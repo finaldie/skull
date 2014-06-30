@@ -1,0 +1,3 @@
+[submodule "deps/flibs"]
+	path = deps/flibs
+	url = git://github.com/finaldie/final_libs.git
