@@ -5,7 +5,7 @@ MAKE_FLAGS += "--no-print-directory"
 DEPS_FOLDERS = \
     ./deps/flibs
 
-all: dep
+all: dep core
 
 dep:
 	@for dep in $(DEPS_FOLDERS); \
@@ -14,6 +14,18 @@ dep:
 	    $(MAKE) $(MAKE_FLAGS) -C $$dep || exit "$$?"; \
 	done;
 
+core:
+	cd core/src && $(MAKE) $@
+
+check:
+	cd core/tests && $(MAKE) $@
+
+valgrind-check:
+	cd core/tests && $(MAKE) $@
+
+install:
+	cd core/src && $(MAKE) $@
+
 clean:
 	@for dep in $(DEPS_FOLDERS); \
 	do \
@@ -21,4 +33,4 @@ clean:
 	    $(MAKE) $(MAKE_FLAGS) -C $$dep clean || exit "$$?"; \
 	done;
 
-.PHONY: all dep clean
+.PHONY: all dep clean core check valgrind-check install
