@@ -24,8 +24,8 @@ sk_module_t* sk_c_module_open(const char* filename)
     module->md = md;
 
     // load module func
-    module->sk_module_init = dlsym(handle, SK_MODULE_INIT_FUNCNAME);
-    module->sk_module_run = dlsym(handle, SK_MODULE_RUN_FUNCNAME);
+    *(void**)(&module->sk_module_init) = dlsym(handle, SK_MODULE_INIT_FUNCNAME);
+    *(void**)(&module->sk_module_run) = dlsym(handle, SK_MODULE_RUN_FUNCNAME);
 
     if ((error = dlerror()) != NULL) {
         return NULL;
@@ -44,7 +44,7 @@ int sk_c_module_close(sk_module_t* module)
     return dlclose(handle);
 }
 
-sk_loader_t sk_c_loader {
+sk_loader_t sk_c_loader = {
     .type = SK_C_MODULE_TYPE,
     .sk_module_open = sk_c_module_open,
     .sk_module_close = sk_c_module_close

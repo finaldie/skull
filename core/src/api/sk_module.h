@@ -6,8 +6,12 @@ typedef enum sk_mtype_t {
 } sk_mtype_t;
 
 typedef struct sk_module_t {
-    sk_mtype_t type;
     void*      md;
+    sk_mtype_t type;
+
+#if __WORDSIZE == 64
+    int        padding;
+#endif
 
     int (*sk_module_init)();
     int (*sk_module_run)();

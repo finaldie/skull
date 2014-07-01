@@ -66,6 +66,8 @@ flags = [
 '-I',
 './src/',
 '-I',
+'./src/api',
+'-I',
 './tests/',
 '-isystem',
 '/usr/bin/../lib/gcc/x86_64-linux-gnu/4.8/include',

@@ -9,6 +9,10 @@
 typedef struct sk_loader_t {
     sk_mtype_t type;
 
+#if __WORDSIZE == 64
+    int        padding;
+#endif
+
     sk_module_t* (*sk_module_open)(const char* filename);
     int   (*sk_module_close)(sk_module_t* module);
 } sk_loader_t;
