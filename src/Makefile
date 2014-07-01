@@ -7,11 +7,18 @@ DEBUG = -g -ggdb
 OTHER = -pipe
 INC = -I.
 
+# linking flags
+DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib64
+
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(DEBUG) $(OPT) $(OTHER) $(INC)
-SKULL_LDFLAGS = $(LDFLAGS) $(DEBUG) $(OTHER)
-SKULL_LIBS = -ldl -pthread -lrt
+SKULL_LDFLAGS = $(LDFLAGS) $(DEBUG) $(OTHER) $(DEPS_LDFLAGS)
+SKULL_LIBS = -ldl -pthread -lrt -lfhash
+
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
 SKULL_LD = $(CC) $(SKULL_LDFLAGS)
+
+# prefix
+prefix ?= /usr/local
 
 # binaries
 SKULL_ENGINE = skull
@@ -33,6 +40,10 @@ $(SKULL_ENGINE): $(COMMON_OBJS) $(LOADER_OBJS) $(SKULL_MAIN_OBJ)
 
 %.o: %.c
 	$(SKULL_CC) -c $< -o $@
+
+install:
+	test -d $(prefix)/bin || mkdir -p $(prefix)/bin
+	cp $(SKULL_ENGINE) $(prefix)/bin
 
 clean:
 	rm -f $(SKULL_ENGINE) $(COMMON_OBJS) $(LOADER_OBJS) $(SKULL_MAIN_OBJ)
