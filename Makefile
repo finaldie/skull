@@ -15,16 +15,16 @@ dep:
 	done;
 
 core:
-	cd core/src && $(MAKE) $@
+	cd src && $(MAKE)
 
 check:
-	cd core/tests && $(MAKE) $@
+	cd tests && $(MAKE) $@
 
 valgrind-check:
-	cd core/tests && $(MAKE) $@
+	cd tests && $(MAKE) $@
 
 install:
-	cd core/src && $(MAKE) $@
+	cd src && $(MAKE) $@
 
 clean:
 	@for dep in $(DEPS_FOLDERS); \
@@ -32,5 +32,6 @@ clean:
 	    echo "[Cleaning dependence lib: $$dep]"; \
 	    $(MAKE) $(MAKE_FLAGS) -C $$dep clean || exit "$$?"; \
 	done;
+	cd src && $(MAKE) $@
 
 .PHONY: all dep clean core check valgrind-check install
