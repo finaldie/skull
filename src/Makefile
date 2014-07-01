@@ -9,11 +9,11 @@ INC = -I.
 
 # linking flags
 DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib64
-
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(DEBUG) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(DEBUG) $(OTHER) $(DEPS_LDFLAGS)
 SKULL_LIBS = -ldl -pthread -lrt -lfhash
 
+# CC and LD
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
 SKULL_LD = $(CC) $(SKULL_LDFLAGS)
 
