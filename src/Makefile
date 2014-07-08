@@ -27,15 +27,23 @@ SKULL_ENGINE = skull
 COMMON_OBJS = \
     common/sk_loader.o
 
+COMPONENTS_OBJS = \
+    components/sk_io_tbl.o \
+    components/sk_scheduler.o
+
 LOADER_OBJS = \
     loaders/c_loader.o
 
 SKULL_MAIN_OBJ = main.o
 
-# target rules
-skull: $(COMMON_OBJS) $(LOADER_OBJS) $(SKULL_MAIN_OBJ)
+SKULL_OBJS = \
+    $(COMMON_OBJS) \
+    $(COMPONENTS_OBJS) \
+    $(LOADER_OBJS) \
+    $(SKULL_MAIN_OBJ)
 
-$(SKULL_ENGINE): $(COMMON_OBJS) $(LOADER_OBJS) $(SKULL_MAIN_OBJ)
+# target rules
+$(SKULL_ENGINE): $(SKULL_OBJS)
 	$(SKULL_LD) -o $@ $^ $(SKULL_LIBS)
 
 %.o: %.c
@@ -46,6 +54,6 @@ install:
 	cp $(SKULL_ENGINE) $(prefix)/bin
 
 clean:
-	rm -f $(SKULL_ENGINE) $(COMMON_OBJS) $(LOADER_OBJS) $(SKULL_MAIN_OBJ)
+	rm -f $(SKULL_ENGINE) $(SKULL_OBJS)
 
-.PHONY: skull clean $(SKULL_ENGINE)
+.PHONY: skull clean $(SKULL_ENGINE) install
