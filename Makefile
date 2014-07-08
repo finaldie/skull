@@ -2,17 +2,10 @@ MAKE ?= make
 
 MAKE_FLAGS += "--no-print-directory"
 
-DEPS_FOLDERS = \
-    ./deps/flibs
-
 all: dep core
 
 dep:
-	@for dep in $(DEPS_FOLDERS); \
-	do \
-	    echo "[Compiling dependence lib: $$dep]"; \
-	    $(MAKE) $(MAKE_FLAGS) -C $$dep || exit "$$?"; \
-	done;
+	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs || exit "$$?"
 
 core:
 	cd src && $(MAKE)
@@ -26,12 +19,10 @@ valgrind-check:
 install:
 	cd src && $(MAKE) $@
 
-clean:
-	@for dep in $(DEPS_FOLDERS); \
-	do \
-	    echo "[Cleaning dependence lib: $$dep]"; \
-	    $(MAKE) $(MAKE_FLAGS) -C $$dep clean || exit "$$?"; \
-	done;
+clean: clean_dep
 	cd src && $(MAKE) $@
 
-.PHONY: all dep clean core check valgrind-check install
+clean_dep:
+	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs clean || exit "$$?"
+
+.PHONY: all dep clean clean_dep core check valgrind-check install
