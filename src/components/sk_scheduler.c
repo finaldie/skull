@@ -123,7 +123,7 @@ void sk_sched_start(sk_sched_t* sched)
     // event loop start
     do {
         // pull all io events and convert them to sched events
-        int nprocessed = sk_eventloop_dispatch(sched->evlp, 10);
+        int nprocessed = sk_eventloop_dispatch(sched->evlp, 1000);
         if (nprocessed <= 0 ) {
             continue;
         }
@@ -135,12 +135,6 @@ void sk_sched_start(sk_sched_t* sched)
 
 void sk_sched_stop(sk_sched_t* sched)
 {
-    sk_io_t** io_tbl = sched->io_tbl;
-    for (int i = 0; i < sched->io_size; i++) {
-        sk_io_t* sk_io = io_tbl[i];
-        sk_io_destroy(sk_io);
-    }
-
     sched->running = 0;
 }
 
