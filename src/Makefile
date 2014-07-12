@@ -28,13 +28,13 @@ SKULL_ENGINE = skull
 # Objs
 COMMON_OBJS = \
     common/sk_loader.o \
-    common/sk_assert.o
+    common/sk_assert.o \
+    common/sk_io.o \
+    common/sk_scheduler.o \
+    common/sk_eventloop.o \
+    common/sk_io_bridge.o
 
-COMPONENTS_OBJS = \
-    components/sk_io.o \
-    components/sk_scheduler.o \
-    components/sk_eventloop.o \
-    components/sk_io_bridge.o
+COMPONENTS_OBJS =
 
 LOADER_OBJS = \
     loaders/c_loader.o
