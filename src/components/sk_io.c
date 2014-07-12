@@ -32,12 +32,17 @@ int sk_io_register(sk_io_t* io, void* data, sk_event_t* event)
     return 0;
 }
 
-int sk_io_push(sk_io_t* io, sk_event_t* event)
+int sk_io_push(sk_io_t* io, int type, sk_event_t* events, int nevents)
 {
     return 0;
 }
 
-int sk_io_pull(sk_io_t* io, sk_event_t* events, int nevents)
+int sk_io_pull(sk_io_t* io, int type, sk_event_t* events, int nevents)
+{
+    return 0;
+}
+
+int sk_io_size(sk_io_t* io, int type)
 {
     return 0;
 }

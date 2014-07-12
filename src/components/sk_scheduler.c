@@ -2,12 +2,11 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "fev/fev.h"
 #include "fhash/fhash.h"
+#include "api/sk_eventloop.h"
 #include "api/sk_io_bridge.h"
 #include "api/sk_scheduler.h"
 
-#define SK_SCHED_MAX_EVENTS 65535
 #define SK_SCHED_PULL_NUM   1024
 
 #define SK_SCHED_MAX_IO        10
@@ -28,6 +27,7 @@ struct sk_sched_t {
     uint32_t   running  :1;
     uint32_t   strategy :2;
     uint32_t   reserved :29;
+
 #if __WORDSIZE == 64
     int        padding;
 #endif
@@ -38,23 +38,20 @@ static
 void _pull_and_run(sk_io_t* sk_io)
 {
     sk_event_t events[SK_SCHED_PULL_NUM];
-    int nevents = sk_io_pull(sk_io, events, SK_SCHED_PULL_NUM);
+    int nevents = sk_io_pull(sk_io, SK_IO_INPUT, events, SK_SCHED_PULL_NUM);
 
-    int finished = 0;
-    for (int i = 0; i < nevents && finished != nevents; i++) {
+    for (int i = 0; i < nevents; i++) {
         sk_event_t* event = &events[i];
 
         if (event->end()) {
             event->cb(event->data);
             event->destroy(event->data);
-            finished++;
             continue;
         }
 
         int ret = event->run(event->data);
         if (ret) {
             event->destroy(event->data);
-            finished++;
             continue;
         }
     }
@@ -63,7 +60,7 @@ void _pull_and_run(sk_io_t* sk_io)
 static
 void _process_io_bridge(sk_io_bridge_t* io_bridge)
 {
-
+    sk_io_bridge_deliver(io_bridge);
 }
 
 static
@@ -92,12 +89,12 @@ void _sched_latency(sk_sched_t* sched)
 }
 
 // APIs
-sk_sched_t* sk_sched_create(int strategy)
+sk_sched_t* sk_sched_create(void* evlp, int strategy)
 {
     sk_sched_t* sched = malloc(sizeof(*sched));
     memset(sched, 0, sizeof(*sched));
 
-    sched->evlp = fev_create(SK_SCHED_MAX_EVENTS);
+    sched->evlp = evlp;
     sched->stragegy_tbl[SK_SCHED_STRATEGY_THROUGHPUT] = _sched_throughput;
     sched->stragegy_tbl[SK_SCHED_STRATEGY_LATENCY] = _sched_latency;
     sched->io_size = 0;
@@ -116,7 +113,6 @@ void sk_sched_destroy(sk_sched_t* sched)
         sk_io_destroy(sk_io);
     }
 
-    fev_destroy(sched->evlp);
     free(sched);
 }
 
@@ -127,7 +123,7 @@ void sk_sched_start(sk_sched_t* sched)
     // event loop start
     do {
         // pull all io events and convert them to sched events
-        int nprocessed = fev_poll(sched->evlp, 100);
+        int nprocessed = sk_eventloop_dispatch(sched->evlp, 10);
         if (nprocessed <= 0 ) {
             continue;
         }

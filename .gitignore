@@ -24,3 +24,9 @@
 
 # Python
 *.pyc
+
+# ctag
+tags
+
+# cscope
+cscope.*

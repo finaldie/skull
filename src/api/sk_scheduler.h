@@ -9,7 +9,7 @@
 
 typedef struct sk_sched_t sk_sched_t;
 
-sk_sched_t* sk_sched_create(int strategy);
+sk_sched_t* sk_sched_create(void* evlp, int strategy);
 void sk_sched_destroy(sk_sched_t* sched);
 
 void sk_sched_start(sk_sched_t* sched);
