@@ -1,15 +1,23 @@
 #ifndef SK_SCHEDULER_H
 #define SK_SCHEDULER_H
 
-#include "sk_io.h"
+#include "api/sk_io.h"
+#include "api/sk_io_bridge.h"
 
-typedef struct sk_scheduler_t sk_scheduler_t;
+#define SK_SCHED_STRATEGY_THROUGHPUT 0
+#define SK_SCHED_STRATEGY_LATENCY    1
 
-sk_scheduler_t* sk_scheduler_create(sk_io_t** io_tbl);
-void sk_scheduler_destroy(sk_scheduler_t* scheduler);
+typedef struct sk_sched_t sk_sched_t;
 
-void sk_scheduler_start(sk_scheduler_t* scheduler);
-void sk_scheduler_stop(sk_scheduler_t* scheduler);
+sk_sched_t* sk_sched_create(int strategy);
+void sk_sched_destroy(sk_sched_t* sched);
+
+void sk_sched_start(sk_sched_t* sched);
+void sk_sched_stop(sk_sched_t* sched);
+
+int sk_sched_register_io(sk_sched_t* sched, sk_io_t* io);
+int sk_sched_register_io_bridge(sk_sched_t* sched,
+                                sk_io_bridge_t* io_bridge);
 
 #endif
 

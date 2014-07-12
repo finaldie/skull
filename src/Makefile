@@ -5,13 +5,15 @@ WARN = -Wall -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-
 OPT = -O2
 DEBUG = -g -ggdb
 OTHER = -pipe
-INC = -I.
+INC = \
+    -I. \
+    -I../deps/flibs
 
 # linking flags
 DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib64
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(DEBUG) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(DEBUG) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_LIBS = -ldl -pthread -lrt -lfhash
+SKULL_LIBS = -ldl -pthread -lrt -lfev -lfhash
 
 # CC and LD
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
@@ -28,7 +30,7 @@ COMMON_OBJS = \
     common/sk_loader.o
 
 COMPONENTS_OBJS = \
-    components/sk_io_tbl.o \
+    components/sk_io.o \
     components/sk_scheduler.o
 
 LOADER_OBJS = \

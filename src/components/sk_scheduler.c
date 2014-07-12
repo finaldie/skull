@@ -1,54 +1,51 @@
 #include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 
+#include "fev/fev.h"
+#include "fhash/fhash.h"
+#include "api/sk_io_bridge.h"
 #include "api/sk_scheduler.h"
 
-#define SK_SCHEDULER_PULL_NUM 1024
+#define SK_SCHED_MAX_EVENTS 65535
+#define SK_SCHED_PULL_NUM   1024
 
-struct sk_scheduler_t {
-    sk_io_t** io_tbl;
-    int       running;
+#define SK_SCHED_MAX_IO        10
+#define SK_SCHED_MAX_IO_BRIDGE 10
+
+#define SK_SCHED_MAX_STRATEGY  2
+
+typedef void (*sk_sched_strategy) (sk_sched_t* sched);
+
+struct sk_sched_t {
+    void*      evlp;
+    sk_io_t*   io_tbl[SK_SCHED_MAX_IO];
+    sk_io_bridge_t* io_bridge_tbl[SK_SCHED_MAX_IO_BRIDGE];
+    sk_sched_strategy stragegy_tbl[SK_SCHED_MAX_STRATEGY];
+
+    int        io_size;
+    int        io_bridge_size;
+    uint32_t   running  :1;
+    uint32_t   strategy :2;
+    uint32_t   reserved :29;
 #if __WORDSIZE == 64
     int        padding;
 #endif
 };
 
-sk_scheduler_t* sk_scheduler_create(sk_io_t** io_tbl)
-{
-    sk_scheduler_t* scheduler = malloc(sizeof(*scheduler));
-    scheduler->running = 0;
-    scheduler->io_tbl = io_tbl;
-
-    // initialize IO systems
-    for (int i = 0; io_tbl[i] != NULL; i++) {
-        sk_io_t* sk_io = io_tbl[i];
-        sk_io->init(sk_io->data);
-    }
-
-    return scheduler;
-}
-
-void sk_scheduler_destroy(sk_scheduler_t* scheduler)
-{
-    sk_io_t** io_tbl = scheduler->io_tbl;
-    for (int i = 0; io_tbl[i] != NULL; i++) {
-        sk_io_t* sk_io = io_tbl[i];
-        sk_io->destroy(sk_io->data);
-    }
-
-    free(scheduler);
-}
-
+// INTERNAL API
 static
 void _pull_and_run(sk_io_t* sk_io)
 {
-    sk_event_t events[SK_SCHEDULER_PULL_NUM];
-    int nevents = sk_io->pull(sk_io->data, events, SK_SCHEDULER_PULL_NUM);
+    sk_event_t events[SK_SCHED_PULL_NUM];
+    int nevents = sk_io_pull(sk_io, events, SK_SCHED_PULL_NUM);
 
     int finished = 0;
     for (int i = 0; i < nevents && finished != nevents; i++) {
         sk_event_t* event = &events[i];
 
         if (event->end()) {
+            event->cb(event->data);
             event->destroy(event->data);
             finished++;
             continue;
@@ -56,38 +53,126 @@ void _pull_and_run(sk_io_t* sk_io)
 
         int ret = event->run(event->data);
         if (ret) {
-            event->destroy(sk_io->data);
+            event->destroy(event->data);
             finished++;
             continue;
         }
     }
 }
 
-void sk_scheduler_start(sk_scheduler_t* scheduler)
+static
+void _process_io_bridge(sk_io_bridge_t* io_bridge)
 {
-    scheduler->running = 1;
-    sk_io_t** io_tbl = scheduler->io_tbl;
-    // open all the io systems
-    for (int i = 0; io_tbl[i] != NULL; i++) {
-        sk_io_t* sk_io = io_tbl[i];
-        sk_io->open(sk_io->data);
-    }
 
-    do {
-        for (int i = 0; io_tbl[i] != NULL; i++) {
-            sk_io_t* sk_io = io_tbl[i];
-            _pull_and_run(sk_io);
-        }
-    } while (scheduler->running);
 }
 
-void sk_scheduler_stop(sk_scheduler_t* scheduler)
+static
+void _sched_throughput(sk_sched_t* sched)
 {
-    sk_io_t** io_tbl = scheduler->io_tbl;
-    for (int i = 0; io_tbl[i] != NULL; i++) {
+    sk_io_t** io_tbl = sched->io_tbl;
+    sk_io_bridge_t** io_bridge_tbl = sched->io_bridge_tbl;
+
+    // execuate all io events
+    for (int i = 0; i < sched->io_size; i++) {
         sk_io_t* sk_io = io_tbl[i];
-        sk_io->close(sk_io->data);
+        _pull_and_run(sk_io);
     }
 
-    scheduler->running = 0;
+    // execuate all io bridge
+    for (int i = 0; i < sched->io_bridge_size; i++) {
+        sk_io_bridge_t* io_bridge = io_bridge_tbl[i];
+        _process_io_bridge(io_bridge);
+    }
+}
+
+static
+void _sched_latency(sk_sched_t* sched)
+{
+
+}
+
+// APIs
+sk_sched_t* sk_sched_create(int strategy)
+{
+    sk_sched_t* sched = malloc(sizeof(*sched));
+    memset(sched, 0, sizeof(*sched));
+
+    sched->evlp = fev_create(SK_SCHED_MAX_EVENTS);
+    sched->stragegy_tbl[SK_SCHED_STRATEGY_THROUGHPUT] = _sched_throughput;
+    sched->stragegy_tbl[SK_SCHED_STRATEGY_LATENCY] = _sched_latency;
+    sched->io_size = 0;
+    sched->io_bridge_size = 0;
+    sched->running = 0;
+    sched->strategy = strategy;
+
+    return sched;
+}
+
+void sk_sched_destroy(sk_sched_t* sched)
+{
+    sk_io_t** io_tbl = sched->io_tbl;
+    for (int i = 0; i < sched->io_size; i++) {
+        sk_io_t* sk_io = io_tbl[i];
+        sk_io_destroy(sk_io);
+    }
+
+    fev_destroy(sched->evlp);
+    free(sched);
+}
+
+void sk_sched_start(sk_sched_t* sched)
+{
+    sched->running = 1;
+
+    // event loop start
+    do {
+        // pull all io events and convert them to sched events
+        int nprocessed = fev_poll(sched->evlp, 100);
+        if (nprocessed <= 0 ) {
+            continue;
+        }
+
+        // run events by strategy
+        sched->stragegy_tbl[sched->strategy](sched);
+    } while (sched->running);
+}
+
+void sk_sched_stop(sk_sched_t* sched)
+{
+    sk_io_t** io_tbl = sched->io_tbl;
+    for (int i = 0; i < sched->io_size; i++) {
+        sk_io_t* sk_io = io_tbl[i];
+        sk_io_destroy(sk_io);
+    }
+
+    sched->running = 0;
+}
+
+int sk_sched_register_io(sk_sched_t* sched, sk_io_t* io)
+{
+    if (sched->io_size == SK_SCHED_MAX_IO) {
+        return 1;
+    }
+
+    if (!io) {
+        return 1;
+    }
+
+    sched->io_tbl[sched->io_size++] = io;
+    return 0;
+}
+
+int sk_sched_register_io_bridge(sk_sched_t* sched,
+                                sk_io_bridge_t* io_bridge)
+{
+    if (sched->io_bridge_size == SK_SCHED_MAX_IO_BRIDGE) {
+        return 1;
+    }
+
+    if (!io_bridge) {
+        return 1;
+    }
+
+    sched->io_bridge_tbl[sched->io_bridge_size++] = io_bridge;
+    return 0;
 }
