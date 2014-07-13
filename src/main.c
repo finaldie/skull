@@ -34,11 +34,34 @@ void skull_init(skull_core_t* core)
     // 3. init schedulers
     core->main_sched.evlp = sk_eventloop_create();
     core->main_sched.sched = sk_main_sched_create(SK_SCHED_STRATEGY_THROUGHPUT);
+    sk_io_t* main_accept_io = sk_io_create(1024);
+    sk_sched_register_io(core->main_sched.sched, main_accept_io);
 
     for (int i = 0; i < SKULL_WORKER_NUM; i++) {
         core->worker_sched[i].evlp = sk_eventloop_create();
         core->worker_sched[i].sched = sk_worker_sched_create(
                                             SK_SCHED_STRATEGY_THROUGHPUT);
+        sk_io_t* worker_accept_io = sk_io_create(1024);
+        sk_io_t* worker_net_io = sk_io_create(65535);
+        sk_sched_register_io(core->worker_sched[i].sched, worker_accept_io);
+        sk_sched_register_io(core->worker_sched[i].sched, worker_net_io);
+
+        // set up the double linked io bridge for accept io
+        sk_io_bridge_t* worker_io_bridge = sk_io_bridge_create(
+                                                    worker_accept_io,
+                                                    main_accept_io,
+                                                    core->main_sched.evlp,
+                                                    1024);
+        sk_io_bridge_t* main_io_bridge = sk_io_bridge_create(
+                                                    main_accept_io,
+                                                    worker_accept_io,
+                                                    core->worker_sched[i].evlp,
+                                                    1024);
+
+        sk_sched_register_io_bridge(core->worker_sched[i].sched,
+                                    worker_io_bridge);
+        sk_sched_register_io_bridge(core->main_sched.sched,
+                                    main_io_bridge);
     }
 }
 
