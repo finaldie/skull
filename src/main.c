@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "api/sk_eventloop.h"
 #include "api/sk_sched.h"
@@ -13,6 +14,11 @@ typedef struct skull_sched_t {
     pthread_t   io_thread;
     sk_sched_t* sched;
     void*       evlp;
+    uint32_t    running:1;
+    uint32_t    reserved:31;
+#if __WORDSIZE == 64
+    int         padding;
+#endif
 } skull_sched_t;
 
 typedef struct skull_core_t {
@@ -27,13 +33,11 @@ void skull_init(skull_core_t* core)
     // 2. load modules
     // 3. init schedulers
     core->main_sched.evlp = sk_eventloop_create();
-    core->main_sched.sched = sk_main_sched_create(core->main_sched.evlp,
-                                             SK_SCHED_STRATEGY_THROUGHPUT);
+    core->main_sched.sched = sk_main_sched_create(SK_SCHED_STRATEGY_THROUGHPUT);
 
     for (int i = 0; i < SKULL_WORKER_NUM; i++) {
         core->worker_sched[i].evlp = sk_eventloop_create();
         core->worker_sched[i].sched = sk_worker_sched_create(
-                                            core->worker_sched[i].evlp,
                                             SK_SCHED_STRATEGY_THROUGHPUT);
     }
 }
@@ -42,8 +46,20 @@ static
 void* main_io_thread(void* arg)
 {
     printf("main io thread started\n");
-    sk_sched_t* sched = arg;
-    sk_sched_start(sched);
+    skull_sched_t* core_sched = arg;
+    sk_sched_t* sched = core_sched->sched;
+
+    core_sched->running = 1;
+    do {
+        // pull all io events and convert them to sched events
+        int nprocessed = sk_eventloop_dispatch(core_sched->evlp, 1000);
+        if (nprocessed <= 0 ) {
+            continue;
+        }
+
+        sk_sched_run(sched);
+    } while (core_sched->running);
+
     return 0;
 }
 
@@ -51,8 +67,20 @@ static
 void* worker_io_thread(void* arg)
 {
     printf("worker io thread started\n");
-    sk_sched_t* sched = arg;
-    sk_sched_start(sched);
+    skull_sched_t* core_sched = arg;
+    sk_sched_t* sched = core_sched->sched;
+
+    core_sched->running = 1;
+    do {
+        // pull all io events and convert them to sched events
+        int nprocessed = sk_eventloop_dispatch(core_sched->evlp, 1000);
+        if (nprocessed <= 0 ) {
+            continue;
+        }
+
+        sk_sched_run(sched);
+    } while (core_sched->running);
+
     return 0;
 }
 

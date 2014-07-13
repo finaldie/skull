@@ -47,7 +47,7 @@ void _sched_throughput(sk_sched_t* sched,
 }
 
 // APIs
-sk_sched_t* sk_main_sched_create(void* evlp, int strategy)
+sk_sched_t* sk_main_sched_create(int strategy)
 {
     sk_sched_opt_t opt;
     if (strategy == SK_SCHED_STRATEGY_THROUGHPUT) {
@@ -56,5 +56,5 @@ sk_sched_t* sk_main_sched_create(void* evlp, int strategy)
         return NULL;
     }
 
-    return sk_sched_create(evlp, opt);
+    return sk_sched_create(opt);
 }
