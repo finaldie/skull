@@ -13,7 +13,7 @@ INC = \
 DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib64
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(DEBUG) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(DEBUG) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_LIBS = -ldl -pthread -lrt -lfev -lfhash
+SKULL_LIBS = -ldl -pthread -lrt -lfev -lfhash -lfmbuf
 
 # CC and LD
 SKULL_CC = $(CC) $(SKULL_CFLAGS)

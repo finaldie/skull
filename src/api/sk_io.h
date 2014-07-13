@@ -1,3 +1,5 @@
+// sk_io is a message queue which controlled by scheduler
+
 #ifndef SK_IO_H
 #define SK_IO_H
 
@@ -10,27 +12,23 @@
 #define SK_IO_PIPE       2
 #define SK_IO_NET_ACCEPT 3
 
+typedef struct sk_io_t sk_io_t;
+
+sk_io_t* sk_io_create(int size);
+void sk_io_destroy(sk_io_t* io);
+
 #define SK_IO_INPUT  0
 #define SK_IO_OUTPUT 1
 
-typedef struct sk_io_t sk_io_t;
-
-typedef struct sk_io_opt_t {
-    void* data;
-
-    int  (*open)  (sk_io_t*, void* data);
-    void (*close) (sk_io_t*, void* data);
-    int  (*pull)  (sk_io_t*, void* data, sk_event_t* events, int nevents);
-    int  (*reg)   (sk_io_t*, void* data, sk_event_t* event/*out*/);
-} sk_io_opt_t;
-
-sk_io_t* sk_io_create(void* evlp, int type, sk_io_opt_t opt);
-void sk_io_destroy(sk_io_t* io);
-
-int sk_io_register(sk_io_t* io, void* data, sk_event_t* event);
+// push N events into sk_io input or output queue
 int sk_io_push(sk_io_t* io, int type, sk_event_t* events, int nevents);
+
+// try to pull N events from sk_io (input or output) queue
+// return the actual event count
 int sk_io_pull(sk_io_t* io, int type, sk_event_t* events, int nevents);
-int sk_io_size(sk_io_t* io, int type);
+
+int sk_io_used(sk_io_t* io, int type);
+int sk_io_free(sk_io_t* io, int type);
 
 #endif
 

@@ -7,6 +7,8 @@
 #define SK_EVENT_ST_PAUSE   1
 #define SK_EVENT_ST_STOP    2
 
+#define SK_EVENT_SZ (sizeof(sk_event_t))
+
 typedef struct sk_event_t {
     sk_ud_t data;
     int     pto_id;
