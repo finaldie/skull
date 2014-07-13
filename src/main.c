@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "api/sk_eventloop.h"
-#include "api/sk_scheduler.h"
+#include "api/sk_sched.h"
 
 #define SKULL_WORKER_NUM 2
 
@@ -27,12 +27,12 @@ void skull_init(skull_core_t* core)
     // 2. load modules
     // 3. init schedulers
     core->main_sched.evlp = sk_eventloop_create();
-    core->main_sched.sched = sk_sched_create(core->main_sched.evlp,
+    core->main_sched.sched = sk_main_sched_create(core->main_sched.evlp,
                                              SK_SCHED_STRATEGY_THROUGHPUT);
 
     for (int i = 0; i < SKULL_WORKER_NUM; i++) {
         core->worker_sched[i].evlp = sk_eventloop_create();
-        core->worker_sched[i].sched = sk_sched_create(
+        core->worker_sched[i].sched = sk_worker_sched_create(
                                             core->worker_sched[i].evlp,
                                             SK_SCHED_STRATEGY_THROUGHPUT);
     }

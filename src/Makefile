@@ -30,11 +30,13 @@ COMMON_OBJS = \
     common/sk_loader.o \
     common/sk_assert.o \
     common/sk_io.o \
-    common/sk_scheduler.o \
+    common/sk_sched.o \
     common/sk_eventloop.o \
     common/sk_io_bridge.o
 
-COMPONENTS_OBJS =
+COMPONENTS_OBJS = \
+    components/sk_main_sched.o \
+    components/sk_worker_sched.o
 
 LOADER_OBJS = \
     loaders/c_loader.o
