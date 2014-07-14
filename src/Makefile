@@ -13,7 +13,7 @@ INC = \
 DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib64
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(DEBUG) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(DEBUG) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_LIBS = -ldl -pthread -lrt -lfev -lfhash -lfmbuf
+SKULL_LIBS = -ldl -pthread -lrt -lfev -lfnet -lfhash -lfmbuf
 
 # CC and LD
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
@@ -37,7 +37,8 @@ COMMON_OBJS = \
 
 COMPONENTS_OBJS = \
     components/sk_main_sched.o \
-    components/sk_worker_sched.o
+    components/sk_worker_sched.o \
+    components/sk.o
 
 LOADER_OBJS = \
     loaders/c_loader.o

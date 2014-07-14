@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 
@@ -14,7 +15,7 @@
 struct sk_sched_t {
     void* evlp;
     sk_sched_opt_t  opt;
-    sk_io_t*        io_tbl[SK_SCHED_MAX_IO];
+    sk_sched_io_t   io_tbl[SK_SCHED_MAX_IO];
     sk_io_bridge_t* io_bridge_tbl[SK_SCHED_MAX_IO_BRIDGE];
     int        io_size;
     int        io_bridge_size;
@@ -41,9 +42,9 @@ sk_sched_t* sk_sched_create(void* evlp, sk_sched_opt_t opt)
 
 void sk_sched_destroy(sk_sched_t* sched)
 {
-    sk_io_t** io_tbl = sched->io_tbl;
+    sk_sched_io_t* io_tbl = sched->io_tbl;
     for (int i = 0; i < sched->io_size; i++) {
-        sk_io_t* sk_io = io_tbl[i];
+        sk_io_t* sk_io = io_tbl[i].io;
         sk_io_destroy(sk_io);
     }
 
@@ -81,7 +82,9 @@ int sk_sched_reg_io(sk_sched_t* sched, int io_type, sk_io_t* io)
         return 1;
     }
 
-    sched->io_tbl[io_type] = io;
+    sched->io_tbl[sched->io_size].type = io_type;
+    sched->io_tbl[sched->io_size].status = SK_IO_STAT_READY;
+    sched->io_tbl[sched->io_size].io = io;
     sched->io_size++;
     return 0;
 }
@@ -98,5 +101,10 @@ int sk_sched_reg_io_bridge(sk_sched_t* sched,
     }
 
     sched->io_bridge_tbl[sched->io_bridge_size++] = io_bridge;
+    return 0;
+}
+
+int sk_sched_push(sk_sched_t* sched, sk_event_t* event)
+{
     return 0;
 }

@@ -20,13 +20,13 @@ void _pull_and_run(sk_io_t* sk_io)
 
 static
 void _sched_throughput(sk_sched_t* sched,
-                       sk_io_t** io_tbl,
+                       sk_sched_io_t* io_tbl,
                        sk_io_bridge_t** io_bridge_tbl)
 {
     // execuate all io events
-    for (int i = 0; io_tbl[i] != NULL; i++) {
-        sk_io_t* io = io_tbl[i];
-        _pull_and_run(io);
+    for (int i = 0; io_tbl[i].io != NULL; i++) {
+        sk_sched_io_t* io = &io_tbl[i];
+        _pull_and_run(io->io);
     }
 
     // execuate all io bridge

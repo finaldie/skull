@@ -32,8 +32,8 @@ typedef struct sk_event_t {
     sk_ud_t  data;
 } sk_event_t;
 
-void sk_event_create(uint32_t pto_id, uint32_t type, uint32_t error,
-                     uint32_t deliver_to, sk_ud_t ud, sk_event_t* event/*out*/);
+void sk_event_create(uint32_t pto_id, uint32_t deliver_to, sk_ud_t ud,
+                     sk_event_t* event/*out*/);
 void sk_event_run(sk_event_t* event);
 
 #endif

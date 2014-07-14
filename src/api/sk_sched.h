@@ -8,11 +8,20 @@
 #define SK_IO_NET_ACCEPT 0
 #define SK_IO_NET_SOCK   1
 
+#define SK_IO_STAT_READY 0
+#define SK_IO_STAT_PAUSE 1
+
 typedef struct sk_sched_t sk_sched_t;
+
+typedef struct sk_sched_io_t {
+    int type;
+    int status;
+    sk_io_t* io;
+} sk_sched_io_t;
 
 typedef struct sk_sched_opt_t {
     void (*schedule)(sk_sched_t* sched,
-                     sk_io_t**   io_tbl,
+                     sk_sched_io_t*   io_tbl,
                      sk_io_bridge_t** io_bridge_tbl);
 } sk_sched_opt_t;
 
@@ -26,7 +35,7 @@ int sk_sched_reg_io(sk_sched_t* sched, int io_type, sk_io_t* io);
 int sk_sched_reg_io_bridge(sk_sched_t* sched, sk_io_bridge_t* io_bridge);
 
 void* sk_sched_get_eventloop(sk_sched_t* sched);
-int sk_sched_push(sk_event_t* event);
+int sk_sched_push(sk_sched_t* sched, sk_event_t* event);
 
 // main and worker scheduler
 
