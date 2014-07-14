@@ -10,16 +10,11 @@
 #include "api/sk_sched.h"
 
 #define SKULL_WORKER_NUM 2
-#define SKULL_IO_TBL_SZ  10
 
 typedef struct skull_sched_t {
     pthread_t   io_thread;
     sk_sched_t* sched;
-    sk_io_t*    io_tbl[SKULL_IO_TBL_SZ];
-    sk_io_bridge_t* io_bridge_tbl[SKULL_IO_TBL_SZ];
     void*       evlp;
-    int         io_tbl_sz;
-    int         io_bridge_tbl_sz;
 } skull_sched_t;
 
 typedef struct skull_core_t {
@@ -28,11 +23,8 @@ typedef struct skull_core_t {
 } skull_core_t;
 
 static
-void skull_init(skull_core_t* core)
+void _skull_setup_io(skull_core_t* core)
 {
-    // 1. load config
-    // 2. load modules
-    // 3. init schedulers
     skull_sched_t* main_sched = &core->main_sched;
     main_sched->evlp = sk_eventloop_create();
     main_sched->sched = sk_main_sched_create(main_sched->evlp,
@@ -56,19 +48,26 @@ void skull_init(skull_core_t* core)
         sk_io_bridge_t* worker_io_bridge = sk_io_bridge_create(
                                                     worker_accept_io,
                                                     main_accept_io,
-                                                    core->main_sched.evlp,
+                                                    main_sched->evlp,
                                                     1024);
         sk_io_bridge_t* main_io_bridge = sk_io_bridge_create(
                                                     main_accept_io,
                                                     worker_accept_io,
-                                                    core->worker_sched[i].evlp,
+                                                    worker_sched->evlp,
                                                     1024);
 
-        sk_sched_reg_io_bridge(core->worker_sched[i].sched,
-                               worker_io_bridge);
-        sk_sched_reg_io_bridge(core->main_sched.sched,
-                                    main_io_bridge);
+        sk_sched_reg_io_bridge(worker_sched->sched, worker_io_bridge);
+        sk_sched_reg_io_bridge(main_sched->sched, main_io_bridge);
     }
+}
+
+static
+void skull_init(skull_core_t* core)
+{
+    // 1. load config
+    // 2. load modules
+    // 3. init schedulers
+    _skull_setup_io(core);
 }
 
 static
@@ -122,7 +121,7 @@ void skull_start(skull_core_t* core)
     for (int i = 0; i < SKULL_WORKER_NUM; i++) {
         pthread_join(core->worker_sched[i].io_thread, NULL);
     }
-    pthread_join(core->main_sched.io_thread, NULL);
+    pthread_join(main_sched->io_thread, NULL);
 }
 
 static
