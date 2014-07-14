@@ -32,7 +32,8 @@ COMMON_OBJS = \
     common/sk_io.o \
     common/sk_sched.o \
     common/sk_eventloop.o \
-    common/sk_io_bridge.o
+    common/sk_io_bridge.o \
+    common/sk_event.o
 
 COMPONENTS_OBJS = \
     components/sk_main_sched.o \
@@ -41,13 +42,18 @@ COMPONENTS_OBJS = \
 LOADER_OBJS = \
     loaders/c_loader.o
 
+PTO_OBJS = \
+    pto/sk_pto.o \
+    pto/sk_pto_net_accept.o
+
 SKULL_MAIN_OBJ = main.o
 
 SKULL_OBJS = \
     $(COMMON_OBJS) \
     $(COMPONENTS_OBJS) \
     $(LOADER_OBJS) \
-    $(SKULL_MAIN_OBJ)
+    $(SKULL_MAIN_OBJ) \
+    $(PTO_OBJS)
 
 # target rules
 $(SKULL_ENGINE): $(SKULL_OBJS)

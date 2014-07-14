@@ -6,19 +6,20 @@
 #include <stdint.h>
 
 #include "api/sk_eventloop.h"
+#include "api/sk_io.h"
 #include "api/sk_sched.h"
 
 #define SKULL_WORKER_NUM 2
+#define SKULL_IO_TBL_SZ  10
 
 typedef struct skull_sched_t {
     pthread_t   io_thread;
     sk_sched_t* sched;
+    sk_io_t*    io_tbl[SKULL_IO_TBL_SZ];
+    sk_io_bridge_t* io_bridge_tbl[SKULL_IO_TBL_SZ];
     void*       evlp;
-    uint32_t    running:1;
-    uint32_t    reserved:31;
-#if __WORDSIZE == 64
-    int         padding;
-#endif
+    int         io_tbl_sz;
+    int         io_bridge_tbl_sz;
 } skull_sched_t;
 
 typedef struct skull_core_t {
@@ -32,19 +33,24 @@ void skull_init(skull_core_t* core)
     // 1. load config
     // 2. load modules
     // 3. init schedulers
-    core->main_sched.evlp = sk_eventloop_create();
-    core->main_sched.sched = sk_main_sched_create(SK_SCHED_STRATEGY_THROUGHPUT);
-    sk_io_t* main_accept_io = sk_io_create(1024);
-    sk_sched_register_io(core->main_sched.sched, main_accept_io);
+    skull_sched_t* main_sched = &core->main_sched;
+    main_sched->evlp = sk_eventloop_create();
+    main_sched->sched = sk_main_sched_create(main_sched->evlp,
+                                             SK_SCHED_STRATEGY_THROUGHPUT);
 
     for (int i = 0; i < SKULL_WORKER_NUM; i++) {
-        core->worker_sched[i].evlp = sk_eventloop_create();
-        core->worker_sched[i].sched = sk_worker_sched_create(
+        skull_sched_t* worker_sched = &core->worker_sched[i];
+
+        worker_sched->evlp = sk_eventloop_create();
+        worker_sched->sched = sk_worker_sched_create(worker_sched->evlp,
                                             SK_SCHED_STRATEGY_THROUGHPUT);
+        sk_io_t* main_accept_io = sk_io_create(1024);
         sk_io_t* worker_accept_io = sk_io_create(1024);
         sk_io_t* worker_net_io = sk_io_create(65535);
-        sk_sched_register_io(core->worker_sched[i].sched, worker_accept_io);
-        sk_sched_register_io(core->worker_sched[i].sched, worker_net_io);
+
+        sk_sched_reg_io(main_sched->sched, SK_IO_NET_ACCEPT, main_accept_io);
+        sk_sched_reg_io(worker_sched->sched, SK_IO_NET_ACCEPT, worker_accept_io);
+        sk_sched_reg_io(worker_sched->sched, SK_IO_NET_SOCK, worker_net_io);
 
         // set up the double linked io bridge for accept io
         sk_io_bridge_t* worker_io_bridge = sk_io_bridge_create(
@@ -58,9 +64,9 @@ void skull_init(skull_core_t* core)
                                                     core->worker_sched[i].evlp,
                                                     1024);
 
-        sk_sched_register_io_bridge(core->worker_sched[i].sched,
-                                    worker_io_bridge);
-        sk_sched_register_io_bridge(core->main_sched.sched,
+        sk_sched_reg_io_bridge(core->worker_sched[i].sched,
+                               worker_io_bridge);
+        sk_sched_reg_io_bridge(core->main_sched.sched,
                                     main_io_bridge);
     }
 }
@@ -69,19 +75,8 @@ static
 void* main_io_thread(void* arg)
 {
     printf("main io thread started\n");
-    skull_sched_t* core_sched = arg;
-    sk_sched_t* sched = core_sched->sched;
-
-    core_sched->running = 1;
-    do {
-        // pull all io events and convert them to sched events
-        int nprocessed = sk_eventloop_dispatch(core_sched->evlp, 1000);
-        if (nprocessed <= 0 ) {
-            continue;
-        }
-
-        sk_sched_run(sched);
-    } while (core_sched->running);
+    sk_sched_t* sched = arg;
+    sk_sched_start(sched);
 
     return 0;
 }
@@ -90,19 +85,8 @@ static
 void* worker_io_thread(void* arg)
 {
     printf("worker io thread started\n");
-    skull_sched_t* core_sched = arg;
-    sk_sched_t* sched = core_sched->sched;
-
-    core_sched->running = 1;
-    do {
-        // pull all io events and convert them to sched events
-        int nprocessed = sk_eventloop_dispatch(core_sched->evlp, 1000);
-        if (nprocessed <= 0 ) {
-            continue;
-        }
-
-        sk_sched_run(sched);
-    } while (core_sched->running);
+    sk_sched_t* sched = arg;
+    sk_sched_start(sched);
 
     return 0;
 }
@@ -159,6 +143,7 @@ int main(int argc, char** argv)
     printf("hello skull engine\n");
 
     skull_core_t core;
+    memset(&core, 0, sizeof(core));
     skull_init(&core);
     skull_start(&core);
     skull_stop(&core);

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "api/sk_assert.h"
 #include "api/sk_sched.h"
 
 #define SK_SCHED_PULL_NUM   1024
@@ -13,18 +14,7 @@ void _pull_and_run(sk_io_t* sk_io)
 
     for (int i = 0; i < nevents; i++) {
         sk_event_t* event = &events[i];
-
-        if (event->end()) {
-            event->cb(event->data);
-            event->destroy(event->data);
-            continue;
-        }
-
-        int ret = event->run(event->data);
-        if (ret) {
-            event->destroy(event->data);
-            continue;
-        }
+        sk_event_run(event);
     }
 }
 
@@ -46,7 +36,7 @@ void _sched_throughput(sk_sched_t* sched,
     }
 }
 // APIs
-sk_sched_t* sk_worker_sched_create(int strategy)
+sk_sched_t* sk_worker_sched_create(void* evlp, int strategy)
 {
     sk_sched_opt_t opt;
     if (strategy == SK_SCHED_STRATEGY_THROUGHPUT) {
@@ -55,5 +45,5 @@ sk_sched_t* sk_worker_sched_create(int strategy)
         return NULL;
     }
 
-    return sk_sched_create(opt);
+    return sk_sched_create(evlp, opt);
 }
