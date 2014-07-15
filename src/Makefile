@@ -45,7 +45,8 @@ LOADER_OBJS = \
 
 PTO_OBJS = \
     pto/sk_pto.o \
-    pto/sk_pto_net_accept.o
+    pto/sk_pto_net_accept.o \
+    pto/sk_pto_net_proc.o
 
 SKULL_MAIN_OBJ = main.o
 

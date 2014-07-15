@@ -8,7 +8,6 @@
 #include "fev/fev_listener.h"
 
 #include "api/sk_types.h"
-#include "api/sk_pto.h"
 #include "api/sk_eventloop.h"
 #include "api/sk_io.h"
 #include "api/sk_assert.h"
@@ -58,10 +57,12 @@ static
 void _sk_accept(fev_state* fev, int fd, void* ud)
 {
     skull_sched_t* sched = ud;
-    sk_ud_t listen_fd;
-    listen_fd.u32 = fd;
     sk_event_t event;
-    sk_event_create(SK_PTO_NET_ACCEPT, SK_IO_NET_ACCEPT, listen_fd, &event);
+    event.deliver = SK_IO_NET_ACCEPT;
+    event.ev_type = SK_EV_OUTGOING;
+    event.type    = SK_EV_REQ;
+    event.pto_id  = SK_PTO_NET_ACCEPT;
+    event.data.d.u32 = fd;
 
     sk_sched_push(sched->sched, &event);
 }

@@ -20,9 +20,7 @@ typedef struct sk_sched_io_t {
 } sk_sched_io_t;
 
 typedef struct sk_sched_opt_t {
-    void (*schedule)(sk_sched_t* sched,
-                     sk_sched_io_t*   io_tbl,
-                     sk_io_bridge_t** io_bridge_tbl);
+    sk_event_opt_t**  pto_tbl;
 } sk_sched_opt_t;
 
 sk_sched_t* sk_sched_create(void* evlp, sk_sched_opt_t opt);

@@ -34,13 +34,17 @@ int sk_io_push(sk_io_t* io, int type, sk_event_t* events, int nevents)
 int sk_io_pull(sk_io_t* io, int type, sk_event_t* events, int nevents)
 {
     fmbuf* mq = io->mq[type];
-    int expect_sz = SK_EVENT_SZ * nevents;
-    int mq_sz = fmbuf_used(mq);
-    int actual_sz = expect_sz > mq_sz ? mq_sz : expect_sz;
+    int mq_cnt = fmbuf_used(mq) / SK_EVENT_SZ;
+    int actual_cnt = nevents > mq_cnt ? mq_cnt : nevents;
 
+    if (mq_cnt == 0) {
+        return 0;
+    }
+
+    int actual_sz = actual_cnt * SK_EVENT_SZ;
     int ret = fmbuf_pop(mq, events, actual_sz);
     SK_ASSERT(!ret);
-    return actual_sz;
+    return actual_cnt;
 }
 
 int sk_io_used(sk_io_t* io, int type)

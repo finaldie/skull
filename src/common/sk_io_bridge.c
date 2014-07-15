@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/eventfd.h>
 #include <stdint.h>
@@ -41,15 +42,16 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
         return;
     }
 
-    int free_cnt = sk_io_free(io_bridge->dst_io, SK_IO_OUTPUT);
-    int mq_cnt = fmbuf_size(io_bridge->mq) / SK_EVENT_SZ;
+    int free_cnt = sk_io_free(io_bridge->dst_io, SK_IO_INPUT);
+    int mq_cnt = fmbuf_used(io_bridge->mq) / SK_EVENT_SZ;
     int copy_cnt = mq_cnt > free_cnt ? free_cnt : mq_cnt;
+    int copy_sz = SK_EVENT_SZ * copy_cnt;
 
-    sk_event_t* events = malloc(sizeof(sk_event_t) * copy_cnt);
-    int ret = fmbuf_pop(io_bridge->mq, events, SK_EVENT_SZ * copy_cnt);
+    sk_event_t* events = malloc(copy_sz);
+    int ret = fmbuf_pop(io_bridge->mq, events, copy_sz);
     SK_ASSERT(!ret);
 
-    ret = sk_io_push(io_bridge->dst_io, SK_IO_OUTPUT, events, copy_cnt);
+    ret = sk_io_push(io_bridge->dst_io, SK_IO_INPUT, events, copy_cnt);
     SK_ASSERT(!ret);
     free(events);
 }
@@ -85,12 +87,31 @@ void sk_io_bridge_destroy(sk_io_bridge_t* io_bridge)
 }
 
 // working flow:
-// 1. notify the dst eventloop how many events from src io's output mq
-// 2. dst eventloop receive the notification, then fetch the events to dst io's
+// 1. try to copy all the events from src_io into io_bridge's mq
+// 2. notify the dst eventloop how many events from io_bridge's mq
+// 3. dst eventloop receive the notification, then fetch the events to dst io's
 //    input mq
-// 3. waiting for dst's scheduler to consume the events
+// 4. waiting for dst's scheduler to consume the events
 void sk_io_bridge_deliver(sk_io_bridge_t* io_bridge)
 {
+    // calculate how many events can be transferred
     int event_cnt = sk_io_used(io_bridge->src_io, SK_IO_OUTPUT);
+    if (event_cnt == 0) {
+        return;
+    }
+    int free_slots = fmbuf_free(io_bridge->mq) / SK_EVENT_SZ;
+    int transfer_cnt = free_slots > event_cnt ? event_cnt : free_slots;
+    int transfer_sz = transfer_cnt * SK_EVENT_SZ;
+
+    // copy events from src_io to io bridge's mq
+    sk_event_t* transfer_events = malloc(transfer_sz);
+    int nevents = sk_io_pull(io_bridge->src_io, SK_IO_OUTPUT,
+                         transfer_events, transfer_cnt);
+    SK_ASSERT(nevents == transfer_cnt);
+    int ret = fmbuf_push(io_bridge->mq, transfer_events, transfer_sz);
+    SK_ASSERT(!ret);
+    free(transfer_events);
+
+    // notify dst eventloop the data is ready
     eventfd_write(io_bridge->evfd, event_cnt);
 }
