@@ -13,6 +13,15 @@
 #define SK_SCHED_MAX_IO        10
 #define SK_SCHED_MAX_IO_BRIDGE 10
 
+#define SK_IO_STAT_READY 0
+#define SK_IO_STAT_PAUSE 1
+
+typedef struct sk_sched_io_t {
+    int type;
+    int status;
+    sk_io_t* io;
+} sk_sched_io_t;
+
 struct sk_sched_t {
     void* evlp;
     sk_sched_opt_t  opt;
@@ -29,6 +38,19 @@ struct sk_sched_t {
 
 // INTERNAL APIs
 
+static
+void _check_ptos(sk_event_opt_t** pto_tbl)
+{
+    if (!pto_tbl) {
+        return;
+    }
+
+    for (int i = 0; pto_tbl[i] != NULL; i++) {
+        sk_event_opt_t* pto = pto_tbl[i];
+        SK_ASSERT(pto->req);
+    }
+}
+
 // NOTE: need to add a selecting strategy
 static
 sk_sched_io_t* _get_io(sk_sched_t* sched, int deliver_to)
@@ -44,6 +66,46 @@ sk_sched_io_t* _get_io(sk_sched_t* sched, int deliver_to)
 }
 
 static
+void _run_req_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event,
+                    sk_event_opt_t* pto)
+{
+    pto->req(sched, event);
+
+    if (pto->req_end && !pto->req_end(sched, event)) {
+        SK_ASSERT(!sk_io_push(io, SK_IO_INPUT, event, 1));
+        return;
+    }
+
+    if (pto->resp) {
+        event->type = SK_EV_RESP;
+        SK_ASSERT(!sk_io_push(io, SK_IO_OUTPUT, event, 1));
+        return;
+    }
+
+    if (pto->destroy) {
+        pto->destroy(sched, event);
+    }
+}
+
+static
+void _run_resp_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event,
+                     sk_event_opt_t* pto)
+{
+    if (pto->resp) {
+        pto->resp(sched, event);
+    }
+
+    if (pto->resp_end && !pto->resp_end(sched, event)) {
+        SK_ASSERT(!sk_io_push(io, SK_IO_OUTPUT, event, 1));
+        return;
+    }
+
+    if (pto->destroy) {
+        pto->destroy(sched, event);
+    }
+}
+
+static
 int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 {
     uint32_t pto_id = event->pto_id;
@@ -52,25 +114,11 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     SK_ASSERT(event_opt);
 
     if (event->type == SK_EV_REQ) {
-        event_opt->req(sched, event);
-
-        if (event_opt->resp) {
-            event->type = SK_EV_RESP;
-            SK_ASSERT(!sk_io_push(io, SK_IO_OUTPUT, event, 1));
-        }
+        _run_req_event(sched, io, event, event_opt);
     } else {
-        if (event_opt->resp) {
-            event_opt->resp(sched, event);
-        }
+        _run_resp_event(sched, io, event, event_opt);
     }
 
-    if (event_opt->end(sched, event)) {
-        if (event_opt->destroy) {
-            event_opt->destroy(sched, event);
-        }
-    } else {
-        SK_ASSERT(!sk_io_push(io, SK_IO_INPUT, event, 1));
-    }
     return 0;
 }
 
@@ -97,6 +145,7 @@ sk_sched_t* sk_sched_create(void* evlp, sk_sched_opt_t opt)
     sched->io_bridge_size = 0;
     sched->running = 0;
 
+    _check_ptos(opt.pto_tbl);
     return sched;
 }
 
@@ -178,6 +227,9 @@ int sk_sched_reg_io_bridge(sk_sched_t* sched,
 // sk_io
 int sk_sched_push(sk_sched_t* sched, sk_event_t* event)
 {
+    // the event must always initialized with SK_PTO_REQ
+    event->type = SK_EV_REQ;
+
     int deliver_to = event->deliver;
     sk_sched_io_t* io = _get_io(sched, deliver_to);
     SK_ASSERT(io);
@@ -186,8 +238,9 @@ int sk_sched_push(sk_sched_t* sched, sk_event_t* event)
         return 1;
     }
 
-    if (sk_io_free(io->io, event->ev_type)) {
-        SK_ASSERT(!sk_io_push(io->io, event->ev_type, event, 1));
+    int io_type = event->ev_type == SK_EV_INCOMING ? SK_IO_INPUT : SK_IO_OUTPUT;
+    if (sk_io_free(io->io, io_type)) {
+        SK_ASSERT(!sk_io_push(io->io, io_type, event, 1));
     }
     return 0;
 }

@@ -36,19 +36,13 @@ void _skull_setup_io(skull_core_t* core)
         sk_sched_reg_io(worker_sched->sched, SK_IO_NET_ACCEPT, worker_accept_io);
         sk_sched_reg_io(worker_sched->sched, SK_IO_NET_SOCK, worker_net_io);
 
-        // set up the double linked io bridge for accept io
-        sk_io_bridge_t* worker_io_bridge = sk_io_bridge_create(
-                                                    worker_accept_io,
-                                                    main_accept_io,
-                                                    main_sched->evlp,
-                                                    1024);
+        // set up the io bridge for accept io
         sk_io_bridge_t* main_io_bridge = sk_io_bridge_create(
                                                     main_accept_io,
                                                     worker_accept_io,
                                                     worker_sched->evlp,
                                                     1024);
 
-        sk_sched_reg_io_bridge(worker_sched->sched, worker_io_bridge);
         sk_sched_reg_io_bridge(main_sched->sched, main_io_bridge);
     }
 }
@@ -57,13 +51,12 @@ static
 void _sk_accept(fev_state* fev, int fd, void* ud)
 {
     skull_sched_t* sched = ud;
+
     sk_event_t event;
     event.deliver = SK_IO_NET_ACCEPT;
     event.ev_type = SK_EV_OUTGOING;
-    event.type    = SK_EV_REQ;
     event.pto_id  = SK_PTO_NET_ACCEPT;
     event.data.d.u32 = fd;
-
     sk_sched_push(sched->sched, &event);
 }
 

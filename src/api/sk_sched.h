@@ -5,19 +5,11 @@
 #include "api/sk_io.h"
 #include "api/sk_io_bridge.h"
 
+// SUPPORTED IO TYPE
 #define SK_IO_NET_ACCEPT 0
 #define SK_IO_NET_SOCK   1
 
-#define SK_IO_STAT_READY 0
-#define SK_IO_STAT_PAUSE 1
-
 typedef struct sk_sched_t sk_sched_t;
-
-typedef struct sk_sched_io_t {
-    int type;
-    int status;
-    sk_io_t* io;
-} sk_sched_io_t;
 
 typedef struct sk_sched_opt_t {
     sk_event_opt_t**  pto_tbl;

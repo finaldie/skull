@@ -17,9 +17,9 @@ int _req(sk_sched_t* sched, sk_event_t* event)
 }
 
 static
-int _end(sk_sched_t* sched, sk_event_t* event)
+int _req_end(sk_sched_t* sched, sk_event_t* event)
 {
-    printf("event end\n");
+    printf("req event end\n");
     return 1;
 }
 
@@ -30,8 +30,9 @@ void _destroy(sk_sched_t* sched, sk_event_t* event)
 }
 
 sk_event_opt_t sk_pto_net_proc = {
-    .req = _req,
+    .req  = _req,
     .resp = NULL,
-    .end = _end,
-    .destroy = _destroy
+    .req_end  = _req_end,
+    .resp_end = NULL,
+    .destroy  = _destroy
 };

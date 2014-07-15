@@ -23,9 +23,8 @@ void _read(fev_state* fev, fev_buff* evbuff, void* arg)
     }
 
     sk_event_t event;
-    event.ev_type = SK_EV_INCOMING;
-    event.type    = SK_EV_REQ;
     event.deliver = SK_IO_NET_SOCK;
+    event.ev_type = SK_EV_INCOMING;
     event.pto_id  = SK_PTO_NET_PROC;
     event.data.d.ud = data;
     event.data.sz = bytes;
@@ -35,6 +34,7 @@ void _read(fev_state* fev, fev_buff* evbuff, void* arg)
 static
 void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {
+    printf("evbuff destroy...\n");
     int fd = fevbuff_destroy(evbuff);
     close(fd);
 }
@@ -52,15 +52,16 @@ int _req(sk_sched_t* sched, sk_event_t* event)
 }
 
 static
-int _end(sk_sched_t* sched, sk_event_t* event)
+int _req_end(sk_sched_t* sched, sk_event_t* event)
 {
-    printf("event end\n");
+    printf("req event end\n");
     return 1;
 }
 
 sk_event_opt_t sk_pto_net_accept = {
-    .req = _req,
+    .req  = _req,
     .resp = NULL,
-    .end = _end,
-    .destroy = NULL
+    .req_end  = _req_end,
+    .resp_end = NULL,
+    .destroy  = NULL
 };

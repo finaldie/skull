@@ -31,10 +31,11 @@ typedef struct sk_event_t {
 
 struct sk_sched_t;
 typedef struct sk_event_opt_t {
-    int  (*req)     (struct sk_sched_t* sched, sk_event_t* event);
-    int  (*resp)    (struct sk_sched_t* sched, sk_event_t* event);
-    int  (*end)     (struct sk_sched_t* sched, sk_event_t* event);
-    void (*destroy) (struct sk_sched_t* sched, sk_event_t* event);
+    int  (*req)      (struct sk_sched_t* sched, sk_event_t* event);
+    int  (*resp)     (struct sk_sched_t* sched, sk_event_t* event);
+    int  (*req_end)  (struct sk_sched_t* sched, sk_event_t* event);
+    int  (*resp_end) (struct sk_sched_t* sched, sk_event_t* event);
+    void (*destroy)  (struct sk_sched_t* sched, sk_event_t* event);
 } sk_event_opt_t;
 
 // Protocol IDs
