@@ -51,8 +51,7 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
     int ret = fmbuf_pop(io_bridge->mq, events, copy_sz);
     SK_ASSERT(!ret);
 
-    ret = sk_io_push(io_bridge->dst_io, SK_IO_INPUT, events, copy_cnt);
-    SK_ASSERT(!ret);
+    sk_io_push(io_bridge->dst_io, SK_IO_INPUT, events, copy_cnt);
     free(events);
 }
 

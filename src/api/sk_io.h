@@ -15,9 +15,7 @@ void sk_io_destroy(sk_io_t* io);
 #define SK_IO_OUTPUT 1
 
 // push N events into sk_io input or output queue
-// return - 0: success
-//        - 1: failed
-int sk_io_push(sk_io_t* io, int type, sk_event_t* events, int nevents);
+void sk_io_push(sk_io_t* io, int type, sk_event_t* events, int nevents);
 
 // try to pull N events from sk_io (input or output) queue
 // return the actual event count

@@ -2,7 +2,7 @@ MAKE ?= make
 
 MAKE_FLAGS += "--no-print-directory"
 
-all: dep core
+all: core
 
 dep:
 	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs || exit "$$?"

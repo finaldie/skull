@@ -72,13 +72,13 @@ void _run_req_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event,
     pto->req(sched, event);
 
     if (pto->req_end && !pto->req_end(sched, event)) {
-        SK_ASSERT(!sk_io_push(io, SK_IO_INPUT, event, 1));
+        sk_io_push(io, SK_IO_INPUT, event, 1);
         return;
     }
 
     if (pto->resp) {
         event->type = SK_EV_RESP;
-        SK_ASSERT(!sk_io_push(io, SK_IO_OUTPUT, event, 1));
+        sk_io_push(io, SK_IO_OUTPUT, event, 1);
         return;
     }
 
@@ -96,7 +96,7 @@ void _run_resp_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event,
     }
 
     if (pto->resp_end && !pto->resp_end(sched, event)) {
-        SK_ASSERT(!sk_io_push(io, SK_IO_OUTPUT, event, 1));
+        sk_io_push(io, SK_IO_OUTPUT, event, 1);
         return;
     }
 
@@ -240,7 +240,7 @@ int sk_sched_push(sk_sched_t* sched, sk_event_t* event)
 
     int io_type = event->ev_type == SK_EV_INCOMING ? SK_IO_INPUT : SK_IO_OUTPUT;
     if (sk_io_free(io->io, io_type)) {
-        SK_ASSERT(!sk_io_push(io->io, io_type, event, 1));
+        sk_io_push(io->io, io_type, event, 1);
     }
     return 0;
 }
