@@ -38,7 +38,8 @@ COMMON_OBJS = \
 COMPONENTS_OBJS = \
     components/sk_main_sched.o \
     components/sk_worker_sched.o \
-    components/sk.o
+    components/sk.o \
+    components/sk_conn_mgr.o
 
 LOADER_OBJS = \
     loaders/c_loader.o
