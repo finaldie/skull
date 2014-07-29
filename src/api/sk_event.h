@@ -26,6 +26,8 @@ typedef struct sk_event_t {
     uint32_t reserved :20;
     uint32_t pto_id;
 
+    void*    entity;        // who the event is belongs to
+    size_t   sz;            // data size
     sk_ud_t  data;
 } sk_event_t;
 

@@ -4,14 +4,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef struct sk_ud_t {
-    union data {
-       uint32_t u32;
-       uint64_t u64;
-       void*    ud;
-    } d;
-
-    size_t sz;
+typedef union sk_ud_t {
+    uint32_t u32;
+    uint64_t u64;
+    void*    ud;
 } sk_ud_t;
 
 #endif

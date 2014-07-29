@@ -56,7 +56,7 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
     event.deliver = SK_IO_NET_ACCEPT;
     event.ev_type = SK_EV_OUTGOING;
     event.pto_id  = SK_PTO_NET_ACCEPT;
-    event.data.d.u32 = fd;
+    event.data.u32 = fd;
     sk_sched_push(sched->sched, &event);
 }
 

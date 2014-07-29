@@ -4,7 +4,7 @@
 #include "api/sk_event.h"
 #include "api/sk_io.h"
 #include "api/sk_io_bridge.h"
-#include "api/sk_conn_mgr.h"
+#include "api/sk_entity_mgr.h"
 
 // SUPPORTED IO TYPE
 #define SK_IO_NET_ACCEPT 0
@@ -26,7 +26,7 @@ int sk_sched_reg_io(sk_sched_t* sched, int io_type, sk_io_t* io);
 int sk_sched_reg_io_bridge(sk_sched_t* sched, sk_io_bridge_t* io_bridge);
 
 void* sk_sched_get_eventloop(sk_sched_t* sched);
-sk_conn_mgr_t* sk_sched_get_conn_mgr(sk_sched_t* sched);
+sk_entity_mgr_t* sk_sched_entity_mgr(sk_sched_t* sched);
 int sk_sched_push(sk_sched_t* sched, sk_event_t* event);
 
 // main and worker scheduler
