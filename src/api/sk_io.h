@@ -1,4 +1,8 @@
-// sk_io is a message queue which controlled by scheduler
+// sk_io is a message queue which controlled by scheduler.
+// sk_io have two message queues: one is input queue, the other is output queue.
+//   - The input queue can be triggered by system or user.
+//   - The output queue is used for transmit an event to other sk_io's input
+//     queue.
 
 #ifndef SK_IO_H
 #define SK_IO_H
@@ -8,7 +12,7 @@
 
 typedef struct sk_io_t sk_io_t;
 
-sk_io_t* sk_io_create(int size);
+sk_io_t* sk_io_create(int input_sz, int output_sz);
 void sk_io_destroy(sk_io_t* io);
 
 #define SK_IO_INPUT  0

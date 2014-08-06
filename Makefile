@@ -4,8 +4,13 @@ MAKE_FLAGS += "--no-print-directory"
 
 all: core
 
-dep:
+flibs:
 	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs || exit "$$?"
+
+protos:
+	cd src && $(MAKE) $@
+
+dep: flibs protos
 
 core:
 	cd src && $(MAKE)
@@ -24,5 +29,6 @@ clean: clean_dep
 
 clean_dep:
 	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs clean || exit "$$?"
+	cd src && $(MAKE) clean_protos
 
-.PHONY: all dep clean clean_dep core check valgrind-check install
+.PHONY: all dep clean clean_dep core check valgrind-check install flibs protos

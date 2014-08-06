@@ -1,0 +1,3 @@
+message net_proc {
+    required bytes data = 1;
+}

@@ -6,50 +6,8 @@
 #include "fev/fev_buff.h"
 #include "api/sk_assert.h"
 #include "api/sk_event.h"
+#include "api/sk_pto.h"
 #include "api/sk_sched.h"
-
-typedef struct sk_net_data_t {
-    fev_buff* evbuff;
-} sk_net_data_t;
-
-static
-int net_read(sk_entity_t* entity, void* buf, int len, void* ud)
-{
-    sk_net_data_t* net_data = ud;
-    fev_buff* evbuff = net_data->evbuff;
-
-    return fevbuff_read(evbuff, buf, len);
-}
-
-static
-int net_write(sk_entity_t* entity, const void* buf, int len, void* ud)
-{
-    sk_net_data_t* net_data = ud;
-    fev_buff* evbuff = net_data->evbuff;
-
-    return fevbuff_write(evbuff, buf, len);
-}
-
-static
-void net_error(sk_entity_t* entity, void* ud)
-{
-}
-
-static
-void net_destroy(sk_entity_t* entity, void* ud)
-{
-    printf("net_destroy\n");
-    sk_net_data_t* net_data = ud;
-    fevbuff_destroy(net_data->evbuff);
-    free(net_data);
-}
-
-sk_entity_opt_t net_opt = {
-    .read = net_read,
-    .write = net_write,
-    .error = net_error,
-    .destroy = net_destroy
-};
 
 // -----------------------------------------------------------------------------
 
@@ -60,70 +18,62 @@ static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_entity_t* entity = arg;
-    sk_entity_mgr_t* entity_mgr = sk_entity_owner(entity);
-    sk_sched_t* sched = sk_entity_mgr_owner(entity_mgr);
+    sk_sched_t* sched = sk_entity_sched(entity);
 
-    void* data = calloc(1, 1024);
-    int bytes = sk_entity_read(entity, data, 1024);
+    // calculate how many bytes we need to read
+    size_t used_len = fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
+    int read_len = 0;
+    if (used_len == 0) {
+        read_len = 1024;
+    } else {
+        read_len *= used_len * 2;
+    }
+
+    int bytes = sk_entity_read(entity, NULL, read_len);
     if (bytes <= 0) {
         printf("buffer cannot read\n");
-        free(data);
         return;
     }
 
-    sk_event_t event;
-    event.deliver = SK_IO_NET_SOCK;
-    event.ev_type = SK_EV_INCOMING;
-    event.pto_id  = SK_PTO_NET_PROC;
-    event.entity  = entity;
-    event.sz = bytes;
-    event.data.ud = data;
-    sk_sched_push(sched, &event);
+    NetProc net_proc_msg = NET_PROC__INIT;
+    net_proc_msg.data.len = bytes;
+    net_proc_msg.data.data = fevbuff_rawget(evbuff);
+    sk_sched_push(sched, entity, SK_PTO_NET_PROC, &net_proc_msg);
 
     // consume the evbuff
     fevbuff_pop(evbuff, bytes);
 }
 
+// mark this entity as inactived, so that the scheduler will destory it later
 static
 void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     printf("evbuff destroy...\n");
     sk_entity_t* entity = arg;
-    sk_entity_mgr_t* entity_mgr = sk_entity_owner(entity);
-
-    sk_entity_mgr_del(entity_mgr, entity);
+    sk_entity_mark_inactive(entity);
 }
 
 // register the new sock fd into eventloop
 static
-int _req(sk_sched_t* sched, sk_event_t* event)
+int _req(sk_sched_t* sched, sk_entity_t* entity, void* proto_msg)
 {
     printf("event req\n");
-    fev_state* fev = sk_sched_get_eventloop(sched);
-    int client_fd = event->data.u32;
-    sk_entity_mgr_t* entity_mgr = sk_sched_entity_mgr(sched);
-    sk_net_data_t* net_data = malloc(sizeof(*net_data));
+    NetAccept* accept_msg = proto_msg;
+    int client_fd = accept_msg->fd;
 
-    sk_entity_t* entity = sk_entity_create(client_fd, net_data, net_opt);
+    fev_state* fev = sk_sched_get_eventloop(sched);
     fev_buff* evbuff = fevbuff_new(fev, client_fd, _read_cb, _error, entity);
     SK_ASSERT(evbuff);
 
-    net_data->evbuff = evbuff;
-    sk_entity_mgr_add(entity_mgr, entity);
+    sk_net_entity_create(entity, evbuff);
     return 0;
 }
 
-static
-int _req_end(sk_sched_t* sched, sk_event_t* event)
-{
-    printf("req event end\n");
-    return 1;
-}
-
-sk_event_opt_t sk_pto_net_accept = {
-    .req  = _req,
-    .resp = NULL,
-    .req_end  = _req_end,
-    .resp_end = NULL,
-    .destroy  = NULL
+sk_proto_t sk_pto_net_accept = {
+    .priority = 10,
+    .descriptor = &net_accept__descriptor,
+    .run = _req
 };
+
+
+//SK_PTO_INIT(net_accept, 10, _req);

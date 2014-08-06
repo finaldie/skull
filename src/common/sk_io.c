@@ -27,11 +27,11 @@ int _get_new_size(fmbuf* mq, int nevents)
     return new_sz > 0 ? new_sz : INT32_MAX;
 }
 
-sk_io_t* sk_io_create(int size)
+sk_io_t* sk_io_create(int input_sz, int output_sz)
 {
     sk_io_t* io = malloc(sizeof(*io));
-    io->mq[0] = fmbuf_create(SK_EVENT_SZ * size); // SK_IO_INPUT
-    io->mq[1] = fmbuf_create(SK_EVENT_SZ * size); // SK_IO_OUTPUT
+    io->mq[0] = fmbuf_create(SK_EVENT_SZ * input_sz); // SK_IO_INPUT
+    io->mq[1] = fmbuf_create(SK_EVENT_SZ * output_sz); // SK_IO_OUTPUT
 
     return io;
 }

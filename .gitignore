@@ -32,3 +32,6 @@ tags
 # cscope
 .cscope.*
 cscope.*
+
+# protobuf-c
+*.pb-c.*

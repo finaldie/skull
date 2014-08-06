@@ -8,9 +8,9 @@
 #include "fev/fev_listener.h"
 
 #include "api/sk_types.h"
-#include "api/sk_eventloop.h"
-#include "api/sk_io.h"
 #include "api/sk_assert.h"
+#include "api/sk_eventloop.h"
+#include "api/sk_pto.h"
 #include "api/sk.h"
 
 // INTERNAL APIs
@@ -19,31 +19,17 @@ void _skull_setup_io(skull_core_t* core)
 {
     skull_sched_t* main_sched = &core->main_sched;
     main_sched->evlp = sk_eventloop_create();
-    main_sched->sched = sk_main_sched_create(main_sched->evlp,
-                                             SK_SCHED_STRATEGY_THROUGHPUT);
+    sk_sched_opt_t main_opt = {0};
+    main_sched->sched = sk_sched_create(main_sched->evlp, main_opt);
 
+    sk_sched_opt_t worker_opt = {.pto_tbl = sk_pto_tbl};
     for (int i = 0; i < SKULL_WORKER_NUM; i++) {
         skull_sched_t* worker_sched = &core->worker_sched[i];
 
         worker_sched->evlp = sk_eventloop_create();
-        worker_sched->sched = sk_worker_sched_create(worker_sched->evlp,
-                                            SK_SCHED_STRATEGY_THROUGHPUT);
-        sk_io_t* main_accept_io = sk_io_create(1024);
-        sk_io_t* worker_accept_io = sk_io_create(1024);
-        sk_io_t* worker_net_io = sk_io_create(65535);
+        worker_sched->sched = sk_sched_create(worker_sched->evlp, worker_opt);
 
-        sk_sched_reg_io(main_sched->sched, SK_IO_NET_ACCEPT, main_accept_io);
-        sk_sched_reg_io(worker_sched->sched, SK_IO_NET_ACCEPT, worker_accept_io);
-        sk_sched_reg_io(worker_sched->sched, SK_IO_NET_SOCK, worker_net_io);
-
-        // set up the io bridge for accept io
-        sk_io_bridge_t* main_io_bridge = sk_io_bridge_create(
-                                                    main_accept_io,
-                                                    worker_accept_io,
-                                                    worker_sched->evlp,
-                                                    1024);
-
-        sk_sched_reg_io_bridge(main_sched->sched, main_io_bridge);
+        sk_sched_setup_bridge(main_sched->sched, worker_sched->sched);
     }
 }
 
@@ -52,12 +38,9 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
 {
     skull_sched_t* sched = ud;
 
-    sk_event_t event;
-    event.deliver = SK_IO_NET_ACCEPT;
-    event.ev_type = SK_EV_OUTGOING;
-    event.pto_id  = SK_PTO_NET_ACCEPT;
-    event.data.u32 = fd;
-    sk_sched_push(sched->sched, &event);
+    NetAccept accept_msg;
+    accept_msg.fd = fd;
+    sk_sched_send(sched->sched, SK_PTO_NET_ACCEPT, &accept_msg);
 }
 
 static

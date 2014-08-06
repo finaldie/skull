@@ -1,22 +1,26 @@
 
 # compiling flags
 STD = -std=c99 -pedantic
-WARN = -Wall -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Wpadded -Winline -Wdisabled-optimization
+WARN = -Wall -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
+EXTRA = -Wpadded
 OPT = -O2
 DEBUG = -g -ggdb
 OTHER = -pipe
 INC = \
     -I. \
-    -I../deps/flibs
+    -I../deps/flibs \
+    -isystem./pto/idls
 
 # linking flags
 DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib64
-SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(DEBUG) $(OPT) $(OTHER) $(INC)
+SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(DEBUG) $(OPT) $(OTHER) $(INC)
+SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(DEBUG) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(DEBUG) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_LIBS = -ldl -pthread -lrt -lfev -lfnet -lfhash -lfmbuf -lflist
+SKULL_LIBS = -ldl -pthread -lrt -lfev -lfnet -lfhash -lfmbuf -lflist -lprotobuf-c
 
 # CC and LD
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
+SKULL_TP_CC = $(CC) $(SKULL_TP_CFLAGS)
 SKULL_LD = $(CC) $(SKULL_LDFLAGS)
 
 # prefix
@@ -30,14 +34,15 @@ COMMON_OBJS = \
     common/sk_loader.o \
     common/sk_assert.o \
     common/sk_io.o \
-    common/sk_sched.o \
     common/sk_eventloop.o \
-    common/sk_io_bridge.o \
     common/sk_event.o
 
+ENTITY_OBJS = \
+    entities/sk_entity.o \
+    entities/sk_net_entity.o
+
 COMPONENTS_OBJS = \
-    components/sk_main_sched.o \
-    components/sk_worker_sched.o \
+    components/sk_sched.o \
     components/sk.o \
     components/sk_entity_mgr.o
 
@@ -49,21 +54,47 @@ PTO_OBJS = \
     pto/sk_pto_net_accept.o \
     pto/sk_pto_net_proc.o
 
+PTO_IDLS_OBJS = \
+    pto/idls/net_accept.pb-c.o \
+    pto/idls/net_proc.pb-c.o
+
 SKULL_MAIN_OBJ = main.o
 
 SKULL_OBJS = \
     $(COMMON_OBJS) \
+    $(ENTITY_OBJS) \
     $(COMPONENTS_OBJS) \
     $(LOADER_OBJS) \
     $(SKULL_MAIN_OBJ) \
-    $(PTO_OBJS)
+    $(PTO_OBJS) \
+    $(PTO_IDLS_OBJS)
+
+PROTO_IDLS = \
+    net_accept.proto \
+    net_proc.proto
 
 # target rules
 $(SKULL_ENGINE): $(SKULL_OBJS)
 	$(SKULL_LD) -o $@ $^ $(SKULL_LIBS)
 
+# compile protocol file without -Wpadded
+%.pb-c.o: %.pb-c.c
+	$(SKULL_TP_CC) -c $< -o $@
+
 %.o: %.c
 	$(SKULL_CC) -c $< -o $@
+
+# compile proto idls
+protos: $(PROTO_IDLS)
+
+%.proto:
+	cd pto/idls && protoc-c --c_out=. $@
+
+
+#	cd pto/idls && ./generate_pto_tbl.py -f $@ -o ../
+
+clean_protos:
+	rm -f pto/idls/*.pb-c.*
 
 install:
 	test -d $(prefix)/bin || mkdir -p $(prefix)/bin
@@ -72,4 +103,4 @@ install:
 clean:
 	rm -f $(SKULL_ENGINE) $(SKULL_OBJS)
 
-.PHONY: skull clean $(SKULL_ENGINE) install
+.PHONY: skull clean $(SKULL_ENGINE) install protos clean_protos
