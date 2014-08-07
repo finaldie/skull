@@ -1,15 +1,22 @@
+debug ?= false
 
 # compiling flags
-STD = -std=c99 -pedantic
+STD = -pedantic -std=c99
 WARN = -Wall -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
 EXTRA = -Wpadded
-OPT = -O2
-DEBUG = -g -ggdb
-OTHER = -pipe
+OTHER = -pipe -g -ggdb
 INC = \
     -I. \
     -I../deps/flibs \
     -isystem./pto/idls
+
+ifeq ($(debug), false)
+OPT = -O2
+DEBUG =
+else
+OPT =
+DEBUG = -DSK_DEBUG
+endif
 
 # linking flags
 DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib64

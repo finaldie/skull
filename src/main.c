@@ -2,11 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "api/sk_utils.h"
 #include "api/sk.h"
 
 int main(int argc, char** argv)
 {
-    printf("hello skull engine\n");
+    sk_print("hello skull engine\n");
 
     skull_core_t core;
     memset(&core, 0, sizeof(core));

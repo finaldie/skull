@@ -5,27 +5,39 @@
 #include <stdarg.h>
 
 // INTERNALs
+// NOTE: DO NOT USE THESE DIRECTLY!
 #define TO_STR(x) #x
+#define EXTRACT_STR(x) TO_STR(x)
+void sk_assert_exit(const char* expr, const char* file, int lineno);
+void sk_assert_exit_with_msg(const char* format, ...);
 
 
 // APIs
+
+// ASSERTIONS
 #define SK_ASSERT(expr) \
     if (!(expr)) { \
         sk_assert_exit(#expr, __FILE__, __LINE__); \
     }
 
-#define SK_ASSERT_MSG(expr, format, ...) \
+#define SK_ASSERT_MSG(expr, ...) \
     if (!(expr)) { \
-        va_list args; \
-        va_start(args, format); \
-        sk_assert_exit_with_msg("FATAL: assert [" #expr "] failed - " \
-                                __FILE__ ":" TO_STR(__LINE__) format, \
-                                #expr, __FILE__, __LINE__ , args); \
-        va_end(args); \
+        sk_assert_exit_with_msg("FATAL: assert [" #expr "] failed, " \
+                                __FILE__ ":" EXTRACT_STR(__LINE__) " - " \
+                                __VA_ARGS__); \
     }
 
-void sk_assert_exit(const char* expr, const char* file, int lineno);
-void sk_assert_exit_with_msg(const char* format, va_list args);
 
+// debug print
+#ifdef SK_DEBUG
+# define sk_print(...) \
+    do { \
+        printf(__FILE__ ":" EXTRACT_STR(__LINE__) " - " __VA_ARGS__); \
+    } while (0)
+
+#else
+# define sk_print(...)
 #endif
+
+#endif // end of SK_UTILS_H
 
