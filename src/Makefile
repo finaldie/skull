@@ -32,7 +32,7 @@ SKULL_ENGINE = skull
 # Objs
 COMMON_OBJS = \
     common/sk_loader.o \
-    common/sk_assert.o \
+    common/sk_utils.o \
     common/sk_io.o \
     common/sk_eventloop.o \
     common/sk_event.o

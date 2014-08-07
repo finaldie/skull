@@ -8,7 +8,7 @@
 #include "fev/fev_listener.h"
 
 #include "api/sk_types.h"
-#include "api/sk_assert.h"
+#include "api/sk_utils.h"
 #include "api/sk_eventloop.h"
 #include "api/sk_pto.h"
 #include "api/sk.h"

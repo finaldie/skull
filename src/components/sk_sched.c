@@ -8,7 +8,7 @@
 
 #include "fmbuf/fmbuf.h"
 #include "fev/fev.h"
-#include "api/sk_assert.h"
+#include "api/sk_utils.h"
 #include "api/sk_pto.h"
 #include "api/sk_event.h"
 #include "api/sk_eventloop.h"
@@ -223,7 +223,6 @@ int _emit_event(sk_sched_t* sched, int io_type, int fd,
     event.data = malloc(event.sz);
     size_t packed_sz = protobuf_c_message_pack(proto_msg, event.data);
     SK_ASSERT(packed_sz == (size_t)event.sz);
-    SK_ASSERT(packed_sz != 0);
 
     sk_io_t* io = _get_io(sched, pto->priority);
     SK_ASSERT(io);

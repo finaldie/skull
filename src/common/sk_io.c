@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include "fmbuf/fmbuf.h"
-#include "api/sk_assert.h"
+#include "api/sk_utils.h"
 #include "api/sk_io.h"
 
 struct sk_io_t {
