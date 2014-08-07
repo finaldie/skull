@@ -35,14 +35,24 @@ struct sk_sched_t* sk_entity_mgr_owner(sk_entity_mgr_t* mgr)
     return mgr->owner;
 }
 
-void sk_entity_mgr_add(sk_entity_mgr_t* mgr, sk_entity_t* entity)
+sk_entity_t* sk_entity_mgr_get(sk_entity_mgr_t* mgr, int fd)
 {
-    fhash_int_set(mgr->entity_mgr, sk_entity_fd(entity), entity);
+    return fhash_int_get(mgr->entity_mgr, fd);
+}
+
+void sk_entity_mgr_add(sk_entity_mgr_t* mgr, int fd, sk_entity_t* entity)
+{
+    fhash_int_set(mgr->entity_mgr, fd, entity);
     sk_entity_set_owner(entity, mgr);
 }
 
-sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
+sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, int fd)
 {
+    sk_entity_t* entity = sk_entity_mgr_get(mgr, fd);
+    if (!entity) {
+        return NULL;
+    }
+
     if (sk_entity_status(entity) == SK_ENTITY_DEAD) {
         // already dead, it will be destroy totally when the clean_dead be
         // called
@@ -50,14 +60,11 @@ sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
     }
 
     sk_entity_mark_dead(entity);
-    sk_entity_t* deleted_entity = fhash_int_del(mgr->entity_mgr,
-                                                sk_entity_fd(entity));
-    SK_ASSERT(deleted_entity == entity);
 
-    int ret = flist_push(mgr->inactive_entitys, deleted_entity);
+    int ret = flist_push(mgr->inactive_entitys, entity);
     SK_ASSERT(!ret);
 
-    return deleted_entity;
+    return entity;
 }
 
 void sk_entity_mgr_foreach(sk_entity_mgr_t* mgr,
@@ -80,6 +87,10 @@ void sk_entity_mgr_clean_dead(sk_entity_mgr_t* mgr)
 {
     while (!flist_empty(mgr->inactive_entitys)) {
         sk_entity_t* entity = flist_pop(mgr->inactive_entitys);
+
+        sk_entity_t* deleted_entity = fhash_int_del(mgr->entity_mgr,
+                                                    sk_entity_fd(entity));
+        SK_ASSERT(deleted_entity == entity);
         sk_entity_destroy(entity);
     }
 }

@@ -9,7 +9,6 @@
 typedef struct skull_sched_t {
     pthread_t   io_thread;
     sk_sched_t* sched;
-    void*       evlp;
 } skull_sched_t;
 
 typedef struct skull_core_t {

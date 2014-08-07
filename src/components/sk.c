@@ -18,16 +18,11 @@ static
 void _skull_setup_io(skull_core_t* core)
 {
     skull_sched_t* main_sched = &core->main_sched;
-    main_sched->evlp = sk_eventloop_create();
-    sk_sched_opt_t main_opt = {0};
-    main_sched->sched = sk_sched_create(main_sched->evlp, main_opt);
+    main_sched->sched = sk_sched_create();
 
-    sk_sched_opt_t worker_opt = {.pto_tbl = sk_pto_tbl};
     for (int i = 0; i < SKULL_WORKER_NUM; i++) {
         skull_sched_t* worker_sched = &core->worker_sched[i];
-
-        worker_sched->evlp = sk_eventloop_create();
-        worker_sched->sched = sk_sched_create(worker_sched->evlp, worker_opt);
+        worker_sched->sched = sk_sched_create();
 
         sk_sched_setup_bridge(main_sched->sched, worker_sched->sched);
     }
@@ -38,9 +33,9 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
 {
     skull_sched_t* sched = ud;
 
-    NetAccept accept_msg;
+    NetAccept accept_msg = NET_ACCEPT__INIT;
     accept_msg.fd = fd;
-    sk_sched_send(sched->sched, SK_PTO_NET_ACCEPT, &accept_msg);
+    sk_sched_send(sched->sched, fd, SK_PTO_NET_ACCEPT, &accept_msg);
 }
 
 static
@@ -49,7 +44,8 @@ void _setup_listener(skull_sched_t* sched)
     int listen_fd = fnet_create_listen(NULL, 7758, 1024, 0);
     SK_ASSERT(listen_fd);
 
-    fev_listen_info* fli = fev_add_listener_byfd(sched->evlp, listen_fd,
+    fev_state* fev = sk_sched_eventloop(sched->sched);
+    fev_listen_info* fli = fev_add_listener_byfd(fev, listen_fd,
                                                  _sk_accept, sched);
     SK_ASSERT(fli);
 }
@@ -130,11 +126,9 @@ void skull_stop(skull_core_t* core)
     printf("skull engine stoping...\n");
     for (int i = 0; i < SKULL_WORKER_NUM; i++) {
         sk_sched_destroy(core->worker_sched[i].sched);
-        sk_eventloop_destroy(core->worker_sched[i].evlp);
     }
 
     sk_sched_destroy(core->main_sched.sched);
-    sk_eventloop_destroy(core->main_sched.evlp);
 }
 
 

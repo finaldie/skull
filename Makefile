@@ -24,11 +24,13 @@ valgrind-check:
 install:
 	cd src && $(MAKE) $@
 
-clean: clean_dep
+clean: clean_dep clean_protos
 	cd src && $(MAKE) $@
 
 clean_dep:
 	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs clean || exit "$$?"
-	cd src && $(MAKE) clean_protos
 
-.PHONY: all dep clean clean_dep core check valgrind-check install flibs protos
+clean_protos:
+	cd src && $(MAKE) $@
+
+.PHONY: all dep clean clean_dep clean_protos core check valgrind-check install flibs protos

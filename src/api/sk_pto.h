@@ -46,6 +46,11 @@ extern sk_proto_t sk_pto_net_accept;
 #define SK_PTO_NET_PROC   1
 extern sk_proto_t sk_pto_net_proc;
 
+// Protocol 3, net process
+#include "pto/idls/net_destroy.pb-c.h"
+#define SK_PTO_NET_DESTROY   2
+extern sk_proto_t sk_pto_net_destroy;
+
 // global protocol table
 extern sk_proto_t* sk_pto_tbl[];
 

@@ -19,6 +19,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_entity_t* entity = arg;
     sk_sched_t* sched = sk_entity_sched(entity);
+    int fd = sk_entity_fd(entity);
 
     // calculate how many bytes we need to read
     size_t used_len = fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
@@ -38,19 +39,23 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
     NetProc net_proc_msg = NET_PROC__INIT;
     net_proc_msg.data.len = bytes;
     net_proc_msg.data.data = fevbuff_rawget(evbuff);
-    sk_sched_push(sched, entity, SK_PTO_NET_PROC, &net_proc_msg);
+    sk_sched_push(sched, fd, SK_PTO_NET_PROC, &net_proc_msg);
 
     // consume the evbuff
     fevbuff_pop(evbuff, bytes);
 }
 
-// mark this entity as inactived, so that the scheduler will destory it later
+// send a destroy msg, so that the scheduler will destory it later
 static
 void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     printf("evbuff destroy...\n");
     sk_entity_t* entity = arg;
-    sk_entity_mark_inactive(entity);
+    sk_sched_t* sched = sk_entity_sched(entity);
+    int fd = fevbuff_get_fd(evbuff);
+
+    NetDestroy destroy_msg = NET_DESTROY__INIT;
+    sk_sched_push(sched, fd, SK_PTO_NET_DESTROY, &destroy_msg);
 }
 
 // register the new sock fd into eventloop
@@ -61,7 +66,7 @@ int _req(sk_sched_t* sched, sk_entity_t* entity, void* proto_msg)
     NetAccept* accept_msg = proto_msg;
     int client_fd = accept_msg->fd;
 
-    fev_state* fev = sk_sched_get_eventloop(sched);
+    fev_state* fev = sk_sched_eventloop(sched);
     fev_buff* evbuff = fevbuff_new(fev, client_fd, _read_cb, _error, entity);
     SK_ASSERT(evbuff);
 
@@ -70,10 +75,7 @@ int _req(sk_sched_t* sched, sk_entity_t* entity, void* proto_msg)
 }
 
 sk_proto_t sk_pto_net_accept = {
-    .priority = 10,
+    .priority = SK_PTO_PRI_8,
     .descriptor = &net_accept__descriptor,
     .run = _req
 };
-
-
-//SK_PTO_INIT(net_accept, 10, _req);

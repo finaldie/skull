@@ -52,11 +52,13 @@ LOADER_OBJS = \
 PTO_OBJS = \
     pto/sk_pto.o \
     pto/sk_pto_net_accept.o \
-    pto/sk_pto_net_proc.o
+    pto/sk_pto_net_proc.o \
+    pto/sk_pto_net_destroy.o
 
 PTO_IDLS_OBJS = \
     pto/idls/net_accept.pb-c.o \
-    pto/idls/net_proc.pb-c.o
+    pto/idls/net_proc.pb-c.o \
+    pto/idls/net_destroy.pb-c.o
 
 SKULL_MAIN_OBJ = main.o
 
@@ -71,7 +73,8 @@ SKULL_OBJS = \
 
 PROTO_IDLS = \
     net_accept.proto \
-    net_proc.proto
+    net_proc.proto \
+    net_destroy.proto
 
 # target rules
 $(SKULL_ENGINE): $(SKULL_OBJS)
