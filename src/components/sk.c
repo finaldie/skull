@@ -42,7 +42,7 @@ static
 void _setup_listener(skull_sched_t* sched)
 {
     int listen_fd = fnet_create_listen(NULL, 7758, 1024, 0);
-    SK_ASSERT(listen_fd);
+    SK_ASSERT_MSG(listen_fd, "listen_fd = %d\n", listen_fd);
 
     fev_state* fev = sk_sched_eventloop(sched->sched);
     fev_listen_info* fli = fev_add_listener_byfd(fev, listen_fd,
@@ -61,7 +61,7 @@ void _skull_setup_evloop(skull_core_t* core)
 static
 void* main_io_thread(void* arg)
 {
-    printf("main io thread started\n");
+    sk_print("main io thread started\n");
     sk_sched_t* sched = arg;
     sk_sched_start(sched);
 
@@ -71,7 +71,7 @@ void* main_io_thread(void* arg)
 static
 void* worker_io_thread(void* arg)
 {
-    printf("worker io thread started\n");
+    sk_print("worker io thread started\n");
     sk_sched_t* sched = arg;
     sk_sched_start(sched);
 
@@ -92,14 +92,14 @@ void skull_start(skull_core_t* core)
 {
     // 1. start the main io thread
     // 2. start the worker io threads
-    printf("skull engine starting...\n");
+    sk_print("skull engine starting...\n");
 
     // 1.
     skull_sched_t* main_sched = &core->main_sched;
     int ret = pthread_create(&main_sched->io_thread, NULL,
                              main_io_thread, main_sched->sched);
     if (ret) {
-        printf("create main io thread failed: %s\n", strerror(errno));
+        sk_print("create main io thread failed: %s\n", strerror(errno));
         exit(ret);
     }
 
@@ -109,7 +109,7 @@ void skull_start(skull_core_t* core)
         ret = pthread_create(&worker_sched->io_thread, NULL,
                              worker_io_thread, worker_sched->sched);
         if (ret) {
-            printf("create worker io thread failed: %s\n", strerror(errno));
+            sk_print("create worker io thread failed: %s\n", strerror(errno));
             exit(ret);
         }
     }
@@ -123,7 +123,7 @@ void skull_start(skull_core_t* core)
 
 void skull_stop(skull_core_t* core)
 {
-    printf("skull engine stoping...\n");
+    sk_print("skull engine stoping...\n");
     for (int i = 0; i < SKULL_WORKER_NUM; i++) {
         sk_sched_destroy(core->worker_sched[i].sched);
     }

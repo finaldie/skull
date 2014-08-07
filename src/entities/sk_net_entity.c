@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "fev/fev_buff.h"
+#include "api/sk_utils.h"
 #include "api/sk_entity_mgr.h"
 
 sk_entity_opt_t sk_net_entity_opt;
@@ -38,7 +39,7 @@ int net_write(sk_entity_t* entity, const void* buf, int len, void* ud)
 static
 void net_destroy(sk_entity_t* entity, void* ud)
 {
-    printf("net_destroy\n");
+    sk_print("net_destroy\n");
     sk_net_data_t* net_data = ud;
     fevbuff_destroy(net_data->evbuff);
     free(net_data);

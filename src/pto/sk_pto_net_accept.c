@@ -5,6 +5,7 @@
 #include "fev/fev.h"
 #include "fev/fev_buff.h"
 #include "api/sk_utils.h"
+#include "api/sk_utils.h"
 #include "api/sk_event.h"
 #include "api/sk_pto.h"
 #include "api/sk_sched.h"
@@ -32,7 +33,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 
     int bytes = sk_entity_read(entity, NULL, read_len);
     if (bytes <= 0) {
-        printf("buffer cannot read\n");
+        sk_print("buffer cannot read\n");
         return;
     }
 
@@ -49,7 +50,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 static
 void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {
-    printf("evbuff destroy...\n");
+    sk_print("evbuff destroy...\n");
     sk_entity_t* entity = arg;
     sk_sched_t* sched = sk_entity_sched(entity);
     int fd = fevbuff_get_fd(evbuff);
@@ -62,7 +63,7 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 static
 int _req(sk_sched_t* sched, sk_entity_t* entity, void* proto_msg)
 {
-    printf("event req\n");
+    sk_print("event req\n");
     NetAccept* accept_msg = proto_msg;
     int client_fd = accept_msg->fd;
 

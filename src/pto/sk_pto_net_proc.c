@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "fev/fev_buff.h"
+#include "api/sk_utils.h"
 #include "api/sk_event.h"
 #include "api/sk_entity_mgr.h"
 #include "api/sk_pto.h"
@@ -17,8 +18,8 @@ int _req(sk_sched_t* sched, sk_entity_t* entity, void* proto_msg)
     unsigned char* data = net_msg->data.data;
     char* tmp = calloc(1, sz + 1);
     memcpy(tmp, data, sz);
-    printf("receive data: [%s], sz=%zu\n", tmp, sz);
-    printf("echo back the data [%s]\n", tmp);
+    sk_print("receive data: [%s], sz=%zu\n", tmp, sz);
+    sk_print("echo back the data [%s]\n", tmp);
     sk_entity_write(entity, data, sz);
     free(tmp);
 

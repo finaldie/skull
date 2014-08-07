@@ -64,7 +64,7 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
         return;
     }
 
-    printf("_copy_event: %d\n", (int)event_cnt);
+    sk_print("_copy_event: %d\n", (int)event_cnt);
     sk_event_t event;
 
     // push the event to the corresponding sk_io
@@ -74,7 +74,7 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
         sk_proto_t* pto = dst->pto_tbl[pto_id];
         int priority = pto->priority;
         sk_io_t* dst_io = io_bridge->dst->io_tbl[priority];
-        printf("dst_io: %p\n", (void*)dst_io);
+        sk_print("dst_io: %p\n", (void*)dst_io);
 
         sk_io_push(dst_io, SK_IO_INPUT, &event, 1);
     }
@@ -163,17 +163,17 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 {
     uint32_t pto_id = event->pto_id;
     sk_proto_t* pto = sched->pto_tbl[pto_id];
-    printf("pto_id = %u\n", pto_id);
+    sk_print("pto_id = %u\n", pto_id);
     SK_ASSERT(pto);
 
     // create a base entity if there is no entity
     sk_entity_t* entity = sk_entity_mgr_get(sched->entity_mgr, event->fd);
     if (!entity) {
-        printf("create a new entity(%d)\n", event->fd);
+        sk_print("create a new entity(%d)\n", event->fd);
         entity = sk_entity_create(event->fd, sched);
         sk_entity_mgr_add(sched->entity_mgr, event->fd, entity);
     } else if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
-        printf("entity(%d) already dead\n", event->fd);
+        sk_print("entity(%d) already dead\n", event->fd);
         return 0;
     }
 
@@ -190,7 +190,7 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     // delete the entity if its status ~= ACTIVE
     if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
         sk_entity_mgr_del(sched->entity_mgr, event->fd);
-        printf("entity(%d) status=%d, will be deleted\n",
+        sk_print("entity(%d) status=%d, will be deleted\n",
                event->fd,
                sk_entity_status(entity));
     }
@@ -227,7 +227,7 @@ int _emit_event(sk_sched_t* sched, int io_type, int fd,
     sk_io_t* io = _get_io(sched, pto->priority);
     SK_ASSERT(io);
 
-    printf("src_io: %p\n", (void*)io);
+    sk_print("src_io: %p\n", (void*)io);
     sk_io_push(io, io_type, &event, 1);
     SK_ASSERT(sk_io_used(io, io_type) > 0);
     return 0;
@@ -242,7 +242,7 @@ void _io_bridget_notify(sk_io_bridge_t* io_bridge, uint64_t cnt)
 
 void _deliver_msg(sk_sched_t* sched)
 {
-    printf("delivery_msg: start\n");
+    sk_print("delivery_msg: start\n");
     int delivery[SK_SCHED_MAX_IO_BRIDGE] = {0};
 
     for (int i = SK_PTO_PRI_MAX; i >= SK_PTO_PRI_MIN; i--) {
@@ -256,11 +256,11 @@ void _deliver_msg(sk_sched_t* sched)
 
     // notify dst eventloop the data is ready
     for (uint32_t bri_idx = 0; bri_idx < sched->bridge_size; bri_idx++) {
-        printf("bri_idx: %u, cnt: %d\n", bri_idx, delivery[bri_idx]);
+        sk_print("bri_idx: %u, cnt: %d\n", bri_idx, delivery[bri_idx]);
         sk_io_bridge_t* io_bridge = sched->bridge_tbl[bri_idx];
         _io_bridget_notify(io_bridge, delivery[bri_idx]);
     }
-    printf("delivery_msg: end\n");
+    sk_print("delivery_msg: end\n");
 }
 
 // APIs

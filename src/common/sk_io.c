@@ -54,7 +54,7 @@ void sk_io_push(sk_io_t* io, int type, sk_event_t* events, int nevents)
     }
 
     int new_sz = _get_new_size(mq, nevents);
-    printf("new_sz = %d\n", new_sz);
+    sk_print("new_sz = %d\n", new_sz);
     io->mq[type] = fmbuf_realloc(mq, new_sz);
     mq = io->mq[type];
     ret = fmbuf_push(mq, events, SK_EVENT_SZ * nevents);
