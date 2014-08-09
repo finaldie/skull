@@ -13,7 +13,7 @@ void _print_usage()
 }
 
 static
-void _read_commands(int argc, char** argv, sk_config_t* config)
+void _read_commands(int argc, char** argv, skull_cmd_args_t* cmd_args)
 {
     if (argc == 1) {
         _print_usage();
@@ -24,8 +24,8 @@ void _read_commands(int argc, char** argv, sk_config_t* config)
     while ((opt = getopt(argc, argv, "c:")) != -1) {
         switch (opt) {
         case 'c':
-            strncpy(config->location, optarg, SK_CONFIG_LOCATION_LEN);
-            sk_print("config location: %s\n", config->location);
+            cmd_args->config_location = optarg;
+            sk_print("config location: %s\n", cmd_args->config_location);
             break;
         default:
             fprintf(stderr, "unknow parameter '%s'\n", optarg);
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 {
     skull_core_t core;
     memset(&core, 0, sizeof(core));
-    _read_commands(argc, argv, &core.config);
+    _read_commands(argc, argv, &core.cmd_args);
 
     skull_init(&core);
     skull_start(&core);

@@ -19,10 +19,12 @@
 static
 void _skull_setup_schedulers(skull_core_t* core)
 {
+    sk_config_t* config = core->config;
     skull_sched_t* main_sched = &core->main_sched;
     main_sched->sched = sk_sched_create();
+    core->worker_sched = calloc(config->threads, sizeof(skull_sched_t));
 
-    for (int i = 0; i < SKULL_WORKER_NUM; i++) {
+    for (int i = 0; i < config->threads; i++) {
         skull_sched_t* worker_sched = &core->worker_sched[i];
         worker_sched->sched = sk_sched_create();
 
@@ -84,7 +86,7 @@ void* worker_io_thread(void* arg)
 void skull_init(skull_core_t* core)
 {
     // 1. load config
-    sk_load_config(&core->config);
+    core->config = sk_config_create(core->cmd_args.config_location);
 
     // 2. init schedulers
     _skull_setup_schedulers(core);
@@ -95,6 +97,8 @@ void skull_init(skull_core_t* core)
 
 void skull_start(skull_core_t* core)
 {
+    sk_config_t* config = core->config;
+
     // 1. start the main io thread
     // 2. start the worker io threads
     sk_print("skull engine starting...\n");
@@ -109,7 +113,7 @@ void skull_start(skull_core_t* core)
     }
 
     // 2.
-    for (int i = 0; i < SKULL_WORKER_NUM; i++) {
+    for (int i = 0; i < config->threads; i++) {
         skull_sched_t* worker_sched = &core->worker_sched[i];
         ret = pthread_create(&worker_sched->io_thread, NULL,
                              worker_io_thread, worker_sched->sched);
@@ -120,7 +124,7 @@ void skull_start(skull_core_t* core)
     }
 
     // 3. wait them quit
-    for (int i = 0; i < SKULL_WORKER_NUM; i++) {
+    for (int i = 0; i < config->threads; i++) {
         pthread_join(core->worker_sched[i].io_thread, NULL);
     }
     pthread_join(main_sched->io_thread, NULL);
@@ -129,11 +133,13 @@ void skull_start(skull_core_t* core)
 void skull_stop(skull_core_t* core)
 {
     sk_print("skull engine stoping...\n");
-    for (int i = 0; i < SKULL_WORKER_NUM; i++) {
+    for (int i = 0; i < core->config->threads; i++) {
         sk_sched_destroy(core->worker_sched[i].sched);
     }
 
+    free(core->worker_sched);
     sk_sched_destroy(core->main_sched.sched);
+    sk_config_destroy(core->config);
 }
 
 

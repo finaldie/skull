@@ -7,8 +7,7 @@
 
 void sk_assert_exit(const char* expr, const char* file, int lineno)
 {
-    printf("FATAL: assert [%s] failed - %s:%d, error: %s\n",
-           expr, file, lineno, strerror(errno));
+    printf("FATAL: assert [%s] failed - %s:%d\n", expr, file, lineno);
     abort();
 }
 

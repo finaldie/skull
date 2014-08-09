@@ -146,8 +146,8 @@ sk_cfg_node_t* _document_process(yaml_parser_t* parser, const char* filename,
 
     do {
         int ret = yaml_parser_load(parser, &doc);
-        SK_ASSERT_MSG(ret, "parse config %s failed: %s\n",
-                      filename, parser->problem);
+        SK_ASSERT_MSG(ret, "parse config %s failed: %s\n%s\n",
+                      filename, parser->problem, parser->context);
 
         root = yaml_document_get_root_node(&doc);
         // get thread_num

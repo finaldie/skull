@@ -13,17 +13,9 @@
 #define SK_WORKFLOW_MAIN    0
 #define SK_WORKFLOW_NETWORK 1
 
-
-typedef void (*sk_load_mapping)(int depth, const char* key, const char* value,
-                                void* data);
-typedef void (*sk_load_sequence)(int depth, const char* key, const char* value,
-                                 void* data);
-typedef void (*sk_load_array_item)(int depth, const char* key,
-                                   const char* value, void* data);
-
 typedef struct sk_workflow_cfg_t {
-    int type;
     int concurrent;
+    int port;
 
     flist* modules; // store module names
 } sk_workflow_cfg_t;
@@ -36,7 +28,10 @@ typedef struct sk_config_t {
     flist* workflows;
 } sk_config_t;
 
-void sk_load_config(sk_config_t* config);
+sk_config_t* sk_config_create(const char* filename);
+void sk_config_destroy(sk_config_t* config);
+
+void sk_config_print(sk_config_t* config);
 
 #endif
 
