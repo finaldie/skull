@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include "api/sk_sched.h"
+#include "api/sk_config.h"
 
 #define SKULL_WORKER_NUM 2
 
@@ -12,6 +13,7 @@ typedef struct skull_sched_t {
 } skull_sched_t;
 
 typedef struct skull_core_t {
+    sk_config_t   config;
     skull_sched_t main_sched;
     skull_sched_t worker_sched[SKULL_WORKER_NUM];
 } skull_core_t;

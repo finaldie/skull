@@ -35,8 +35,14 @@ void sk_assert_exit_with_msg(const char* format, ...);
         printf(__FILE__ ":" EXTRACT_STR(__LINE__) " - " __VA_ARGS__); \
     } while (0)
 
+# define sk_rawprint(...) \
+    do { \
+        printf(__VA_ARGS__); \
+    } while (0)
+
 #else
 # define sk_print(...)
+# define sk_rawprint(...)
 #endif
 
 #endif // end of SK_UTILS_H

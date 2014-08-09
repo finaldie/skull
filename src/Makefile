@@ -5,6 +5,7 @@ STD = -pedantic -std=c99
 WARN = -Wall -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
 EXTRA = -Wpadded
 OTHER = -pipe -g -ggdb
+MACRO = -D_POSIX_C_SOURCE=200809L
 INC = \
     -I. \
     -I../deps/flibs \
@@ -12,18 +13,16 @@ INC = \
 
 ifeq ($(debug), false)
 OPT = -O2
-DEBUG =
 else
-OPT =
-DEBUG = -DSK_DEBUG
+MACRO += -DSK_DEBUG
 endif
 
 # linking flags
 DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib64
-SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(DEBUG) $(OPT) $(OTHER) $(INC)
-SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(DEBUG) $(OPT) $(OTHER) $(INC)
-SKULL_LDFLAGS = $(LDFLAGS) $(DEBUG) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_LIBS = -ldl -pthread -lrt -lfev -lfnet -lfhash -lfmbuf -lflist -lprotobuf-c
+SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
+SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
+SKULL_LDFLAGS = $(LDFLAGS) $(OTHER) $(DEPS_LDFLAGS)
+SKULL_LIBS = -ldl -pthread -lrt -lyaml -lfev -lfnet -lfhash -lfmbuf -lflist -lprotobuf-c
 
 # CC and LD
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
@@ -42,7 +41,8 @@ COMMON_OBJS = \
     common/sk_utils.o \
     common/sk_io.o \
     common/sk_eventloop.o \
-    common/sk_event.o
+    common/sk_event.o \
+    common/sk_config_loader.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
@@ -51,7 +51,8 @@ ENTITY_OBJS = \
 COMPONENTS_OBJS = \
     components/sk_sched.o \
     components/sk.o \
-    components/sk_entity_mgr.o
+    components/sk_entity_mgr.o \
+    components/sk_config.o
 
 LOADER_OBJS = \
     loaders/c_loader.o

@@ -11,11 +11,13 @@
 #include "api/sk_utils.h"
 #include "api/sk_eventloop.h"
 #include "api/sk_pto.h"
+#include "api/sk_config.h"
 #include "api/sk.h"
 
 // INTERNAL APIs
+
 static
-void _skull_setup_io(skull_core_t* core)
+void _skull_setup_schedulers(skull_core_t* core)
 {
     skull_sched_t* main_sched = &core->main_sched;
     main_sched->sched = sk_sched_create();
@@ -51,7 +53,7 @@ void _setup_listener(skull_sched_t* sched)
 }
 
 static
-void _skull_setup_evloop(skull_core_t* core)
+void _skull_setup_workflow(skull_core_t* core)
 {
     // setup main evloop
     skull_sched_t* main_sched = &core->main_sched;
@@ -82,10 +84,13 @@ void* worker_io_thread(void* arg)
 void skull_init(skull_core_t* core)
 {
     // 1. load config
-    // 2. load modules
-    // 3. init schedulers
-    _skull_setup_io(core);
-    _skull_setup_evloop(core);
+    sk_load_config(&core->config);
+
+    // 2. init schedulers
+    _skull_setup_schedulers(core);
+
+    // 3. load working flows
+    _skull_setup_workflow(core);
 }
 
 void skull_start(skull_core_t* core)
