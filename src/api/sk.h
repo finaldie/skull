@@ -20,6 +20,8 @@ typedef struct skull_core_t {
 
     skull_sched_t    main_sched;
     skull_sched_t*   worker_sched;
+
+    flist*           workflows;  // element type: sk_workflow_t
 } skull_core_t;
 
 void skull_init(skull_core_t* core);

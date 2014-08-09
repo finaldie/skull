@@ -52,7 +52,8 @@ COMPONENTS_OBJS = \
     components/sk_sched.o \
     components/sk.o \
     components/sk_entity_mgr.o \
-    components/sk_config.o
+    components/sk_config.o \
+    components/sk_workflow.o
 
 LOADER_OBJS = \
     loaders/c_loader.o

@@ -12,6 +12,9 @@
 #include "api/sk_eventloop.h"
 #include "api/sk_pto.h"
 #include "api/sk_config.h"
+#include "api/sk_module.h"
+#include "api/sk_workflow.h"
+#include "api/sk_loader.h"
 #include "api/sk.h"
 
 // INTERNAL APIs
@@ -43,23 +46,83 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
 }
 
 static
-void _setup_listener(skull_sched_t* sched)
+void _setup_net_trigger(skull_sched_t* sched, int listen_fd)
 {
-    int listen_fd = fnet_create_listen(NULL, 7758, 1024, 0);
-    SK_ASSERT_MSG(listen_fd, "listen_fd = %d\n", listen_fd);
-
     fev_state* fev = sk_sched_eventloop(sched->sched);
     fev_listen_info* fli = fev_add_listener_byfd(fev, listen_fd,
                                                  _sk_accept, sched);
     SK_ASSERT(fli);
 }
 
+
+static
+void _skull_setup_trigger(skull_core_t* core, sk_workflow_t* workflow)
+{
+    if (workflow->type == SK_WORKFLOW_MAIN) {
+        sk_print("no need to set up trigger\n");
+        return;
+    }
+
+    if (workflow->type == SK_WORKFLOW_TRIGGER) {
+        // setup main evloop
+        skull_sched_t* main_sched = &core->main_sched;
+        _setup_net_trigger(main_sched, workflow->trigger.network.listen_fd);
+    }
+}
+
 static
 void _skull_setup_workflow(skull_core_t* core)
 {
-    // setup main evloop
-    skull_sched_t* main_sched = &core->main_sched;
-    _setup_listener(main_sched);
+    sk_config_t* config = core->config;
+    core->workflows = flist_create();
+    flist_iter iter = flist_new_iter(config->workflows);
+    sk_workflow_cfg_t* workflow_cfg = NULL;
+
+    while ((workflow_cfg = flist_each(&iter))) {
+        sk_print("setup workflow, detail info:\n");
+
+        // set up the type and concurrent
+        sk_workflow_t* workflow = sk_workflow_create();
+        workflow->concurrent = workflow_cfg->concurrent;
+
+        if (workflow_cfg->port) {
+            workflow->type = SK_WORKFLOW_TRIGGER;
+            workflow->trigger.network.port = workflow_cfg->port;
+            workflow->trigger.network.listen_fd =
+                fnet_create_listen(NULL, workflow_cfg->port, 1024, 0);
+        } else {
+            workflow->type = SK_WORKFLOW_MAIN;
+        }
+
+        // set up modules
+        flist_iter name_iter = flist_new_iter(workflow_cfg->modules);
+        char* module_name = NULL;
+        while ((module_name = flist_each(&name_iter))) {
+            sk_print("loading module: %s\n", module_name);
+            // 1. load the module
+            // 2. add the module into workflow
+
+            // 1.
+            // TODO: use current folder as the default module location
+            sk_module_t* module = sk_module_load(module_name);
+            if (module) {
+                sk_print("load module [%s] successful\n", module_name);
+            } else {
+                sk_print("load module [%s] failed\n", module_name);
+            }
+
+            // 2.
+            //int ret = flist_push(workflow->modules, module);
+            //SK_ASSERT_MSG(!ret, "add module to workflow failed\n");
+        }
+
+        // store this workflow to skull_core::workflows
+        int ret = flist_push(core->workflows, workflow);
+        SK_ASSERT(!ret);
+
+        // set up trigger
+        _skull_setup_trigger(core, workflow);
+    }
 }
 
 static
@@ -140,6 +203,7 @@ void skull_stop(skull_core_t* core)
     free(core->worker_sched);
     sk_sched_destroy(core->main_sched.sched);
     sk_config_destroy(core->config);
+    flist_delete(core->workflows);
 }
 
 
