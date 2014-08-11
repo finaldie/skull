@@ -82,17 +82,8 @@ void _skull_setup_workflow(skull_core_t* core)
         sk_print("setup workflow, detail info:\n");
 
         // set up the type and concurrent
-        sk_workflow_t* workflow = sk_workflow_create();
-        workflow->concurrent = workflow_cfg->concurrent;
-
-        if (workflow_cfg->port) {
-            workflow->type = SK_WORKFLOW_TRIGGER;
-            workflow->trigger.network.port = workflow_cfg->port;
-            workflow->trigger.network.listen_fd =
-                fnet_create_listen(NULL, workflow_cfg->port, 1024, 0);
-        } else {
-            workflow->type = SK_WORKFLOW_MAIN;
-        }
+        sk_workflow_t* workflow = sk_workflow_create(workflow_cfg->concurrent,
+                                                     workflow_cfg->port);
 
         // set up modules
         flist_iter name_iter = flist_new_iter(workflow_cfg->modules);
@@ -112,8 +103,9 @@ void _skull_setup_workflow(skull_core_t* core)
             }
 
             // 2.
-            //int ret = flist_push(workflow->modules, module);
-            //SK_ASSERT_MSG(!ret, "add module to workflow failed\n");
+            int ret = sk_workflow_add_module(workflow, module);
+            SK_ASSERT_MSG(!ret, "add module {%s} to workflow failed\n",
+                          module_name);
         }
 
         // store this workflow to skull_core::workflows
