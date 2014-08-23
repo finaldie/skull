@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "fev/fev_buff.h"
 #include "api/sk_utils.h"
@@ -41,7 +42,8 @@ void net_destroy(sk_entity_t* entity, void* ud)
 {
     sk_print("net_destroy\n");
     sk_net_data_t* net_data = ud;
-    fevbuff_destroy(net_data->evbuff);
+    int fd = fevbuff_destroy(net_data->evbuff);
+    close(fd);
     free(net_data);
 }
 

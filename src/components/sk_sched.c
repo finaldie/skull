@@ -38,6 +38,7 @@ struct sk_sched_t {
     sk_proto_t**     pto_tbl;
     sk_io_t*         io_tbl[SK_PTO_PRI_SZ];
     sk_io_bridge_t*  bridge_tbl[SK_SCHED_MAX_IO_BRIDGE];
+    flist*           workflows;
 
     uint32_t   bridge_size;
     uint32_t   running:1;
@@ -166,14 +167,16 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     sk_print("pto_id = %u\n", pto_id);
     SK_ASSERT(pto);
 
-    // create a base entity if there is no entity
-    sk_entity_t* entity = sk_entity_mgr_get(sched->entity_mgr, event->fd);
-    if (!entity) {
-        sk_print("create a new entity(%d)\n", event->fd);
-        entity = sk_entity_create(event->fd, sched);
-        sk_entity_mgr_add(sched->entity_mgr, event->fd, entity);
-    } else if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
-        sk_print("entity(%d) already dead\n", event->fd);
+    sk_txn_t* txn = event->txn;
+    sk_entity_t* entity = sk_txn_entity(txn);
+    SK_ASSERT(entity);
+
+    // add entity into entity_mgr if there is no entity
+    sk_entity_status_t status = sk_entity_status(entity);
+    if (status == SK_ENTITY_INIT) {
+        sk_entity_mgr_add(sched->entity_mgr, entity);
+    } else if (status != SK_ENTITY_ACTIVE) {
+        sk_print("entity already dead\n");
         return 0;
     }
 
@@ -182,16 +185,15 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
                                                       event->sz,
                                                       event->data);
     // TODO: should check the return value, and do something
-    pto->run(sched, entity, msg);
+    pto->run(sched, txn, msg);
 
     protobuf_c_message_free_unpacked(msg, NULL);
     free(event->data);
 
     // delete the entity if its status ~= ACTIVE
     if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
-        sk_entity_mgr_del(sched->entity_mgr, event->fd);
-        sk_print("entity(%d) status=%d, will be deleted\n",
-               event->fd,
+        sk_entity_mgr_del(sched->entity_mgr, entity);
+        sk_print("entity status=%d, will be deleted\n",
                sk_entity_status(entity));
     }
 
@@ -211,14 +213,14 @@ void _pull_and_run(sk_sched_t* sched, sk_io_t* sk_io)
 }
 
 static
-int _emit_event(sk_sched_t* sched, int io_type, int fd,
+int _emit_event(sk_sched_t* sched, int io_type, sk_txn_t* txn,
                   int pto_id, void* proto_msg)
 {
     sk_proto_t* pto = sched->pto_tbl[pto_id];
 
     sk_event_t event;
-    event.fd = fd;
     event.pto_id = pto_id;
+    event.txn = txn;
     event.sz = protobuf_c_message_get_packed_size(proto_msg);
     event.data = malloc(event.sz);
     size_t packed_sz = protobuf_c_message_pack(proto_msg, event.data);
@@ -347,17 +349,37 @@ int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst)
 
 // push a event into scheduler, and the scheduler will route it to the specific
 // sk_io
-int sk_sched_push(sk_sched_t* sched, int fd, int pto_id, void* proto_msg)
+int sk_sched_push(sk_sched_t* sched, sk_txn_t* txn,
+                  int pto_id, void* proto_msg)
 {
-    return _emit_event(sched, SK_IO_INPUT, fd, pto_id, proto_msg);
+    return _emit_event(sched, SK_IO_INPUT, txn, pto_id, proto_msg);
 }
 
-int sk_sched_send(sk_sched_t* sched, int fd, int pto_id, void* proto_msg)
+int sk_sched_send(sk_sched_t* sched, sk_txn_t* txn,
+                  int pto_id, void* proto_msg)
 {
-    return _emit_event(sched, SK_IO_OUTPUT, fd, pto_id, proto_msg);
+    return _emit_event(sched, SK_IO_OUTPUT, txn, pto_id, proto_msg);
 }
 
 void* sk_sched_eventloop(sk_sched_t* sched)
 {
     return sched->evlp;
+}
+
+void sk_sched_set_workflow(sk_sched_t* sched, flist* workflows)
+{
+    sched->workflows = workflows;
+}
+
+sk_workflow_t* sk_sched_workflow(sk_sched_t* sched, int idx)
+{
+    sk_workflow_t* workflow = NULL;
+    int i = 0;
+    flist_iter iter = flist_new_iter(sched->workflows);
+
+    do {
+        workflow = flist_each(&iter);
+    } while (workflow != NULL && i < idx);
+
+    return workflow;
 }

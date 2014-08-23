@@ -3,6 +3,8 @@
 
 #include "fmbuf/fmbuf.h"
 
+struct sk_txn_t;
+
 typedef enum sk_mtype_t {
     SK_C_MODULE_TYPE = 0
 } sk_mtype_t;
@@ -16,9 +18,9 @@ typedef struct sk_module_t {
 #endif
 
     int (*sk_module_init)();
-    int (*sk_module_run)();
-    int (*sk_module_unpack)(fmbuf* input);
-    int (*sk_module_pack)(fmbuf* output);
+    int (*sk_module_run)(struct sk_txn_t* txn);
+    int (*sk_module_unpack)(struct sk_txn_t* txn);
+    int (*sk_module_pack)(struct sk_txn_t* txn);
 } sk_module_t;
 
 #endif

@@ -1,3 +1,4 @@
 message net_accept {
     required int32 fd = 1;
+    required int32 workflow_idx = 2;
 }

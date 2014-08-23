@@ -17,6 +17,12 @@
 #include "api/sk_loader.h"
 #include "api/sk.h"
 
+typedef struct sk_net_trigger_t {
+    sk_sched_t* sched;
+    int         workflow_idx;
+    int         _reserved;
+} sk_net_trigger_t;
+
 // INTERNAL APIs
 
 static
@@ -38,25 +44,35 @@ void _skull_setup_schedulers(skull_core_t* core)
 static
 void _sk_accept(fev_state* fev, int fd, void* ud)
 {
-    skull_sched_t* sched = ud;
+    sk_net_trigger_t* net_trigger = ud;
+    sk_sched_t* sched = net_trigger->sched;
+    int workflow_idx = net_trigger->workflow_idx;
+    sk_print("create a new entity(%d)\n", fd);
 
     NetAccept accept_msg = NET_ACCEPT__INIT;
     accept_msg.fd = fd;
-    sk_sched_send(sched->sched, fd, SK_PTO_NET_ACCEPT, &accept_msg);
+    accept_msg.workflow_idx = workflow_idx;
+    sk_sched_send(sched, NULL, SK_PTO_NET_ACCEPT, &accept_msg);
 }
 
 static
-void _setup_net_trigger(skull_sched_t* sched, int listen_fd)
+void _setup_net_trigger(skull_sched_t* sched, sk_workflow_t* workflow,
+                        int workflow_idx)
 {
     fev_state* fev = sk_sched_eventloop(sched->sched);
+    int listen_fd = workflow->trigger.network.listen_fd;
+    sk_net_trigger_t* net_trigger = malloc(sizeof(*net_trigger));
+    net_trigger->sched = sched->sched;
+    net_trigger->workflow_idx = workflow_idx;
+
     fev_listen_info* fli = fev_add_listener_byfd(fev, listen_fd,
-                                                 _sk_accept, sched);
+                                                 _sk_accept, net_trigger);
     SK_ASSERT(fli);
 }
 
-
 static
-void _skull_setup_trigger(skull_core_t* core, sk_workflow_t* workflow)
+void _skull_setup_trigger(skull_core_t* core, sk_workflow_t* workflow,
+                          int workflow_idx)
 {
     if (workflow->type == SK_WORKFLOW_MAIN) {
         sk_print("no need to set up trigger\n");
@@ -66,7 +82,7 @@ void _skull_setup_trigger(skull_core_t* core, sk_workflow_t* workflow)
     if (workflow->type == SK_WORKFLOW_TRIGGER) {
         // setup main evloop
         skull_sched_t* main_sched = &core->main_sched;
-        _setup_net_trigger(main_sched, workflow->trigger.network.listen_fd);
+        _setup_net_trigger(main_sched, workflow, workflow_idx);
     }
 }
 
@@ -77,6 +93,7 @@ void _skull_setup_workflow(skull_core_t* core)
     core->workflows = flist_create();
     flist_iter iter = flist_new_iter(config->workflows);
     sk_workflow_cfg_t* workflow_cfg = NULL;
+    int workflow_idx = 0;
 
     while ((workflow_cfg = flist_each(&iter))) {
         sk_print("setup workflow, detail info:\n");
@@ -112,8 +129,19 @@ void _skull_setup_workflow(skull_core_t* core)
         int ret = flist_push(core->workflows, workflow);
         SK_ASSERT(!ret);
 
+
         // set up trigger
-        _skull_setup_trigger(core, workflow);
+        _skull_setup_trigger(core, workflow, workflow_idx);
+
+        workflow_idx++;
+    }
+
+    // set workflow in schedulers
+    sk_sched_set_workflow(core->main_sched.sched, core->workflows);
+
+    for (int i = 0; i < config->threads; i++) {
+        skull_sched_t* worker_sched = &core->worker_sched[i];
+        sk_sched_set_workflow(worker_sched->sched, core->workflows);
     }
 }
 
@@ -137,6 +165,20 @@ void* worker_io_thread(void* arg)
     return 0;
 }
 
+static
+void _skull_module_init(skull_core_t* core)
+{
+    fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+    sk_module_t* module = NULL;
+
+    while ((module = fhash_str_next(&iter))) {
+        sk_print("module init...\n");
+
+        int ret = module->sk_module_init();
+        SK_ASSERT(!ret);
+    }
+}
+
 // APIs
 void skull_init(skull_core_t* core)
 {
@@ -152,13 +194,16 @@ void skull_init(skull_core_t* core)
 
 void skull_start(skull_core_t* core)
 {
+    // 1. module init
+    _skull_module_init(core);
+
     sk_config_t* config = core->config;
 
-    // 1. start the main io thread
-    // 2. start the worker io threads
+    // 2. start the main io thread
+    // 3. start the worker io threads
     sk_print("skull engine starting...\n");
 
-    // 1.
+    // 2.
     skull_sched_t* main_sched = &core->main_sched;
     int ret = pthread_create(&main_sched->io_thread, NULL,
                              main_io_thread, main_sched->sched);
@@ -167,7 +212,7 @@ void skull_start(skull_core_t* core)
         exit(ret);
     }
 
-    // 2.
+    // 3.
     for (int i = 0; i < config->threads; i++) {
         skull_sched_t* worker_sched = &core->worker_sched[i];
         ret = pthread_create(&worker_sched->io_thread, NULL,
@@ -178,7 +223,7 @@ void skull_start(skull_core_t* core)
         }
     }
 
-    // 3. wait them quit
+    // 4. wait them quit
     for (int i = 0; i < config->threads; i++) {
         pthread_join(core->worker_sched[i].io_thread, NULL);
     }

@@ -9,11 +9,11 @@
 #define SK_EVENT_SZ (sizeof(sk_event_t))
 
 typedef struct sk_event_t {
-    int      fd;
     uint32_t pto_id;
+    int      _reserved;
     size_t   sz;            // data size
 
-    //void*    entity;      // who the event is belongs to
+    void*    txn;           // transcation data
     void*    data;          // protobuf data
 } sk_event_t;
 

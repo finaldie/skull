@@ -2,6 +2,9 @@
 #define SK_H
 
 #include <pthread.h>
+
+#include "flist/flist.h"
+#include "fhash/fhash.h"
 #include "api/sk_sched.h"
 #include "api/sk_config.h"
 
@@ -21,7 +24,9 @@ typedef struct skull_core_t {
     skull_sched_t    main_sched;
     skull_sched_t*   worker_sched;
 
+    // shared data
     flist*           workflows;  // element type: sk_workflow_t
+    fhash*           unique_modules;
 } skull_core_t;
 
 void skull_init(skull_core_t* core);

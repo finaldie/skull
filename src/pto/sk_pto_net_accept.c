@@ -8,19 +8,22 @@
 #include "api/sk_utils.h"
 #include "api/sk_event.h"
 #include "api/sk_pto.h"
+#include "api/sk_workflow.h"
+#include "api/sk_entity.h"
+#include "api/sk_txn.h"
 #include "api/sk_sched.h"
 
 // -----------------------------------------------------------------------------
 
-// EventLoop trigger this callback
-// read buffer and create a sk_event
-// TODO: sk_event should use protobuf to store the data
 static
-void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
+void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_txn_t* txn)
 {
-    sk_entity_t* entity = arg;
-    sk_sched_t* sched = sk_entity_sched(entity);
-    int fd = sk_entity_fd(entity);
+    sk_sched_t* sched = sk_txn_sched(txn);
+    //sk_workflow_t* workflow = sk_txn_workflow(txn);
+    sk_entity_t* entity = sk_txn_entity(txn);
+
+    sk_module_t* module = sk_txn_next_module(txn);
+    SK_ASSERT_MSG(module->sk_module_unpack, "missing unpack callback\n");
 
     // calculate how many bytes we need to read
     size_t used_len = fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
@@ -37,13 +40,46 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         return;
     }
 
+    sk_txn_set_input(txn, fevbuff_rawget(evbuff), bytes);
+    int consumed = module->sk_module_unpack(txn);
+    if (consumed == 0) {
+        // means user need more data, re-try in next round
+        sk_print("user need more data, current data size=%d\n", bytes);
+        return;
+    }
+
     NetProc net_proc_msg = NET_PROC__INIT;
-    net_proc_msg.data.len = bytes;
+    net_proc_msg.data.len = consumed;
     net_proc_msg.data.data = fevbuff_rawget(evbuff);
-    sk_sched_push(sched, fd, SK_PTO_NET_PROC, &net_proc_msg);
+    sk_sched_push(sched, txn, SK_PTO_NET_PROC, &net_proc_msg);
+
+    // success to construct one task, increase the ref cnt
+    sk_entity_inc_task_cnt(entity);
 
     // consume the evbuff
     fevbuff_pop(evbuff, bytes);
+}
+
+// EventLoop trigger this callback
+// read buffer and create a sk_event
+// TODO: sk_event should use protobuf to store the data
+static
+void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
+{
+    sk_entity_t* entity = arg;
+    sk_sched_t* sched = sk_entity_sched(entity);
+    sk_workflow_t* workflow = sk_entity_workflow(entity);
+    int concurrent = workflow->concurrent;
+
+    // check whether allow concurrent
+    if (!concurrent && sk_entity_task_cnt(entity) > 0) {
+        sk_print("entity already have running tasks\n");
+        return;
+    }
+
+    sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
+
+    _unpack_data(fev, evbuff, txn);
 }
 
 // send a destroy msg, so that the scheduler will destory it later
@@ -53,19 +89,23 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
     sk_print("evbuff destroy...\n");
     sk_entity_t* entity = arg;
     sk_sched_t* sched = sk_entity_sched(entity);
-    int fd = fevbuff_get_fd(evbuff);
 
     NetDestroy destroy_msg = NET_DESTROY__INIT;
-    sk_sched_push(sched, fd, SK_PTO_NET_DESTROY, &destroy_msg);
+    sk_sched_push(sched, NULL, SK_PTO_NET_DESTROY, &destroy_msg);
 }
 
 // register the new sock fd into eventloop
 static
-int _req(sk_sched_t* sched, sk_entity_t* entity, void* proto_msg)
+int _run(sk_sched_t* sched, sk_txn_t* txn, void* proto_msg)
 {
     sk_print("event req\n");
+    SK_ASSERT(!txn);
+
     NetAccept* accept_msg = proto_msg;
     int client_fd = accept_msg->fd;
+    int workflow_idx = accept_msg->workflow_idx;
+    sk_workflow_t* workflow = sk_sched_workflow(sched, workflow_idx);
+    sk_entity_t* entity = sk_entity_create(sched, workflow);
 
     fev_state* fev = sk_sched_eventloop(sched);
     fev_buff* evbuff = fevbuff_new(fev, client_fd, _read_cb, _error, entity);
@@ -78,5 +118,5 @@ int _req(sk_sched_t* sched, sk_entity_t* entity, void* proto_msg)
 sk_proto_t sk_pto_net_accept = {
     .priority = SK_PTO_PRI_8,
     .descriptor = &net_accept__descriptor,
-    .run = _req
+    .run = _run
 };

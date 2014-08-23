@@ -2,7 +2,7 @@
 #define SK_PTO_H
 
 #include <stdint.h>
-#include "api/sk_entity.h"
+#include "api/sk_txn.h"
 
 // Priority: 0 - 9
 #define SK_PTO_PRI_0  0
@@ -30,7 +30,7 @@ typedef struct sk_proto_t {
 
     const void* descriptor; // the message descriptor
     int (*run) (struct sk_sched_t* sched,
-                sk_entity_t* entity,
+                sk_txn_t* txn,
                 void* proto_msg);
 } sk_proto_t;
 
