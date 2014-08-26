@@ -75,7 +75,6 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
         sk_proto_t* pto = dst->pto_tbl[pto_id];
         int priority = pto->priority;
         sk_io_t* dst_io = io_bridge->dst->io_tbl[priority];
-        sk_print("dst_io: %p\n", (void*)dst_io);
 
         sk_io_push(dst_io, SK_IO_INPUT, &event, 1);
     }
@@ -167,17 +166,22 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     sk_print("pto_id = %u\n", pto_id);
     SK_ASSERT(pto);
 
+    sk_entity_t* entity = NULL;
     sk_txn_t* txn = event->txn;
-    sk_entity_t* entity = sk_txn_entity(txn);
-    SK_ASSERT(entity);
+    if (txn) {
+        entity = sk_txn_entity(txn);
+        SK_ASSERT(entity);
 
-    // add entity into entity_mgr if there is no entity
-    sk_entity_status_t status = sk_entity_status(entity);
-    if (status == SK_ENTITY_INIT) {
-        sk_entity_mgr_add(sched->entity_mgr, entity);
-    } else if (status != SK_ENTITY_ACTIVE) {
-        sk_print("entity already dead\n");
-        return 0;
+        // add entity into entity_mgr
+        sk_entity_status_t status = sk_entity_status(entity);
+        if (status != SK_ENTITY_ACTIVE) {
+            sk_print("entity already dead\n");
+            return 0;
+        }
+
+        if (NULL == sk_entity_owner(entity)) {
+            sk_entity_mgr_add(sched->entity_mgr, entity);
+        }
     }
 
     ProtobufCMessage* msg = protobuf_c_message_unpack(pto->descriptor,
@@ -191,10 +195,10 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     free(event->data);
 
     // delete the entity if its status ~= ACTIVE
-    if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
+    if (entity && sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
         sk_entity_mgr_del(sched->entity_mgr, entity);
         sk_print("entity status=%d, will be deleted\n",
-               sk_entity_status(entity));
+                 sk_entity_status(entity));
     }
 
     return 0;
@@ -221,15 +225,19 @@ int _emit_event(sk_sched_t* sched, int io_type, sk_txn_t* txn,
     sk_event_t event;
     event.pto_id = pto_id;
     event.txn = txn;
-    event.sz = protobuf_c_message_get_packed_size(proto_msg);
-    event.data = malloc(event.sz);
-    size_t packed_sz = protobuf_c_message_pack(proto_msg, event.data);
-    SK_ASSERT(packed_sz == (size_t)event.sz);
+    if (proto_msg) {
+        event.sz = protobuf_c_message_get_packed_size(proto_msg);
+        event.data = malloc(event.sz);
+        size_t packed_sz = protobuf_c_message_pack(proto_msg, event.data);
+        SK_ASSERT(packed_sz == (size_t)event.sz);
+    } else {
+        event.sz = 0;
+        event.data = NULL;
+    }
 
     sk_io_t* io = _get_io(sched, pto->priority);
     SK_ASSERT(io);
 
-    sk_print("src_io: %p\n", (void*)io);
     sk_io_push(io, io_type, &event, 1);
     SK_ASSERT(sk_io_used(io, io_type) > 0);
     return 0;
@@ -258,7 +266,7 @@ void _deliver_msg(sk_sched_t* sched)
 
     // notify dst eventloop the data is ready
     for (uint32_t bri_idx = 0; bri_idx < sched->bridge_size; bri_idx++) {
-        sk_print("bri_idx: %u, cnt: %d\n", bri_idx, delivery[bri_idx]);
+        //sk_print("bri_idx: %u, cnt: %d\n", bri_idx, delivery[bri_idx]);
         sk_io_bridge_t* io_bridge = sched->bridge_tbl[bri_idx];
         _io_bridget_notify(io_bridge, delivery[bri_idx]);
     }

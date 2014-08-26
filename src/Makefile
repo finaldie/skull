@@ -4,7 +4,8 @@ debug ?= false
 STD = -pedantic -std=c99
 WARN = -Wall -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
 EXTRA = -Wpadded
-OTHER = -pipe -g -ggdb
+OTHER = -pipe -g -ggdb -Wl,-E
+SHARED =
 MACRO = -D_POSIX_C_SOURCE=200809L
 INC = \
     -I. \
@@ -19,9 +20,9 @@ endif
 
 # linking flags
 DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib64
-SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
+SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(SHARED) $(OTHER) $(INC)
 SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
-SKULL_LDFLAGS = $(LDFLAGS) $(OTHER) $(DEPS_LDFLAGS)
+SKULL_LDFLAGS = $(LDFLAGS) $(SHARED) $(OTHER) $(DEPS_LDFLAGS)
 SKULL_LIBS = -ldl -pthread -lrt -lyaml -lfev -lfnet -lfhash -lfmbuf -lflist -lprotobuf-c
 
 # CC and LD
@@ -103,17 +104,14 @@ protos: $(PROTO_IDLS)
 %.proto:
 	cd pto/idls && protoc-c --c_out=. $@
 
-
-#	cd pto/idls && ./generate_pto_tbl.py -f $@ -o ../
-
-clean_protos:
-	rm -f pto/idls/*.pb-c.*
-
 install:
 	test -d $(prefix)/bin || mkdir -p $(prefix)/bin
-	cp $(SKULL_ENGINE) $(prefix)/bin
+	test -f $(SKULL_ENGINE) && cp $(SKULL_ENGINE) $(prefix)/bin
 
 clean:
 	rm -f $(SKULL_ENGINE) $(SKULL_OBJS)
+
+clean_protos:
+	rm -f pto/idls/*.pb-c.*
 
 .PHONY: skull clean $(SKULL_ENGINE) install protos clean_protos

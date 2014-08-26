@@ -2,6 +2,8 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <libgen.h>
 
 #include "fnet/fnet_core.h"
 #include "fev/fev.h"
@@ -91,6 +93,7 @@ void _skull_setup_workflow(skull_core_t* core)
 {
     sk_config_t* config = core->config;
     core->workflows = flist_create();
+    core->unique_modules = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     flist_iter iter = flist_new_iter(config->workflows);
     sk_workflow_cfg_t* workflow_cfg = NULL;
     int workflow_idx = 0;
@@ -109,6 +112,7 @@ void _skull_setup_workflow(skull_core_t* core)
             sk_print("loading module: %s\n", module_name);
             // 1. load the module
             // 2. add the module into workflow
+            // 3. store it to the unique module list
 
             // 1.
             // TODO: use current folder as the default module location
@@ -123,14 +127,17 @@ void _skull_setup_workflow(skull_core_t* core)
             int ret = sk_workflow_add_module(workflow, module);
             SK_ASSERT_MSG(!ret, "add module {%s} to workflow failed\n",
                           module_name);
+
+            // 3.
+            fhash_str_set(core->unique_modules, module_name, module);
         }
 
         // store this workflow to skull_core::workflows
         int ret = flist_push(core->workflows, workflow);
         SK_ASSERT(!ret);
 
-
         // set up trigger
+        sk_print("set up trigger...\n");
         _skull_setup_trigger(core, workflow, workflow_idx);
 
         workflow_idx++;
@@ -173,9 +180,7 @@ void _skull_module_init(skull_core_t* core)
 
     while ((module = fhash_str_next(&iter))) {
         sk_print("module init...\n");
-
-        int ret = module->sk_module_init();
-        SK_ASSERT(!ret);
+        module->sk_module_init();
     }
 }
 
@@ -185,10 +190,20 @@ void skull_init(skull_core_t* core)
     // 1. load config
     core->config = sk_config_create(core->cmd_args.config_location);
 
-    // 2. init schedulers
+    // 2. change working-dir to the config dir
+    char* raw_path = strdup(core->cmd_args.config_location);
+    const char* config_dir = dirname(raw_path);
+    int ret = chdir(config_dir);
+    SK_ASSERT_MSG(!ret, "change working dir to %s failed, errno:%s\n",
+                  config_dir, strerror(errno));
+    free(raw_path);
+    core->working_dir = getcwd(NULL, 0);
+    sk_print("current working dir: %s\n", core->working_dir);
+
+    // 3. init schedulers
     _skull_setup_schedulers(core);
 
-    // 3. load working flows
+    // 4. load working flows
     _skull_setup_workflow(core);
 }
 
@@ -241,6 +256,7 @@ void skull_stop(skull_core_t* core)
     sk_sched_destroy(core->main_sched.sched);
     sk_config_destroy(core->config);
     flist_delete(core->workflows);
+    fhash_str_delete(core->unique_modules);
 }
 
 

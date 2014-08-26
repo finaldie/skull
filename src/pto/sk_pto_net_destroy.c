@@ -7,8 +7,6 @@
 static
 int _run(sk_sched_t* sched, sk_txn_t* txn, void* proto_msg)
 {
-    SK_ASSERT(txn);
-
     sk_entity_t* entity = sk_txn_entity(txn);
     sk_entity_mark(entity, SK_ENTITY_INACTIVE);
     return 0;

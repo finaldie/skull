@@ -13,6 +13,7 @@ sk_module_t* sk_module_load(const char* short_name)
 
         char fullname[1024] = {0};
         loader->sk_module_name(short_name, fullname, 1024);
+        sk_print("try to load module{%s} - %s\n", short_name, fullname);
         sk_module_t* module = loader->sk_module_open(fullname);
         if (module) {
             return module;

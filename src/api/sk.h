@@ -27,6 +27,7 @@ typedef struct skull_core_t {
     // shared data
     flist*           workflows;  // element type: sk_workflow_t
     fhash*           unique_modules;
+    const char*      working_dir;
 } skull_core_t;
 
 void skull_init(skull_core_t* core);

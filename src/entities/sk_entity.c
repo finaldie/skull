@@ -23,7 +23,7 @@ sk_entity_t* sk_entity_create(struct sk_sched_t* sched,
     entity->owner = NULL;
     entity->sched = sched;
     entity->workflow = workflow;
-    entity->status = SK_ENTITY_INIT;
+    entity->status = SK_ENTITY_ACTIVE;
     return entity;
 }
 
@@ -56,22 +56,7 @@ void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr)
 
 void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status)
 {
-    if (status == SK_ENTITY_INIT) {
-        return;
-    }
-
     entity->status = status;
-}
-
-// set the status as inactive, which means this entity is ready to be destroyed
-void sk_entity_mark_inactive(sk_entity_t* entity)
-{
-    entity->status = SK_ENTITY_INACTIVE;
-}
-
-void sk_entity_mark_dead(sk_entity_t* entity)
-{
-    entity->status = SK_ENTITY_DEAD;
 }
 
 struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity)

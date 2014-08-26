@@ -17,7 +17,7 @@ struct sk_txn_t {
     fmbuf*          output;
     flist_iter      workflow_idx;
     sk_module_t*    current;
-    sk_txn_status_t status;
+    int             is_unpacked;
     int             _reserved;
 };
 
@@ -31,7 +31,6 @@ sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
     txn->entity = entity;
     txn->output = fmbuf_create(0);
     txn->workflow_idx = flist_new_iter(workflow->modules);
-    txn->status = SK_TXN_INIT;
 
     return txn;
 }
@@ -40,20 +39,6 @@ void sk_txn_destroy(sk_txn_t* txn)
 {
     fmbuf_delete(txn->output);
     free(txn);
-}
-
-sk_txn_status_t sk_txn_status(sk_txn_t* txn)
-{
-    return txn->status;
-}
-
-void sk_txn_set_status(sk_txn_t* txn, sk_txn_status_t status)
-{
-    if (status == SK_TXN_INIT) {
-        return;
-    }
-
-    txn->status = status;
 }
 
 const char* sk_txn_input(sk_txn_t* txn, size_t* sz)
@@ -68,7 +53,7 @@ void sk_txn_set_input(sk_txn_t* txn, const char* data, size_t sz)
     txn->input_sz = sz;
 }
 
-void sk_txn_append_output(sk_txn_t* txn, const char* data, size_t sz)
+void sk_txn_output_append(sk_txn_t* txn, const char* data, size_t sz)
 {
     if (sz == 0) {
         return;

@@ -52,13 +52,13 @@ sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
         return NULL;
     }
 
-    if (sk_entity_status(entity) == SK_ENTITY_DEAD) {
+    if (sk_entity_status(entity) == SK_ENTITY_INACTIVE) {
         // already dead, it will be destroy totally when the clean_dead be
         // called
         return entity;
     }
 
-    sk_entity_mark(entity, SK_ENTITY_DEAD);
+    sk_entity_mark(entity, SK_ENTITY_INACTIVE);
 
     int ret = flist_push(mgr->inactive_entitys, entity);
     SK_ASSERT(!ret);

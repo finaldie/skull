@@ -2,10 +2,8 @@
 #define SK_ENTITY_H
 
 typedef enum sk_entity_status_t {
-    SK_ENTITY_INIT = 0,   // an empty entity
-    SK_ENTITY_ACTIVE,     // read to do the task
-    SK_ENTITY_INACTIVE,   // ready to be deleted
-    SK_ENTITY_DEAD        // already marked as deleted
+    SK_ENTITY_ACTIVE = 0, // read to do the task
+    SK_ENTITY_INACTIVE    // ready to be deleted
 } sk_entity_status_t;
 
 struct sk_sched_t;

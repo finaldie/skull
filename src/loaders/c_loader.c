@@ -14,14 +14,17 @@ typedef struct sk_c_mdata {
 const char* sk_c_module_name(const char* short_name, char* fullname, int sz)
 {
     memset(fullname, 0, sz);
-    snprintf(fullname, sz, "%s.so", short_name);
+    snprintf(fullname, sz, "modules/%s.so", short_name);
     return fullname;
 }
 
 sk_module_t* sk_c_module_open(const char* filename)
 {
+    // empty all errors first
+    dlerror();
+
     char* error = NULL;
-    void* handle = dlopen(filename, RTLD_LAZY);
+    void* handle = dlopen(filename, RTLD_NOW);
     if (!handle) {
         sk_print("cannot open %s: %s\n", filename, dlerror());
         return NULL;
