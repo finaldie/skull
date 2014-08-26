@@ -16,12 +16,10 @@ struct sk_entity_t {
     void* ud;
 };
 
-sk_entity_t* sk_entity_create(struct sk_sched_t* sched,
-                              struct sk_workflow_t* workflow)
+sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
 {
     sk_entity_t* entity = calloc(1, sizeof(*entity));
     entity->owner = NULL;
-    entity->sched = sched;
     entity->workflow = workflow;
     entity->status = SK_ENTITY_ACTIVE;
     return entity;

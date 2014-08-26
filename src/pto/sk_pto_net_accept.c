@@ -5,12 +5,12 @@
 #include "fev/fev.h"
 #include "fev/fev_buff.h"
 #include "api/sk_utils.h"
-#include "api/sk_utils.h"
 #include "api/sk_event.h"
 #include "api/sk_pto.h"
 #include "api/sk_workflow.h"
 #include "api/sk_entity.h"
 #include "api/sk_txn.h"
+#include "api/sk_env.h"
 #include "api/sk_sched.h"
 
 // -----------------------------------------------------------------------------
@@ -51,10 +51,7 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_txn_t* txn)
     NetProc net_proc_msg = NET_PROC__INIT;
     net_proc_msg.data.len = consumed;
     net_proc_msg.data.data = fevbuff_rawget(evbuff);
-    sk_sched_push(sched, txn, SK_PTO_NET_PROC, &net_proc_msg);
-
-    // success to construct one task, increase the ref cnt
-    sk_entity_inc_task_cnt(entity);
+    sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, &net_proc_msg);
 
     // consume the evbuff
     fevbuff_pop(evbuff, bytes);
@@ -67,7 +64,7 @@ static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_entity_t* entity = arg;
-    sk_sched_t* sched = sk_entity_sched(entity);
+    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
     sk_workflow_t* workflow = sk_entity_workflow(entity);
     int concurrent = workflow->concurrent;
 
@@ -77,6 +74,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         return;
     }
 
+    sk_print("create a new transcation\n");
     sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
 
     _unpack_data(fev, evbuff, txn);
@@ -88,26 +86,24 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_print("evbuff destroy...\n");
     sk_entity_t* entity = arg;
-    sk_sched_t* sched = sk_entity_sched(entity);
+    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
 
     NetDestroy destroy_msg = NET_DESTROY__INIT;
-    sk_sched_push(sched, NULL, SK_PTO_NET_DESTROY, &destroy_msg);
+    sk_sched_push(sched, entity, NULL, SK_PTO_NET_DESTROY, &destroy_msg);
 }
 
 // register the new sock fd into eventloop
 static
-int _run(sk_sched_t* sched, sk_txn_t* txn, void* proto_msg)
+int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     sk_print("event req\n");
     SK_ASSERT(!txn);
+    SK_ASSERT(entity);
 
     NetAccept* accept_msg = proto_msg;
     int client_fd = accept_msg->fd;
-    int workflow_idx = accept_msg->workflow_idx;
-    sk_workflow_t* workflow = sk_sched_workflow(sched, workflow_idx);
-    sk_entity_t* entity = sk_entity_create(sched, workflow);
+    fev_state* fev = SK_THREAD_ENV_EVENTLOOP;
 
-    fev_state* fev = sk_sched_eventloop(sched);
     fev_buff* evbuff = fevbuff_new(fev, client_fd, _read_cb, _error, entity);
     SK_ASSERT(evbuff);
 

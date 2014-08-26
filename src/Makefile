@@ -44,7 +44,8 @@ COMMON_OBJS = \
     common/sk_eventloop.o \
     common/sk_event.o \
     common/sk_config_loader.o \
-    common/sk_txn.o
+    common/sk_txn.o \
+    common/sk_env.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \

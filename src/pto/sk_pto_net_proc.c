@@ -11,10 +11,9 @@
 #include "api/sk_sched.h"
 
 static
-int _execute_module(sk_sched_t* sched, sk_txn_t* txn,
+int _execute_module(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
                      const char* data, size_t sz)
 {
-    sk_entity_t* entity = sk_txn_entity(txn);
     sk_module_t* module = sk_txn_current_module(txn);
 
     int ret = module->sk_module_run(txn);
@@ -28,7 +27,7 @@ int _execute_module(sk_sched_t* sched, sk_txn_t* txn,
     if (!sk_txn_is_last_module(txn)) {
         sk_print("doesn't reach the last module\n");
         sk_txn_next_module(txn);
-        sk_sched_push(sched, txn, SK_PTO_NET_PROC, NULL);
+        sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, NULL);
         return 0;
     }
 
@@ -54,13 +53,13 @@ int _execute_module(sk_sched_t* sched, sk_txn_t* txn,
 
 // consume the data received from network
 static
-int _run(sk_sched_t* sched, sk_txn_t* txn, void* proto_msg)
+int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     NetProc* net_msg = proto_msg;
     size_t sz = net_msg->data.len;
     unsigned char* data = net_msg->data.data;
 
-    return _execute_module(sched, txn, (const char*)data, sz);
+    return _execute_module(sched, entity, txn, (const char*)data, sz);
 }
 
 sk_proto_t sk_pto_net_proc = {

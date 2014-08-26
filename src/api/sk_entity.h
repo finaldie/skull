@@ -18,8 +18,7 @@ typedef struct sk_entity_opt_t {
 } sk_entity_opt_t;
 
 // ENTITY
-sk_entity_t* sk_entity_create(struct sk_sched_t* sched,
-                              struct sk_workflow_t* workflow);
+sk_entity_t* sk_entity_create(struct sk_workflow_t* workflow);
 void sk_entity_destroy(sk_entity_t* entity);
 
 int sk_entity_read(sk_entity_t* entity, void* buf, int buf_len);
@@ -27,7 +26,6 @@ int sk_entity_write(sk_entity_t* entity, const void* buf, int buf_len);
 
 sk_entity_status_t sk_entity_status(sk_entity_t* entity);
 struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity);
-struct sk_sched_t* sk_entity_sched(sk_entity_t* entity);
 struct sk_workflow_t* sk_entity_workflow(sk_entity_t* entity);
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud);

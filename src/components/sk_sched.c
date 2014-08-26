@@ -166,36 +166,34 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     sk_print("pto_id = %u\n", pto_id);
     SK_ASSERT(pto);
 
-    sk_entity_t* entity = NULL;
-    sk_txn_t* txn = event->txn;
-    if (txn) {
-        entity = sk_txn_entity(txn);
-        SK_ASSERT(entity);
+    sk_entity_t* entity = event->entity;
+    SK_ASSERT(entity);
 
-        // add entity into entity_mgr
-        sk_entity_status_t status = sk_entity_status(entity);
-        if (status != SK_ENTITY_ACTIVE) {
-            sk_print("entity already dead\n");
-            return 0;
-        }
+    // add entity into entity_mgr
+    sk_entity_status_t status = sk_entity_status(entity);
+    if (status != SK_ENTITY_ACTIVE) {
+        sk_print("entity already dead\n");
+        return 0;
+    }
 
-        if (NULL == sk_entity_owner(entity)) {
-            sk_entity_mgr_add(sched->entity_mgr, entity);
-        }
+    if (NULL == sk_entity_owner(entity)) {
+        sk_entity_mgr_add(sched->entity_mgr, entity);
     }
 
     ProtobufCMessage* msg = protobuf_c_message_unpack(pto->descriptor,
                                                       NULL,
                                                       event->sz,
                                                       event->data);
+
+    sk_txn_t* txn = event->txn;
     // TODO: should check the return value, and do something
-    pto->run(sched, txn, msg);
+    pto->run(sched, entity, txn, msg);
 
     protobuf_c_message_free_unpacked(msg, NULL);
     free(event->data);
 
     // delete the entity if its status ~= ACTIVE
-    if (entity && sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
+    if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
         sk_entity_mgr_del(sched->entity_mgr, entity);
         sk_print("entity status=%d, will be deleted\n",
                  sk_entity_status(entity));
@@ -217,13 +215,14 @@ void _pull_and_run(sk_sched_t* sched, sk_io_t* sk_io)
 }
 
 static
-int _emit_event(sk_sched_t* sched, int io_type, sk_txn_t* txn,
-                  int pto_id, void* proto_msg)
+int _emit_event(sk_sched_t* sched, int io_type, sk_entity_t* entity,
+                sk_txn_t* txn, int pto_id, void* proto_msg)
 {
     sk_proto_t* pto = sched->pto_tbl[pto_id];
 
     sk_event_t event;
     event.pto_id = pto_id;
+    event.entity = entity;
     event.txn = txn;
     if (proto_msg) {
         event.sz = protobuf_c_message_get_packed_size(proto_msg);
@@ -274,12 +273,12 @@ void _deliver_msg(sk_sched_t* sched)
 }
 
 // APIs
-sk_sched_t* sk_sched_create()
+sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr)
 {
     sk_sched_t* sched = malloc(sizeof(*sched));
     memset(sched, 0, sizeof(*sched));
-    sched->evlp = sk_eventloop_create();
-    sched->entity_mgr = sk_entity_mgr_create(sched, 65535);
+    sched->evlp = evlp;
+    sched->entity_mgr = entity_mgr;
     sched->pto_tbl = sk_pto_tbl;
     sched->running = 0;
 
@@ -304,8 +303,6 @@ void sk_sched_destroy(sk_sched_t* sched)
         }
     }
 
-    sk_entity_mgr_destroy(sched->entity_mgr);
-    sk_eventloop_destroy(sched->evlp);
     free(sched);
 }
 
@@ -357,21 +354,22 @@ int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst)
 
 // push a event into scheduler, and the scheduler will route it to the specific
 // sk_io
-int sk_sched_push(sk_sched_t* sched, sk_txn_t* txn,
+int sk_sched_push(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
                   int pto_id, void* proto_msg)
 {
-    return _emit_event(sched, SK_IO_INPUT, txn, pto_id, proto_msg);
+    SK_ASSERT(entity);
+    if (txn) {
+        sk_entity_inc_task_cnt(entity);
+    }
+
+    return _emit_event(sched, SK_IO_INPUT, entity, txn, pto_id, proto_msg);
 }
 
-int sk_sched_send(sk_sched_t* sched, sk_txn_t* txn,
+int sk_sched_send(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
                   int pto_id, void* proto_msg)
 {
-    return _emit_event(sched, SK_IO_OUTPUT, txn, pto_id, proto_msg);
-}
-
-void* sk_sched_eventloop(sk_sched_t* sched)
-{
-    return sched->evlp;
+    SK_ASSERT(entity);
+    return _emit_event(sched, SK_IO_OUTPUT, entity, txn, pto_id, proto_msg);
 }
 
 void sk_sched_set_workflow(sk_sched_t* sched, flist* workflows)

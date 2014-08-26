@@ -5,6 +5,7 @@
 
 #include "flist/flist.h"
 #include "fhash/fhash.h"
+#include "api/sk_entity_mgr.h"
 #include "api/sk_sched.h"
 #include "api/sk_config.h"
 
@@ -13,8 +14,10 @@ typedef struct skull_cmd_args_t {
 } skull_cmd_args_t;
 
 typedef struct skull_sched_t {
-    pthread_t   io_thread;
-    sk_sched_t* sched;
+    pthread_t        io_thread;
+    void*            evlp;
+    sk_sched_t*      sched;
+    sk_entity_mgr_t* entity_mgr;
 } skull_sched_t;
 
 typedef struct skull_core_t {

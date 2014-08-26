@@ -13,6 +13,7 @@ typedef struct sk_event_t {
     int      _reserved;
     size_t   sz;            // data size
 
+    void*    entity;        // entity object
     void*    txn;           // transcation data
     void*    data;          // protobuf data
 } sk_event_t;
