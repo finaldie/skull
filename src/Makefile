@@ -15,7 +15,7 @@ INC = \
 ifeq ($(debug), false)
 OPT = -O2
 else
-MACRO += -DSK_DEBUG
+MACRO += -DSK_DEBUG -finstrument-functions
 endif
 
 # linking flags
@@ -45,7 +45,8 @@ COMMON_OBJS = \
     common/sk_event.o \
     common/sk_config_loader.o \
     common/sk_txn.o \
-    common/sk_env.o
+    common/sk_env.o \
+    common/sk_workflow.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
@@ -55,8 +56,7 @@ COMPONENTS_OBJS = \
     components/sk_sched.o \
     components/sk.o \
     components/sk_entity_mgr.o \
-    components/sk_config.o \
-    components/sk_workflow.o
+    components/sk_config.o
 
 LOADER_OBJS = \
     loaders/c_loader.o

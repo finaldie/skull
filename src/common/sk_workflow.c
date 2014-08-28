@@ -41,3 +41,13 @@ int sk_workflow_add_module(sk_workflow_t* workflow, sk_module_t* module)
 {
     return flist_push(workflow->modules, module);
 }
+
+sk_module_t* sk_workflow_first_module(sk_workflow_t* workflow)
+{
+    return flist_head(workflow->modules);
+}
+
+sk_module_t* sk_workflow_last_module(sk_workflow_t* workflow)
+{
+    return flist_tail(workflow->modules);
+}

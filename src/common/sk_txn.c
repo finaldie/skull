@@ -107,10 +107,10 @@ struct sk_module_t* sk_txn_current_module(sk_txn_t* txn)
 
 int sk_txn_is_first_module(sk_txn_t* txn)
 {
-    return txn->current == flist_head(txn->workflow->modules);
+    return txn->current == sk_workflow_first_module(txn->workflow);
 }
 
 int sk_txn_is_last_module(sk_txn_t* txn)
 {
-    return txn->current == flist_tail(txn->workflow->modules);
+    return txn->current == sk_workflow_last_module(txn->workflow);
 }

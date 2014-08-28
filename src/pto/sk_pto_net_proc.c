@@ -10,11 +10,15 @@
 #include "api/sk_txn.h"
 #include "api/sk_sched.h"
 
+// Every time pick up the next module in the workflow module list, then execute
+// the its `run` method. If reach the last module of the workflow, then will
+// execute the `pack` method
 static
 int _execute_module(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
                      const char* data, size_t sz)
 {
-    sk_module_t* module = sk_txn_current_module(txn);
+    // 1. run the next module
+    sk_module_t* module = sk_txn_next_module(txn);
 
     int ret = module->sk_module_run(txn);
     sk_print("module execution return code=%d\n", ret);
@@ -24,27 +28,30 @@ int _execute_module(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
         return 1;
     }
 
+    // 2. check whether is the last module:
+    // if no, send a event for next module
+    // if yes, pack
     if (!sk_txn_is_last_module(txn)) {
         sk_print("doesn't reach the last module\n");
-        sk_txn_next_module(txn);
         sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, NULL);
         return 0;
     }
 
-    // pack the data, and send the response if needed
+    // 3. pack the data, and send the response if needed
     module->sk_module_pack(txn);
 
-    size_t unpacked_data_sz = 0;
-    const char* unpacked_data = sk_txn_output(txn, &unpacked_data_sz);
-    sk_print("module packed data size=%zu\n", unpacked_data_sz);
+    size_t packed_data_sz = 0;
+    const char* packed_data = sk_txn_output(txn, &packed_data_sz);
+    sk_print("module packed data size=%zu\n", packed_data_sz);
 
-    if (!unpacked_data) {
+    if (!packed_data) {
         sk_print("module no need to send response\n");
     } else {
-        sk_print("write data sz:%zu\n", unpacked_data_sz);
-        sk_entity_write(entity, unpacked_data, unpacked_data_sz);
+        sk_print("write data sz:%zu\n", packed_data_sz);
+        sk_entity_write(entity, packed_data, packed_data_sz);
     }
 
+    // 4. the transcation is over, destroy sk_txn structure
     sk_print("txn destroy\n");
     sk_txn_destroy(txn);
     sk_entity_dec_task_cnt(entity);

@@ -10,21 +10,21 @@
 // Entity Manager
 struct sk_entity_mgr_t {
     fhash* entity_mgr;
-    flist* inactive_entitys;
+    flist* inactive_entities;
 };
 
 sk_entity_mgr_t* sk_entity_mgr_create(size_t size)
 {
     sk_entity_mgr_t* mgr = malloc(sizeof(*mgr));
     mgr->entity_mgr = fhash_u64_create(size, FHASH_MASK_AUTO_REHASH);
-    mgr->inactive_entitys = flist_create();
+    mgr->inactive_entities = flist_create();
     return mgr;
 }
 
 void sk_entity_mgr_destroy(sk_entity_mgr_t* mgr)
 {
     fhash_u64_delete(mgr->entity_mgr);
-    flist_delete(mgr->inactive_entitys);
+    flist_delete(mgr->inactive_entities);
     free(mgr);
 }
 
@@ -45,15 +45,15 @@ sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
         return NULL;
     }
 
-    if (sk_entity_status(entity) == SK_ENTITY_INACTIVE) {
+    if (sk_entity_status(entity) == SK_ENTITY_DEAD) {
         // already dead, it will be destroy totally when the clean_dead be
         // called
         return entity;
     }
 
-    sk_entity_mark(entity, SK_ENTITY_INACTIVE);
+    sk_entity_mark(entity, SK_ENTITY_DEAD);
 
-    int ret = flist_push(mgr->inactive_entitys, entity);
+    int ret = flist_push(mgr->inactive_entities, entity);
     SK_ASSERT(!ret);
 
     return entity;
@@ -77,8 +77,8 @@ void sk_entity_mgr_foreach(sk_entity_mgr_t* mgr,
 
 void sk_entity_mgr_clean_dead(sk_entity_mgr_t* mgr)
 {
-    while (!flist_empty(mgr->inactive_entitys)) {
-        sk_entity_t* entity = flist_pop(mgr->inactive_entitys);
+    while (!flist_empty(mgr->inactive_entities)) {
+        sk_entity_t* entity = flist_pop(mgr->inactive_entities);
 
         sk_entity_t* deleted_entity = fhash_u64_del(mgr->entity_mgr,
                                                     (uint64_t)entity);

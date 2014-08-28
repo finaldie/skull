@@ -3,7 +3,8 @@
 
 typedef enum sk_entity_status_t {
     SK_ENTITY_ACTIVE = 0, // read to do the task
-    SK_ENTITY_INACTIVE    // ready to be deleted
+    SK_ENTITY_INACTIVE,   // ready to be deleted
+    SK_ENTITY_DEAD
 } sk_entity_status_t;
 
 struct sk_sched_t;

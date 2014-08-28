@@ -173,9 +173,9 @@ void* worker_io_thread(void* arg)
 {
     sk_print("worker io thread started\n");
     sk_thread_env_t* thread_env = arg;
-    sk_sched_t* sched = thread_env->sched;
     sk_thread_env_set(thread_env);
 
+    sk_sched_t* sched = thread_env->sched;
     sk_sched_start(sched);
     return 0;
 }
@@ -246,7 +246,7 @@ void skull_start(skull_core_t* core)
         skull_sched_t* worker_sched = &core->worker_sched[i];
         // this *worker_thread_env* will be deleted when thread exit
         sk_thread_env_t* worker_thread_env = _skull_thread_env_create(
-                                                               main_sched,
+                                                               worker_sched,
                                                                core->workflows);
         ret = pthread_create(&worker_sched->io_thread, NULL,
                              worker_io_thread, worker_thread_env);

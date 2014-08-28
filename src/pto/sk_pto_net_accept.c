@@ -16,16 +16,16 @@
 // -----------------------------------------------------------------------------
 
 static
-void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_txn_t* txn)
+void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 {
-    sk_sched_t* sched = sk_txn_sched(txn);
-    //sk_workflow_t* workflow = sk_txn_workflow(txn);
-    sk_entity_t* entity = sk_txn_entity(txn);
+    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
+    sk_workflow_t* workflow = sk_entity_workflow(entity);
 
-    sk_module_t* module = sk_txn_next_module(txn);
-    SK_ASSERT_MSG(module->sk_module_unpack, "missing unpack callback\n");
+    // 1. get the first module, and try to unpack the data
+    sk_module_t* first_module = sk_workflow_first_module(workflow);
+    SK_ASSERT_MSG(first_module->sk_module_unpack, "missing unpack callback\n");
 
-    // calculate how many bytes we need to read
+    // 2. calculate how many bytes we need to read
     size_t used_len = fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
     int read_len = 0;
     if (used_len == 0) {
@@ -40,21 +40,35 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_txn_t* txn)
         return;
     }
 
-    sk_txn_set_input(txn, fevbuff_rawget(evbuff), bytes);
-    int consumed = module->sk_module_unpack(txn);
+    // 3. try to unpack the user data
+    const void* data = fevbuff_rawget(evbuff);
+    int consumed = first_module->sk_module_unpack(data, bytes);
     if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%d\n", bytes);
         return;
     }
 
+    // Now, the one user packge has been unpacked succefully
+    // 4. prepare a sk_txn and set the input data
+    // 5. increase the txn reference in entity object
+
+    // 4.
+    sk_print("create a new transcation\n");
+    sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
+    sk_txn_set_input(txn, data, bytes);
+
+    // 5.
+    sk_entity_inc_task_cnt(entity);
+
+    // 6. prepare and send a workflow processing event
     NetProc net_proc_msg = NET_PROC__INIT;
     net_proc_msg.data.len = consumed;
-    net_proc_msg.data.data = fevbuff_rawget(evbuff);
+    net_proc_msg.data.data = (unsigned char*)data;
     sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, &net_proc_msg);
 
     // consume the evbuff
-    fevbuff_pop(evbuff, bytes);
+    fevbuff_pop(evbuff, consumed);
 }
 
 // EventLoop trigger this callback
@@ -64,7 +78,6 @@ static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_entity_t* entity = arg;
-    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
     sk_workflow_t* workflow = sk_entity_workflow(entity);
     int concurrent = workflow->concurrent;
 
@@ -74,10 +87,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         return;
     }
 
-    sk_print("create a new transcation\n");
-    sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
-
-    _unpack_data(fev, evbuff, txn);
+    _unpack_data(fev, evbuff, entity);
 }
 
 // send a destroy msg, so that the scheduler will destory it later
