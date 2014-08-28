@@ -27,14 +27,15 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 
     // 2. calculate how many bytes we need to read
     size_t used_len = fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
-    int read_len = 0;
+    size_t read_len = 0;
     if (used_len == 0) {
         read_len = 1024;
     } else {
-        read_len *= used_len * 2;
+        read_len = used_len * 2;
     }
 
-    int bytes = sk_entity_read(entity, NULL, read_len);
+    ssize_t bytes = sk_entity_read(entity, NULL, read_len);
+    sk_print("read bytes: %ld\n", bytes);
     if (bytes <= 0) {
         sk_print("buffer cannot read\n");
         return;
@@ -42,10 +43,10 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 
     // 3. try to unpack the user data
     const void* data = fevbuff_rawget(evbuff);
-    int consumed = first_module->sk_module_unpack(data, bytes);
+    size_t consumed = first_module->sk_module_unpack(data, bytes);
     if (consumed == 0) {
         // means user need more data, re-try in next round
-        sk_print("user need more data, current data size=%d\n", bytes);
+        sk_print("user need more data, current data size=%zu\n", bytes);
         return;
     }
 
@@ -62,10 +63,7 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
     sk_entity_inc_task_cnt(entity);
 
     // 6. prepare and send a workflow processing event
-    NetProc net_proc_msg = NET_PROC__INIT;
-    net_proc_msg.data.len = consumed;
-    net_proc_msg.data.data = (unsigned char*)data;
-    sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, &net_proc_msg);
+    sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, NULL);
 
     // consume the evbuff
     fevbuff_pop(evbuff, consumed);

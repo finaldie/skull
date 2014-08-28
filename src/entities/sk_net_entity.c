@@ -12,7 +12,7 @@ typedef struct sk_net_data_t {
     fev_buff* evbuff;
 } sk_net_data_t;
 
-void sk_net_entity_create(sk_entity_t* entity, struct fev_buff* evbuff)
+void sk_net_entity_create(sk_entity_t* entity, void* evbuff)
 {
     sk_net_data_t* net_data = malloc(sizeof(*net_data));
     net_data->evbuff = evbuff;
@@ -20,7 +20,7 @@ void sk_net_entity_create(sk_entity_t* entity, struct fev_buff* evbuff)
 }
 
 static
-int net_read(sk_entity_t* entity, void* buf, int len, void* ud)
+ssize_t net_read(sk_entity_t* entity, void* buf, size_t len, void* ud)
 {
     sk_net_data_t* net_data = ud;
     fev_buff* evbuff = net_data->evbuff;
@@ -29,7 +29,7 @@ int net_read(sk_entity_t* entity, void* buf, int len, void* ud)
 }
 
 static
-int net_write(sk_entity_t* entity, const void* buf, int len, void* ud)
+ssize_t net_write(sk_entity_t* entity, const void* buf, size_t len, void* ud)
 {
     sk_net_data_t* net_data = ud;
     fev_buff* evbuff = net_data->evbuff;

@@ -37,12 +37,12 @@ void sk_entity_destroy(sk_entity_t* entity)
     free(entity);
 }
 
-int sk_entity_read(sk_entity_t* entity, void* buf, int buf_len)
+ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len)
 {
     return entity->opt.read(entity, buf, buf_len, entity->ud);
 }
 
-int sk_entity_write(sk_entity_t* entity, const void* buf, int buf_len)
+ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len)
 {
     return entity->opt.write(entity, buf, buf_len, entity->ud);
 }

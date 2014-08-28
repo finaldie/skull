@@ -40,12 +40,12 @@ struct sk_sched_t {
     sk_io_bridge_t*  bridge_tbl[SK_SCHED_MAX_IO_BRIDGE];
     flist*           workflows;
 
-    // sk_event read buffer
-    sk_event_t*      events_buffer;
-
     uint32_t   bridge_size;
     uint32_t   running:1;
     uint32_t   _reserved:31;
+
+    // sk_event read buffer
+    sk_event_t events_buffer[1];
 };
 
 // INTERNAL APIs
@@ -308,12 +308,11 @@ int _emit_event(sk_sched_t* sched, int io_type, sk_entity_t* entity,
 // APIs
 sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr)
 {
-    sk_sched_t* sched = malloc(sizeof(*sched));
-    memset(sched, 0, sizeof(*sched));
+    sk_sched_t* sched = calloc(1, sizeof(*sched) +
+                               SK_EVENT_SZ * SK_SCHED_PULL_NUM);
     sched->evlp = evlp;
     sched->entity_mgr = entity_mgr;
     sched->pto_tbl = sk_pto_tbl;
-    sched->events_buffer = malloc(SK_EVENT_SZ * SK_SCHED_PULL_NUM);
     sched->running = 0;
 
     // create the default io
@@ -337,7 +336,6 @@ void sk_sched_destroy(sk_sched_t* sched)
         }
     }
 
-    free(sched->events_buffer);
     free(sched);
 }
 

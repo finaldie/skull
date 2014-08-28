@@ -1,6 +1,9 @@
 #ifndef SK_ENTITY_H
 #define SK_ENTITY_H
 
+#include <stddef.h>
+#include <unistd.h>
+
 typedef enum sk_entity_status_t {
     SK_ENTITY_ACTIVE = 0, // read to do the task
     SK_ENTITY_INACTIVE,   // ready to be deleted
@@ -13,17 +16,17 @@ struct sk_workflow_t;
 typedef struct sk_entity_t sk_entity_t;
 
 typedef struct sk_entity_opt_t {
-    int  (*read)    (sk_entity_t*, void* buf, int len, void* ud);
-    int  (*write)   (sk_entity_t*, const void* buf, int len, void* ud);
-    void (*destroy) (sk_entity_t*, void* ud);
+    ssize_t (*read)    (sk_entity_t*, void* buf, size_t len, void* ud);
+    ssize_t (*write)   (sk_entity_t*, const void* buf, size_t len, void* ud);
+    void    (*destroy) (sk_entity_t*, void* ud);
 } sk_entity_opt_t;
 
 // ENTITY
 sk_entity_t* sk_entity_create(struct sk_workflow_t* workflow);
 void sk_entity_destroy(sk_entity_t* entity);
 
-int sk_entity_read(sk_entity_t* entity, void* buf, int buf_len);
-int sk_entity_write(sk_entity_t* entity, const void* buf, int buf_len);
+ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len);
+ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len);
 
 sk_entity_status_t sk_entity_status(sk_entity_t* entity);
 struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity);
@@ -43,8 +46,7 @@ void sk_entity_dec_task_cnt(sk_entity_t* entity);
 int sk_entity_task_cnt(sk_entity_t* entity);
 
 // create network entity from an empty entity
-struct fev_buff;
-void sk_net_entity_create(sk_entity_t* entity, struct fev_buff* evbuff);
+void sk_net_entity_create(sk_entity_t* entity, void* ud);
 
 #endif
 

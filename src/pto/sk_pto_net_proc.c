@@ -14,8 +14,7 @@
 // the its `run` method. If reach the last module of the workflow, then will
 // execute the `pack` method
 static
-int _execute_module(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
-                     const char* data, size_t sz)
+int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
@@ -56,17 +55,6 @@ int _execute_module(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     sk_txn_destroy(txn);
     sk_entity_dec_task_cnt(entity);
     return 0;
-}
-
-// consume the data received from network
-static
-int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
-{
-    NetProc* net_msg = proto_msg;
-    size_t sz = net_msg->data.len;
-    unsigned char* data = net_msg->data.data;
-
-    return _execute_module(sched, entity, txn, (const char*)data, sz);
 }
 
 sk_proto_t sk_pto_net_proc = {
