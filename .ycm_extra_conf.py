@@ -49,6 +49,7 @@ flags = [
 '-Wpadded',
 '-pedantic',
 '-fexceptions',
+'-Wconversion',
 '-DNDEBUG',
 '-D_POSIX_C_SOURCE=200809L',
 # THIS IS IMPORTANT! Without a "-std=<something>" flag, clang won't know which

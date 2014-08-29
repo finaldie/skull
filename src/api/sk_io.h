@@ -12,21 +12,25 @@
 
 typedef struct sk_io_t sk_io_t;
 
-sk_io_t* sk_io_create(int input_sz, int output_sz);
+sk_io_t* sk_io_create(size_t input_sz, size_t output_sz);
 void sk_io_destroy(sk_io_t* io);
 
-#define SK_IO_INPUT  0
-#define SK_IO_OUTPUT 1
+typedef enum sk_io_type_t {
+    SK_IO_INPUT = 0,
+    SK_IO_OUTPUT,
+} sk_io_type_t;
 
 // push N events into sk_io input or output queue
-void sk_io_push(sk_io_t* io, int type, sk_event_t* events, int nevents);
+void sk_io_push(sk_io_t* io, sk_io_type_t type, sk_event_t* events,
+                size_t nevents);
 
 // try to pull N events from sk_io (input or output) queue
 // return the actual event count
-int sk_io_pull(sk_io_t* io, int type, sk_event_t* events, int nevents);
+size_t sk_io_pull(sk_io_t* io, sk_io_type_t type, sk_event_t* events,
+                  size_t nevents);
 
-int sk_io_used(sk_io_t* io, int type);
-int sk_io_free(sk_io_t* io, int type);
+size_t sk_io_used(sk_io_t* io, sk_io_type_t type);
+size_t sk_io_free(sk_io_t* io, sk_io_type_t type);
 
 #endif
 

@@ -43,7 +43,7 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 
     // 3. try to unpack the user data
     const void* data = fevbuff_rawget(evbuff);
-    size_t consumed = first_module->sk_module_unpack(data, bytes);
+    size_t consumed = first_module->sk_module_unpack(data, (size_t)bytes);
     if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", bytes);
@@ -57,7 +57,7 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
     // 4.
     sk_print("create a new transcation\n");
     sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
-    sk_txn_set_input(txn, data, bytes);
+    sk_txn_set_input(txn, data, (size_t)bytes);
 
     // 5.
     sk_entity_inc_task_cnt(entity);

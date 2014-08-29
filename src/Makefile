@@ -2,10 +2,11 @@ debug ?= false
 
 # compiling flags
 STD = -pedantic -std=c99
-WARN = -Wall -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
+WARN = -Wall -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization -Wconversion
 EXTRA = -Wpadded
-OTHER = -pipe -g -ggdb -Wl,-E
+OTHER = -pipe -g -ggdb
 SHARED =
+LDFLAGS += -Wl,-E
 MACRO = -D_POSIX_C_SOURCE=200809L
 INC = \
     -I. \

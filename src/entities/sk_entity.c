@@ -7,11 +7,10 @@
 
 struct sk_entity_t {
     struct sk_entity_mgr_t* owner;
-    struct sk_sched_t* sched;
-    sk_workflow_t* workflow;
+    sk_workflow_t*  workflow;
     sk_entity_opt_t opt;
 
-    int   status;
+    sk_entity_status_t status;
     int   task_cnt;
     void* ud;
 };
@@ -60,11 +59,6 @@ void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status)
 struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity)
 {
     return entity->owner;
-}
-
-struct sk_sched_t* sk_entity_sched(sk_entity_t* entity)
-{
-    return entity->sched;
 }
 
 sk_workflow_t* sk_entity_workflow(sk_entity_t* entity)

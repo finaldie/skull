@@ -1,6 +1,8 @@
 #ifndef SK_SCHEDULER_H
 #define SK_SCHEDULER_H
 
+#include <stdint.h>
+
 #include "flist/flist.h"
 #include "api/sk_txn.h"
 #include "api/sk_entity.h"
@@ -19,11 +21,11 @@ int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst);
 
 // push an event to the scheduler
 int sk_sched_push(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
-                  int pto_id, void* proto_msg);
+                  uint32_t pto_id, void* proto_msg);
 
 // deliver a event to another scheduler
 int sk_sched_send(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
-                  int pto_id, void* proto_msg);
+                  uint32_t pto_id, void* proto_msg);
 
 #endif
 

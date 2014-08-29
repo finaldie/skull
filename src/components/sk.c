@@ -48,7 +48,7 @@ void _skull_setup_schedulers(skull_core_t* core)
                                         main_sched->entity_mgr);
 
     // create worker schedulers
-    core->worker_sched = calloc(config->threads, sizeof(skull_sched_t));
+    core->worker_sched = calloc((size_t)config->threads, sizeof(skull_sched_t));
 
     for (int i = 0; i < config->threads; i++) {
         skull_sched_t* worker_sched = &core->worker_sched[i];

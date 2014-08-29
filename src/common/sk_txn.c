@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "fmbuf/fmbuf.h"
 #include "api/sk_workflow.h"
@@ -12,7 +13,7 @@ struct sk_txn_t {
     sk_workflow_t*  workflow;
     sk_entity_t*    entity;
 
-    const char*     input;
+    char*           input;
     size_t          input_sz;
     fmbuf*          output;
     flist_iter      workflow_idx;
@@ -38,6 +39,7 @@ sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
 void sk_txn_destroy(sk_txn_t* txn)
 {
     fmbuf_delete(txn->output);
+    free(txn->input);
     free(txn);
 }
 
@@ -49,7 +51,12 @@ const char* sk_txn_input(sk_txn_t* txn, size_t* sz)
 
 void sk_txn_set_input(sk_txn_t* txn, const char* data, size_t sz)
 {
-    txn->input = data;
+    if (!sz || !data) {
+        return;
+    }
+
+    txn->input = malloc(sz);
+    memcpy(txn->input, data, sz);
     txn->input_sz = sz;
 }
 

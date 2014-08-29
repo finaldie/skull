@@ -48,11 +48,11 @@ void _delete_config(sk_config_t* config)
 static
 int _get_int(sk_cfg_node_t* node)
 {
-    int value = strtol(node->data.value, NULL, 10);
+    long int value = strtol(node->data.value, NULL, 10);
     SK_ASSERT_MSG(errno != EINVAL && errno != ERANGE,
                   "load config errno: %d, %s\n", errno, strerror(errno));
 
-    return value;
+    return (int)value;
 }
 
 static

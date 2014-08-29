@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <unistd.h>
+#include <stdint.h>
 
 typedef enum sk_entity_status_t {
     SK_ENTITY_ACTIVE = 0, // read to do the task
@@ -10,10 +11,11 @@ typedef enum sk_entity_status_t {
     SK_ENTITY_DEAD
 } sk_entity_status_t;
 
-struct sk_sched_t;
 struct sk_entity_mgr_t;
 struct sk_workflow_t;
 typedef struct sk_entity_t sk_entity_t;
+
+typedef uint64_t sk_entity_id_t;
 
 typedef struct sk_entity_opt_t {
     ssize_t (*read)    (sk_entity_t*, void* buf, size_t len, void* ud);
@@ -31,6 +33,7 @@ ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len);
 sk_entity_status_t sk_entity_status(sk_entity_t* entity);
 struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity);
 struct sk_workflow_t* sk_entity_workflow(sk_entity_t* entity);
+sk_entity_id_t sk_entity_id(sk_entity_t* entity);
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud);
 void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr);

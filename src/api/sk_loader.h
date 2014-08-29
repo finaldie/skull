@@ -10,7 +10,7 @@
 
 typedef struct sk_loader_t {
     const char* (*sk_module_name)(const char* short_name,
-                                  char* fullname, int sz);
+                                  char* fullname, size_t sz);
     sk_module_t* (*sk_module_open)(const char* filename);
 
     int   (*sk_module_close)(sk_module_t* module);

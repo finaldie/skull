@@ -13,10 +13,10 @@ struct sk_entity_mgr_t {
     flist* inactive_entities;
 };
 
-sk_entity_mgr_t* sk_entity_mgr_create(size_t size)
+sk_entity_mgr_t* sk_entity_mgr_create(uint32_t idx_sz)
 {
     sk_entity_mgr_t* mgr = malloc(sizeof(*mgr));
-    mgr->entity_mgr = fhash_u64_create(size, FHASH_MASK_AUTO_REHASH);
+    mgr->entity_mgr = fhash_u64_create(idx_sz, FHASH_MASK_AUTO_REHASH);
     mgr->inactive_entities = flist_create();
     return mgr;
 }
@@ -28,9 +28,9 @@ void sk_entity_mgr_destroy(sk_entity_mgr_t* mgr)
     free(mgr);
 }
 
-sk_entity_t* sk_entity_mgr_get(sk_entity_mgr_t* mgr, int fd)
+sk_entity_t* sk_entity_mgr_get(sk_entity_mgr_t* mgr, sk_entity_id_t id)
 {
-    return fhash_u64_get(mgr->entity_mgr, fd);
+    return fhash_u64_get(mgr->entity_mgr, id);
 }
 
 void sk_entity_mgr_add(sk_entity_mgr_t* mgr, sk_entity_t* entity)

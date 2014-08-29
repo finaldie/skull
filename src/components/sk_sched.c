@@ -74,7 +74,7 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
     // push the event to the corresponding sk_io
     while (!fmbuf_pop(io_bridge->mq, &event, SK_EVENT_SZ)) {
         sk_sched_t* dst = io_bridge->dst;
-        int pto_id = event.pto_id;
+        uint32_t pto_id = event.pto_id;
         sk_proto_t* pto = dst->pto_tbl[pto_id];
         int priority = pto->priority;
         sk_io_t* dst_io = io_bridge->dst->io_tbl[priority];
@@ -92,7 +92,7 @@ void _setup_bridge(sk_sched_t* dst, sk_io_bridge_t* io_bridge)
 }
 
 static
-sk_io_bridge_t* sk_io_bridge_create(sk_sched_t* dst, int size)
+sk_io_bridge_t* sk_io_bridge_create(sk_sched_t* dst, size_t size)
 {
     sk_io_bridge_t* io_bridge = malloc(sizeof(*io_bridge));
     io_bridge->dst = dst;
@@ -120,26 +120,26 @@ void sk_io_bridge_destroy(sk_io_bridge_t* io_bridge)
 //
 // return how many events be delivered
 static
-int sk_io_bridge_deliver(sk_io_bridge_t* io_bridge, sk_io_t* src_io)
+size_t sk_io_bridge_deliver(sk_io_bridge_t* io_bridge, sk_io_t* src_io)
 {
     // calculate how many events can be transferred
-    int event_cnt = sk_io_used(src_io, SK_IO_OUTPUT);
+    size_t event_cnt = sk_io_used(src_io, SK_IO_OUTPUT);
     if (event_cnt == 0) {
         return 0;
     }
-    int free_slots = fmbuf_free(io_bridge->mq) / SK_EVENT_SZ;
+    size_t free_slots = fmbuf_free(io_bridge->mq) / SK_EVENT_SZ;
     if (free_slots == 0) {
         return 0;
     }
 
     // copy events from src_io to io bridge's mq
     sk_event_t event;
-    int nevents = sk_io_pull(src_io, SK_IO_OUTPUT, &event, 1);
+    size_t nevents = sk_io_pull(src_io, SK_IO_OUTPUT, &event, 1);
     SK_ASSERT(nevents == 1);
+
     int ret = fmbuf_push(io_bridge->mq, &event, SK_EVENT_SZ);
     SK_ASSERT(!ret);
-
-    return 1;
+    return nevents;
 }
 
 static
@@ -170,14 +170,14 @@ void _io_bridget_notify(sk_io_bridge_t* io_bridge, uint64_t cnt)
 
 void _deliver_msg(sk_sched_t* sched)
 {
-    int delivery[SK_SCHED_MAX_IO_BRIDGE] = {0};
+    uint64_t delivery[SK_SCHED_MAX_IO_BRIDGE] = {0};
 
     for (int i = SK_PTO_PRI_MAX; i >= SK_PTO_PRI_MIN; i--) {
         sk_io_t* io = sched->io_tbl[i];
 
         for (uint32_t bri_idx = 0; bri_idx < sched->bridge_size; bri_idx++) {
             sk_io_bridge_t* io_bridge = sched->bridge_tbl[bri_idx];
-            delivery[bri_idx] += sk_io_bridge_deliver(io_bridge, io);
+            delivery[bri_idx] += (uint64_t)sk_io_bridge_deliver(io_bridge, io);
         }
     }
 
@@ -233,12 +233,12 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 }
 
 static
-int _pull_and_run(sk_sched_t* sched, sk_io_t* sk_io)
+size_t _pull_and_run(sk_sched_t* sched, sk_io_t* sk_io)
 {
-    int nevents = sk_io_pull(sk_io, SK_IO_INPUT, sched->events_buffer,
+    size_t nevents = sk_io_pull(sk_io, SK_IO_INPUT, sched->events_buffer,
                              SK_SCHED_PULL_NUM);
 
-    for (int i = 0; i < nevents; i++) {
+    for (size_t i = 0; i < nevents; i++) {
         sk_event_t* event = &sched->events_buffer[i];
         _run_event(sched, sk_io, event);
     }
@@ -247,7 +247,7 @@ int _pull_and_run(sk_sched_t* sched, sk_io_t* sk_io)
 }
 
 static
-int _process_events_once(sk_sched_t* sched)
+size_t _process_events_once(sk_sched_t* sched)
 {
     // execuate all io bridge
     // NOTE: deliver the msg from highest priority mq to lowest priority mq
@@ -255,7 +255,7 @@ int _process_events_once(sk_sched_t* sched)
 
     // execuate all io events
     // NOTE: run the events from highest priority mq to lowest priority mq
-    int nprocessed = 0;
+    size_t nprocessed = 0;
     for (int i = SK_PTO_PRI_MAX; i >= SK_PTO_PRI_MIN; i--) {
         nprocessed += _pull_and_run(sched, sched->io_tbl[i]);
     }
@@ -270,7 +270,7 @@ int _process_events_once(sk_sched_t* sched)
 static
 void _process_events(sk_sched_t* sched)
 {
-    int nprocessed = 0;
+    size_t nprocessed = 0;
 
     do {
         nprocessed = _process_events_once(sched);
@@ -278,8 +278,8 @@ void _process_events(sk_sched_t* sched)
 }
 
 static
-int _emit_event(sk_sched_t* sched, int io_type, sk_entity_t* entity,
-                sk_txn_t* txn, int pto_id, void* proto_msg)
+int _emit_event(sk_sched_t* sched, sk_io_type_t io_type, sk_entity_t* entity,
+                sk_txn_t* txn, uint32_t pto_id, void* proto_msg)
 {
     sk_proto_t* pto = sched->pto_tbl[pto_id];
 
@@ -376,14 +376,14 @@ int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst)
 // push a event into scheduler, and the scheduler will route it to the specific
 // sk_io
 int sk_sched_push(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
-                  int pto_id, void* proto_msg)
+                  uint32_t pto_id, void* proto_msg)
 {
     SK_ASSERT(entity);
     return _emit_event(sched, SK_IO_INPUT, entity, txn, pto_id, proto_msg);
 }
 
 int sk_sched_send(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
-                  int pto_id, void* proto_msg)
+                  uint32_t pto_id, void* proto_msg)
 {
     SK_ASSERT(entity);
     return _emit_event(sched, SK_IO_OUTPUT, entity, txn, pto_id, proto_msg);

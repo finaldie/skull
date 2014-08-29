@@ -20,7 +20,7 @@ void _read_commands(int argc, char** argv, skull_cmd_args_t* cmd_args)
         exit(1);
     }
 
-    char opt;
+    int opt;
     while ((opt = getopt(argc, argv, "c:")) != -1) {
         switch (opt) {
         case 'c':
