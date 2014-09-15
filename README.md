@@ -11,13 +11,22 @@ Use Ubuntu14.04 as an example.
 apt-get install libyaml-dev libpcap0.8-dev libpcap0.8 libprotobuf-c0 libprotobuf-c0-dev
 ```
 
-### Build
+### Build Release Version
 ```
 git clone git@github.com:finaldie/skull.git
 cd skull
 git submodule update --init --recursive
 make dep
 make -j4
+```
+
+### Build Debug Version
+```
+git clone git@github.com:finaldie/skull.git
+cd skull
+git submodule update --init --recursive
+make dep
+make debug=true -j4
 ```
 
 ## How to Run
