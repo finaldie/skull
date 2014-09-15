@@ -1,9 +1,9 @@
 debug ?= false
 
 # compiling flags
-STD = -pedantic -std=c99
-WARN = -Wall -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization -Wconversion
-EXTRA = -Wpadded
+STD = -std=c99
+WARN = -Wall
+EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization -Wconversion
 OTHER = -pipe -g -ggdb
 SHARED =
 LDFLAGS += -Wl,-E
