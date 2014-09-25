@@ -4,7 +4,7 @@ debug ?= false
 STD = -std=c99
 WARN = -Wall
 EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization -Wconversion
-OTHER = -pipe -g -ggdb
+OTHER = -pipe -g -ggdb3
 SHARED =
 LDFLAGS += -Wl,-E
 MACRO = -D_POSIX_C_SOURCE=200809L
@@ -35,7 +35,7 @@ SKULL_LD = $(CC) $(SKULL_LDFLAGS)
 prefix ?= /usr/local
 
 # binaries
-SKULL_ENGINE = skull
+SKULL_ENGINE = skull-engine
 
 # Objs
 COMMON_OBJS = \
