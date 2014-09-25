@@ -1,0 +1,47 @@
+#!/bin/bash
+
+function print_usage()
+{
+    echo "usage:"
+    echo " \_ skull create project_name"
+}
+
+function action_create()
+{
+    if [ $# = 0 ]; then
+        echo "Error: missing project name"
+        print_usage
+        exit 1
+    fi
+
+    local workspace=$1
+    echo "create skull workspace..."
+    if [ -d $workspace ]; then
+        echo "Notice: The workspace [$workspace] has already exist, give up to build it"
+    fi
+
+    # build the basic workspace folder structure
+    mkdir -p $workspace
+    mkdir -p $workspace/.skull
+    mkdir -p $workspace/components/modules
+    mkdir -p $workspace/components/common
+    mkdir -p $workspace/components/config
+    mkdir -p $workspace/scripts
+    mkdir -p $workspace/tests
+    touch $workspace/Makefile
+    touch $workspace/scripts/start.sh
+    touch $workspace/scripts/stop.sh
+
+    echo "create skull workspace done"
+}
+
+##### main #####
+if [ $# = 0 ]; then
+    print_usage
+    exit 1
+fi
+
+if [ $1 = "create" ]; then
+    shift
+    action_create $@
+fi
