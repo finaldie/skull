@@ -6,6 +6,26 @@ function print_usage()
     echo " \_ skull create project_name"
 }
 
+function skull_create()
+{
+    local workspace=$1
+    # build the basic workspace folder structure
+    mkdir -p $workspace
+    mkdir -p $workspace/.skull
+    mkdir -p $workspace/components/modules
+    mkdir -p $workspace/components/common
+    mkdir -p $workspace/scripts
+    mkdir -p $workspace/tests
+    mkdir -p $workspace/config
+    touch $workspace/Makefile
+    touch $workspace/scripts/start.sh
+    touch $workspace/scripts/stop.sh
+    touch $workspace/config/skull-config.yaml
+
+    # copy templates to the target workspace
+    cp templates/skull-config.yaml $workspace/config/skull-config.yaml
+}
+
 function action_create()
 {
     if [ $# = 0 ]; then
@@ -17,21 +37,12 @@ function action_create()
     local workspace=$1
     echo "create skull workspace..."
     if [ -d $workspace ]; then
-        echo "Notice: The workspace [$workspace] has already exist, give up to build it"
+        echo "Notice: The workspace [$workspace] has already exist, " \
+             "give up to build it"
+        exit 1
     fi
 
-    # build the basic workspace folder structure
-    mkdir -p $workspace
-    mkdir -p $workspace/.skull
-    mkdir -p $workspace/components/modules
-    mkdir -p $workspace/components/common
-    mkdir -p $workspace/components/config
-    mkdir -p $workspace/scripts
-    mkdir -p $workspace/tests
-    touch $workspace/Makefile
-    touch $workspace/scripts/start.sh
-    touch $workspace/scripts/stop.sh
-
+    skull_create $workspace
     echo "create skull workspace done"
 }
 
