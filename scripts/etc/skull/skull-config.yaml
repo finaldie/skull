@@ -1,7 +1,5 @@
-# how many worker threads the skull engine will create
 thread_num: 1
 
-# working flow
 workflows:
     - modules: []
       concurrent: 1
