@@ -108,7 +108,7 @@ protos: $(PROTO_IDLS)
 
 install:
 	test -d $(prefix)/bin || mkdir -p $(prefix)/bin
-	test -f $(SKULL_ENGINE) && cp $(SKULL_ENGINE) $(prefix)/bin
+	test -x $(SKULL_ENGINE) && cp $(SKULL_ENGINE) $(prefix)/bin
 
 clean:
 	rm -f $(SKULL_ENGINE) $(SKULL_OBJS)

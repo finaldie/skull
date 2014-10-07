@@ -33,7 +33,7 @@ def show_workflows(config_name):
         workflow_cnt += 1
         print "\n",
 
-    print "total %d workflows" % workflow_cnt
+    print "total %d workflows" % (workflow_cnt - 1)
 
     yaml_file.close()
 

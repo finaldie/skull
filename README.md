@@ -29,7 +29,14 @@ make -j4
 make debug=true -j4
 ```
 
+### Install Skull and its related Scripts
+```
+sudo make install
+```
+
 ## How to Run
 ```
-skull -c config
+skull-engine -c config
 ```
+
+## Frequent Questions

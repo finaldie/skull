@@ -21,8 +21,11 @@ check:
 valgrind-check:
 	cd tests && $(MAKE) $@
 
-install:
+install: install_scripts
 	cd src && $(MAKE) $@
+
+install_scripts:
+	cd scripts && $(MAKE) install
 
 clean: clean_dep clean_protos
 	cd src && $(MAKE) $@
@@ -33,4 +36,4 @@ clean_dep:
 clean_protos:
 	cd src && $(MAKE) $@
 
-.PHONY: all dep clean clean_dep clean_protos core check valgrind-check install flibs protos
+.PHONY: all dep clean clean_dep clean_protos core check valgrind-check install flibs protos install_scripts

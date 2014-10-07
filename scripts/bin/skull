@@ -1,0 +1,90 @@
+#!/bin/bash
+
+########################## Global Environment Variables ########################
+# detected skull project root folder
+SKULL_PROJ_ROOT=
+
+# detected skull scripts root folder
+SKULL_ROOT=
+
+##################################### Utility ##################################
+function print_usage()
+{
+    echo "usage:"
+    echo " \_ skull create project_name"
+    echo " \_ skull show"
+}
+
+# Get the skull scripts root directory folder, it should be run only once
+function get_root()
+{
+    SKULL_ROOT=`dirname $0`
+    SKULL_ROOT=`dirname $SKULL_ROOT`
+
+    # If we run skull from its bin folder like "./skull", so the $SKULL_ROOT
+    # should be its parent folder
+    if [ $SKULL_ROOT = "." ] && [ -x skull ]; then
+        SKULL_ROOT="../$SKULL_ROOT"
+    fi
+}
+
+# The prepare() function mainly focus on:
+# 1. Initialize global variables
+# 2. Load lib scripts
+function prepare()
+{
+    local should_get_proj_root=$1
+
+    # 1. Get the root script folder of skull
+    get_root
+
+    # 2. Load the lib scripts
+    if [ -f $SKULL_ROOT/lib/skull_env.bash ]; then
+        . $SKULL_ROOT/lib/skull_env.bash
+    fi
+
+    if [ -f $SKULL_ROOT/lib/skull_actions.bash ]; then
+        . $SKULL_ROOT/lib/skull_actions.bash
+    fi
+
+    # If no need to get project root path, return 0 directly
+    if ! $should_get_proj_root; then
+        return 0
+    fi
+
+    # 3. Now if the other commands need the root path of a skull project,
+    #  so get it before run any other commands
+    get_proj_root
+    if [ $? = 1 ]; then
+        echo "Fatal: Not a skull project"
+        exit 1
+    fi
+}
+
+###################################### MAIN ####################################
+# 1. Basic checking for parameter count
+if [ $# = 0 ]; then
+    print_usage
+    exit 1
+fi
+
+# 2. Process Commands
+case "$1" in
+    (create)
+        shift
+        prepare false
+        action_create $@
+        ;;
+    (show)
+        shift
+        prepare true
+        action_show $@
+        ;;
+    (*)
+        echo "Error: Unknown command parameter $1"
+        print_usage
+        exit 1
+        ;;
+esac
+
+exit 0

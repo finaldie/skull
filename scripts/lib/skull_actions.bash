@@ -1,10 +1,10 @@
-#!/bin/bash
-
-function print_usage()
-{
-    echo "usage:"
-    echo " \_ skull create project_name"
-}
+# This is a utility functions for skull actions including:
+#  - create
+#  - show
+#  - add
+#  - rm
+#  ...
+# NOTES: This is included by the main script `skull`
 
 function skull_create()
 {
@@ -23,7 +23,7 @@ function skull_create()
     touch $workspace/config/skull-config.yaml
 
     # copy templates to the target workspace
-    cp templates/skull-config.yaml $workspace/config/skull-config.yaml
+    cp $SKULL_ROOT/etc/skull/templates/skull-config.yaml $workspace/config/skull-config.yaml
 }
 
 function action_create()
@@ -36,8 +36,8 @@ function action_create()
 
     local workspace=$1
     echo "create skull workspace..."
-    if [ -d $workspace ]; then
-        echo "Notice: The workspace [$workspace] has already exist, " \
+    if [ -d $workspace ] && [ -d $workspace/.skull ]; then
+        echo "Notice: The workspace [$workspace] has a skull project, " \
              "give up to build it"
         exit 1
     fi
@@ -46,13 +46,9 @@ function action_create()
     echo "create skull workspace done"
 }
 
-##### main #####
-if [ $# = 0 ]; then
-    print_usage
-    exit 1
-fi
+function action_show()
+{
+    local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
 
-if [ $1 = "create" ]; then
-    shift
-    action_create $@
-fi
+    $SKULL_ROOT/bin/skull-workflow.py -f $skull_conf
+}
