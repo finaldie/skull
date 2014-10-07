@@ -1,0 +1,16 @@
+# how many worker threads the skull engine will create
+thread_num: 1
+
+# working flow
+workflows:
+    - modules: []
+      concurrent: 1
+      port: 7758
+    - modules: []
+      concurrent: 0
+      port: 7759
+    - modules: []
+      concurrent: 1
+    - modules: []
+      concurrent: 0
+

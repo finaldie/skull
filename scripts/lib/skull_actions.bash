@@ -23,7 +23,7 @@ function skull_create()
     touch $workspace/config/skull-config.yaml
 
     # copy templates to the target workspace
-    cp $SKULL_ROOT/etc/skull/templates/skull-config.yaml $workspace/config/skull-config.yaml
+    cp $SKULL_ROOT/etc/skull/skull-config.yaml $workspace/config/skull-config.yaml
 }
 
 function action_create()
