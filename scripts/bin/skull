@@ -80,6 +80,26 @@ case "$1" in
         prepare true
         action_show $@
         ;;
+    (add_workflow)
+        shift
+        prepare true
+        action_add_workflow $@
+        ;;
+    (add_module)
+        shift
+        prepare true
+        action_add_module $@
+        ;;
+    (start)
+        shift
+        prepare true
+        action_start $@
+        ;;
+    (deploy)
+        shift
+        prepare true
+        action_deploy $@
+        ;;
     (*)
         echo "Error: Unknown command parameter $1"
         print_usage

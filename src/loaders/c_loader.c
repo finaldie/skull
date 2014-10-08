@@ -14,7 +14,10 @@ typedef struct sk_c_mdata {
 const char* sk_c_module_name(const char* short_name, char* fullname, size_t sz)
 {
     memset(fullname, 0, sz);
-    snprintf(fullname, sz, "modules/%s.so", short_name);
+
+    // The full name like: modules/test/mod.so
+    snprintf(fullname, sz, "modules/%s/" SK_MODULE_PREFIX_NAME ".so",
+             short_name);
     return fullname;
 }
 

@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# This is skull workflow config controlling script
+
 import sys
 import os
 import getopt
@@ -7,16 +9,19 @@ import string
 import pprint
 import yaml
 
-def load_yaml_config(config_name):
-    yaml_file = open(config_name, "rb")
-    return yaml_file
+yaml_obj = None
+config_name = ""
 
-def show_workflows(config_name):
-    yaml_file = load_yaml_config(config_name)
+def load_yaml_config():
+    global yaml_obj
+    global config_name
+
+    yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
+def process_show():
     workflows = yaml_obj['workflows']
-    workflow_cnt = 1
+    workflow_cnt = 0
 
     for workflow in workflows:
         print "workflow [%d]:" % workflow_cnt
@@ -33,12 +38,47 @@ def show_workflows(config_name):
         workflow_cnt += 1
         print "\n",
 
-    print "total %d workflows" % (workflow_cnt - 1)
+    print "total %d workflows" % (workflow_cnt)
 
-    yaml_file.close()
 
 def usage():
-    print "usage: skull-show_workflow.py -f yaml_file"
+    print "usage: skull-show_workflow.py -m mode -c yaml_file ..."
+
+def create_workflow():
+    return {
+    'concurrent' : 1,
+    'port' : 1234,
+    'modules' : []
+    }
+
+def process_add_workflow():
+    global yaml_obj
+
+    try:
+        opts, args = getopt.getopt(sys.argv[5:], 'C:p:')
+
+        workflow_concurrent = 1
+        workflow_port = 1234
+
+        for op, value in opts:
+            if op == "-C":
+                workflow_concurrent = int(value)
+            elif op == "-p":
+                workflow_port = int(value)
+
+        # Now add these workflow_x to yaml obj and dump it
+        workflow_frame = create_workflow()
+        workflow_frame['concurrent'] = workflow_concurrent
+        workflow_frame['port'] = workflow_port
+        yaml_obj['workflows'].append(workflow_frame)
+        pprint.pprint(yaml_obj)
+
+        yaml.dump(yaml_obj, file(config_name, 'w'))
+
+    except Exception, e:
+        print "Fatal: process_add: " + str(e)
+        usage()
+        sys.exit(1)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -46,11 +86,23 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'f:')
+        work_mode = None
+        opts, args = getopt.getopt(sys.argv[1:5], 'c:m:')
 
         for op, value in opts:
-            if op == "-f":
-                show_workflows(value)
+            if op == "-c":
+                config_name = value
+                load_yaml_config()
+            elif op == "-m":
+                work_mode = value
+
+        # Now run the process func according the mode
+        if work_mode == "show":
+            process_show()
+        elif work_mode == "add_workflow":
+            process_add_workflow()
+        else:
+            print "Fatal: Unknown work_mode: %s" % work_mode
 
     except Exception, e:
         print "Fatal: " + str(e)

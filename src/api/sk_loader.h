@@ -8,6 +8,13 @@
 #define SK_MODULE_UNPACK_FUNCNAME "module_unpack"
 #define SK_MODULE_PACK_FUNCNAME   "module_pack"
 
+// Every module has the same file structure:
+// module
+//  \_ config.yaml
+//  \_ mod.so (or mod.lua ...)
+#define SK_MODULE_CONFIG_NAME "config.yaml"
+#define SK_MODULE_PREFIX_NAME "mod"
+
 typedef struct sk_loader_t {
     const char* (*sk_module_name)(const char* short_name,
                                   char* fullname, size_t sz);

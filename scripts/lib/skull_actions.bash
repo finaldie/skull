@@ -17,12 +17,11 @@ function skull_create()
     mkdir -p $workspace/scripts
     mkdir -p $workspace/tests
     mkdir -p $workspace/config
-    touch $workspace/Makefile
-    touch $workspace/scripts/start.sh
-    touch $workspace/scripts/stop.sh
-    touch $workspace/config/skull-config.yaml
 
     # copy templates to the target workspace
+    cp $SKULL_ROOT/share/skull/Makefile $workspace/Makefile
+    cp $SKULL_ROOT/share/skull/skull-start.sh $workspace/scripts/skull-start.sh
+    cp $SKULL_ROOT/share/skull/skull-stop.sh $workspace/scripts/skull-stop.sh
     cp $SKULL_ROOT/etc/skull/skull-config.yaml $workspace/config/skull-config.yaml
 }
 
@@ -37,7 +36,7 @@ function action_create()
     local workspace=$1
     echo "create skull workspace..."
     if [ -d $workspace ] && [ -d $workspace/.skull ]; then
-        echo "Notice: The workspace [$workspace] has a skull project, " \
+        echo "Notice: The workspace [$workspace] is a skull project, " \
              "give up to build it"
         exit 1
     fi
@@ -50,5 +49,93 @@ function action_show()
 {
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
 
-    $SKULL_ROOT/bin/skull-workflow.py -f $skull_conf
+    $SKULL_ROOT/bin/skull-workflow.py -m show -c $skull_conf
+}
+
+function action_add_workflow()
+{
+    local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
+    local concurrent=1
+    local port=1234
+
+    local yn_concurrent=true
+    local yn_port=true
+
+    # set the concurrent
+    read -p "Whether allow concurrent? (y/n)" yn_concurrent
+    if [ ! $yn_concurrent = "y" ]; then
+        concurrent=0
+    fi
+
+    # set the port
+    read -p "Need listen on a port? (y/n)" yn_port
+    if [ $yn_port = "y" ]; then
+        read -p "Input the port you want(1025-65535): " port
+    fi
+
+    $SKULL_ROOT/bin/skull-workflow.py -m add_workflow -c $skull_conf -C $concurrent -p $port
+}
+
+function action_start()
+{
+    local start_mode=$1
+    local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
+    local deploy_dir=
+
+    if [ $start_mode = "dev" ]; then
+        deploy_dir=$SKULL_PROJ_ROOT/run
+    elif [ $start_mode = "prod" ]; then
+        echo "Fatal: Un-implemented mode"
+        exit 1
+    else
+        echo "Fatal: Unknown start_mode $start_mode"
+        exit 1
+    fi
+
+    # Fork a process to do the deployment, since we will change the working
+    # dir, this will be easily to handle the cleanup job
+    (
+        if [ $start_mode = "dev" ]; then
+            action_deploy dev
+
+            cd $deploy_dir
+            skull-engine -c $skull_conf
+        elif [ $start_mode = "prod" ]; then
+            echo "Fatal: Un-implemented mode"
+            exit 1
+        else
+            echo "Fatal: Unknown start_mode $start_mode"
+            exit 1
+        fi
+    )
+}
+
+function action_deploy()
+{
+    local deploy_mode=$1
+
+    if [ $deploy_mode = "dev" ]; then
+        _action_deploy_dev
+    elif [ $deploy_mode = "prod" ]; then
+        _action_deploy_prod
+    else
+        echo "Fatal: Unknown deploy mode \"$deploy_mode\""
+        exit 1
+    fi
+}
+
+function _action_deploy_dev()
+{
+    # Fork a process to do the deployment, since we will change the working
+    # dir, this will be easily to handle the cleanup job
+    (
+        cd $SKULL_PROJ_ROOT
+        make deploy DEPLOY_DIR=./run
+    )
+}
+
+function _action_deploy_prod()
+{
+    echo "Fatal: Un-implemented mode"
+    exit 1
 }
