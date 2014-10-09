@@ -37,6 +37,11 @@ prefix ?= /usr/local
 # binaries
 SKULL_ENGINE = skull-engine
 
+# headers
+SKULL_HEADERS = \
+    api/sk_txn.h \
+    api/sk_utils.h
+
 # Objs
 COMMON_OBJS = \
     common/sk_loader.o \
@@ -109,6 +114,8 @@ protos: $(PROTO_IDLS)
 install:
 	test -d $(prefix)/bin || mkdir -p $(prefix)/bin
 	test -x $(SKULL_ENGINE) && cp $(SKULL_ENGINE) $(prefix)/bin
+	test -d $(prefix)/include/skull || mkdir -p $(prefix)/include/skull
+	cp $(SKULL_HEADERS) $(prefix)/include/skull
 
 clean:
 	rm -f $(SKULL_ENGINE) $(SKULL_OBJS)

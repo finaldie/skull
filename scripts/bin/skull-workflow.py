@@ -53,6 +53,7 @@ def create_workflow():
 
 def process_add_workflow():
     global yaml_obj
+    global config_name
 
     try:
         opts, args = getopt.getopt(sys.argv[5:], 'C:p:')
@@ -71,6 +72,33 @@ def process_add_workflow():
         workflow_frame['concurrent'] = workflow_concurrent
         workflow_frame['port'] = workflow_port
         yaml_obj['workflows'].append(workflow_frame)
+
+        yaml.dump(yaml_obj, file(config_name, 'w'))
+
+    except Exception, e:
+        print "Fatal: process_add: " + str(e)
+        usage()
+        sys.exit(1)
+
+def process_add_module():
+    global yaml_obj
+    global config_name
+
+    try:
+        opts, args = getopt.getopt(sys.argv[5:], 'M:i:')
+
+        workflow_idx = 0
+        module_name = ""
+
+        for op, value in opts:
+            if op == "-M":
+                module_name = value
+            elif op == "-i":
+                workflow_idx = int(value)
+
+        # Now add these workflow_x to yaml obj and dump it
+        workflow_frame = yaml_obj['workflows'][workflow_idx]
+        workflow_frame['modules'].append(module_name)
         pprint.pprint(yaml_obj)
 
         yaml.dump(yaml_obj, file(config_name, 'w'))
@@ -101,6 +129,8 @@ if __name__ == "__main__":
             process_show()
         elif work_mode == "add_workflow":
             process_add_workflow()
+        elif work_mode == "add_module":
+            process_add_module()
         else:
             print "Fatal: Unknown work_mode: %s" % work_mode
 

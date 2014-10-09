@@ -2,23 +2,26 @@ MAKE = make
 
 DEPLOY_DIR ?= ./run
 
-SUBDIRS := $(shell find components/modules -maxdepth 1 -type d)
-SUBDIRS += components/common
-SUBDIR_MKS := $(foreach subdir,$(SUBDIRS),$(subdir)/Makefrag.mk)
-
-# include all the Makefrag
--include $(SUBDIR_MKS)
+# Get all the sub dirs which have Makefile
+SUB_DIRS := $(shell find components/ -name Makefile)
+SUB_DIRS := $(shell dirname $(SUB_DIRS))
 
 build:
-	cd components && make
+	for src in $(SUB_DIRS); do \
+	    $(MAKE) -C $$src; \
+	done
 
 check:
-	cd components && make $@
+	for test in $(SUB_DIRS); do \
+	    $(MAKE) -C $$test check; \
+	done
 
 valgrind-check:
-	cd components && make $@
 
 deploy:
 	test -d $(DEPLOY_DIR) || mkdir $(DEPLOY_DIR)
 
-.PHONY: build check valgrind-check deploy $(SUBDIRS)
+$(SUB_SRCDIRS):
+	make
+
+.PHONY: build check valgrind-check deploy

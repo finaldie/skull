@@ -76,6 +76,31 @@ function action_add_workflow()
     $SKULL_ROOT/bin/skull-workflow.py -m add_workflow -c $skull_conf -C $concurrent -p $port
 }
 
+# Add module need 2 steps:
+# 1. Add the module folder structure into project according to its module language
+# 2. Change the main config
+function action_add_module()
+{
+    local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
+
+    # 1. input the module name
+    local module=""
+    local workflow_idx=0
+    local language=""
+
+    read -p "module name? " module
+    read -p "which workflow you want add it to? " workflow_idx
+    read -p "which language the module belongs to? " language
+
+    # 1. Add basic folder structure
+    # NOTES: currently, we only support C language
+    action_${language}_add $module
+
+    # 2. Add module into main config
+    $SKULL_ROOT/bin/skull-workflow.py -m add_module -c $skull_conf -M $module -i $workflow_idx
+    echo "module [$module] added successfully"
+}
+
 function action_start()
 {
     local start_mode=$1

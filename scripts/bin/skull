@@ -39,13 +39,11 @@ function prepare()
     get_root
 
     # 2. Load the lib scripts
-    if [ -f $SKULL_ROOT/lib/skull_env.bash ]; then
-        . $SKULL_ROOT/lib/skull_env.bash
-    fi
+    . $SKULL_ROOT/lib/skull_env.bash
+    . $SKULL_ROOT/lib/skull_actions.bash
 
-    if [ -f $SKULL_ROOT/lib/skull_actions.bash ]; then
-        . $SKULL_ROOT/lib/skull_actions.bash
-    fi
+    # 3. Load Language action scripts
+    . $SKULL_ROOT/lib/skull_actions_c.bash
 
     # If no need to get project root path, return 0 directly
     if ! $should_get_proj_root; then

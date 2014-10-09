@@ -2,7 +2,6 @@
 #define SK_TXN_H
 
 #include <stddef.h>
-#include "flist/flist.h"
 
 struct sk_sched_t;
 struct sk_workflow_t;
