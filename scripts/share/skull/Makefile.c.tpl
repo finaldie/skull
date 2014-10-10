@@ -1,3 +1,5 @@
+MOD_NAME := $(shell basename $(shell pwd))
+
 TARGET = mod
 TEST_TARGET = test_mod
 
@@ -18,6 +20,9 @@ DEPLOY_ITEMS := \
     config/config.yaml \
     $(TARGET).so
 
+DEPLOY_MOD_ROOT ?= ./run
+DEPLOY_DIR ?= $(DEPLOY_MOD_ROOT)/$(MOD_NAME)
+
 $(TARGET): $(OBJS)
 	$(CC) $(FL_FLAGS) $(INC) -o $(TARGET).so $(OBJS)
 
@@ -25,7 +30,8 @@ check: $(TEST_OBJS)
 	$(CC) $(FL_FDFLAGS) -o $(TEST_TARGET) $(TEST_OBJS) $(TARGET).so
 
 deploy:
-	cp $(DEPLOY_ITEMS) $(DEPLOY_LOCATION)
+	test -d $(DEPLOY_DIR) || mkdir -p $(DEPLOY_DIR)
+	cp $(DEPLOY_ITEMS) $(DEPLOY_DIR)
 
 %.o: %.c
 	$(CC) $(FL_FLAGS) $(INC) -c $< -o $@
