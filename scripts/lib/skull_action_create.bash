@@ -16,11 +16,14 @@ function skull_create()
     mkdir -p $workspace/scripts
     mkdir -p $workspace/tests
     mkdir -p $workspace/config
+    mkdir -p $workspace/bin
 
     # copy templates to the target workspace
     cp $SKULL_ROOT/share/skull/Makefile.tpl $workspace/Makefile
-    cp $SKULL_ROOT/share/skull/skull-start.sh $workspace/scripts/skull-start.sh
-    cp $SKULL_ROOT/share/skull/skull-stop.sh $workspace/scripts/skull-stop.sh
+    cp $SKULL_ROOT/share/skull/ChangeLog.md.tpl $workspace/ChangeLog.md
+    cp $SKULL_ROOT/share/skull/README.md.tpl $workspace/README.md
+    cp -R $SKULL_ROOT/share/skull/bin/* $workspace/bin
+    cp -R $SKULL_ROOT/share/skull/scripts/* $workspace/scripts
     cp $SKULL_ROOT/etc/skull/skull-config.yaml $workspace/config/skull-config.yaml
 }
 

@@ -6,5 +6,9 @@
 function action_start()
 {
     deploy_dir=$SKULL_PROJ_ROOT/run
-    skull-engine -c $deploy_dir/skull-config.yaml
+
+    (
+        cd $deploy_dir
+        ./bin/skull-start.sh $deploy_dir/skull-config.yaml
+    )
 }
