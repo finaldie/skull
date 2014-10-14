@@ -5,7 +5,7 @@
 #
 # NOTES: This is included by the main script `skull`
 
-function skull_create()
+function _skull_create()
 {
     local workspace=$1
     # build the basic workspace folder structure
@@ -31,8 +31,8 @@ function skull_create()
 function action_create()
 {
     if [ $# = 0 ]; then
-        echo "Error: missing project name"
-        print_usage
+        echo "Error: missing project name" >&2
+        print_usage >&2
         exit 1
     fi
 
@@ -44,6 +44,6 @@ function action_create()
         exit 1
     fi
 
-    skull_create $workspace
+    _skull_create $workspace
     echo "create skull workspace done"
 }

@@ -8,7 +8,7 @@
 # 2. Change the main config
 function action_module()
 {
-    preload_language_actions
+    _preload_language_actions
 
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
 
@@ -17,7 +17,7 @@ function action_module()
         -n "skull_action_module.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
-        action_module_usage
+        action_module_usage >&2
         exit 1
     fi
 
@@ -27,12 +27,12 @@ function action_module()
         case "$1" in
             -a|--add)
                 shift
-                action_module_add
+                _action_module_add
                 exit 0
                 ;;
             -h|--help)
                 shift
-                action_module_usage
+                action_module_usage >&2
                 exit 0
                 ;;
             --)
@@ -42,7 +42,7 @@ function action_module()
             *)
                 echo "Error: Invalid parameters $1" >&2
                 shift
-                action_module_usage
+                action_module_usage >&2
                 exit 1
                 ;;
         esac
@@ -56,7 +56,7 @@ function action_module_usage()
     echo "  skull module -h|--help"
 }
 
-function preload_language_actions()
+function _preload_language_actions()
 {
     # Load Language action scripts, for now, we only have C language
     for lang_dir in $SKULL_ROOT/share/skull/lang/*;
@@ -67,7 +67,7 @@ function preload_language_actions()
     done
 }
 
-function action_module_add()
+function _action_module_add()
 {
     # 1. input the module name
     local module=""

@@ -21,17 +21,17 @@ function action_workflow()
         case "$1" in
             -a|--add)
                 shift
-                action_workflow_add
+                _action_workflow_add
                 exit 0
                 ;;
             -l|--list)
                 shift
-                action_workflow_show
+                _action_workflow_show
                 exit 0
                 ;;
             -h|--help)
                 shift
-                action_workflow_usage
+                action_workflow_usage >&2
                 exit 0
                 ;;
             --)
@@ -41,7 +41,7 @@ function action_workflow()
             *)
                 echo "Error: Invalid parameters $1" >&2
                 shift
-                action_workflow_usage
+                action_workflow_usage >&2
                 exit 1
                 ;;
         esac
@@ -56,7 +56,7 @@ function action_workflow_usage()
     echo "  skull workflow -h|--help"
 }
 
-function action_workflow_add()
+function _action_workflow_add()
 {
     # prepare add workflow
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
@@ -81,7 +81,7 @@ function action_workflow_add()
     $SKULL_ROOT/bin/skull-workflow.py -m add_workflow -c $skull_conf -C $concurrent -p $port
 }
 
-function action_workflow_show()
+function _action_workflow_show()
 {
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
 

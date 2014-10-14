@@ -12,7 +12,12 @@ function print_usage()
 {
     echo "usage:"
     echo " \_ skull create project_name"
-    echo " \_ skull show"
+    echo " \_ skull workflow"
+    echo " \_ skull module"
+    echo " \_ skull build"
+    echo " \_ skull deploy"
+    echo " \_ skull start"
+    echo " \_ skull version"
 }
 
 # Get the skull scripts root directory folder, it should be run only once
@@ -46,6 +51,7 @@ function prepare()
     . $SKULL_ROOT/lib/skull/skull_action_build.bash
     . $SKULL_ROOT/lib/skull/skull_action_deploy.bash
     . $SKULL_ROOT/lib/skull/skull_action_start.bash
+    . $SKULL_ROOT/lib/skull/skull_action_version.bash
 
     # If no need to get project root path, return 0 directly
     if ! $should_get_proj_root; then
@@ -56,7 +62,7 @@ function prepare()
     #  so get it before run any other commands
     get_proj_root
     if [ $? = 1 ]; then
-        echo "Fatal: Not a skull project"
+        echo "Fatal: Not a skull project" >&2
         exit 1
     fi
 }
@@ -70,10 +76,12 @@ fi
 
 # 2. Process Commands
 case "$1" in
-    (create)
-        shift
+    (create|version)
         prepare false
-        action_create $@
+        entry=$1
+        shift
+
+        action_$entry $@
         ;;
     (workflow|module|build|deploy|start)
         prepare true
@@ -86,8 +94,8 @@ case "$1" in
         action_$entry $@
         ;;
     (*)
-        echo "Error: Unknown command parameter $1"
-        print_usage
+        echo "Error: Unknown command parameter $1" >&2
+        print_usage >&2
         exit 1
         ;;
 esac

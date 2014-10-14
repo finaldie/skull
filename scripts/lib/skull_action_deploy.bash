@@ -33,7 +33,7 @@ function action_deploy()
                 ;;
             -h|--help)
                 shift
-                action_deploy_usage
+                action_deploy_usage >&2
                 exit 0
                 ;;
             --)
@@ -43,7 +43,7 @@ function action_deploy()
             *)
                 echo "Error: Invalid parameters $1" >&2
                 shift
-                action_deploy_usage
+                action_deploy_usage >&2
                 exit 1
                 ;;
         esac

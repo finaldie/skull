@@ -1,4 +1,5 @@
 MAKE ?= make
+prefix ?= /usr/local
 
 MAKE_FLAGS += "--no-print-directory"
 
@@ -21,8 +22,12 @@ check:
 valgrind-check:
 	cd tests && $(MAKE) $@
 
-install: install_scripts
+install: install_scripts install_others
 	cd src && $(MAKE) $@
+
+install_others:
+	test -d $(prefix)/etc/skull || mkdir -p $(prefix)/etc/skull
+	cp ChangeLog.md $(prefix)/etc/skull
 
 install_scripts:
 	cd scripts && $(MAKE) install
