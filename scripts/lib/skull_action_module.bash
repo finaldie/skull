@@ -58,8 +58,13 @@ function action_module_usage()
 
 function preload_language_actions()
 {
-    # Load C Language action scripts
-    . $SKULL_ROOT/lib/skull_languages/skull_actions_c.bash
+    # Load Language action scripts, for now, we only have C language
+    for lang_dir in $SKULL_ROOT/share/skull/lang/*;
+    do
+        if [ -d $lang_dir ]; then
+            . $lang_dir/lib/skull_actions.bash
+        fi
+    done
 }
 
 function action_module_add()

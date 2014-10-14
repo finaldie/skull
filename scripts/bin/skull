@@ -39,13 +39,13 @@ function prepare()
     get_root
 
     # 2. Load the lib scripts
-    . $SKULL_ROOT/lib/skull_env.bash
-    . $SKULL_ROOT/lib/skull_action_create.bash
-    . $SKULL_ROOT/lib/skull_action_workflow.bash
-    . $SKULL_ROOT/lib/skull_action_module.bash
-    . $SKULL_ROOT/lib/skull_action_build.bash
-    . $SKULL_ROOT/lib/skull_action_deploy.bash
-    . $SKULL_ROOT/lib/skull_action_start.bash
+    . $SKULL_ROOT/lib/skull/skull_env.bash
+    . $SKULL_ROOT/lib/skull/skull_action_create.bash
+    . $SKULL_ROOT/lib/skull/skull_action_workflow.bash
+    . $SKULL_ROOT/lib/skull/skull_action_module.bash
+    . $SKULL_ROOT/lib/skull/skull_action_build.bash
+    . $SKULL_ROOT/lib/skull/skull_action_deploy.bash
+    . $SKULL_ROOT/lib/skull/skull_action_start.bash
 
     # If no need to get project root path, return 0 directly
     if ! $should_get_proj_root; then
