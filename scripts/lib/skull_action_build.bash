@@ -7,8 +7,10 @@
 function action_build()
 {
     # Fork and move to the top level of the project to do the build
+    # NOTES: since we pass through the user input args to make, so meanwhile
+    # all the args will be passed to the main Makefile(e.g. 'CC=clang').
     (
         cd $SKULL_PROJ_ROOT
-        make
+        make $@
     )
 }

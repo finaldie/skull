@@ -11,6 +11,8 @@ Use Ubuntu14.04 as an example.
 apt-get install libyaml-dev libpcap0.8-dev libpcap0.8 libprotobuf-c0 libprotobuf-c0-dev
 
 wget http://pyyaml.org/download/pyyaml/PyYAML-3.11.tar.gz
+tar -zxf PyYAML-3.11.tar.gz
+cd PyYAML-3.11
 sudo python setup.py install
 
 git clone git@github.com:finaldie/skull.git
@@ -34,9 +36,34 @@ make debug=true -j4
 sudo make install
 ```
 
-## How to Run
+## Start with a Skull Project
+Now, skull environment has been set up, so let's create a Skull project and play
+with it.
+
+### Create Skull Project
 ```
-skull-engine -c config
+skull create test_proj
+```
+
+### Add a Module
+```
+skull module --add
+```
+
+### Build Skull Project
+```
+skull build
+```
+
+### Deploy Skull Project
+```
+skull deploy
+
+```
+
+### Start Skull
+```
+skull start
 ```
 
 ## Frequent Questions
