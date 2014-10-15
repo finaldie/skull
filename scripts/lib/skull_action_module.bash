@@ -27,6 +27,8 @@ function action_module()
         case "$1" in
             -a|--add)
                 shift
+                action_workflow_show
+                echo ""
                 _action_module_add
                 exit 0
                 ;;
@@ -67,22 +69,106 @@ function _preload_language_actions()
     done
 }
 
+function _get_language_list()
+{
+    local langs
+    local idx=0
+
+    for lang_dir in $SKULL_ROOT/share/skull/lang/*;
+    do
+        if [ -d $lang_dir ]; then
+            local lang_name=`basename $lang_dir`
+            langs[$idx]=$lang_name
+            idx=`expr $idx + 1`
+        fi
+    done
+
+    echo ${langs[*]}
+}
+
+function _check_language()
+{
+    local langs=$1
+    local input_lang=$2
+
+    for lang in "$langs"; do
+        if [ "$lang" = "$input_lang" ]; then
+            return 0
+        fi
+    done
+
+    echo "Fatal: module add failed, input the correct language" >&2
+    return 1
+}
+
+# module name must be in [0-9a-zA-Z_]
+function _check_module_name()
+{
+    local module_name=$1
+
+    if [ -z "$module_name" ]; then
+        echo "Error: module name must not be empty" >&2
+        return 1
+    fi
+
+    local ret=`echo $module_name | grep -P "[^\w]" | wc -l`
+    if [ "$ret" = "1" ]; then
+        echo "Error: module name must be [0-9a-zA-Z_]" >&2
+        return 1
+    fi
+
+    if [ -d $SKULL_PROJ_ROOT/components/modules/$module_name ]; then
+        echo "Error: module [$module_name] has already exist, change to another name" >&2
+        return 1
+    fi
+
+    return 0
+}
+
 function _action_module_add()
 {
     # 1. input the module name
     local module=""
     local workflow_idx=0
     local language=""
+    local langs=$(_get_language_list)
+    local lang_names=`echo ${langs[*]} | sed 's/ /|/g'`
+    local total_workflows=`action_workflow_show | tail -1 | awk '{print $2}'`
 
-    read -p "module name? " module
-    read -p "which workflow you want add it to? " workflow_idx
-    read -p "which language the module belongs to? " language
+    # 2. get user input and verify them
+    while true; do
+        read -p "module name? " module
 
-    # 1. Add basic folder structure
+        if $(_check_module_name $module); then
+            break;
+        fi
+    done
+
+    while true; do
+        read -p "which workflow you want add it to? " workflow_idx
+
+        if [ "$workflow_idx" -ge "$total_workflows" ] ||
+           [ "$workflow_idx" -lt "0" ]; then
+            echo "Fatal: module add failed, input the correct workflow index" >&2
+        else
+            break;
+        fi
+    done
+
+    while true; do
+        read -p "which language the module belongs to?($lang_names) " language
+
+        # verify the language valid or not
+        if $(_check_language $langs $language); then
+            break;
+        fi
+    done
+
+    # 3. Add basic folder structure
     # NOTES: currently, we only support C language
     action_${language}_add $module
 
-    # 2. Add module into main config
+    # 4. Add module into main config
     $SKULL_ROOT/bin/skull-workflow.py -m add_module -c $skull_conf -M $module -i $workflow_idx
     echo "module [$module] added successfully"
 }

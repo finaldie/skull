@@ -26,7 +26,7 @@ function action_workflow()
                 ;;
             -l|--list)
                 shift
-                _action_workflow_show
+                action_workflow_show
                 exit 0
                 ;;
             -h|--help)
@@ -81,7 +81,7 @@ function _action_workflow_add()
     $SKULL_ROOT/bin/skull-workflow.py -m add_workflow -c $skull_conf -C $concurrent -p $port
 }
 
-function _action_workflow_show()
+function action_workflow_show()
 {
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
 

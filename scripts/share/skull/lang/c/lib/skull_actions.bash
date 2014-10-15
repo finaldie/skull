@@ -4,7 +4,7 @@
 function action_c_add()
 {
     local module=$1
-    if [ -d components/modules/$module ]; then
+    if [ -d $SKULL_PROJ_ROOT/components/modules/$module ]; then
         echo "Notice: the module [$module] has already exist"
         return 1
     fi
