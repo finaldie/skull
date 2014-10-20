@@ -5,7 +5,7 @@
 #include "flist/flist.h"
 
 typedef enum sk_cfg_node_type_t {
-    SK_CFG_NODE_VALUE = 0,   // a value of integer of string...
+    SK_CFG_NODE_VALUE = 0,   // a value of integer or string...
     SK_CFG_NODE_ARRAY = 1,   // sequence
     SK_CFG_NODE_MAPPING = 2  // mapping
 } sk_cfg_node_type_t;

@@ -5,6 +5,8 @@
 
 #include "flist/flist.h"
 #include "fhash/fhash.h"
+#include "flog/flog.h"
+
 #include "api/sk_entity_mgr.h"
 #include "api/sk_sched.h"
 #include "api/sk_config.h"
@@ -31,6 +33,7 @@ typedef struct skull_core_t {
     flist*           workflows;  // element type: sk_workflow_t
     fhash*           unique_modules;
     const char*      working_dir;
+    flog_file_t*     logger;
 } skull_core_t;
 
 void skull_init(skull_core_t* core);

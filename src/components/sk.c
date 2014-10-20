@@ -26,7 +26,7 @@ static
 sk_thread_env_t* _skull_thread_env_create(skull_sched_t* skull_sched,
                                           flist* workflows)
 {
-    sk_thread_env_t* thread_env = malloc(sizeof(*thread_env));
+    sk_thread_env_t* thread_env = calloc(1, sizeof(*thread_env));
     thread_env->sched = skull_sched->sched;
     thread_env->entity_mgr = skull_sched->entity_mgr;
     thread_env->workflows = workflows;
@@ -181,6 +181,26 @@ void* worker_io_thread(void* arg)
 }
 
 static
+void _skull_init_config(skull_core_t* core)
+{
+    core->config = sk_config_create(core->cmd_args.config_location);
+}
+
+static
+void _skull_chdir(skull_core_t* core)
+{
+    char* raw_path = strdup(core->cmd_args.config_location);
+    const char* config_dir = dirname(raw_path);
+    int ret = chdir(config_dir);
+    SK_ASSERT_MSG(!ret, "change working dir to %s failed, errno:%s\n",
+                  config_dir, strerror(errno));
+    free(raw_path);
+
+    core->working_dir = getcwd(NULL, 0);
+    sk_print("current working dir: %s\n", core->working_dir);
+}
+
+static
 void _skull_module_init(skull_core_t* core)
 {
     fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
@@ -192,6 +212,68 @@ void _skull_module_init(skull_core_t* core)
     }
 }
 
+static
+void _skull_log_notification_cb(FLOG_EVENT event)
+{
+    switch (event) {
+    case FLOG_EVENT_ERROR_WRITE:
+        sk_print("Fatal: skull write log occur errors!\n");
+        break;
+    case FLOG_EVENT_TRUNCATED:
+        sk_print("Fatal: skull write log which was truncated!\n");
+        break;
+    case FLOG_EVENT_BUFF_FULL:
+        sk_print("Fatal: skull logger buffer full!\n");
+        break;
+    case FLOG_EVENT_USER_BUFFER_RELEASED:
+        sk_print("Notice: skull logger quit gracefully\n");
+        break;
+    default:
+        sk_print("Fatal: unknow skull log event %d\n", event);
+        break;
+    }
+}
+
+static
+void _skull_init_log(skull_core_t* core)
+{
+    const sk_config_t* config = core->config;
+    const char* working_dir = core->working_dir;
+    size_t workdir_len = strlen(working_dir);
+    size_t log_name_len = strlen(config->log_name);
+
+    // 1. create logger
+    char full_log_name[workdir_len + log_name_len + 1];
+    core->logger = flog_create(full_log_name);
+    SK_ASSERT_MSG(core->logger, "logger create failure");
+
+    // 2. set log level
+    flog_set_level(config->log_level);
+    int log_level = flog_get_level();
+    SK_ASSERT_MSG(log_level == config->log_level, "log level set up failure");
+
+    // 3. set flush inverval: 1 second
+    flog_set_flush_interval(1);
+
+    // 4. set file rolling size: 2GB
+    flog_set_roll_size(1024lu * 1024 * 1024 * 2);
+
+    // 5. set log buffer size(per-thread): 200MB
+    flog_set_buffer_size(1024lu * 1024 * 200);
+
+    // 6. set log mode: async mode
+    flog_set_mode(FLOG_ASYNC_MODE);
+
+    // 7. set up the notification callback, we can handle it if there are some
+    // abnormal things happened
+    flog_register_event_callback(_skull_log_notification_cb);
+
+    // 8. set up the cookie
+    // NOTES: in skull engine, the cookie will be the skull.core, otherwise
+    //   the cookie will be the module name or other name
+    flog_set_cookie("skull.core");
+}
+
 // APIs
 void skull_init(skull_core_t* core)
 {
@@ -199,22 +281,18 @@ void skull_init(skull_core_t* core)
     sk_thread_env_init();
 
     // 2. load config
-    core->config = sk_config_create(core->cmd_args.config_location);
+    _skull_init_config(core);
 
     // 3. change working-dir to the config dir
-    char* raw_path = strdup(core->cmd_args.config_location);
-    const char* config_dir = dirname(raw_path);
-    int ret = chdir(config_dir);
-    SK_ASSERT_MSG(!ret, "change working dir to %s failed, errno:%s\n",
-                  config_dir, strerror(errno));
-    free(raw_path);
-    core->working_dir = getcwd(NULL, 0);
-    sk_print("current working dir: %s\n", core->working_dir);
+    _skull_chdir(core);
 
-    // 4. init schedulers
+    // 4. init logger
+    _skull_init_log(core);
+
+    // 5. init schedulers
     _skull_setup_schedulers(core);
 
-    // 5. load working flows
+    // 6. load working flows
     _skull_setup_workflow(core);
 }
 
@@ -275,6 +353,7 @@ void skull_stop(skull_core_t* core)
     sk_config_destroy(core->config);
     flist_delete(core->workflows);
     fhash_str_delete(core->unique_modules);
+    flog_destroy(core->logger);
 }
 
 

@@ -6,8 +6,8 @@
 
 // INTERNALs
 // NOTE: DO NOT USE THESE DIRECTLY!
-#define TO_STR(x) #x
-#define EXTRACT_STR(x) TO_STR(x)
+#define SK_TO_STR(x) #x
+#define SK_EXTRACT_STR(x) SK_TO_STR(x)
 void sk_assert_exit(const char* expr, const char* file, int lineno);
 void sk_assert_exit_with_msg(const char* format, ...);
 
@@ -23,7 +23,7 @@ void sk_assert_exit_with_msg(const char* format, ...);
 #define SK_ASSERT_MSG(expr, ...) \
     if (!(expr)) { \
         sk_assert_exit_with_msg("FATAL: assert [" #expr "] failed, " \
-                                __FILE__ ":" EXTRACT_STR(__LINE__) " - " \
+                                __FILE__ ":" SK_EXTRACT_STR(__LINE__) " - " \
                                 __VA_ARGS__); \
     }
 
@@ -32,7 +32,7 @@ void sk_assert_exit_with_msg(const char* format, ...);
 #ifdef SK_DEBUG
 # define sk_print(...) \
     do { \
-        printf(__FILE__ ":" EXTRACT_STR(__LINE__) " - " __VA_ARGS__); \
+        printf(__FILE__ ":" SK_EXTRACT_STR(__LINE__) " - " __VA_ARGS__); \
     } while (0)
 
 # define sk_rawprint(...) \

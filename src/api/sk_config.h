@@ -5,6 +5,7 @@
 #include "api/sk_module.h"
 
 #define SK_CONFIG_LOCATION_LEN    1024
+#define SK_CONFIG_LOGNAME_LEN	  1024
 
 #define SK_WORKFLOW_NONCONCURRENT 0
 #define SK_WORKFLOW_CONCURRENT    1
@@ -21,10 +22,21 @@ typedef struct sk_workflow_cfg_t {
 } sk_workflow_cfg_t;
 
 typedef struct sk_config_t {
-    char location[SK_CONFIG_LOCATION_LEN]; // the location of the config file
+    // the location of the config file, while this is root location of the
+    // runtime environment as well
+    char location[SK_CONFIG_LOCATION_LEN];
 
+    // log name (we don't specify the log location, by default the log file will
+    // be put at the `log` folder)
+    char log_name[SK_CONFIG_LOGNAME_LEN];
+
+    // how many worker threads will be created after skull starting
     int threads;
-    int _reserved;
+
+    // log level of flog, from LOG_LEVEL_TRACE(0) - LOG_LEVEL_FATAL(5)
+    int log_level;
+
+    // workflows list
     flist* workflows;
 } sk_config_t;
 

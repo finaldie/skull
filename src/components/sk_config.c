@@ -111,6 +111,13 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
 }
 
 static
+void _load_log_name(sk_cfg_node_t* child, sk_config_t* config)
+{
+    SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
+    strncpy(config->log_name, child->data.value, SK_CONFIG_LOGNAME_LEN - 1);
+}
+
+static
 void _load_config(sk_cfg_node_t* root, sk_config_t* config)
 {
     SK_ASSERT_MSG(root->type == SK_CFG_NODE_MAPPING,
@@ -130,6 +137,16 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         if (0 == strcmp(key, "workflows")) {
             _load_workflow(child, config);
         }
+
+        // load log name
+        if (0 == strcmp(key, "log_name")) {
+            _load_log_name(child, config);
+        }
+
+        // load log level
+        if (0 == strcmp(key, "log_level")) {
+            config->log_level = _get_int(child);
+        }
     }
 
     fhash_str_iter_release(&iter);
@@ -145,6 +162,7 @@ sk_config_t* sk_config_create(const char* filename)
     sk_cfg_node_t* root = sk_config_load(location);
     sk_config_dump(root);
 
+    // pick useful information to skull_config struct
     _load_config(root, config);
     sk_config_delete(root);
     return config;
@@ -159,6 +177,8 @@ void sk_config_print(sk_config_t* config)
 {
     sk_print("dump sk_config:\n");
     sk_print("thread_num: %d\n", config->threads);
+    sk_print("log_name: %s\n", config->log_name);
+    sk_print("log_level: %d\n", config->log_level);
 
     sk_workflow_cfg_t* workflow = NULL;
     flist_iter iter = flist_new_iter(config->workflows);

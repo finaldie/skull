@@ -3,7 +3,10 @@ debug ?= false
 # compiling flags
 STD = -std=c99
 WARN = -Wall
-EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization -Wconversion
+EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter
+EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
+EXTRA += -Wconversion
+EXTRA += -fstack-protector
 OTHER = -pipe -g -ggdb3
 SHARED =
 LDFLAGS += -Wl,-E
@@ -24,7 +27,18 @@ DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(SHARED) $(OTHER) $(INC)
 SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(SHARED) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_LIBS = -ldl -pthread -lrt -lyaml -lfev -lfnet -lfhash -lfmbuf -lflist -lprotobuf-c
+SKULL_LIBS = \
+    -ldl \
+    -pthread \
+    -lrt \
+    -lyaml \
+    -lfev \
+    -lfnet \
+    -lflog \
+    -lfhash \
+    -lfmbuf \
+    -lflist \
+    -lprotobuf-c
 
 # CC and LD
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
