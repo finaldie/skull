@@ -109,6 +109,8 @@ PROTO_IDLS = \
     net_destroy.proto
 
 # target rules
+all: $(SKULL_ENGINE)
+
 $(SKULL_ENGINE): $(SKULL_OBJS)
 	$(SKULL_LD) -o $@ $^ $(SKULL_LIBS)
 

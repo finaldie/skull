@@ -35,6 +35,12 @@ void sk_assert_exit_with_msg(const char* format, ...);
         printf(__FILE__ ":" SK_EXTRACT_STR(__LINE__) " - " __VA_ARGS__); \
     } while (0)
 
+# define sk_print_err(...) \
+    do { \
+        fprintf(stderr, __FILE__ ":" SK_EXTRACT_STR(__LINE__) " - " \
+                __VA_ARGS__); \
+    } while (0)
+
 # define sk_rawprint(...) \
     do { \
         printf(__VA_ARGS__); \
@@ -42,6 +48,7 @@ void sk_assert_exit_with_msg(const char* format, ...);
 
 #else
 # define sk_print(...)
+# define sk_print_err(...)
 # define sk_rawprint(...)
 #endif
 
