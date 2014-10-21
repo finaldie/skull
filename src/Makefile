@@ -66,7 +66,8 @@ COMMON_OBJS = \
     common/sk_config_loader.o \
     common/sk_txn.o \
     common/sk_env.o \
-    common/sk_workflow.o
+    common/sk_workflow.o \
+    common/sk_log.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \

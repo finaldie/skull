@@ -18,19 +18,25 @@
 #include "api/sk_workflow.h"
 #include "api/sk_loader.h"
 #include "api/sk_env.h"
+#include "api/sk_log.h"
 #include "api/sk.h"
 
 // INTERNAL APIs
 
 static
-sk_thread_env_t* _skull_thread_env_create(skull_sched_t* skull_sched,
-                                          flist* workflows)
+sk_thread_env_t* _skull_thread_env_create(skull_core_t* core,
+                                          skull_sched_t* worker_sched)
 {
     sk_thread_env_t* thread_env = calloc(1, sizeof(*thread_env));
-    thread_env->sched = skull_sched->sched;
-    thread_env->entity_mgr = skull_sched->entity_mgr;
-    thread_env->workflows = workflows;
-    thread_env->evlp = skull_sched->evlp;
+    thread_env->core = core;
+    thread_env->worker_sched = worker_sched;
+
+    // create a per-thread logger which use the same log name of main scheduler
+    const sk_config_t* config = core->config;
+    const char* working_dir = core->working_dir;
+    const char* log_name = config->log_name;
+    int log_level = config->log_level;
+    thread_env->logger = sk_create_logger(working_dir, log_name, log_level);
 
     return thread_env;
 }
@@ -57,9 +63,13 @@ void _skull_setup_schedulers(skull_core_t* core)
         worker_sched->entity_mgr = sk_entity_mgr_create(65535);
         worker_sched->sched = sk_sched_create(worker_sched->evlp,
                                               worker_sched->entity_mgr);
+        SK_LOG_INFO(core->logger, "worker scheduler [%d] init successfully", i);
 
         sk_sched_setup_bridge(main_sched->sched, worker_sched->sched);
+        SK_LOG_INFO(core->logger, "io bridge [%d] init successfully", i);
     }
+
+    SK_LOG_INFO(core->logger, "skull schedulers init successfully");
 }
 
 // this is running on the main scheduler io thread
@@ -101,6 +111,8 @@ void _skull_setup_trigger(skull_core_t* core, sk_workflow_t* workflow)
         skull_sched_t* main_sched = &core->main_sched;
         _setup_net_trigger(main_sched, workflow);
     }
+
+    SK_LOG_INFO(core->logger, "set up triggers successfully");
 }
 
 static
@@ -114,6 +126,7 @@ void _skull_setup_workflow(skull_core_t* core)
 
     while ((workflow_cfg = flist_each(&iter))) {
         sk_print("setup workflow, detail info:\n");
+        SK_LOG_INFO(core->logger, "setup one workflow...");
 
         // set up the type and concurrent
         sk_workflow_t* workflow = sk_workflow_create(workflow_cfg->concurrent,
@@ -133,8 +146,12 @@ void _skull_setup_workflow(skull_core_t* core)
             sk_module_t* module = sk_module_load(module_name);
             if (module) {
                 sk_print("load module [%s] successful\n", module_name);
+                SK_LOG_INFO(core->logger, "load module [%s] successful",
+                          module_name);
             } else {
                 sk_print("load module [%s] failed\n", module_name);
+                SK_LOG_INFO(core->logger, "load module [%s] failed",
+                          module_name);
             }
 
             // 2.
@@ -149,6 +166,7 @@ void _skull_setup_workflow(skull_core_t* core)
         // store this workflow to skull_core::workflows
         int ret = flist_push(core->workflows, workflow);
         SK_ASSERT(!ret);
+        SK_LOG_INFO(core->logger, "setup one workflow successfully");
 
         // set up trigger
         sk_print("set up trigger...\n");
@@ -163,7 +181,8 @@ void* main_io_thread(void* arg)
     sk_thread_env_t* thread_env = arg;
     sk_thread_env_set(thread_env);
 
-    sk_sched_t* sched = thread_env->sched;
+    // Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros
+    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
     sk_sched_start(sched);
     return 0;
 }
@@ -175,7 +194,8 @@ void* worker_io_thread(void* arg)
     sk_thread_env_t* thread_env = arg;
     sk_thread_env_set(thread_env);
 
-    sk_sched_t* sched = thread_env->sched;
+    // Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros
+    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
     sk_sched_start(sched);
     return 0;
 }
@@ -212,66 +232,20 @@ void _skull_module_init(skull_core_t* core)
     }
 }
 
-static
-void _skull_log_notification_cb(FLOG_EVENT event)
-{
-    switch (event) {
-    case FLOG_EVENT_ERROR_WRITE:
-        sk_print_err("Fatal: skull write log occur errors!\n");
-        break;
-    case FLOG_EVENT_TRUNCATED:
-        sk_print_err("Fatal: skull write log which was truncated!\n");
-        break;
-    case FLOG_EVENT_BUFF_FULL:
-        sk_print_err("Fatal: skull logger buffer full!\n");
-        break;
-    case FLOG_EVENT_USER_BUFFER_RELEASED:
-        sk_print("Notice: skull logger quit gracefully\n");
-        break;
-    default:
-        sk_print_err("Fatal: unknow skull log event %d\n", event);
-        break;
-    }
-}
+
 
 static
 void _skull_init_log(skull_core_t* core)
 {
     const sk_config_t* config = core->config;
     const char* working_dir = core->working_dir;
-    size_t workdir_len = strlen(working_dir);
-    size_t log_name_len = strlen(config->log_name);
+    const char* log_name = config->log_name;
+    int log_level = config->log_level;
 
-    // 1. create logger
-    char full_log_name[workdir_len + log_name_len + 1];
-    core->logger = flog_create(full_log_name);
-    SK_ASSERT_MSG(core->logger, "logger create failure");
+    core->logger = sk_create_logger(working_dir, log_name, log_level);
+    SK_ASSERT_MSG(core->logger, "create core logger failed\n");
 
-    // 2. set log level
-    flog_set_level(config->log_level);
-    int log_level = flog_get_level();
-    SK_ASSERT_MSG(log_level == config->log_level, "log level set up failure");
-
-    // 3. set flush inverval: 1 second
-    flog_set_flush_interval(1);
-
-    // 4. set file rolling size: 2GB
-    flog_set_roll_size(1024lu * 1024 * 1024 * 2);
-
-    // 5. set log buffer size(per-thread): 200MB
-    flog_set_buffer_size(1024lu * 1024 * 200);
-
-    // 6. set log mode: async mode
-    flog_set_mode(FLOG_ASYNC_MODE);
-
-    // 7. set up the notification callback, we can handle it if there are some
-    // abnormal things happened
-    flog_register_event_callback(_skull_log_notification_cb);
-
-    // 8. set up the cookie
-    // NOTES: in skull engine, the cookie will be the skull.core, otherwise
-    //   the cookie will be the module name or other name
-    flog_set_cookie("skull.core");
+    SK_LOG_INFO(core->logger, "skull logger initialization successfully");
 }
 
 // APIs
@@ -310,8 +284,8 @@ void skull_start(skull_core_t* core)
     // 2.
     skull_sched_t* main_sched = &core->main_sched;
     // this *main_thread_env* will be deleted when thread exit
-    sk_thread_env_t* main_thread_env = _skull_thread_env_create(main_sched,
-                                                               core->workflows);
+    sk_thread_env_t* main_thread_env = _skull_thread_env_create(core,
+                                                                main_sched);
     int ret = pthread_create(&main_sched->io_thread, NULL,
                              main_io_thread, main_thread_env);
     if (ret) {
@@ -323,9 +297,8 @@ void skull_start(skull_core_t* core)
     for (int i = 0; i < config->threads; i++) {
         skull_sched_t* worker_sched = &core->worker_sched[i];
         // this *worker_thread_env* will be deleted when thread exit
-        sk_thread_env_t* worker_thread_env = _skull_thread_env_create(
-                                                               worker_sched,
-                                                               core->workflows);
+        sk_thread_env_t* worker_thread_env = _skull_thread_env_create(core,
+                                                               worker_sched);
         ret = pthread_create(&worker_sched->io_thread, NULL,
                              worker_io_thread, worker_thread_env);
         if (ret) {
@@ -333,6 +306,7 @@ void skull_start(skull_core_t* core)
             exit(ret);
         }
     }
+    SK_LOG_INFO(core->logger, "skull engine start");
 
     // 4. wait them quit
     for (int i = 0; i < config->threads; i++) {
@@ -344,6 +318,7 @@ void skull_start(skull_core_t* core)
 void skull_stop(skull_core_t* core)
 {
     sk_print("skull engine stoping...\n");
+    SK_LOG_INFO(core->logger, "skull engine stop");
     for (int i = 0; i < core->config->threads; i++) {
         sk_sched_destroy(core->worker_sched[i].sched);
     }
@@ -353,7 +328,6 @@ void skull_stop(skull_core_t* core)
     sk_config_destroy(core->config);
     flist_delete(core->workflows);
     fhash_str_delete(core->unique_modules);
-    flog_destroy(core->logger);
+    sk_destroy_logger(core->logger);
 }
-
 

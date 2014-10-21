@@ -2,6 +2,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include "flog/flog.h"
+
 #include "api/sk_utils.h"
 #include "api/sk_config_loader.h"
 #include "api/sk_config.h"
@@ -114,7 +116,38 @@ static
 void _load_log_name(sk_cfg_node_t* child, sk_config_t* config)
 {
     SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
-    strncpy(config->log_name, child->data.value, SK_CONFIG_LOGNAME_LEN - 1);
+    const char* log_name = child->data.value;
+
+    if (log_name && strlen(log_name)) {
+        strncpy(config->log_name, child->data.value, SK_CONFIG_LOGNAME_LEN - 1);
+    } else {
+        sk_print_err("Fatal: empty log name, please configure a non-empty \
+                     log name\n");
+        exit(1);
+    }
+}
+
+static
+void _load_log_level(sk_cfg_node_t* child, sk_config_t* config)
+{
+    SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
+    const char* log_level_str = child->data.value;
+    if (0 == strcmp("trace", log_level_str)) {
+        config->log_level = FLOG_LEVEL_TRACE;
+    } else if (0 == strcmp("debug", log_level_str)) {
+        config->log_level = FLOG_LEVEL_DEBUG;
+    } else if (0 == strcmp("info", log_level_str)) {
+        config->log_level = FLOG_LEVEL_INFO;
+    } else if (0 == strcmp("warn", log_level_str)) {
+        config->log_level = FLOG_LEVEL_WARN;
+    } else if (0 == strcmp("error", log_level_str)) {
+        config->log_level = FLOG_LEVEL_ERROR;
+    } else if (0 == strcmp("fatal", log_level_str)) {
+        config->log_level = FLOG_LEVEL_FATAL;
+    } else {
+        sk_print_err("Fatal: unknown log level: %s\n", log_level_str);
+        exit(1);
+    }
 }
 
 static
@@ -143,9 +176,9 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
             _load_log_name(child, config);
         }
 
-        // load log level
+        // load log level: trace|debug|info|warn|error|fatal
         if (0 == strcmp(key, "log_level")) {
-            config->log_level = _get_int(child);
+            _load_log_level(child, config);
         }
     }
 

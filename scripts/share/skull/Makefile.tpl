@@ -9,6 +9,7 @@ DEPLOY_DIR_ROOT ?= $(shell pwd)/run
 DEPLOY_BIN_ROOT := $(DEPLOY_DIR_ROOT)/bin
 DEPLOY_MOD_ROOT := $(DEPLOY_DIR_ROOT)/modules
 DEPLOY_SCRIPTS_ROOT := $(DEPLOY_DIR_ROOT)/scripts
+DEPLOY_LOG_ROOT := $(DEPLOY_DIR_ROOT)/log
 
 # Get all the sub dirs which have Makefile
 SUB_DIRS := $(shell find components/ -name Makefile)
@@ -52,6 +53,7 @@ prepare_deploy_dirs:
 	test -d $(DEPLOY_MOD_ROOT) || mkdir -p $(DEPLOY_MOD_ROOT)
 	test -d $(DEPLOY_BIN_ROOT) || mkdir -p $(DEPLOY_BIN_ROOT)
 	test -d $(DEPLOY_SCRIPTS_ROOT) || mkdir -p $(DEPLOY_SCRIPTS_ROOT)
+	test -d $(DEPLOY_LOG_ROOT) || mkdir -p $(DEPLOY_LOG_ROOT)
 
 prepare_deploy_files:
 	cp ChangeLog.md README.md $(DEPLOY_DIR_ROOT)

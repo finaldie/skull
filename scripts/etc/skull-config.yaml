@@ -12,3 +12,5 @@ workflows:
     - modules: []
       concurrent: 0
 
+log_name: skull.log
+log_level: info
