@@ -8,6 +8,8 @@
 #include "api/sk_entity_mgr.h"
 #include "api/sk_pto.h"
 #include "api/sk_txn.h"
+#include "api/sk_log.h"
+#include "api/sk_env.h"
 #include "api/sk_sched.h"
 
 // Every time pick up the next module in the workflow module list, then execute
@@ -19,8 +21,13 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
 
+    // before run module, set the module name for this module
+    sk_logger_setcookie(module->name);
     int ret = module->sk_module_run(txn);
     sk_print("module execution return code=%d\n", ret);
+
+    // after module exit, set back the module name
+    sk_logger_setcookie(SK_CORE_LOG_COOKIE);
 
     if (ret) {
         SK_ASSERT_MSG(!ret, "un-implemented code path\n");

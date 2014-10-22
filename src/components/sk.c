@@ -36,7 +36,7 @@ sk_thread_env_t* _skull_thread_env_create(skull_core_t* core,
     const char* working_dir = core->working_dir;
     const char* log_name = config->log_name;
     int log_level = config->log_level;
-    thread_env->logger = sk_create_logger(working_dir, log_name, log_level);
+    thread_env->logger = sk_logger_create(working_dir, log_name, log_level);
 
     return thread_env;
 }
@@ -242,7 +242,7 @@ void _skull_init_log(skull_core_t* core)
     const char* log_name = config->log_name;
     int log_level = config->log_level;
 
-    core->logger = sk_create_logger(working_dir, log_name, log_level);
+    core->logger = sk_logger_create(working_dir, log_name, log_level);
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
 
     SK_LOG_INFO(core->logger, "skull logger initialization successfully");
@@ -328,6 +328,6 @@ void skull_stop(skull_core_t* core)
     sk_config_destroy(core->config);
     flist_delete(core->workflows);
     fhash_str_delete(core->unique_modules);
-    sk_destroy_logger(core->logger);
+    sk_logger_destroy(core->logger);
 }
 

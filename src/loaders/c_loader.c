@@ -83,6 +83,7 @@ int sk_c_module_close(sk_module_t* module)
 }
 
 sk_loader_t sk_c_loader = {
+    .type = SK_C_MODULE_TYPE,
     .sk_module_name = sk_c_module_name,
     .sk_module_open = sk_c_module_open,
     .sk_module_close = sk_c_module_close

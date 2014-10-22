@@ -13,11 +13,20 @@ sk_module_t* sk_module_load(const char* short_name)
 
         char fullname[1024] = {0};
         loader->sk_module_name(short_name, fullname, 1024);
-        sk_print("try to load module{%s} - %s\n", short_name, fullname);
+        sk_print("try to load module{%s:%d} - %s\n",
+                 short_name, loader->type, fullname);
+
         sk_module_t* module = loader->sk_module_open(fullname);
-        if (module) {
-            return module;
+        if (!module) {
+            continue;
         }
+
+        // we successfully load a module, now init other attributes
+        // the short_name is the config value, feel free to use it
+        module->type = loader->type;
+        module->name = short_name;
+        sk_print("load module{%s:%d} successfully\n", short_name, module->type);
+        return module;
     }
 
     return NULL;

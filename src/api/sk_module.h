@@ -1,7 +1,7 @@
 #ifndef SK_MODULE_H
 #define SK_MODULE_H
 
-#include "fmbuf/fmbuf.h"
+#include <stddef.h>
 
 struct sk_txn_t;
 
@@ -11,6 +11,7 @@ typedef enum sk_mtype_t {
 
 typedef struct sk_module_t {
     void*       md;     // module data
+    const char* name;
     sk_mtype_t  type;
 
 #if __WORDSIZE == 64

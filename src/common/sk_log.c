@@ -30,7 +30,7 @@ void _skull_log_notification_cb(FLOG_EVENT event)
 }
 
 // Public APIs
-sk_logger_t* sk_create_logger(const char* workdir,
+sk_logger_t* sk_logger_create(const char* workdir,
                               const char* log_name,
                               int log_level)
 {
@@ -74,11 +74,16 @@ sk_logger_t* sk_create_logger(const char* workdir,
     return logger;
 }
 
-void sk_destroy_logger(sk_logger_t* logger)
+void sk_logger_destroy(sk_logger_t* logger)
 {
     if (!logger) {
         return;
     }
 
     flog_destroy(logger);
+}
+
+void sk_logger_setcookie(const char* cookie)
+{
+    flog_set_cookie(cookie);
 }

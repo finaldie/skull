@@ -16,6 +16,13 @@
 #define SK_MODULE_PREFIX_NAME "mod"
 
 typedef struct sk_loader_t {
+    // module loader type
+    sk_mtype_t type;
+
+#if __WORDSIZE == 64
+    int         padding;
+#endif
+
     const char* (*sk_module_name)(const char* short_name,
                                   char* fullname, size_t sz);
     sk_module_t* (*sk_module_open)(const char* filename);
