@@ -36,12 +36,13 @@ sk_logger_t* sk_logger_create(const char* workdir,
 {
     size_t workdir_len = strlen(workdir);
     size_t log_name_len = strlen(log_name);
-    size_t full_name_sz = workdir_len + log_name_len + 9 +1;
+    // notes: we add more 5 bytes space for the string of fullname "/log/"
+    size_t full_name_sz = workdir_len + log_name_len + 5 + 1;
 
     // 1. construct the full log name and then create logger
     // NOTES: the log file will be put at log/xxx
     char full_log_name[full_name_sz];
-    snprintf(full_log_name, full_name_sz, "%s/log/%s.log",
+    snprintf(full_log_name, full_name_sz, "%s/log/%s",
              workdir, log_name);
 
     sk_logger_t* logger = flog_create(full_log_name);

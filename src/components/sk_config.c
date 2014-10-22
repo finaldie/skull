@@ -226,7 +226,7 @@ void sk_config_print(sk_config_t* config)
             sk_rawprint("%s ", module_name);
         }
 
-        sk_print("\n");
+        sk_rawprint("\n");
         sk_print("workflow end:\n");
     }
 }

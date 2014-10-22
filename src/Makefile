@@ -19,7 +19,7 @@ INC = \
 ifeq ($(debug), false)
 OPT = -O2
 else
-MACRO += -DSK_DEBUG -finstrument-functions
+MACRO += -DSK_DEBUG -O0 -finstrument-functions
 endif
 
 # linking flags

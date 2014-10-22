@@ -204,6 +204,7 @@ static
 void _skull_init_config(skull_core_t* core)
 {
     core->config = sk_config_create(core->cmd_args.config_location);
+    sk_config_print(core->config);
 }
 
 static
