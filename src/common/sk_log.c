@@ -14,10 +14,16 @@ void _skull_log_notification_cb(FLOG_EVENT event)
     case FLOG_EVENT_ERROR_WRITE:
         sk_print_err("Fatal: skull write log occur errors!\n");
         break;
+    case FLOG_EVENT_ERROR_ASYNC_PUSH:
+        sk_print_err("Fatal: skull async push occur errors!\n");
+        break;
+    case FLOG_EVENT_ERROR_ASYNC_POP:
+        sk_print_err("Fatal: skull async pop occur errors!\n");
+        break;
     case FLOG_EVENT_TRUNCATED:
         sk_print_err("Fatal: skull write log which was truncated!\n");
         break;
-    case FLOG_EVENT_BUFF_FULL:
+    case FLOG_EVENT_BUFFER_FULL:
         sk_print_err("Fatal: skull logger buffer full!\n");
         break;
     case FLOG_EVENT_USER_BUFFER_RELEASED:
