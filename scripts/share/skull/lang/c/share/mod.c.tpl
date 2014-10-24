@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "skull/skull_api.h"
 #include "skull/sk_utils.h"
 #include "skull/sk_txn.h"
 
@@ -15,6 +16,7 @@ size_t module_unpack(const char* data, size_t data_sz)
     SK_ASSERT(data_sz);
 
     sk_print("module_unpack(test): data sz:%zu\n", data_sz);
+    SKULL_LOG_INFO("module_unpack(test): data sz:%zu", data_sz);
     return data_sz;
 }
 
@@ -26,6 +28,7 @@ int module_run(sk_txn_t* txn)
     memcpy(tmp, data, data_sz);
 
     sk_print("receive data: %s\n", tmp);
+    SKULL_LOG_INFO("receive data: %s", tmp);
     free(tmp);
     return 0;
 }
@@ -36,5 +39,6 @@ void module_pack(sk_txn_t* txn)
     const char* data = sk_txn_input(txn, &data_sz);
 
     sk_print("module_pack(test): data sz:%zu\n", data_sz);
+    SKULL_LOG_INFO("module_pack(test): data sz:%zu", data_sz);
     sk_txn_output_append(txn, data, data_sz);
 }

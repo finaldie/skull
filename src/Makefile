@@ -54,7 +54,8 @@ SKULL_ENGINE = skull-engine
 # headers
 SKULL_HEADERS = \
     api/sk_txn.h \
-    api/sk_utils.h
+    api/sk_utils.h \
+    user/skull_api.h
 
 # Objs
 COMMON_OBJS = \
@@ -93,6 +94,9 @@ PTO_IDLS_OBJS = \
     pto/idls/net_proc.pb-c.o \
     pto/idls/net_destroy.pb-c.o
 
+USER_OBJS = \
+    user/skull_api.o
+
 SKULL_MAIN_OBJ = main.o
 
 SKULL_OBJS = \
@@ -102,7 +106,8 @@ SKULL_OBJS = \
     $(LOADER_OBJS) \
     $(SKULL_MAIN_OBJ) \
     $(PTO_OBJS) \
-    $(PTO_IDLS_OBJS)
+    $(PTO_IDLS_OBJS) \
+    $(USER_OBJS)
 
 PROTO_IDLS = \
     net_accept.proto \

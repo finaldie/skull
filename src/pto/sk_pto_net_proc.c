@@ -12,6 +12,8 @@
 #include "api/sk_env.h"
 #include "api/sk_sched.h"
 
+#define SK_MAX_COOKIE_LEN 256
+
 // Every time pick up the next module in the workflow module list, then execute
 // the its `run` method. If reach the last module of the workflow, then will
 // execute the `pack` method
@@ -22,7 +24,13 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_module_t* module = sk_txn_next_module(txn);
 
     // before run module, set the module name for this module
-    sk_logger_setcookie(module->name);
+    // since flog_set_cookie only accept at most 256 bytes cookie string, so
+    // here alloc 256 bytes is enough
+    char cookie[SK_MAX_COOKIE_LEN] = {0};
+    snprintf(cookie, SK_MAX_COOKIE_LEN, "module.%s", module->name);
+    sk_logger_setcookie(cookie);
+
+    // run the module
     int ret = module->sk_module_run(txn);
     sk_print("module execution return code=%d\n", ret);
 
