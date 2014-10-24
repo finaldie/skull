@@ -24,11 +24,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_module_t* module = sk_txn_next_module(txn);
 
     // before run module, set the module name for this module
-    // since flog_set_cookie only accept at most 256 bytes cookie string, so
-    // here alloc 256 bytes is enough
-    char cookie[SK_MAX_COOKIE_LEN] = {0};
-    snprintf(cookie, SK_MAX_COOKIE_LEN, "module.%s", module->name);
-    sk_logger_setcookie(cookie);
+    // NOTES: the cookie have 256 bytes limitation
+    sk_logger_setcookie("module.%s", module->name);
 
     // run the module
     int ret = module->sk_module_run(txn);

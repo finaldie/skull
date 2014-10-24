@@ -90,7 +90,11 @@ void sk_logger_destroy(sk_logger_t* logger)
     flog_destroy(logger);
 }
 
-void sk_logger_setcookie(const char* cookie)
+void sk_logger_setcookie(const char* fmt, ...)
 {
-    flog_set_cookie(cookie);
+    va_list ap;
+    va_start(ap, fmt);
+
+    flog_vset_cookie(fmt, ap);
+    va_end(ap);
 }

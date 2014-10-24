@@ -21,7 +21,7 @@ sk_logger_t* sk_logger_create(const char* workdir,
 void sk_logger_destroy(sk_logger_t* logger);
 
 // set per-thread cookie
-void sk_logger_setcookie(const char* cookie);
+void sk_logger_setcookie(const char* fmt, ...);
 
 #endif
 

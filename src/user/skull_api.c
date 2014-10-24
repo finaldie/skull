@@ -19,30 +19,30 @@ void skull_log(const char* fmt, ...)
 
 bool skull_log_enable_trace()
 {
-    return flog_is_trace_enable();
+    return flog_is_trace_enabled();
 }
 
 bool skull_log_enable_debug()
 {
-    return flog_is_debug_enable();
+    return flog_is_debug_enabled();
 }
 
 bool skull_log_enable_info()
 {
-    return flog_is_info_enable();
+    return flog_is_info_enabled();
 }
 
 bool skull_log_enable_warn()
 {
-    return flog_is_warn_enable();
+    return flog_is_warn_enabled();
 }
 
 bool skull_log_enable_error()
 {
-    return flog_is_error_enable();
+    return flog_is_error_enabled();
 }
 
 bool skull_log_enable_fatal()
 {
-    return flog_is_fatal_enable();
+    return flog_is_fatal_enabled();
 }
