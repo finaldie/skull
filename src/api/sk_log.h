@@ -2,6 +2,7 @@
 #define SK_LOG_H
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include "flog/flog.h"
 
 // SK Logger helper macros

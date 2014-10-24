@@ -14,6 +14,7 @@ MACRO = -D_POSIX_C_SOURCE=200809L
 INC = \
     -I. \
     -I../deps/flibs \
+    -Iuser/include/ \
     -isystem./pto/idls
 
 ifeq ($(debug), false)
@@ -55,7 +56,7 @@ SKULL_ENGINE = skull-engine
 SKULL_HEADERS = \
     api/sk_txn.h \
     api/sk_utils.h \
-    user/skull_api.h
+    user/include/skull/skull_api.h
 
 # Objs
 COMMON_OBJS = \
@@ -95,7 +96,7 @@ PTO_IDLS_OBJS = \
     pto/idls/net_destroy.pb-c.o
 
 USER_OBJS = \
-    user/skull_api.o
+    user/src/skull_api.o
 
 SKULL_MAIN_OBJ = main.o
 

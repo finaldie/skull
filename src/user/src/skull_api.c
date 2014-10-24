@@ -4,7 +4,7 @@
 #include "api/sk_log.h"
 #include "api/sk_env.h"
 
-#include "skull_api.h"
+#include "skull/skull_api.h"
 
 void skull_log(const char* fmt, ...)
 {
