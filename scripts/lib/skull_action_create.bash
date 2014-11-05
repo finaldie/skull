@@ -25,7 +25,7 @@ function _skull_create()
     cp $SKULL_ROOT/share/skull/README.md.tpl $workspace/README.md
     cp -R $SKULL_ROOT/share/skull/bin/* $workspace/bin
     cp -R $SKULL_ROOT/share/skull/scripts/* $workspace/scripts
-    cp $SKULL_ROOT/etc/skull/skull-config.yaml $workspace/config/skull-config.yaml
+    cp -R $SKULL_ROOT/etc/skull/* $workspace/config
 }
 
 function action_create()

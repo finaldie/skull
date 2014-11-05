@@ -5,24 +5,26 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
 
 // ================== Logging Part ========================
-// logging helper macros
+// publis:
+//  logging helper macros
 #define SKULL_LOG_TRACE(fmt, ...) \
     if (skull_log_enable_trace()) { \
-        skull_log(fmt, __VA_ARGS__); \
+        skull_log(SKULL_LOG_PREFIX " TRACE - " fmt, __VA_ARGS__); \
     }
 
 #define SKULL_LOG_DEBUG(fmt, ...) \
     if (skull_log_enable_debug()) { \
-        skull_log(fmt, __VA_ARGS__); \
+        skull_log(SKULL_LOG_PREFIX " DEBUG - " fmt, __VA_ARGS__); \
     }
 
 #define SKULL_LOG_INFO(log_id, fmt, ...) \
     if (skull_log_enable_info()) { \
-        skull_log("[%d] %s; " fmt, \
+        skull_log(SKULL_LOG_PREFIX " INFO - [%d] %s; " fmt, \
                   log_id, \
                   skull_log_info_msg(log_id), \
                   __VA_ARGS__); \
@@ -30,7 +32,7 @@ extern "C" {
 
 #define SKULL_LOG_WARN(log_id, fmt, ...) \
     if (skull_log_enable_warn()) { \
-        skull_log("[%d] %s; suggestion:%s; " fmt, \
+        skull_log(SKULL_LOG_PREFIX " WARN - [%d] %s; suggestion:%s; " fmt, \
                   log_id, \
                   skull_log_warn_msg(log_id), \
                   skull_log_warn_solution(log_id), \
@@ -39,7 +41,7 @@ extern "C" {
 
 #define SKULL_LOG_ERROR(log_id, fmt, ...) \
     if (skull_log_enable_error()) { \
-        skull_log("[%d] %s; solution:%s; " fmt, \
+        skull_log(SKULL_LOG_PREFIX " ERROR - [%d] %s; solution:%s; " fmt, \
                   log_id, \
                   skull_log_error_msg(log_id), \
                   skull_log_error_solution(log_id), \
@@ -48,14 +50,21 @@ extern "C" {
 
 #define SKULL_LOG_FATAL(log_id, fmt, ...) \
     if (skull_log_enable_fatal()) { \
-        skull_log("[%d] %s; solution:%s; " fmt, \
+        skull_log(SKULL_LOG_PREFIX " FATAL - [%d] %s; solution:%s; " fmt, \
                   log_id, \
                   skull_log_fatal_msg(log_id), \
                   skull_log_fatal_solution(log_id), \
                   __VA_ARGS__); \
     }
 
-// logging base functions, but user do not need to call them directly
+// private:
+//  internal macros
+#define SKULL_TO_STR(x) #x
+#define SKULL_EXTRACT_STR(x) SKULL_TO_STR(x)
+#define SKULL_LOG_PREFIX __FILE__ ":" SKULL_EXTRACT_STR(__LINE__)
+
+// private:
+//  logging base functions, but user do not need to call them directly
 void skull_log(const char* fmt, ...);
 
 bool skull_log_enable_trace();
@@ -65,7 +74,8 @@ bool skull_log_enable_warn();
 bool skull_log_enable_error();
 bool skull_log_enable_fatal();
 
-// get log msg and solution
+// private:
+//  get log msg and solution
 const char* skull_log_info_msg(int log_id);
 const char* skull_log_warn_msg(int log_id);
 const char* skull_log_warn_solution(int log_id);

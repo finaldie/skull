@@ -8,6 +8,12 @@
 void module_init()
 {
     sk_print("module(test): init\n");
+    SKULL_LOG_TRACE("skull trace log test %d", 1);
+    SKULL_LOG_DEBUG("skull debug log test %d", 2);
+    SKULL_LOG_INFO(1, "skull info log test %d", 3);
+    SKULL_LOG_WARN(1, "skull warn log test %d", 4);
+    SKULL_LOG_ERROR(1, "skull error log test %d", 5);
+    SKULL_LOG_FATAL(1, "skull fatal log test %d", 6);
 }
 
 size_t module_unpack(const char* data, size_t data_sz)
@@ -16,7 +22,7 @@ size_t module_unpack(const char* data, size_t data_sz)
     SK_ASSERT(data_sz);
 
     sk_print("module_unpack(test): data sz:%zu\n", data_sz);
-    SKULL_LOG_INFO("module_unpack(test): data sz:%zu", data_sz);
+    SKULL_LOG_INFO(1, "module_unpack(test): data sz:%zu", data_sz);
     return data_sz;
 }
 
@@ -28,7 +34,7 @@ int module_run(sk_txn_t* txn)
     memcpy(tmp, data, data_sz);
 
     sk_print("receive data: %s\n", tmp);
-    SKULL_LOG_INFO("receive data: %s", tmp);
+    SKULL_LOG_INFO(1, "receive data: %s", tmp);
     free(tmp);
     return 0;
 }
@@ -39,6 +45,6 @@ void module_pack(sk_txn_t* txn)
     const char* data = sk_txn_input(txn, &data_sz);
 
     sk_print("module_pack(test): data sz:%zu\n", data_sz);
-    SKULL_LOG_INFO("module_pack(test): data sz:%zu", data_sz);
+    SKULL_LOG_INFO(1, "module_pack(test): data sz:%zu", data_sz);
     sk_txn_output_append(txn, data, data_sz);
 }
