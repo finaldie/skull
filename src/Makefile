@@ -69,7 +69,8 @@ COMMON_OBJS = \
     common/sk_txn.o \
     common/sk_env.o \
     common/sk_workflow.o \
-    common/sk_log.o
+    common/sk_log.o \
+    common/sk_log_tpl.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \

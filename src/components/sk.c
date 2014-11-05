@@ -17,8 +17,10 @@
 #include "api/sk_module.h"
 #include "api/sk_workflow.h"
 #include "api/sk_loader.h"
+#include "api/sk_const.h"
 #include "api/sk_env.h"
 #include "api/sk_log.h"
+#include "api/sk_log_tpl.h"
 #include "api/sk.h"
 
 // INTERNAL APIs
@@ -233,8 +235,6 @@ void _skull_module_init(skull_core_t* core)
     }
 }
 
-
-
 static
 void _skull_init_log(skull_core_t* core)
 {
@@ -247,6 +247,45 @@ void _skull_init_log(skull_core_t* core)
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
 
     SK_LOG_INFO(core->logger, "skull logger initialization successfully");
+}
+
+static
+void _skull_init_log_tpls(skull_core_t* core)
+{
+    const char* working_dir = core->working_dir;
+    char log_tpl_name[SK_LOG_TPL_NAME_MAX_LEN];
+
+    // 1. load info log template
+    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
+    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
+             working_dir, SK_LOG_INFO_TPL_NAME);
+
+    core->info_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_INFO_TPL);
+    SK_ASSERT(core->info_log_tpl);
+
+    // 2. load warn log template
+    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
+    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
+             working_dir, SK_LOG_WARN_TPL_NAME);
+
+    core->warn_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_ERROR_TPL);
+    SK_ASSERT(core->warn_log_tpl);
+
+    // 3. load error log template
+    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
+    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
+             working_dir, SK_LOG_ERROR_TPL_NAME);
+
+    core->error_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_ERROR_TPL);
+    SK_ASSERT(core->error_log_tpl);
+
+    // 4. load fatal log template
+    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
+    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
+             working_dir, SK_LOG_FATAL_TPL_NAME);
+
+    core->fatal_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_ERROR_TPL);
+    SK_ASSERT(core->fatal_log_tpl);
 }
 
 // APIs
@@ -264,10 +303,13 @@ void skull_init(skull_core_t* core)
     // 4. init logger
     _skull_init_log(core);
 
-    // 5. init schedulers
+    // 5. init log tempaltes
+    _skull_init_log_tpls(core);
+
+    // 6. init schedulers
     _skull_setup_schedulers(core);
 
-    // 6. load working flows
+    // 7. load working flows
     _skull_setup_workflow(core);
 }
 
@@ -330,5 +372,11 @@ void skull_stop(skull_core_t* core)
     flist_delete(core->workflows);
     fhash_str_delete(core->unique_modules);
     sk_logger_destroy(core->logger);
+
+    // destroy log templates
+    sk_log_tpl_destroy(core->info_log_tpl);
+    sk_log_tpl_destroy(core->warn_log_tpl);
+    sk_log_tpl_destroy(core->error_log_tpl);
+    sk_log_tpl_destroy(core->fatal_log_tpl);
 }
 

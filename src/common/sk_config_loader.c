@@ -265,3 +265,13 @@ void sk_config_dump(sk_cfg_node_t* root)
 {
     _sk_config_dump(0, root);
 }
+
+// Util APIs
+int sk_config_getint(sk_cfg_node_t* node)
+{
+    long int value = strtol(node->data.value, NULL, 10);
+    SK_ASSERT_MSG(errno != EINVAL && errno != ERANGE,
+                  "load config errno: %d, %s\n", errno, strerror(errno));
+
+    return (int)value;
+}

@@ -30,9 +30,6 @@ typedef struct sk_config_t {
     // be put at the `log` folder)
     char log_name[SK_CONFIG_LOGNAME_LEN];
 
-    // user error log template file name
-    char error_log_template[SK_CONFIG_LOGNAME_LEN];
-
     // how many worker threads will be created after skull starting
     int threads;
 

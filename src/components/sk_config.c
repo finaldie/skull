@@ -100,9 +100,9 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
             if (0 == strcmp(key, "modules")) {
                 _load_modules(child, workflow);
             } else if (0 == strcmp(key, "concurrent")) {
-                workflow->concurrent = _get_int(child);
+                workflow->concurrent = sk_config_getint(child);
             } else if (0 == strcmp(key, "port")) {
-                workflow->port = _get_int(child);
+                workflow->port = sk_config_getint(child);
             }
         }
         fhash_str_iter_release(&item_iter);
@@ -123,22 +123,6 @@ void _load_log_name(sk_cfg_node_t* child, sk_config_t* config)
     } else {
         sk_print_err("Fatal: empty log name, please configure a non-empty \
                      log name\n");
-        exit(1);
-    }
-}
-
-static
-void _load_error_log_template(sk_cfg_node_t* child, sk_config_t* config)
-{
-    SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
-    const char* template_name = child->data.value;
-
-    if (template_name && strlen(template_name)) {
-        strncpy(config->error_log_template, child->data.value,
-                SK_CONFIG_LOGNAME_LEN - 1);
-    } else {
-        sk_print_err("Fatal: empty error_log_template name, please configure a \
-                     non-empty log name\n");
         exit(1);
     }
 }
@@ -179,7 +163,7 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         // load thread_num
         const char* key = iter.key;
         if (0 == strcmp(key, "thread_num")) {
-            config->threads = _get_int(child);
+            config->threads = sk_config_getint(child);
         }
 
         // load working flows
@@ -195,11 +179,6 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         // load log level: trace|debug|info|warn|error|fatal
         if (0 == strcmp(key, "log_level")) {
             _load_log_level(child, config);
-        }
-
-        // user error log template file name
-        if (0 == strcmp(key, "error_log_template")) {
-            _load_error_log_template(child, config);
         }
     }
 

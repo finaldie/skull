@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "flog/flog.h"
 #include "api/sk_utils.h"
+#include "api/sk_const.h"
 #include "api/sk_env.h"
 #include "api/sk_log.h"
 
@@ -51,7 +53,7 @@ sk_logger_t* sk_logger_create(const char* workdir,
     snprintf(full_log_name, full_name_sz, "%s/log/%s",
              workdir, log_name);
 
-    sk_logger_t* logger = flog_create(full_log_name);
+    flog_file_t* logger = flog_create(full_log_name);
     SK_ASSERT_MSG(logger, "logger create failure");
 
     // 2. set log level
@@ -88,6 +90,7 @@ void sk_logger_destroy(sk_logger_t* logger)
     }
 
     flog_destroy(logger);
+    free(logger);
 }
 
 void sk_logger_setcookie(const char* fmt, ...)
