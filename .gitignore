@@ -21,3 +21,17 @@
 *.i*86
 *.x86_64
 *.hex
+
+# Python
+*.pyc
+
+# ctag
+.tags
+tags
+
+# cscope
+.cscope.*
+cscope.*
+
+# protobuf-c
+*.pb-c.*

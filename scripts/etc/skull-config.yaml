@@ -1,0 +1,16 @@
+thread_num: 1
+
+workflows:
+    - modules: []
+      concurrent: 1
+      port: 7758
+    - modules: []
+      concurrent: 0
+      port: 7759
+    - modules: []
+      concurrent: 1
+    - modules: []
+      concurrent: 0
+
+log_name: skull.log
+log_level: info
