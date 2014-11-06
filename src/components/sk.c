@@ -182,6 +182,7 @@ void* main_io_thread(void* arg)
     sk_print("main io thread started\n");
     sk_thread_env_t* thread_env = arg;
     sk_thread_env_set(thread_env);
+    sk_logger_setcookie(SK_CORE_LOG_COOKIE);
 
     // Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros
     sk_sched_t* sched = SK_THREAD_ENV_SCHED;
@@ -195,6 +196,7 @@ void* worker_io_thread(void* arg)
     sk_print("worker io thread started\n");
     sk_thread_env_t* thread_env = arg;
     sk_thread_env_set(thread_env);
+    sk_logger_setcookie(SK_CORE_LOG_COOKIE);
 
     // Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros
     sk_sched_t* sched = SK_THREAD_ENV_SCHED;
@@ -230,8 +232,10 @@ void _skull_module_init(skull_core_t* core)
     sk_module_t* module = NULL;
 
     while ((module = fhash_str_next(&iter))) {
-        sk_print("module init...\n");
+        sk_print("module [%s] init...\n", module->name);
+        sk_logger_setcookie("module.%s", module->name);
         module->sk_module_init();
+        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
     }
 }
 
@@ -245,6 +249,12 @@ void _skull_init_log(skull_core_t* core)
 
     core->logger = sk_logger_create(working_dir, log_name, log_level);
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
+
+    // create a thread env for the main thread, this is necessary since during
+    // the phase of loading modules, user may log something, if the thread_env
+    // does not exist, the logs will be dropped
+    sk_thread_env_t* env = _skull_thread_env_create(core, NULL);
+    sk_thread_env_set(env);
 
     SK_LOG_INFO(core->logger, "skull logger initialization successfully");
 }
