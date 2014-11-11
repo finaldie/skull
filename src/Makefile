@@ -147,4 +147,4 @@ clean:
 clean_protos:
 	rm -f pto/idls/*.pb-c.*
 
-.PHONY: skull clean $(SKULL_ENGINE) install protos clean_protos
+.PHONY: skull clean install protos clean_protos
