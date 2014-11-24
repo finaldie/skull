@@ -32,7 +32,7 @@ void sk_mon_destroy(sk_mon_t* sk_mon)
     free(sk_mon);
 }
 
-void sk_mon_add(sk_mon_t* sk_mon, const char* name, uint32_t value)
+void sk_mon_inc(sk_mon_t* sk_mon, const char* name, uint32_t value)
 {
     pthread_mutex_lock(&sk_mon->lock);
     {
@@ -40,15 +40,6 @@ void sk_mon_add(sk_mon_t* sk_mon, const char* name, uint32_t value)
                                                                 name);
         uint32_t new_value = raw_value + value;
         fhash_str_set(sk_mon->mon_tbl, name, (void*)(uintptr_t)new_value);
-    }
-    pthread_mutex_unlock(&sk_mon->lock);
-}
-
-void sk_mon_set(sk_mon_t* sk_mon, const char* name, uint32_t value)
-{
-    pthread_mutex_lock(&sk_mon->lock);
-    {
-        fhash_str_set(sk_mon->mon_tbl, name, (void*)(uintptr_t)value);
     }
     pthread_mutex_unlock(&sk_mon->lock);
 }

@@ -6,7 +6,6 @@ WARN = -Wall
 EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter
 EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
 EXTRA += -Wconversion
-EXTRA += -fstack-protector
 OTHER = -pipe -g -ggdb3
 SHARED =
 LDFLAGS += -Wl,-E
@@ -19,7 +18,9 @@ INC = \
 
 ifeq ($(debug), false)
 OPT = -O2
+EXTRA += -fstack-protector
 else
+EXTRA += -fstack-protector-all
 MACRO += -DSK_DEBUG -O0 -finstrument-functions
 endif
 
@@ -71,7 +72,8 @@ COMMON_OBJS = \
     common/sk_workflow.o \
     common/sk_log.o \
     common/sk_log_tpl.o \
-    common/sk_mon.o
+    common/sk_mon.o \
+    common/sk_metrics.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \

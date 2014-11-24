@@ -298,7 +298,17 @@ void _skull_init_log_tpls(skull_core_t* core)
     SK_ASSERT(core->fatal_log_tpl);
 }
 
+static
+void _skull_init_moniter(skull_core_t* core)
+{
+    core->monitor = sk_mon_create();
+}
+
 // APIs
+
+// The skull core context initialization function, please *BE CAREFUL* for the
+// execution orders, if you quite understand it, do not modify the calling ord-
+// ers.
 void skull_init(skull_core_t* core)
 {
     // 1. prepare the thread env
@@ -316,10 +326,13 @@ void skull_init(skull_core_t* core)
     // 5. init log tempaltes
     _skull_init_log_tpls(core);
 
-    // 6. init schedulers
+    // 6. init global monitor
+    _skull_init_moniter(core);
+
+    // 7. init schedulers
     _skull_setup_schedulers(core);
 
-    // 7. load working flows
+    // 8. load working flows
     _skull_setup_workflow(core);
 }
 

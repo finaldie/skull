@@ -8,8 +8,7 @@ typedef struct sk_mon_t sk_mon_t;
 sk_mon_t* sk_mon_create();
 void sk_mon_destroy(sk_mon_t*);
 
-void sk_mon_add(sk_mon_t*, const char* name, uint32_t value);
-void sk_mon_set(sk_mon_t*, const char* name, uint32_t value);
+void sk_mon_inc(sk_mon_t*, const char* name, uint32_t value);
 uint32_t sk_mon_get(sk_mon_t*, const char* name);
 
 void sk_mon_reset(sk_mon_t*);

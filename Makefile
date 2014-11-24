@@ -11,7 +11,12 @@ flibs:
 protos:
 	cd src && $(MAKE) $@
 
-dep: flibs protos
+metrics:
+	cd config && ../scripts/bin/skull-metrics-gen.py -l c -m core -c metrics.yaml
+	mv config/sk_metrics.h src/api
+	mv config/sk_metrics.c src/common
+
+dep: flibs protos metrics
 
 core:
 	cd src && $(MAKE)
