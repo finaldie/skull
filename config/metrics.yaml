@@ -1,23 +1,27 @@
 global:
-    request:
-        desc: Everytime we received a request, this counter will +1
-    response:
-        desc: Everytime we send a response, this counter will +1
-    latency:
-        desc: "This is the sum of the latency for each transcation (unit: milli-second)"
+    mode: global
+    metrics:
+        request:
+            desc: Everytime we received a request, this counter will +1
+        response:
+            desc: Everytime we send a response, this counter will +1
+        latency:
+            desc: "This is the sum of the latency for each transcation (unit: milli-second)"
 
 thread:
-    request:
-        desc: When the worker thread receive a request, this counter will +1
-    response:
-        desc: When the worker thread send a response, this coutner will +1
-    latency:
-        desc: The sum of the latency for each transcation in the thread
-    entities:
-        desc: The total count of the entities in the thread
-    transcations:
-        desc: How many transcations be completed in the thread
-    transcation_time:
-        desc: "The sum of the transcation time in the thread (unit: milli-second)"
+    mode: thread
+    metrics:
+        request:
+            desc: When the worker thread receive a request, this counter will +1
+        response:
+            desc: When the worker thread send a response, this coutner will +1
+        latency:
+            desc: The sum of the latency for each transcation in the thread
+        entities:
+            desc: The total count of the entities in the thread
+        transcations:
+            desc: How many transcations be completed in the thread
+        transcation_time:
+            desc: "The sum of the transcation time in the thread (unit: milli-second)"
 
 

@@ -26,7 +26,7 @@ C_HEADER_CONTENT_START = "\
 \n\
 // base metrics type, including inc() and get() methods\n\
 typedef struct sk_metrics_t {\n\
-    void (*inc)(uint32_t value);\n\
+    void     (*inc)(uint32_t value);\n\
     uint32_t (*get)();\n\
 } sk_metrics_t;\n\
 \n"
@@ -44,14 +44,28 @@ C_SOURCE_CONTENT_START = "\
 #include \"api/sk_metrics.h\"\n\
 \n"
 
-C_FUNC_INC_CONTENT = "static\n\
+C_FUNC_GLOBAL_INC_CONTENT = "static\n\
+void _sk_%s_%s_inc(uint32_t value)\n\
+{\n\
+  sk_mon_t* mon = SK_THREAD_ENV_CORE->monitor;\n\
+  sk_mon_inc(mon, \"%s\", value);\n\
+}\n\n"
+
+C_FUNC_GLOBAL_GET_CONTENT = "static\n\
+uint32_t _sk_%s_%s_get()\n\
+{\n\
+  sk_mon_t* mon = SK_THREAD_ENV_CORE->monitor;\n\
+  return sk_mon_get(mon, \"%s\");\n\
+}\n\n"
+
+C_FUNC_THREAD_INC_CONTENT = "static\n\
 void _sk_%s_%s_inc(uint32_t value)\n\
 {\n\
   sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
   sk_mon_inc(mon, \"%s\", value);\n\
 }\n\n"
 
-C_FUNC_GET_CONTENT = "static\n\
+C_FUNC_THREAD_GET_CONTENT = "static\n\
 uint32_t _sk_%s_%s_get()\n\
 {\n\
   sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
@@ -92,7 +106,15 @@ def load_yaml_config():
     yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
-def gen_c_header_metrics(scope_name, metrics_map):
+def gen_c_header_metrics(scope_name, metrics_obj):
+    # check required field
+    if not metrics_obj.get("metrics"):
+        print "Fatal: don't find 'metrics' field in the config, please check it again"
+        sys.exit(1)
+
+    metrics_map = metrics_obj['metrics']
+
+    # define the type name
     metrics_type_name = "sk_metrics_" + scope_name + "_t"
 
     # assemble first line
@@ -141,16 +163,39 @@ def generate_c_header():
     header_file.write(content)
     header_file.close()
 
-def gen_c_source_metrics(scope_name, metrics_map):
+def gen_c_source_metrics(scope_name, metrics_obj):
     content = ""
+
+    # 0. check required field
+    if not metrics_obj.get("metrics"):
+        print "Fatal: don't find 'metrics' field in the config, please check it again"
+        sys.exit(1)
+
+    metrics_map = metrics_obj['metrics']
+
+    if not metrics_obj.get("mode"):
+        print "Fatal: don't find 'mode' field in the config, please check it again"
+        sys.exit(1)
+
+    mode = metrics_obj['mode']
+    if mode not in ["global", "thread"]:
+        print "Fatal: 'mode' field must be 'global' or 'thread', please check it again"
+        sys.exit(1)
 
     # 1. assemble metrics methods
     for metric_name in metrics_map:
-        # 1.1 assemble inc method
-        content += C_FUNC_INC_CONTENT % (scope_name, metric_name, metric_name)
+        if mode == "global":
+            # 1.1 assemble inc method
+            content += C_FUNC_GLOBAL_INC_CONTENT % (scope_name, metric_name, metric_name)
 
-        # 1.2 assemble get method
-        content += C_FUNC_GET_CONTENT % (scope_name, metric_name, metric_name)
+            # 1.2 assemble get method
+            content += C_FUNC_GLOBAL_GET_CONTENT % (scope_name, metric_name, metric_name)
+        else:
+            # 1.3 assemble inc method
+            content += C_FUNC_THREAD_INC_CONTENT % (scope_name, metric_name, metric_name)
+
+            # 1.4 assemble get method
+            content += C_FUNC_THREAD_GET_CONTENT % (scope_name, metric_name, metric_name)
 
     # 2. assemble scope apis
     # 2.1 assemble create api
