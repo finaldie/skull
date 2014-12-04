@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-# This is skull workflow config controlling script
+# This is skull metrics generator and used only for the skull engine itself.
+# It will generate the C header and source files
 
 import sys
 import os

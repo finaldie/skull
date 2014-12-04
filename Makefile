@@ -12,7 +12,7 @@ protos:
 	cd src && $(MAKE) $@
 
 metrics:
-	cd config && ../scripts/bin/skull-metrics-gen.py -l c -m core -c metrics.yaml
+	cd config && ../tools/skull-metrics-gen.py -l c -m core -c metrics.yaml
 	mv config/sk_metrics.h src/api
 	mv config/sk_metrics.c src/common
 
