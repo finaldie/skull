@@ -58,14 +58,14 @@ C_SOURCE_CONTENT_START = "\
 C_FUNC_GLOBAL_INC_CONTENT = "static\n\
 void _sk_%s_%s_inc(uint32_t value)\n\
 {\n\
-    sk_mon_t* mon = SK_THREAD_ENV_CORE->monitor;\n\
+    sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
     sk_mon_inc(mon, \"%s\", value);\n\
 }\n\n"
 
 C_FUNC_GLOBAL_GET_CONTENT = "static\n\
 uint32_t _sk_%s_%s_get()\n\
 {\n\
-    sk_mon_t* mon = SK_THREAD_ENV_CORE->monitor;\n\
+    sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
     return sk_mon_get(mon, \"%s\");\n\
 }\n\n"
 
@@ -90,14 +90,14 @@ uint32_t _sk_%s_%s_get()\n\
 C_FUNC_GLOBAL_DYN_INC_CONTENT = "static\n\
 void _sk_global_dynamic_inc(const char* name, uint32_t value)\n\
 {\n\
-    sk_mon_t* mon = SK_THREAD_ENV_CORE->monitor;\n\
+    sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
     sk_mon_inc(mon, name, value);\n\
 }\n\n"
 
 C_FUNC_GLOBAL_DYN_GET_CONTENT = "static\n\
 uint32_t _sk_global_dynamic_get(const char* name)\n\
 {\n\
-    sk_mon_t* mon = SK_THREAD_ENV_CORE->monitor;\n\
+    sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
     return sk_mon_get(mon, name);\n\
 }\n\n"
 

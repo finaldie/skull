@@ -27,7 +27,9 @@
 
 static
 sk_thread_env_t* _skull_thread_env_create(skull_core_t* core,
-                                          skull_sched_t* worker_sched)
+                                          skull_sched_t* worker_sched,
+                                          const char* name,
+                                          int idx)
 {
     sk_thread_env_t* thread_env = calloc(1, sizeof(*thread_env));
     thread_env->core = core;
@@ -39,6 +41,12 @@ sk_thread_env_t* _skull_thread_env_create(skull_core_t* core,
     const char* log_name = config->log_name;
     int log_level = config->log_level;
     thread_env->logger = sk_logger_create(working_dir, log_name, log_level);
+
+    thread_env->mon = sk_mon_create();
+    thread_env->monitor = sk_metrics_thread_create(name);
+
+    snprintf(thread_env->name, SK_ENV_NAME_LEN, "%s%d", name, idx);
+    thread_env->idx = idx;
 
     return thread_env;
 }
@@ -253,7 +261,7 @@ void _skull_init_log(skull_core_t* core)
     // create a thread env for the main thread, this is necessary since during
     // the phase of loading modules, user may log something, if the thread_env
     // does not exist, the logs will be dropped
-    sk_thread_env_t* env = _skull_thread_env_create(core, NULL);
+    sk_thread_env_t* env = _skull_thread_env_create(core, NULL, "main", 0);
     sk_thread_env_set(env);
 
     SK_LOG_INFO(core->logger, "skull logger initialization successfully");
@@ -301,7 +309,8 @@ void _skull_init_log_tpls(skull_core_t* core)
 static
 void _skull_init_moniter(skull_core_t* core)
 {
-    core->monitor = sk_mon_create();
+    core->mon = sk_mon_create();
+    core->monitor = sk_metrics_global_create("global");
 }
 
 // APIs
@@ -351,7 +360,9 @@ void skull_start(skull_core_t* core)
     skull_sched_t* main_sched = &core->main_sched;
     // this *main_thread_env* will be deleted when thread exit
     sk_thread_env_t* main_thread_env = _skull_thread_env_create(core,
-                                                                main_sched);
+                                                                main_sched,
+                                                                "master",
+                                                                0);
     int ret = pthread_create(&main_sched->io_thread, NULL,
                              main_io_thread, main_thread_env);
     if (ret) {
@@ -364,7 +375,9 @@ void skull_start(skull_core_t* core)
         skull_sched_t* worker_sched = &core->worker_sched[i];
         // this *worker_thread_env* will be deleted when thread exit
         sk_thread_env_t* worker_thread_env = _skull_thread_env_create(core,
-                                                               worker_sched);
+                                                               worker_sched,
+                                                               "worker",
+                                                               i);
         ret = pthread_create(&worker_sched->io_thread, NULL,
                              worker_io_thread, worker_thread_env);
         if (ret) {

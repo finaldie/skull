@@ -13,9 +13,19 @@
 #include "api/sk_log.h"
 #include "api/sk_log_tpl.h"
 #include "api/sk_mon.h"
+#include "api/sk_metrics.h"
+
+// per-thread data and macros, most of time, normally you only need to use these macros
+#define SK_THREAD_ENV_CORE       (sk_thread_env()->core)
+
+#define SK_THREAD_ENV_SCHED      (sk_thread_env()->worker_sched->sched)
+#define SK_THREAD_ENV_ENTITY_MGR (sk_thread_env()->worker_sched->entity_mgr)
+#define SK_THREAD_ENV_EVENTLOOP  (sk_thread_env()->worker_sched->evlp)
+#define SK_THREAD_ENV_WORKFLOWS  (sk_thread_env()->core->workflows)
+#define SK_THREAD_ENV_LOGGER     (sk_thread_env()->logger)
+#define SK_THREAD_ENV_MON        (sk_thread_env()->mon)
 
 // skull core related structures
-
 typedef struct skull_cmd_args_t {
     const char* config_location;
 } skull_cmd_args_t;
@@ -28,6 +38,10 @@ typedef struct skull_sched_t {
 } skull_sched_t;
 
 typedef struct skull_core_t {
+    // ======= private =======
+    sk_mon_t*            mon;
+
+    // ======= public  =======
     skull_cmd_args_t cmd_args;
     sk_config_t*     config;
 
@@ -44,29 +58,30 @@ typedef struct skull_core_t {
     sk_log_tpl_t*    fatal_log_tpl;
 
     // global monitor
-    sk_mon_t*        monitor;
+    sk_metrics_global_t* monitor;
 
-    // shared data
     flist*           workflows;      // element type: sk_workflow_t
     fhash*           unique_modules; // key: module name; value: sk_module_t
     const char*      working_dir;
 } skull_core_t;
 
-// per-thread data and macros, most of time, you only need to use these macros
-#define SK_THREAD_ENV_CORE       (sk_thread_env()->core)
-
-#define SK_THREAD_ENV_SCHED      (sk_thread_env()->worker_sched->sched)
-#define SK_THREAD_ENV_ENTITY_MGR (sk_thread_env()->worker_sched->entity_mgr)
-#define SK_THREAD_ENV_EVENTLOOP  (sk_thread_env()->worker_sched->evlp)
-#define SK_THREAD_ENV_WORKFLOWS  (sk_thread_env()->core->workflows)
-#define SK_THREAD_ENV_LOGGER     (sk_thread_env()->logger)
-#define SK_THREAD_ENV_MON        (sk_thread_env()->monitor)
+#define SK_ENV_NAME_LEN 20
 
 typedef struct sk_thread_env_t {
+    // ======== private ========
+    sk_mon_t*            mon;
+
+    // ======== public  ========
     skull_core_t*    core;
     skull_sched_t*   worker_sched;
     sk_logger_t*     logger;
-    sk_mon_t*        monitor;
+
+    // per thread monitor
+    sk_metrics_thread_t* monitor;
+
+    // used for logging or debugging
+    char name[SK_ENV_NAME_LEN];
+    int  idx;
 } sk_thread_env_t;
 
 void sk_thread_env_init();
