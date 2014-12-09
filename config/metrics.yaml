@@ -8,7 +8,13 @@ global:
         latency:
             desc: "This is the sum of the latency for each transcation (unit: milli-second)"
 
-thread:
+master:
+    mode: thread
+    metrics:
+        accept:
+            desc: Accept counter
+
+worker:
     mode: thread
     metrics:
         request:

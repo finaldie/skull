@@ -18,9 +18,9 @@
 // per-thread data and macros, most of time, normally you only need to use these macros
 #define SK_THREAD_ENV_CORE       (sk_thread_env()->core)
 
-#define SK_THREAD_ENV_SCHED      (sk_thread_env()->worker_sched->sched)
-#define SK_THREAD_ENV_ENTITY_MGR (sk_thread_env()->worker_sched->entity_mgr)
-#define SK_THREAD_ENV_EVENTLOOP  (sk_thread_env()->worker_sched->evlp)
+#define SK_THREAD_ENV_SCHED      (sk_thread_env()->sched->sched)
+#define SK_THREAD_ENV_ENTITY_MGR (sk_thread_env()->sched->entity_mgr)
+#define SK_THREAD_ENV_EVENTLOOP  (sk_thread_env()->sched->evlp)
 #define SK_THREAD_ENV_WORKFLOWS  (sk_thread_env()->core->workflows)
 #define SK_THREAD_ENV_LOGGER     (sk_thread_env()->logger)
 #define SK_THREAD_ENV_MON        (sk_thread_env()->mon)
@@ -73,11 +73,17 @@ typedef struct sk_thread_env_t {
 
     // ======== public  ========
     skull_core_t*    core;
-    skull_sched_t*   worker_sched;
+    skull_sched_t*   sched;
     sk_logger_t*     logger;
 
     // per thread monitor
-    sk_metrics_thread_t* monitor;
+    union {
+        // The master io's monitor handler
+        sk_metrics_master_t* master;
+
+        // The worker io's monitor handler
+        sk_metrics_worker_t* worker;
+    } monitor;
 
     // used for logging or debugging
     char name[SK_ENV_NAME_LEN];
