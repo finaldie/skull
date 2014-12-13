@@ -42,7 +42,7 @@ sk_thread_env_t* _sk_master_env_create(skull_core_t* core,
     thread_env->logger = sk_logger_create(working_dir, log_name, log_level);
 
     thread_env->mon = sk_mon_create();
-    thread_env->monitor.master = sk_metrics_master_create(name);
+    thread_env->monitor = sk_metrics_worker_create(name);
 
     return thread_env;
 }
@@ -65,7 +65,7 @@ sk_thread_env_t* _sk_worker_env_create(skull_core_t* core,
     thread_env->logger = sk_logger_create(working_dir, log_name, log_level);
 
     thread_env->mon = sk_mon_create();
-    thread_env->monitor.worker = sk_metrics_worker_create(name);
+    thread_env->monitor = sk_metrics_worker_create(name);
 
     snprintf(thread_env->name, SK_ENV_NAME_LEN, "%s%d", name, idx);
     thread_env->idx = idx;
@@ -247,8 +247,8 @@ void _skull_chdir(skull_core_t* core)
     char* raw_path = strdup(core->cmd_args.config_location);
     const char* config_dir = dirname(raw_path);
     int ret = chdir(config_dir);
-    SK_ASSERT_MSG(!ret, "change working dir to %s failed, errno:%s\n",
-                  config_dir, strerror(errno));
+    SK_ASSERT_MSG(!ret, "change working dir to %s failed, errno:%d\n",
+                  config_dir, errno);
     free(raw_path);
 
     core->working_dir = getcwd(NULL, 0);
@@ -387,7 +387,7 @@ void skull_start(skull_core_t* core)
     int ret = pthread_create(&main_sched->io_thread, NULL,
                              main_io_thread, main_thread_env);
     if (ret) {
-        sk_print("create main io thread failed: %s\n", strerror_r(errno));
+        sk_print("create main io thread failed, errno: %d\n", errno);
         exit(ret);
     }
 
@@ -402,7 +402,7 @@ void skull_start(skull_core_t* core)
         ret = pthread_create(&worker_sched->io_thread, NULL,
                              worker_io_thread, worker_thread_env);
         if (ret) {
-            sk_print("create worker io thread failed: %s\n", strerror_r(errno));
+            sk_print("create worker io thread failed, errno: %d\n", errno);
             exit(ret);
         }
     }

@@ -30,9 +30,6 @@ SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(SHARED) $(OTH
 SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(OPT) $(SHARED) $(OTHER) $(DEPS_LDFLAGS)
 SKULL_LIBS = \
-    -ldl \
-    -pthread \
-    -lrt \
     -lyaml \
     -lfev \
     -lfnet \
@@ -40,7 +37,11 @@ SKULL_LIBS = \
     -lfhash \
     -lfmbuf \
     -lflist \
-    -lprotobuf-c
+    -lftimer \
+    -lprotobuf-c \
+    -pthread \
+    -ldl \
+    -lrt
 
 # CC and LD
 SKULL_CC = $(CC) $(SKULL_CFLAGS)

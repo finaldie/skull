@@ -21,6 +21,13 @@
 static
 int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
+    // 0. First, if the current module is the first module (deserialization
+    // module), so we will increase the request counter metrcis
+    if (sk_txn_is_first_module(txn)) {
+        SK_THREAD_ENV->monitor->request.inc(1);
+        SK_THREAD_ENV_CORE->monitor->request.inc(1);
+    }
+
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
 
@@ -61,6 +68,14 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     } else {
         sk_print("write data sz:%zu\n", packed_data_sz);
         sk_entity_write(entity, packed_data, packed_data_sz);
+
+        // record metrics
+        SK_THREAD_ENV->monitor->response.inc(1);
+        SK_THREAD_ENV_CORE->monitor->response.inc(1);
+
+        unsigned long long alivetime = sk_txn_alivetime(txn);
+        SK_THREAD_ENV->monitor->latency.inc((uint32_t)(alivetime / 1000));
+        SK_THREAD_ENV_CORE->monitor->latency.inc((uint32_t)(alivetime / 1000));
     }
 
     // 4. the transcation is over, destroy sk_txn structure

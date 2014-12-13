@@ -2,6 +2,8 @@
 #include <string.h>
 
 #include "fmbuf/fmbuf.h"
+#include "ftimer/ftimer.h"
+
 #include "api/sk_workflow.h"
 #include "api/sk_sched.h"
 #include "api/sk_entity.h"
@@ -18,8 +20,12 @@ struct sk_txn_t {
     fmbuf*          output;
     flist_iter      workflow_idx;
     sk_module_t*    current;
+
+    unsigned long long start_time;
+
     int             is_unpacked;
     int             _reserved;
+
 };
 
 sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
@@ -32,6 +38,7 @@ sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
     txn->entity = entity;
     txn->output = fmbuf_create(0);
     txn->workflow_idx = flist_new_iter(workflow->modules);
+    txn->start_time = fgettime();
 
     return txn;
 }
@@ -120,4 +127,9 @@ int sk_txn_is_first_module(sk_txn_t* txn)
 int sk_txn_is_last_module(sk_txn_t* txn)
 {
     return txn->current == sk_workflow_last_module(txn->workflow);
+}
+
+unsigned long long sk_txn_alivetime(sk_txn_t* txn)
+{
+    return fgettime() - txn->start_time;
 }

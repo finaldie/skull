@@ -116,6 +116,9 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     SK_ASSERT(evbuff);
 
     sk_net_entity_create(entity, evbuff);
+
+    SK_THREAD_ENV->monitor->accept.inc(1);
+    SK_THREAD_ENV_CORE->monitor->connection.inc(1);
     return 0;
 }
 

@@ -16,6 +16,7 @@
 #include "api/sk_metrics.h"
 
 // per-thread data and macros, most of time, normally you only need to use these macros
+#define SK_THREAD_ENV            (sk_thread_env())
 #define SK_THREAD_ENV_CORE       (sk_thread_env()->core)
 
 #define SK_THREAD_ENV_SCHED      (sk_thread_env()->sched->sched)
@@ -76,14 +77,8 @@ typedef struct sk_thread_env_t {
     skull_sched_t*   sched;
     sk_logger_t*     logger;
 
-    // per thread monitor
-    union {
-        // The master io's monitor handler
-        sk_metrics_master_t* master;
-
-        // The worker io's monitor handler
-        sk_metrics_worker_t* worker;
-    } monitor;
+    // per thread monitor handler
+    sk_metrics_worker_t* monitor;
 
     // used for logging or debugging
     char name[SK_ENV_NAME_LEN];
