@@ -1,0 +1,11 @@
+example:
+    request:
+        desc: this is a example, request counter
+    response:
+        desc: this is a example, response counter
+
+test:
+    connection:
+        desc: how many connection has been accepted
+    uptime:
+        desc: uptime counter

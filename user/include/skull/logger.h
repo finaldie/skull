@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include <skull/skull_logger_private.h>
+#include <skull/logger_private.h>
 
 //  logging helper macros
 #define SKULL_LOG_TRACE(fmt, ...) \
