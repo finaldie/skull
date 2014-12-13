@@ -58,9 +58,10 @@ SKULL_ENGINE = skull-engine
 SKULL_HEADERS = \
     api/sk_txn.h \
     api/sk_utils.h \
-    user/include/skull/skull_api.h \
-    user/include/skull/skull_logger.h \
-    user/include/skull/skull_logger_private.h
+    user/include/skull/api.h \
+    user/include/skull/logger.h \
+    user/include/skull/logger_private.h \
+    user/include/skull/metrics_utils.h
 
 # Objs
 COMMON_OBJS = \
@@ -103,7 +104,8 @@ PTO_IDLS_OBJS = \
     pto/idls/net_destroy.pb-c.o
 
 USER_OBJS = \
-    user/src/skull_api.o
+    user/src/logger_private.o \
+    user/src/metrics_utils.o
 
 SKULL_MAIN_OBJ = main.o
 

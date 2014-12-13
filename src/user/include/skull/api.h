@@ -6,8 +6,7 @@ extern "C" {
 #endif
 
 #include <skull/logger.h>
-#include <skull/env.h>
-#include <skull/metrics.h>
+#include <skull/metrics_utils.h>
 
 #ifdef __cplusplus
 }

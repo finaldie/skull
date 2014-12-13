@@ -70,7 +70,7 @@ flags = [
 '-I',
 './src/',
 '-I',
-'./src/api',
+'./src/user/include',
 '-I',
 './deps/flibs',
 '-I',

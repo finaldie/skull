@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "skull/skull_api.h"
+#include "skull/api.h"
 #include "skull/sk_utils.h"
 #include "skull/sk_txn.h"
 

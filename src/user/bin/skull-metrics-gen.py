@@ -13,16 +13,11 @@ import yaml
 # global variables
 yaml_obj = None
 topdir = ""
-
-# static
-CONFIG_NAME = "/config/metrics.yaml"
-
-####################### C language files #########################
-HEADER_NAME = "skull_metrics.h"
-SOURCE_NAME = "skull_metrics.c"
+config_name = ""
+header_name = ""
+source_name = ""
 
 ####################### STATIC TEMPALTES #########################
-
 ########################## Header Part ###########################
 HEADER_CONTENT_START = "\
 #ifndef SKULL_METRICS_H\n\
@@ -48,7 +43,7 @@ typedef struct skull_metrics_dynamic_t {\n\
 
 HEADER_CONTENT_END = "\
  #ifdef __cplusplus\n\
-extern \"C\" {\n\
+}\n\
 #endif\n\
 \n\
 #endif\n\n"
@@ -59,91 +54,63 @@ SOURCE_CONTENT_START = "\
 #include <string.h>\n\
 #include <stdio.h>\n\
 \n\
+#include <skull/metrics_utils.h>\n\
 #include \"skull_metrics.h\"\n\
 \n"
 
 FUNC_INC_CONTENT = "static\n\
 void _skull_%s_%s_inc(uint32_t value)\n\
 {\n\
-    sk_mon_t* mon = sk_thread_env()->core->mon;\n\
-    sk_mon_inc(mon, \"%s\", value);\n\
+    skull_metric_inc(\"%s.%s\", value);\n\
 }\n\n"
 
 FUNC_GET_CONTENT = "static\n\
 uint32_t _skull_%s_%s_get()\n\
 {\n\
-    sk_mon_t* mon = sk_thread_env()->core->mon;\n\
-    return sk_mon_get(mon, \"%s\");\n\
+    return skull_metric_get(\"%s.%s\");\n\
 }\n\n"
 
 # dynamic metrics
 ## global dynamic metrics
 FUNC_DYN_INC_CONTENT = "static\n\
-void _skull_dynamic_inc(const char* name, uint32_t value)\n\
+void _skull_%s_dynamic_inc(const char* name, uint32_t value)\n\
 {\n\
-    sk_mon_t* mon = sk_thread_env()->core->mon;\n\
-    sk_mon_inc(mon, name, value);\n\
+    char full_name[128] = {0};\n\
+    snprintf(full_name, 128, \"%s.%%s\", name);\n\
+    skull_metric_inc(full_name, value);\n\
 }\n\n"
 
 FUNC_DYN_GET_CONTENT = "static\n\
-uint32_t _skull_dynamic_get(const char* name)\n\
+uint32_t _skull_%s_dynamic_get(const char* name)\n\
 {\n\
-    sk_mon_t* mon = sk_thread_env()->core->mon;\n\
-    return sk_mon_get(mon, name);\n\
+    char full_name[128] = {0};\n\
+    snprintf(full_name, 128, \"%s.%%s\", name);\n\
+    return skull_metric_get(full_name);\n\
 }\n\n"
 
-API_CREATE_CONTENT_START = "skull_metrics_%s_t*\n\
-skull_metrics_%s_create(const char* name)\n\
-{\n\
-    SK_ASSERT_MSG(name != NULL, \"%s metrics initialization failed\");\n\
-\n\
-    skull_metrics_%s_t* metrics = calloc(1, sizeof(*metrics));\n\
-    metrics->name = strdup(name);\n\n"
+METRICS_INC_INIT_CONTENT = "    .%s.inc = _skull_%s_%s_inc,\n"
+METRICS_GET_INIT_CONTENT = "    .%s.get = _skull_%s_%s_get,\n"
 
-API_CREATE_CONTENT_END = "\
-\n\
-    return metrics;\n\
-}\n\n"
-
-METRICS_INC_INIT_CONTENT = "    metrics->%s.inc = _skull_%s_%s_inc;\n"
-METRICS_GET_INIT_CONTENT = "    metrics->%s.get = _skull_%s_%s_get;\n"
-
-METRICS_DYN_INC_INIT_CONTENT = "    metrics->dynamic.inc = _skull_dynamic_inc;\n"
-METRICS_DYN_GET_INIT_CONTENT = "    metrics->dynamic.get = _skull_dynamic_get;\n"
-
-API_DESTROY_CONTENT = "void\n\
-skull_metrics_%s_destroy(skull_metrics_%s_t* metrics)\n\
-{\n\
-    if (!metrics) {\n\
-        return;\n\
-    }\n\
-\n\
-    free((void*)metrics->name);\n\
-    free(metrics);\n\
-}\n\n"
+METRICS_DYN_INC_INIT_CONTENT = "    .dynamic.inc = _skull_%s_dynamic_inc,\n"
+METRICS_DYN_GET_INIT_CONTENT = "    .dynamic.get = _skull_%s_dynamic_get,\n"
 
 ############################## Internal APIs ############################
 def load_yaml_config():
     global yaml_obj
-    global CONFIG_NAME
+    global config_name
 
-    yaml_file = file(topdir + CONFIG_NAME, 'r')
+    yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
 def gen_c_header_metrics(scope_name, metrics_map):
     # define the type name
-    metrics_type_name = "skull_metrics_" + scope_name + "_t"
+    metrics_type_name = "skull_metrics_%s_t" % scope_name
 
     # assemble first line
     content = "/*==========================================================*/\n"
     content += "typedef struct " + metrics_type_name + " {\n"
 
-    # assemble private datas
-    content += "    // private\n"
-    content += "    const char* name;\n\n"
-
-    # assemble public data
-    content += "    // public metrics:\n"
+    # assemble dynamic metrics
     content += "    // dynamic metrics handler\n"
     content += "    skull_metrics_dynamic_t dynamic;\n"
 
@@ -157,15 +124,13 @@ def gen_c_header_metrics(scope_name, metrics_map):
     # assemble tailer
     content += "} " + metrics_type_name + ";\n\n"
 
-    # assemble methods
-    content += "skull_metrics_%s_t* skull_metrics_%s_create(const char* name);\n" % (scope_name, scope_name)
-    content += "void skull_metrics_%s_destroy(skull_metrics_%s_t*);\n" % (scope_name, scope_name)
-    content += "void skull_metrics_%s_dump(skull_metrics_%s_t*);\n\n" % (scope_name, scope_name)
+    # add a user handler
+    content += "extern skull_metrics_%s_t skull_metrics_%s;\n" % (scope_name, scope_name)
 
     return content
 
 def generate_c_header():
-    header_file = file(HEADER_NAME, 'w')
+    header_file = file(header_name, 'w')
     content = ""
 
     # generate header
@@ -183,46 +148,41 @@ def generate_c_header():
     header_file.close()
 
 def gen_c_source_metrics(scope_name, metrics_map):
-    content = ""
+    content = "// ==========================================================\n"
+
+    # 0. add the dynamic handler for this metrics scope only once
+    content += FUNC_DYN_INC_CONTENT % (scope_name, scope_name)
+    content += FUNC_DYN_GET_CONTENT % (scope_name, scope_name)
 
     # 1. assemble metrics methods
-    for metric_name in metrics_map:
-        # 1.1 assemble inc method
-        content += FUNC_INC_CONTENT % (scope_name, metric_name, metric_name)
+    for name in metrics_map:
+        content += FUNC_INC_CONTENT % (scope_name, name, scope_name, name)
+        content += FUNC_GET_CONTENT % (scope_name, name, scope_name, name)
 
-        # 1.2 assemble get method
-        content += FUNC_GET_CONTENT % (scope_name, metric_name, metric_name)
+    # 2. assemble metrics
+    # 2.1 assemble the metrics header
+    content += "skull_metrics_%s_t skull_metrics_%s = {\n" % (scope_name, scope_name)
 
-    # 2. assemble scope apis
-    # 2.1 assemble create api
-    content += API_CREATE_CONTENT_START % (scope_name, scope_name,
-                                             scope_name, scope_name)
     # 2.2 assemble dynamic metrics api
-    content += METRICS_DYN_INC_INIT_CONTENT
-    content += METRICS_DYN_GET_INIT_CONTENT
+    content += METRICS_DYN_INC_INIT_CONTENT % scope_name
+    content += METRICS_DYN_GET_INIT_CONTENT % scope_name
 
     # 2.3 assemble static metris api
     for name in metrics_map:
         content += METRICS_INC_INIT_CONTENT % (name, scope_name, name)
         content += METRICS_GET_INIT_CONTENT % (name, scope_name, name)
 
-    content += API_CREATE_CONTENT_END
-
-    # 3. assemble destroy api
-    content += API_DESTROY_CONTENT % (scope_name, scope_name)
+    # 2.4 end of the metrics
+    content += "};\n\n"
 
     return content
 
 def generate_c_source():
-    source_file = file(SOURCE_NAME, 'w')
+    source_file = file(source_name, 'w')
     content = ""
 
     # generate header
     content += SOURCE_CONTENT_START
-
-    # generate dynamic metrcis implementations
-    content += FUNC_DYN_INC_CONTENT
-    content += FUNC_DYN_GET_CONTENT
 
     # generate body
     for scope_name in yaml_obj:
@@ -239,7 +199,7 @@ def process_core():
     generate_c_source()
 
 def usage():
-    print "usage: skull-metrics-gen.py -p topdir"
+    print "usage: skull-metrics-gen.py -p topdir -h header_file -o source_file"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -247,12 +207,16 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'p:')
+        opts, args = getopt.getopt(sys.argv[1:], 'c:h:s:')
 
         for op, value in opts:
-            if op == "-p":
-                topdir = value
+            if op == "-c":
+                config_name = value
                 load_yaml_config()
+            if op == "-h":
+                header_name = value
+            if op == "-s":
+                source_name = value
 
         # Now run the process func according the mode
         process_core()
