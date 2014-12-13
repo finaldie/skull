@@ -302,35 +302,6 @@ def process_core():
 def usage():
     print "usage: skull-metrics-gen.py -c yaml_file"
 
-def process_add_workflow():
-    global yaml_obj
-    global config_name
-
-    try:
-        opts, args = getopt.getopt(sys.argv[5:], 'C:p:')
-
-        workflow_concurrent = 1
-        workflow_port = 1234
-
-        for op, value in opts:
-            if op == "-C":
-                workflow_concurrent = int(value)
-            elif op == "-p":
-                workflow_port = int(value)
-
-        # Now add these workflow_x to yaml obj and dump it
-        workflow_frame = create_workflow()
-        workflow_frame['concurrent'] = workflow_concurrent
-        workflow_frame['port'] = workflow_port
-        yaml_obj['workflows'].append(workflow_frame)
-
-        yaml.dump(yaml_obj, file(config_name, 'w'))
-
-    except Exception, e:
-        print "Fatal: process_add: " + str(e)
-        usage()
-        sys.exit(1)
-
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         usage()
