@@ -13,7 +13,7 @@ uint32_t sk_mon_get(sk_mon_t*, const char* name);
 
 void sk_mon_reset(sk_mon_t*);
 
-typedef void (sk_mon_cb)(const char* name, uint32_t value, void* ud);
+typedef void (*sk_mon_cb)(const char* name, uint32_t value, void* ud);
 void sk_mon_foreach(sk_mon_t*, sk_mon_cb cb, void* ud);
 
 #endif

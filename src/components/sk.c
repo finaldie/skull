@@ -129,7 +129,7 @@ void __sk_open_common_lib(skull_core_t* core, const char* subdir_name)
 
         // check the file suffix is .so
         if (0 == strcmp(&subdir->d_name[name_len - 3], ".so")) {
-            printf("found so file: %s\n", subdir->d_name);
+            sk_print("found so file: %s\n", subdir->d_name);
             char common_lib_name[256] = {0};
             snprintf(common_lib_name, 256, "%s/%s", subdir_name,
                      subdir->d_name);
@@ -158,7 +158,7 @@ void _skull_setup_common_lib(skull_core_t* core)
     const char* config_dir = dirname(raw_path);
     char common_lib_dir[256] = {0};
     snprintf(common_lib_dir, 256, "%s/common", config_dir);
-    printf("open common lib dir: %s\n", common_lib_dir);
+    sk_print("open common lib dir: %s\n", common_lib_dir);
 
     DIR* d;
     struct dirent* dir;
@@ -173,7 +173,7 @@ void _skull_setup_common_lib(skull_core_t* core)
             continue;
         }
 
-        printf("found subdir: %s\n", dir->d_name);
+        sk_print("found subdir: %s\n", dir->d_name);
         char subdir_name[256] = {0};
         snprintf(subdir_name, 256, "%s/%s", common_lib_dir, dir->d_name);
         __sk_open_common_lib(core, subdir_name);
