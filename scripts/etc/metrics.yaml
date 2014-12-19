@@ -1,0 +1,5 @@
+module:
+    request:
+        desc: module request counter
+    response:
+        desc: module response counter

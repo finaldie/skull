@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <dirent.h>
+#include <dlfcn.h>
 
 #include "fnet/fnet_core.h"
 #include "fev/fev.h"
@@ -102,6 +104,83 @@ void _skull_setup_schedulers(skull_core_t* core)
     }
 
     SK_LOG_INFO(core->logger, "skull schedulers init successfully");
+}
+
+static
+void __sk_open_common_lib(skull_core_t* core, const char* subdir_name)
+{
+    DIR* subd;
+    struct dirent* subdir;
+
+    subd = opendir(subdir_name);
+    if (!subd) {
+        SK_LOG_ERROR(core->logger, "cannot open common lib subdir [%s]",
+                     subdir_name);
+        exit(1);
+    }
+
+    while ((subdir = readdir(subd)) != NULL) {
+        size_t name_len = strlen(subdir->d_name);
+
+        // a  valid so name length must be >= 4, skip the invalid files
+        if (!name_len || name_len < 4) {
+            continue;
+        }
+
+        // check the file suffix is .so
+        if (0 == strcmp(&subdir->d_name[name_len - 3], ".so")) {
+            printf("found so file: %s\n", subdir->d_name);
+            char common_lib_name[256] = {0};
+            snprintf(common_lib_name, 256, "%s/%s", subdir_name,
+                     subdir->d_name);
+
+            // load common library
+            dlerror();
+            void* handle = dlopen(common_lib_name, RTLD_NOW);
+            if (!handle) {
+                SK_LOG_ERROR(core->logger, "cannot load the common lib %s:%s",
+                             common_lib_name, dlerror());
+            }
+
+            SK_LOG_INFO(core->logger, "load common lib %s successfully",
+                        common_lib_name);
+        }
+    }
+
+    closedir(subd);
+}
+
+// generally, we only need to load the c/c++ libs
+static
+void _skull_setup_common_lib(skull_core_t* core)
+{
+    char* raw_path = strdup(core->cmd_args.config_location);
+    const char* config_dir = dirname(raw_path);
+    char common_lib_dir[256] = {0};
+    snprintf(common_lib_dir, 256, "%s/common", config_dir);
+    printf("open common lib dir: %s\n", common_lib_dir);
+
+    DIR* d;
+    struct dirent* dir;
+    d = opendir(common_lib_dir);
+    if (!d) {
+        SK_LOG_ERROR(core->logger, "cannot open common lib dir [%s]",
+                     common_lib_dir);
+    }
+
+    while ((dir = readdir(d)) != NULL) {
+        if (dir->d_type != DT_DIR) {
+            continue;
+        }
+
+        printf("found subdir: %s\n", dir->d_name);
+        char subdir_name[256] = {0};
+        snprintf(subdir_name, 256, "%s/%s", common_lib_dir, dir->d_name);
+        __sk_open_common_lib(core, subdir_name);
+    }
+
+    closedir(d);
+    free(raw_path);
 }
 
 // this is running on the main scheduler io thread
@@ -363,7 +442,10 @@ void skull_init(skull_core_t* core)
     // 7. init schedulers
     _skull_setup_schedulers(core);
 
-    // 8. load working flows
+    // 8. init common libraries
+    _skull_setup_common_lib(core);
+
+    // 9. load working flows
     _skull_setup_workflow(core);
 }
 

@@ -8,6 +8,7 @@ SKULL_ETC_DIR = etc
 
 DEPLOY_DIR_ROOT ?= $(shell pwd)/run
 DEPLOY_BIN_ROOT := $(DEPLOY_DIR_ROOT)/bin
+DEPLOY_COMMON_ROOT := $(DEPLOY_DIR_ROOT)/common
 DEPLOY_MOD_ROOT := $(DEPLOY_DIR_ROOT)/modules
 DEPLOY_SCRIPTS_ROOT := $(DEPLOY_DIR_ROOT)/scripts
 DEPLOY_LOG_ROOT := $(DEPLOY_DIR_ROOT)/log
@@ -44,7 +45,8 @@ clean:
 # Required by skull
 deploy: prepare_deploy
 	for dir in $(SUB_DIRS); do \
-	    $(MAKE) -C $$dir deploy DEPLOY_MOD_ROOT=$(DEPLOY_MOD_ROOT); \
+	    $(MAKE) -C $$dir deploy DEPLOY_COMMON_ROOT=$(DEPLOY_COMMON_ROOT) \
+		DEPLOY_MOD_ROOT=$(DEPLOY_MOD_ROOT); \
 	done
 
 # skull utils' targets
@@ -52,6 +54,7 @@ prepare_deploy: prepare_deploy_dirs prepare_deploy_files
 
 prepare_deploy_dirs:
 	test -d $(DEPLOY_DIR_ROOT) || mkdir -p $(DEPLOY_DIR_ROOT)
+	test -d $(DEPLOY_COMMON_ROOT) || mkdir -p $(DEPLOY_COMMON_ROOT)
 	test -d $(DEPLOY_MOD_ROOT) || mkdir -p $(DEPLOY_MOD_ROOT)
 	test -d $(DEPLOY_BIN_ROOT) || mkdir -p $(DEPLOY_BIN_ROOT)
 	test -d $(DEPLOY_LOG_ROOT) || mkdir -p $(DEPLOY_LOG_ROOT)

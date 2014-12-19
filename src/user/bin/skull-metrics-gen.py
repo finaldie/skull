@@ -42,7 +42,7 @@ typedef struct skull_metrics_dynamic_t {\n\
 \n"
 
 HEADER_CONTENT_END = "\
- #ifdef __cplusplus\n\
+#ifdef __cplusplus\n\
 }\n\
 #endif\n\
 \n\
@@ -88,11 +88,8 @@ uint32_t _skull_%s_dynamic_get(const char* name)\n\
     return skull_metric_get(full_name);\n\
 }\n\n"
 
-METRICS_INC_INIT_CONTENT = "    .%s.inc = _skull_%s_%s_inc,\n"
-METRICS_GET_INIT_CONTENT = "    .%s.get = _skull_%s_%s_get,\n"
-
-METRICS_DYN_INC_INIT_CONTENT = "    .dynamic.inc = _skull_%s_dynamic_inc,\n"
-METRICS_DYN_GET_INIT_CONTENT = "    .dynamic.get = _skull_%s_dynamic_get,\n"
+METRICS_INIT_CONTENT = "    .%s = { .inc = _skull_%s_%s_inc, .get =  _skull_%s_%s_get},\n"
+METRICS_DYN_INIT_CONTENT = "    .dynamic = { .inc = _skull_%s_dynamic_inc, .get =  _skull_%s_dynamic_get},\n"
 
 ############################## Internal APIs ############################
 def load_yaml_config():
@@ -164,13 +161,11 @@ def gen_c_source_metrics(scope_name, metrics_map):
     content += "skull_metrics_%s_t skull_metrics_%s = {\n" % (scope_name, scope_name)
 
     # 2.2 assemble dynamic metrics api
-    content += METRICS_DYN_INC_INIT_CONTENT % scope_name
-    content += METRICS_DYN_GET_INIT_CONTENT % scope_name
+    content += METRICS_DYN_INIT_CONTENT % (scope_name, scope_name)
 
     # 2.3 assemble static metris api
     for name in metrics_map:
-        content += METRICS_INC_INIT_CONTENT % (name, scope_name, name)
-        content += METRICS_GET_INIT_CONTENT % (name, scope_name, name)
+        content += METRICS_INIT_CONTENT % (name, scope_name, name, scope_name, name)
 
     # 2.4 end of the metrics
     content += "};\n\n"

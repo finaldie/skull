@@ -9,7 +9,7 @@ EXTRA += -Wconversion
 OTHER = -pipe -g -ggdb3
 SHARED =
 LDFLAGS += -Wl,-E
-MACRO = -D_POSIX_C_SOURCE=200809L
+MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE
 INC = \
     -I. \
     -I../deps/flibs \
@@ -57,11 +57,7 @@ SKULL_ENGINE = skull-engine
 # headers
 SKULL_HEADERS = \
     api/sk_txn.h \
-    api/sk_utils.h \
-    user/include/skull/api.h \
-    user/include/skull/logger.h \
-    user/include/skull/logger_private.h \
-    user/include/skull/metrics_utils.h
+    api/sk_utils.h
 
 # Objs
 COMMON_OBJS = \

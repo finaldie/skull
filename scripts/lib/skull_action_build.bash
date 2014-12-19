@@ -11,6 +11,8 @@ function action_build()
     # all the args will be passed to the main Makefile(e.g. 'CC=clang').
     (
         cd $SKULL_PROJ_ROOT
+
+        action_metrics --gen
         make $@
     )
 }

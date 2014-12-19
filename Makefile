@@ -27,8 +27,13 @@ check:
 valgrind-check:
 	cd tests && $(MAKE) $@
 
-install: install_scripts install_others
-	cd src && $(MAKE) $@
+install: install_core install_scripts install_api install_others
+
+install_core:
+	cd src && $(MAKE) install
+
+install_api:
+	cd src/user && $(MAKE) install
 
 install_others:
 	test -d $(prefix)/etc/skull || mkdir -p $(prefix)/etc/skull

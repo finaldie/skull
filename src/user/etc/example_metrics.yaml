@@ -1,8 +1,8 @@
 example:
     request:
-        desc: this is a example, request counter
+        desc: this is an example, request counter
     response:
-        desc: this is a example, response counter
+        desc: this is an example, response counter
 
 test:
     connection:

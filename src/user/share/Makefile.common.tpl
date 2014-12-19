@@ -1,14 +1,8 @@
-# Include the basic Makefile template
-include ../../common/Makefile.inc
+include ../Makefile.inc
 
-MOD_NAME := $(shell basename $(shell pwd))
+TARGET = skull-common
 
-TARGET = mod
-TEST_TARGET = test_mod
-
-INC = \
-    -Isrc \
-    -I../common/c/src
+INC =
 
 DEPS_LDFLAGS +=
 DEPS_LIBS =
@@ -17,21 +11,18 @@ SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(SHARED) $(OTH
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
 
 SKULL_LDFLAGS = $(LDFLAGS) $(SHARED) $(OTHER) $(DEPS_LDFLAGS) $(DEPS_LIBS)
-SKULL_LD = $(CC) $(SKULL_LDFLAGS)
+SKULL_LD = $(CC) $(SKULL_LDFLAGS) -Wl,-rpath,$(DEPLOY_DIR)
 
-# Objs and deployment related items
 OBJS = \
-    src/mod.o
+    src/skull_metrics.o
 
-TEST_OBJS = \
-    tests/test_mod.o
+TEST_OBJS =
 
 DEPLOY_ITEMS := \
-    config/config.yaml \
     $(TARGET).so
 
-DEPLOY_MOD_ROOT ?= ./run
-DEPLOY_DIR ?= $(DEPLOY_MOD_ROOT)/$(MOD_NAME)
+DEPLOY_COMMON_ROOT ?= ./run/common
+DEPLOY_DIR ?= $(DEPLOY_COMMON_ROOT)/c
 
 # Required by skull
 $(TARGET): $(OBJS)
