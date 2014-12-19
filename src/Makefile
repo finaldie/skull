@@ -56,8 +56,7 @@ SKULL_ENGINE = skull-engine
 
 # headers
 SKULL_HEADERS = \
-    api/sk_txn.h \
-    api/sk_utils.h
+    api/sk_txn.h
 
 # Objs
 COMMON_OBJS = \
