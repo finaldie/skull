@@ -53,8 +53,6 @@ extern "C" {
                   __VA_ARGS__); \
     }
 
-
-
 #ifdef __cplusplus
 }
 #endif

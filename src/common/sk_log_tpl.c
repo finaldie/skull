@@ -79,7 +79,7 @@ void _load_one_error_msg(int log_id, sk_cfg_node_t* node, sk_log_tpl_t* tpl)
 
         if (0 == strcmp(key, "msg")) {
             item->msg = strdup(child->data.value);
-        } else if (0 == strcmp(key, "msg")) {
+        } else if (0 == strcmp(key, "solution")) {
             item->solution = strdup(child->data.value);
         } else {
             sk_print("unknown field in log template %s\n", key);
