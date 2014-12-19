@@ -130,8 +130,8 @@ void __sk_open_common_lib(skull_core_t* core, const char* subdir_name)
         // check the file suffix is .so
         if (0 == strcmp(&subdir->d_name[name_len - 3], ".so")) {
             sk_print("found so file: %s\n", subdir->d_name);
-            char common_lib_name[256] = {0};
-            snprintf(common_lib_name, 256, "%s/%s", subdir_name,
+            char common_lib_name[SK_FILENAME_LEN] = {0};
+            snprintf(common_lib_name, SK_FILENAME_LEN, "%s/%s", subdir_name,
                      subdir->d_name);
 
             // load common library
@@ -156,8 +156,8 @@ void _skull_setup_common_lib(skull_core_t* core)
 {
     char* raw_path = strdup(core->cmd_args.config_location);
     const char* config_dir = dirname(raw_path);
-    char common_lib_dir[256] = {0};
-    snprintf(common_lib_dir, 256, "%s/common", config_dir);
+    char common_lib_dir[SK_FILENAME_LEN] = {0};
+    snprintf(common_lib_dir, SK_FILENAME_LEN, "%s/common", config_dir);
     sk_print("open common lib dir: %s\n", common_lib_dir);
 
     DIR* d;
@@ -174,8 +174,10 @@ void _skull_setup_common_lib(skull_core_t* core)
         }
 
         sk_print("found subdir: %s\n", dir->d_name);
-        char subdir_name[256] = {0};
-        snprintf(subdir_name, 256, "%s/%s", common_lib_dir, dir->d_name);
+        char subdir_name[SK_FILENAME_LEN] = {0};
+        snprintf(subdir_name, SK_FILENAME_LEN, "%s/%s",
+                 common_lib_dir, dir->d_name);
+
         __sk_open_common_lib(core, subdir_name);
     }
 

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define SK_FILENAME_LEN 256
+
 typedef union sk_ud_t {
     uint32_t u32;
     uint64_t u64;
