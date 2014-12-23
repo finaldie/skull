@@ -24,7 +24,7 @@
 #define SK_THREAD_ENV_EVENTLOOP  (sk_thread_env()->sched->evlp)
 #define SK_THREAD_ENV_WORKFLOWS  (sk_thread_env()->core->workflows)
 #define SK_THREAD_ENV_LOGGER     (sk_thread_env()->logger)
-#define SK_THREAD_ENV_MON        (sk_thread_env()->mon)
+#define SK_THREAD_ENV_MON        (sk_thread_env()->sched->mon)
 
 // skull core related structures
 typedef struct skull_cmd_args_t {
@@ -36,11 +36,12 @@ typedef struct skull_sched_t {
     void*            evlp;
     sk_sched_t*      sched;
     sk_entity_mgr_t* entity_mgr;
+    sk_mon_t*        mon;
 } skull_sched_t;
 
 typedef struct skull_core_t {
     // ======= private =======
-    sk_mon_t*            mon;
+    sk_mon_t*        mon;
 
     // ======= public  =======
     skull_cmd_args_t cmd_args;
@@ -69,9 +70,6 @@ typedef struct skull_core_t {
 #define SK_ENV_NAME_LEN 20
 
 typedef struct sk_thread_env_t {
-    // ======== private ========
-    sk_mon_t*            mon;
-
     // ======== public  ========
     skull_core_t*    core;
     skull_sched_t*   sched;

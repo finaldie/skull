@@ -61,13 +61,13 @@ SOURCE_CONTENT_START = "\
 FUNC_INC_CONTENT = "static\n\
 void _skull_%s_%s_inc(uint32_t value)\n\
 {\n\
-    skull_metric_inc(\"%s.%s\", value);\n\
+    skull_metric_inc(\"skull.user.%s.%s\", value);\n\
 }\n\n"
 
 FUNC_GET_CONTENT = "static\n\
 uint32_t _skull_%s_%s_get()\n\
 {\n\
-    return skull_metric_get(\"%s.%s\");\n\
+    return skull_metric_get(\"skull.user.%s.%s\");\n\
 }\n\n"
 
 # dynamic metrics
@@ -75,16 +75,16 @@ uint32_t _skull_%s_%s_get()\n\
 FUNC_DYN_INC_CONTENT = "static\n\
 void _skull_%s_dynamic_inc(const char* name, uint32_t value)\n\
 {\n\
-    char full_name[128] = {0};\n\
-    snprintf(full_name, 128, \"%s.%%s\", name);\n\
+    char full_name[256] = {0};\n\
+    snprintf(full_name, 256, \"skull.user.%s.%%s\", name);\n\
     skull_metric_inc(full_name, value);\n\
 }\n\n"
 
 FUNC_DYN_GET_CONTENT = "static\n\
 uint32_t _skull_%s_dynamic_get(const char* name)\n\
 {\n\
-    char full_name[128] = {0};\n\
-    snprintf(full_name, 128, \"%s.%%s\", name);\n\
+    char full_name[256] = {0};\n\
+    snprintf(full_name, 256, \"skull.user.%s.%%s\", name);\n\
     return skull_metric_get(full_name);\n\
 }\n\n"
 

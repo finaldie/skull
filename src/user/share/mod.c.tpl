@@ -19,9 +19,6 @@ void module_init()
 
 size_t module_unpack(const char* data, size_t data_sz)
 {
-    SK_ASSERT(data);
-    SK_ASSERT(data_sz);
-
     skull_metrics_module.request.inc(1);
     printf("module_unpack(test): data sz:%zu\n", data_sz);
     SKULL_LOG_INFO(1, "module_unpack(test): data sz:%zu", data_sz);

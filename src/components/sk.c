@@ -43,7 +43,6 @@ sk_thread_env_t* _sk_master_env_create(skull_core_t* core,
     int log_level = config->log_level;
     thread_env->logger = sk_logger_create(working_dir, log_name, log_level);
 
-    thread_env->mon = sk_mon_create();
     thread_env->monitor = sk_metrics_worker_create(name);
 
     return thread_env;
@@ -66,7 +65,6 @@ sk_thread_env_t* _sk_worker_env_create(skull_core_t* core,
     int log_level = config->log_level;
     thread_env->logger = sk_logger_create(working_dir, log_name, log_level);
 
-    thread_env->mon = sk_mon_create();
     thread_env->monitor = sk_metrics_worker_create(name);
 
     snprintf(thread_env->name, SK_ENV_NAME_LEN, "%s%d", name, idx);
@@ -84,6 +82,7 @@ void _skull_setup_schedulers(skull_core_t* core)
     skull_sched_t* main_sched = &core->main_sched;
     main_sched->evlp = sk_eventloop_create();
     main_sched->entity_mgr = sk_entity_mgr_create(65535);
+    main_sched->mon = sk_mon_create();
     main_sched->sched = sk_sched_create(main_sched->evlp,
                                         main_sched->entity_mgr);
 
@@ -97,6 +96,7 @@ void _skull_setup_schedulers(skull_core_t* core)
         worker_sched->entity_mgr = sk_entity_mgr_create(65535);
         worker_sched->sched = sk_sched_create(worker_sched->evlp,
                                               worker_sched->entity_mgr);
+        worker_sched->mon = sk_mon_create();
         SK_LOG_INFO(core->logger, "worker scheduler [%d] init successfully", i);
 
         sk_sched_setup_bridge(main_sched->sched, worker_sched->sched);
@@ -104,85 +104,6 @@ void _skull_setup_schedulers(skull_core_t* core)
     }
 
     SK_LOG_INFO(core->logger, "skull schedulers init successfully");
-}
-
-static
-void __sk_open_common_lib(skull_core_t* core, const char* subdir_name)
-{
-    DIR* subd;
-    struct dirent* subdir;
-
-    subd = opendir(subdir_name);
-    if (!subd) {
-        SK_LOG_ERROR(core->logger, "cannot open common lib subdir [%s]",
-                     subdir_name);
-        exit(1);
-    }
-
-    while ((subdir = readdir(subd)) != NULL) {
-        size_t name_len = strlen(subdir->d_name);
-
-        // a  valid so name length must be >= 4, skip the invalid files
-        if (!name_len || name_len < 4) {
-            continue;
-        }
-
-        // check the file suffix is .so
-        if (0 == strcmp(&subdir->d_name[name_len - 3], ".so")) {
-            sk_print("found so file: %s\n", subdir->d_name);
-            char common_lib_name[SK_FILENAME_LEN] = {0};
-            snprintf(common_lib_name, SK_FILENAME_LEN, "%s/%s", subdir_name,
-                     subdir->d_name);
-
-            // load common library
-            dlerror();
-            void* handle = dlopen(common_lib_name, RTLD_NOW);
-            if (!handle) {
-                SK_LOG_ERROR(core->logger, "cannot load the common lib %s:%s",
-                             common_lib_name, dlerror());
-            }
-
-            SK_LOG_INFO(core->logger, "load common lib %s successfully",
-                        common_lib_name);
-        }
-    }
-
-    closedir(subd);
-}
-
-// generally, we only need to load the c/c++ libs
-static
-void _skull_setup_common_lib(skull_core_t* core)
-{
-    char* raw_path = strdup(core->cmd_args.config_location);
-    const char* config_dir = dirname(raw_path);
-    char common_lib_dir[SK_FILENAME_LEN] = {0};
-    snprintf(common_lib_dir, SK_FILENAME_LEN, "%s/common", config_dir);
-    sk_print("open common lib dir: %s\n", common_lib_dir);
-
-    DIR* d;
-    struct dirent* dir;
-    d = opendir(common_lib_dir);
-    if (!d) {
-        SK_LOG_ERROR(core->logger, "cannot open common lib dir [%s]",
-                     common_lib_dir);
-    }
-
-    while ((dir = readdir(d)) != NULL) {
-        if (dir->d_type != DT_DIR) {
-            continue;
-        }
-
-        sk_print("found subdir: %s\n", dir->d_name);
-        char subdir_name[SK_FILENAME_LEN] = {0};
-        snprintf(subdir_name, SK_FILENAME_LEN, "%s/%s",
-                 common_lib_dir, dir->d_name);
-
-        __sk_open_common_lib(core, subdir_name);
-    }
-
-    closedir(d);
-    free(raw_path);
 }
 
 // this is running on the main scheduler io thread
@@ -444,10 +365,7 @@ void skull_init(skull_core_t* core)
     // 7. init schedulers
     _skull_setup_schedulers(core);
 
-    // 8. init common libraries
-    _skull_setup_common_lib(core);
-
-    // 9. load working flows
+    // 8. load working flows
     _skull_setup_workflow(core);
 }
 
