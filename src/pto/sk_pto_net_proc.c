@@ -74,8 +74,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
         SK_THREAD_ENV_CORE->monitor->response.inc(1);
 
         unsigned long long alivetime = sk_txn_alivetime(txn);
-        SK_THREAD_ENV->monitor->latency.inc((uint32_t)(alivetime / 1000));
-        SK_THREAD_ENV_CORE->monitor->latency.inc((uint32_t)(alivetime / 1000));
+        SK_THREAD_ENV->monitor->latency.inc((uint32_t)alivetime);
+        SK_THREAD_ENV_CORE->monitor->latency.inc((uint32_t)alivetime);
     }
 
     // 4. the transcation is over, destroy sk_txn structure
