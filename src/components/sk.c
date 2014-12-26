@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <libgen.h>
-#include <dirent.h>
-#include <dlfcn.h>
 
 #include "fnet/fnet_core.h"
 #include "fev/fev.h"
@@ -28,28 +26,7 @@
 // INTERNAL APIs
 
 static
-sk_thread_env_t* _sk_master_env_create(skull_core_t* core,
-                                       skull_sched_t* master_sched,
-                                       const char* name)
-{
-    sk_thread_env_t* thread_env = calloc(1, sizeof(*thread_env));
-    thread_env->core = core;
-    thread_env->sched = master_sched;
-
-    // create a per-thread logger which use the same log name of main scheduler
-    const sk_config_t* config = core->config;
-    const char* working_dir = core->working_dir;
-    const char* log_name = config->log_name;
-    int log_level = config->log_level;
-    thread_env->logger = sk_logger_create(working_dir, log_name, log_level);
-
-    thread_env->monitor = sk_metrics_worker_create(name);
-
-    return thread_env;
-}
-
-static
-sk_thread_env_t* _sk_worker_env_create(skull_core_t* core,
+sk_thread_env_t* _sk_env_create(skull_core_t* core,
                                           skull_sched_t* worker_sched,
                                           const char* name,
                                           int idx)
@@ -65,9 +42,7 @@ sk_thread_env_t* _sk_worker_env_create(skull_core_t* core,
     int log_level = config->log_level;
     thread_env->logger = sk_logger_create(working_dir, log_name, log_level);
 
-    thread_env->monitor = sk_metrics_worker_create(name);
-
-    snprintf(thread_env->name, SK_ENV_NAME_LEN, "%s%d", name, idx);
+    snprintf(thread_env->name, SK_ENV_NAME_LEN, "%s", name);
     thread_env->idx = idx;
 
     return thread_env;
@@ -285,7 +260,7 @@ void _skull_init_log(skull_core_t* core)
     // create a thread env for the main thread, this is necessary since during
     // the phase of loading modules, user may log something, if the thread_env
     // does not exist, the logs will be dropped
-    sk_thread_env_t* env = _sk_worker_env_create(core, NULL, "main", 0);
+    sk_thread_env_t* env = _sk_env_create(core, NULL, "main", 0);
     sk_thread_env_set(env);
 
     SK_LOG_INFO(core->logger, "skull logger initialization successfully");
@@ -334,7 +309,6 @@ static
 void _skull_init_moniter(skull_core_t* core)
 {
     core->mon = sk_mon_create();
-    core->monitor = sk_metrics_global_create("global");
 }
 
 // APIs
@@ -383,9 +357,8 @@ void skull_start(skull_core_t* core)
     // 2.
     skull_sched_t* main_sched = &core->main_sched;
     // this *main_thread_env* will be deleted when thread exit
-    sk_thread_env_t* main_thread_env = _sk_master_env_create(core,
-                                                             main_sched,
-                                                             "master");
+    sk_thread_env_t* main_thread_env = _sk_env_create(core, main_sched,
+                                                      "master", 0);
     int ret = pthread_create(&main_sched->io_thread, NULL,
                              main_io_thread, main_thread_env);
     if (ret) {
@@ -397,10 +370,8 @@ void skull_start(skull_core_t* core)
     for (int i = 0; i < config->threads; i++) {
         skull_sched_t* worker_sched = &core->worker_sched[i];
         // this *worker_thread_env* will be deleted when thread exit
-        sk_thread_env_t* worker_thread_env = _sk_worker_env_create(core,
-                                                               worker_sched,
-                                                               "worker",
-                                                               i);
+        sk_thread_env_t* worker_thread_env = _sk_env_create(core, worker_sched,
+                                                            "worker", i);
         ret = pthread_create(&worker_sched->io_thread, NULL,
                              worker_io_thread, worker_thread_env);
         if (ret) {
@@ -431,9 +402,6 @@ void skull_stop(skull_core_t* core)
     flist_delete(core->workflows);
     fhash_str_delete(core->unique_modules);
     sk_logger_destroy(core->logger);
-
-    // destroy the monitor
-    sk_metrics_global_destroy(core->monitor);
     sk_mon_destroy(core->mon);
 
     // destroy log templates

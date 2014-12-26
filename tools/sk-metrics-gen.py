@@ -17,13 +17,13 @@ config_name = ""
 METRICS_MODE = ["global", "thread"]
 
 ####################### C language files #########################
-C_HEADER_NAME = "sk_metrics.h"
-C_SOURCE_NAME = "sk_metrics.c"
+HEADER_NAME = "sk_metrics.h"
+SOURCE_NAME = "sk_metrics.c"
 
 ####################### STATIC TEMPALTES #########################
 
 ########################## Header Part ###########################
-C_HEADER_CONTENT_START = "\
+HEADER_CONTENT_START = "\
 #ifndef SK_METRICS_H\n\
 #define SK_METRICS_H\n\
 \n\
@@ -41,10 +41,10 @@ typedef struct sk_metrics_dynamic_t {\n\
 } sk_metrics_dynamic_t;\n\
 \n"
 
-C_HEADER_CONTENT_END = "#endif\n\n"
+HEADER_CONTENT_END = "#endif\n\n"
 
 ########################## Source Part ###########################
-C_SOURCE_CONTENT_START = "\
+SOURCE_CONTENT_START = "\
 #include <stdlib.h>\n\
 #include <string.h>\n\
 #include <stdio.h>\n\
@@ -55,46 +55,52 @@ C_SOURCE_CONTENT_START = "\
 #include \"api/sk_metrics.h\"\n\
 \n"
 
-C_FUNC_GLOBAL_INC_CONTENT = "static\n\
+FUNC_GLOBAL_INC_CONTENT = "static\n\
 void _sk_%s_%s_inc(uint32_t value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
-    sk_mon_inc(mon, \"%s\", value);\n\
+    sk_mon_inc(mon, \"skull.core.%s.%s\", value);\n\
 }\n\n"
 
-C_FUNC_GLOBAL_GET_CONTENT = "static\n\
+FUNC_GLOBAL_GET_CONTENT = "static\n\
 uint32_t _sk_%s_%s_get()\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
-    return sk_mon_get(mon, \"%s\");\n\
+    return sk_mon_get(mon, \"skull.core.%s.%s\");\n\
 }\n\n"
 
 
 
-C_FUNC_THREAD_INC_CONTENT = "static\n\
+FUNC_THREAD_INC_CONTENT = "static\n\
 void _sk_%s_%s_inc(uint32_t value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
-    sk_mon_inc(mon, \"%s\", value);\n\
+    char name[256] = {0};\n\
+    snprintf(name, 256, \"skull.core.%s.%s.%%s%%d\",\n\
+             SK_THREAD_ENV->name, SK_THREAD_ENV->idx);\n\
+    sk_mon_inc(mon, name, value);\n\
 }\n\n"
 
-C_FUNC_THREAD_GET_CONTENT = "static\n\
+FUNC_THREAD_GET_CONTENT = "static\n\
 uint32_t _sk_%s_%s_get()\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
-    return sk_mon_get(mon, \"%s\");\n\
+    char name[256] = {0};\n\
+    snprintf(name, 256, \"skull.core.%s.%s.%%s%%d\",\n\
+             SK_THREAD_ENV->name, SK_THREAD_ENV->idx);\n\
+    return sk_mon_get(mon, name);\n\
 }\n\n"
 
 # dynamic metrics
 ## global dynamic metrics
-C_FUNC_GLOBAL_DYN_INC_CONTENT = "static\n\
+FUNC_GLOBAL_DYN_INC_CONTENT = "static\n\
 void _sk_global_dynamic_inc(const char* name, uint32_t value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
     sk_mon_inc(mon, name, value);\n\
 }\n\n"
 
-C_FUNC_GLOBAL_DYN_GET_CONTENT = "static\n\
+FUNC_GLOBAL_DYN_GET_CONTENT = "static\n\
 uint32_t _sk_global_dynamic_get(const char* name)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
@@ -102,49 +108,24 @@ uint32_t _sk_global_dynamic_get(const char* name)\n\
 }\n\n"
 
 ## thread dynamic metrics
-C_FUNC_THREAD_DYN_INC_CONTENT = "static\n\
+FUNC_THREAD_DYN_INC_CONTENT = "static\n\
 void _sk_thread_dynamic_inc(const char* name, uint32_t value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     sk_mon_inc(mon, name, value);\n\
 }\n\n"
 
-C_FUNC_THREAD_DYN_GET_CONTENT = "static\n\
+FUNC_THREAD_DYN_GET_CONTENT = "static\n\
 uint32_t _sk_thread_dynamic_get(const char* name)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     return sk_mon_get(mon, name);\n\
 }\n\n"
 
-C_API_CREATE_CONTENT_START = "sk_metrics_%s_t*\n\
-sk_metrics_%s_create(const char* name)\n\
-{\n\
-    SK_ASSERT_MSG(name != NULL, \"%s metrics initialization failed\");\n\
-\n\
-    sk_metrics_%s_t* metrics = calloc(1, sizeof(*metrics));\n\
-    metrics->name = strdup(name);\n\n"
+METRICS_INIT_CONTENT = "    .%s = { .inc = _sk_%s_%s_inc, .get = _sk_%s_%s_get},\n"
 
-C_API_CREATE_CONTENT_END = "\
-\n\
-    return metrics;\n\
-}\n\n"
-
-C_METRICS_INC_INIT_CONTENT = "    metrics->%s.inc = _sk_%s_%s_inc;\n"
-C_METRICS_GET_INIT_CONTENT = "    metrics->%s.get = _sk_%s_%s_get;\n"
-
-C_METRICS_DYN_INC_INIT_CONTENT = "    metrics->dynamic.inc = _sk_%s_dynamic_inc;\n"
-C_METRICS_DYN_GET_INIT_CONTENT = "    metrics->dynamic.get = _sk_%s_dynamic_get;\n"
-
-C_API_DESTROY_CONTENT = "void\n\
-sk_metrics_%s_destroy(sk_metrics_%s_t* metrics)\n\
-{\n\
-    if (!metrics) {\n\
-        return;\n\
-    }\n\
-\n\
-    free((void*)metrics->name);\n\
-    free(metrics);\n\
-}\n\n"
+METRICS_DYN_INC_INIT_CONTENT = "    metrics->dynamic.inc = _sk_%s_dynamic_inc;\n"
+METRICS_DYN_GET_INIT_CONTENT = "    metrics->dynamic.get = _sk_%s_dynamic_get;\n"
 
 ############################## Internal APIs ############################
 def load_yaml_config():
@@ -169,15 +150,6 @@ def gen_c_header_metrics(scope_name, metrics_obj):
     content = "/*==========================================================*/\n"
     content += "typedef struct " + metrics_type_name + " {\n"
 
-    # assemble private datas
-    content += "    // private\n"
-    content += "    const char* name;\n\n"
-
-    # assemble public data
-    content += "    // public metrics:\n"
-    content += "    // dynamic metrics handler\n"
-    content += "    sk_metrics_dynamic_t dynamic;\n"
-
     for name in metrics_map:
         items = metrics_map[name]
         desc = items['desc']
@@ -188,26 +160,24 @@ def gen_c_header_metrics(scope_name, metrics_obj):
     # assemble tailer
     content += "} " + metrics_type_name + ";\n\n"
 
-    # assemble methods
-    content += "sk_metrics_%s_t* sk_metrics_%s_create(const char* name);\n" % (scope_name, scope_name)
-    content += "void sk_metrics_%s_destroy(sk_metrics_%s_t*);\n" % (scope_name, scope_name)
-    content += "void sk_metrics_%s_dump(sk_metrics_%s_t*);\n\n" % (scope_name, scope_name)
+    # add user handler
+    content += "extern sk_metrics_%s_t sk_metrics_%s;\n" % (scope_name, scope_name)
 
     return content
 
 def generate_c_header():
-    header_file = file(C_HEADER_NAME, 'w')
+    header_file = file(HEADER_NAME, 'w')
     content = ""
 
     # generate header
-    content += C_HEADER_CONTENT_START
+    content += HEADER_CONTENT_START
 
     # generate body
     for scope_name in yaml_obj:
         content += gen_c_header_metrics(scope_name, yaml_obj[scope_name])
 
     # generate tailer
-    content += C_HEADER_CONTENT_END
+    content += HEADER_CONTENT_END
 
     # write and close the header file
     header_file.write(content)
@@ -237,53 +207,42 @@ def gen_c_source_metrics(scope_name, metrics_obj):
     for metric_name in metrics_map:
         if mode == "global":
             # 1.1 assemble inc method
-            content += C_FUNC_GLOBAL_INC_CONTENT % (scope_name, metric_name, metric_name)
+            content += FUNC_GLOBAL_INC_CONTENT % (scope_name, metric_name, scope_name, metric_name)
 
             # 1.2 assemble get method
-            content += C_FUNC_GLOBAL_GET_CONTENT % (scope_name, metric_name, metric_name)
+            content += FUNC_GLOBAL_GET_CONTENT % (scope_name, metric_name, scope_name, metric_name)
         else:
             # 1.3 assemble inc method
-            content += C_FUNC_THREAD_INC_CONTENT % (scope_name, metric_name, metric_name)
+            content += FUNC_THREAD_INC_CONTENT % (scope_name, metric_name, scope_name, metric_name)
 
             # 1.4 assemble get method
-            content += C_FUNC_THREAD_GET_CONTENT % (scope_name, metric_name, metric_name)
+            content += FUNC_THREAD_GET_CONTENT % (scope_name, metric_name, scope_name, metric_name)
 
-    # 2. assemble scope apis
-    # 2.1 assemble create api
-    content += C_API_CREATE_CONTENT_START % (scope_name, scope_name,
-                                             scope_name, scope_name)
-    # 2.2 assemble dynamic metrics api
-    if mode == "global":
-        content += C_METRICS_DYN_INC_INIT_CONTENT % "global"
-        content += C_METRICS_DYN_GET_INIT_CONTENT % "global"
-    else:
-        content += C_METRICS_DYN_INC_INIT_CONTENT % "thread"
-        content += C_METRICS_DYN_GET_INIT_CONTENT % "thread"
+    # 2. assemble metrics
+    # 2.1 assemble create api header
+    content += "sk_metrics_%s_t sk_metrics_%s = {\n" % (scope_name, scope_name)
 
-    # 2.3 assemble static metris api
+    # 2.2 assemble metrics handler
     for name in metrics_map:
-        content += C_METRICS_INC_INIT_CONTENT % (name, scope_name, name)
-        content += C_METRICS_GET_INIT_CONTENT % (name, scope_name, name)
+        content += METRICS_INIT_CONTENT % (name, scope_name, name, scope_name, name)
 
-    content += C_API_CREATE_CONTENT_END
-
-    # 3. assemble destroy api
-    content += C_API_DESTROY_CONTENT % (scope_name, scope_name)
+    # 2.2 assemble api tailer
+    content += "};\n\n"
 
     return content
 
 def generate_c_source():
-    source_file = file(C_SOURCE_NAME, 'w')
+    source_file = file(SOURCE_NAME, 'w')
     content = ""
 
     # generate header
-    content += C_SOURCE_CONTENT_START
+    content += SOURCE_CONTENT_START
 
     # generate dynamic metrcis implementations
-    content += C_FUNC_GLOBAL_DYN_INC_CONTENT
-    content += C_FUNC_GLOBAL_DYN_GET_CONTENT
-    content += C_FUNC_THREAD_DYN_INC_CONTENT
-    content += C_FUNC_THREAD_DYN_GET_CONTENT
+    content += FUNC_GLOBAL_DYN_INC_CONTENT
+    content += FUNC_GLOBAL_DYN_GET_CONTENT
+    content += FUNC_THREAD_DYN_INC_CONTENT
+    content += FUNC_THREAD_DYN_GET_CONTENT
 
     # generate body
     for scope_name in yaml_obj:

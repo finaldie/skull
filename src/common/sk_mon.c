@@ -120,7 +120,8 @@ void sk_mon_foreach(sk_mon_t* sk_mon, sk_mon_cb cb, void* ud)
 
         while((value = fhash_next(&iter))) {
             sk_print("metrics cb: %s - %u, thread name: %s\n",
-                     iter.key, *(uint32_t*)value, SK_THREAD_ENV->name);
+                     (const char*)iter.key, *(uint32_t*)value,
+                     SK_THREAD_ENV->name);
 
             cb(iter.key, *(uint32_t*)value, ud);
         }

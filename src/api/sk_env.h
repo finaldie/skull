@@ -13,7 +13,6 @@
 #include "api/sk_log.h"
 #include "api/sk_log_tpl.h"
 #include "api/sk_mon.h"
-#include "api/sk_metrics.h"
 
 // per-thread data and macros, most of time, normally you only need to use these macros
 #define SK_THREAD_ENV            (sk_thread_env())
@@ -59,9 +58,6 @@ typedef struct skull_core_t {
     sk_log_tpl_t*    error_log_tpl;
     sk_log_tpl_t*    fatal_log_tpl;
 
-    // global monitor
-    sk_metrics_global_t* monitor;
-
     flist*           workflows;      // element type: sk_workflow_t
     fhash*           unique_modules; // key: module name; value: sk_module_t
     const char*      working_dir;
@@ -74,9 +70,6 @@ typedef struct sk_thread_env_t {
     skull_core_t*    core;
     skull_sched_t*   sched;
     sk_logger_t*     logger;
-
-    // per thread monitor handler
-    sk_metrics_worker_t* monitor;
 
     // used for logging or debugging
     char name[SK_ENV_NAME_LEN];

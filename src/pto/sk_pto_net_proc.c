@@ -11,6 +11,7 @@
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
 #include "api/sk_env.h"
+#include "api/sk_metrics.h"
 #include "api/sk_sched.h"
 
 #define SK_MAX_COOKIE_LEN 256
@@ -24,8 +25,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // 0. First, if the current module is the first module (deserialization
     // module), so we will increase the request counter metrcis
     if (sk_txn_is_first_module(txn)) {
-        SK_THREAD_ENV->monitor->request.inc(1);
-        SK_THREAD_ENV_CORE->monitor->request.inc(1);
+        sk_metrics_worker.request.inc(1);
+        sk_metrics_global.request.inc(1);
     }
 
     // 1. run the next module
@@ -70,12 +71,13 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
         sk_entity_write(entity, packed_data, packed_data_sz);
 
         // record metrics
-        SK_THREAD_ENV->monitor->response.inc(1);
-        SK_THREAD_ENV_CORE->monitor->response.inc(1);
+        sk_metrics_worker.response.inc(1);
+        sk_metrics_global.response.inc(1);
 
         unsigned long long alivetime = sk_txn_alivetime(txn);
-        SK_THREAD_ENV->monitor->latency.inc((uint32_t)alivetime);
-        SK_THREAD_ENV_CORE->monitor->latency.inc((uint32_t)alivetime);
+        sk_print("txn time: %llu\n", alivetime);
+        sk_metrics_worker.latency.inc((uint32_t)alivetime);
+        sk_metrics_global.latency.inc((uint32_t)alivetime);
     }
 
     // 4. the transcation is over, destroy sk_txn structure

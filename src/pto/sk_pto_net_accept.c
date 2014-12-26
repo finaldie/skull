@@ -11,6 +11,7 @@
 #include "api/sk_entity.h"
 #include "api/sk_txn.h"
 #include "api/sk_env.h"
+#include "api/sk_metrics.h"
 #include "api/sk_sched.h"
 
 // -----------------------------------------------------------------------------
@@ -117,8 +118,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 
     sk_net_entity_create(entity, evbuff);
 
-    SK_THREAD_ENV->monitor->accept.inc(1);
-    SK_THREAD_ENV_CORE->monitor->connection.inc(1);
+    sk_metrics_worker.accept.inc(1);
+    sk_metrics_global.connection.inc(1);
     return 0;
 }
 

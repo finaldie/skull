@@ -16,6 +16,7 @@
 #include "api/sk_io.h"
 #include "api/sk_entity_mgr.h"
 #include "api/sk_env.h"
+#include "api/sk_metrics.h"
 #include "api/sk_sched.h"
 
 #define SK_SCHED_PULL_NUM   65536
@@ -211,7 +212,7 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     if (NULL == sk_entity_owner(entity)) {
         sk_entity_mgr_add(sched->entity_mgr, entity);
 
-        SK_THREAD_ENV->monitor->connection.inc(1);
+        sk_metrics_worker.connection.inc(1);
     }
 
     ProtobufCMessage* msg = protobuf_c_message_unpack(pto->descriptor,
