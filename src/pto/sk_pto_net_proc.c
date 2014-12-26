@@ -22,13 +22,6 @@
 static
 int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
-    // 0. First, if the current module is the first module (deserialization
-    // module), so we will increase the request counter metrcis
-    if (sk_txn_is_first_module(txn)) {
-        sk_metrics_worker.request.inc(1);
-        sk_metrics_global.request.inc(1);
-    }
-
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
 

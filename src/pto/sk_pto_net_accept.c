@@ -68,6 +68,9 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 
     // consume the evbuff
     fevbuff_pop(evbuff, consumed);
+
+    sk_metrics_worker.request.inc(1);
+    sk_metrics_global.request.inc(1);
 }
 
 // EventLoop trigger this callback
