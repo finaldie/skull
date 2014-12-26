@@ -27,17 +27,15 @@ HEADER_CONTENT_START = "\
 #ifndef SK_METRICS_H\n\
 #define SK_METRICS_H\n\
 \n\
-#include <stdint.h>\n\
-\n\
 // base metrics type, including inc() and get() methods\n\
 typedef struct sk_metrics_t {\n\
-    void     (*inc)(uint32_t value);\n\
-    uint32_t (*get)();\n\
+    void   (*inc)(double value);\n\
+    double (*get)();\n\
 } sk_metrics_t;\n\
 \n\
 typedef struct sk_metrics_dynamic_t {\n\
-    void     (*inc)(const char* name, uint32_t value);\n\
-    uint32_t (*get)(const char* name);\n\
+    void   (*inc)(const char* name, double value);\n\
+    double (*get)(const char* name);\n\
 } sk_metrics_dynamic_t;\n\
 \n"
 
@@ -56,14 +54,14 @@ SOURCE_CONTENT_START = "\
 \n"
 
 FUNC_GLOBAL_INC_CONTENT = "static\n\
-void _sk_%s_%s_inc(uint32_t value)\n\
+void _sk_%s_%s_inc(double value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
     sk_mon_inc(mon, \"skull.core.%s.%s\", value);\n\
 }\n\n"
 
 FUNC_GLOBAL_GET_CONTENT = "static\n\
-uint32_t _sk_%s_%s_get()\n\
+double _sk_%s_%s_get()\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
     return sk_mon_get(mon, \"skull.core.%s.%s\");\n\
@@ -72,7 +70,7 @@ uint32_t _sk_%s_%s_get()\n\
 
 
 FUNC_THREAD_INC_CONTENT = "static\n\
-void _sk_%s_%s_inc(uint32_t value)\n\
+void _sk_%s_%s_inc(double value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     char name[256] = {0};\n\
@@ -82,7 +80,7 @@ void _sk_%s_%s_inc(uint32_t value)\n\
 }\n\n"
 
 FUNC_THREAD_GET_CONTENT = "static\n\
-uint32_t _sk_%s_%s_get()\n\
+double _sk_%s_%s_get()\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     char name[256] = {0};\n\
@@ -94,14 +92,14 @@ uint32_t _sk_%s_%s_get()\n\
 # dynamic metrics
 ## global dynamic metrics
 FUNC_GLOBAL_DYN_INC_CONTENT = "static\n\
-void _sk_global_dynamic_inc(const char* name, uint32_t value)\n\
+void _sk_global_dynamic_inc(const char* name, double value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
     sk_mon_inc(mon, name, value);\n\
 }\n\n"
 
 FUNC_GLOBAL_DYN_GET_CONTENT = "static\n\
-uint32_t _sk_global_dynamic_get(const char* name)\n\
+double _sk_global_dynamic_get(const char* name)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
     return sk_mon_get(mon, name);\n\
@@ -109,14 +107,14 @@ uint32_t _sk_global_dynamic_get(const char* name)\n\
 
 ## thread dynamic metrics
 FUNC_THREAD_DYN_INC_CONTENT = "static\n\
-void _sk_thread_dynamic_inc(const char* name, uint32_t value)\n\
+void _sk_thread_dynamic_inc(const char* name, double value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     sk_mon_inc(mon, name, value);\n\
 }\n\n"
 
 FUNC_THREAD_DYN_GET_CONTENT = "static\n\
-uint32_t _sk_thread_dynamic_get(const char* name)\n\
+double _sk_thread_dynamic_get(const char* name)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     return sk_mon_get(mon, name);\n\
@@ -161,7 +159,7 @@ def gen_c_header_metrics(scope_name, metrics_obj):
     content += "} " + metrics_type_name + ";\n\n"
 
     # add user handler
-    content += "extern sk_metrics_%s_t sk_metrics_%s;\n" % (scope_name, scope_name)
+    content += "extern sk_metrics_%s_t sk_metrics_%s;\n\n" % (scope_name, scope_name)
 
     return content
 

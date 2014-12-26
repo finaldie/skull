@@ -53,7 +53,7 @@ void sk_mon_destroy(sk_mon_t* sk_mon)
     free(sk_mon);
 }
 
-void sk_mon_inc(sk_mon_t* sk_mon, const char* name, uint32_t value)
+void sk_mon_inc(sk_mon_t* sk_mon, const char* name, double value)
 {
     SK_ASSERT(name);
     key_sz_t name_len = (key_sz_t)strlen(name);
@@ -61,29 +61,29 @@ void sk_mon_inc(sk_mon_t* sk_mon, const char* name, uint32_t value)
 
     pthread_mutex_lock(&sk_mon->lock);
     {
-        uint32_t* raw = fhash_get(sk_mon->mon_tbl, name, name_len, NULL);
-        uint32_t raw_value = raw ? *raw : 0;
+        double* raw = fhash_get(sk_mon->mon_tbl, name, name_len, NULL);
+        double raw_value = raw ? *raw : 0;
 
-        uint32_t new_value = raw_value + value;
+        double new_value = raw_value + value;
         fhash_set(sk_mon->mon_tbl, name, name_len,
                   &new_value, sizeof(new_value));
 
-        sk_print("metrics inc: %s - %u, thread name: %s\n",
+        sk_print("metrics inc: %s - %f, thread name: %s\n",
                  name, value, SK_THREAD_ENV->name);
     }
     pthread_mutex_unlock(&sk_mon->lock);
 }
 
-uint32_t sk_mon_get(sk_mon_t* sk_mon, const char* name)
+double sk_mon_get(sk_mon_t* sk_mon, const char* name)
 {
     SK_ASSERT(name);
     key_sz_t name_len = (key_sz_t)strlen(name);
     SK_ASSERT(name_len);
 
-    uint32_t raw_value = 0;
+    double raw_value = 0;
     pthread_mutex_lock(&sk_mon->lock);
     {
-        uint32_t* raw = fhash_get(sk_mon->mon_tbl, name, name_len, NULL);
+        double* raw = fhash_get(sk_mon->mon_tbl, name, name_len, NULL);
         raw_value = raw ? *raw : 0;
     }
     pthread_mutex_unlock(&sk_mon->lock);
@@ -99,7 +99,7 @@ void sk_mon_reset(sk_mon_t* sk_mon)
         void* value = NULL;
 
         while((value = fhash_next(&iter))) {
-            uint32_t value = 0;
+            double value = 0;
             fhash_set(sk_mon->mon_tbl, iter.key, iter.key_sz,
                       &value, sizeof(value));
         }
@@ -119,11 +119,11 @@ void sk_mon_foreach(sk_mon_t* sk_mon, sk_mon_cb cb, void* ud)
         void* value = NULL;
 
         while((value = fhash_next(&iter))) {
-            sk_print("metrics cb: %s - %u, thread name: %s\n",
-                     (const char*)iter.key, *(uint32_t*)value,
+            sk_print("metrics cb: %s - %f, thread name: %s\n",
+                     (const char*)iter.key, *(double*)value,
                      SK_THREAD_ENV->name);
 
-            cb(iter.key, *(uint32_t*)value, ud);
+            cb(iter.key, *(double*)value, ud);
         }
         fhash_iter_release(&iter);
     }
