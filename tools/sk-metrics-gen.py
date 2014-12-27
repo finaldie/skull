@@ -52,14 +52,14 @@ FUNC_GLOBAL_INC_CONTENT = "static\n\
 void _sk_%s_%s_inc(double value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
-    sk_mon_inc(mon, \"skull.core.%s.%s\", value);\n\
+    sk_mon_inc(mon, \"skull.core.g.%s.%s\", value);\n\
 }\n\n"
 
 FUNC_GLOBAL_GET_CONTENT = "static\n\
 double _sk_%s_%s_get()\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
-    return sk_mon_get(mon, \"skull.core.%s.%s\");\n\
+    return sk_mon_get(mon, \"skull.core.g.%s.%s\");\n\
 }\n\n"
 
 FUNC_THREAD_INC_CONTENT = "static\n\
@@ -67,7 +67,7 @@ void _sk_%s_%s_inc(double value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     char name[256] = {0};\n\
-    snprintf(name, 256, \"skull.core.%s.%s.%%s%%d\",\n\
+    snprintf(name, 256, \"skull.core.t.%s.%s.%%s%%d\",\n\
              SK_THREAD_ENV->name, SK_THREAD_ENV->idx);\n\
     sk_mon_inc(mon, name, value);\n\
 }\n\n"
@@ -77,7 +77,7 @@ double _sk_%s_%s_get()\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     char name[256] = {0};\n\
-    snprintf(name, 256, \"skull.core.%s.%s,%%s%%d\",\n\
+    snprintf(name, 256, \"skull.core.t.%s.%s,%%s%%d\",\n\
              SK_THREAD_ENV->name, SK_THREAD_ENV->idx);\n\
     return sk_mon_get(mon, name);\n\
 }\n\n"
