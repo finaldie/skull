@@ -15,8 +15,15 @@ DEPLOY_LOG_ROOT := $(DEPLOY_DIR_ROOT)/log
 DEPLOY_ETC_ROOT := $(DEPLOY_DIR_ROOT)/etc
 
 # Get all the sub dirs which have Makefile
-SUB_DIRS := $(shell find components/ -name Makefile)
-SUB_DIRS := $(shell dirname $(SUB_DIRS))
+COMMON_DIRS := $(shell find src/common -name Makefile)
+COMMON_DIRS := $(shell dirname $(COMMON_DIRS))
+
+MOD_DIRS := $(shell find src/modules -name Makefile)
+MOD_DIRS := $(shell dirname $(MOD_DIRS))
+
+SUB_DIRS = \
+    $(COMMON_DIRS) \
+    $(MOD_DIRS)
 
 # Required by skull
 build:

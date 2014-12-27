@@ -12,24 +12,24 @@ LANGUAGE_PATH=share/skull/lang/c
 function action_c_add()
 {
     local module=$1
-    if [ -d components/modules/$module ]; then
+    if [ -d src/modules/$module ]; then
         echo "Notice: the module [$module] has already exist"
         return 1
     fi
 
     # add module folder and files
-    mkdir -p components/modules/$module/src
-    mkdir -p components/modules/$module/tests
-    mkdir -p components/modules/$module/config
+    mkdir -p src/modules/$module/src
+    mkdir -p src/modules/$module/tests
+    mkdir -p src/modules/$module/config
 
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.tpl components/modules/$module/Makefile
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/mod.c.tpl components/modules/$module/src/mod.c
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/config.yaml.tpl components/modules/$module/config/config.yaml
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.tpl src/modules/$module/Makefile
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/mod.c.tpl src/modules/$module/src/mod.c
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/config.yaml.tpl src/modules/$module/config/config.yaml
 
     return 0
 }
 
-COMMON_FILE_LOCATION=components/common/c
+COMMON_FILE_LOCATION=src/common/c
 
 function action_c_gen_metrics()
 {

@@ -72,9 +72,9 @@ function _check_module_name()
         return 1
     fi
 
-    if [ -d $SKULL_PROJ_ROOT/components/modules/$module_name ]; then
-        echo "Error: module [$module_name] has already exist, change to another name" >&2
-        return 1
+    if [ -d "$SKULL_PROJ_ROOT/src/modules/$module_name" ]; then
+        echo "Warn: Found the module [$module_name] has already exist, please" \
+            " make sure its a valid module" >&2
     fi
 
     return 0
@@ -110,18 +110,20 @@ function _action_module_add()
         fi
     done
 
-    while true; do
-        read -p "which language the module belongs to?($lang_names) " language
+    # 3. Add basic folder structure if the target module does not exist
+    if [ ! -d "$SKULL_PROJ_ROOT/src/modules/$module" ]; then
+        # NOTES: currently, we only support C language
+        while true; do
+            read -p "which language the module belongs to?($lang_names) " language
 
-        # verify the language valid or not
-        if $(_check_language $langs $language); then
-            break;
-        fi
-    done
+            # verify the language valid or not
+            if $(_check_language $langs $language); then
+                break;
+            fi
+        done
 
-    # 3. Add basic folder structure
-    # NOTES: currently, we only support C language
-    action_${language}_add $module
+        action_${language}_add $module
+    fi
 
     # 4. Add module into main config
     $SKULL_ROOT/bin/skull-workflow.py -m add_module -c $skull_conf -M $module -i $workflow_idx
