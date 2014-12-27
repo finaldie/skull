@@ -8,13 +8,13 @@
 
 void skull_metric_inc(const char* name, double value)
 {
-    sk_mon_t* mon = SK_THREAD_ENV->core->mon;
+    sk_mon_t* mon = SK_THREAD_ENV->core->umon;
     sk_mon_inc(mon, name, value);
 }
 
 double skull_metric_get(const char* name)
 {
-    sk_mon_t* mon = SK_THREAD_ENV->core->mon;
+    sk_mon_t* mon = SK_THREAD_ENV->core->umon;
     return sk_mon_get(mon, name);
 }
 
@@ -35,4 +35,7 @@ void skull_metric_foreach(skull_metric_each metric_cb, void* ud)
         skull_sched_t* worker = &core->worker_sched[i];
         sk_mon_foreach(worker->mon, metric_cb, ud);
     }
+
+    // iterate user metrics
+    sk_mon_foreach(core->umon, metric_cb, ud);
 }

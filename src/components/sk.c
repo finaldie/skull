@@ -309,6 +309,7 @@ static
 void _skull_init_moniter(skull_core_t* core)
 {
     core->mon = sk_mon_create();
+    core->umon = sk_mon_create();
 }
 
 // APIs
@@ -403,6 +404,7 @@ void skull_stop(skull_core_t* core)
     fhash_str_delete(core->unique_modules);
     sk_logger_destroy(core->logger);
     sk_mon_destroy(core->mon);
+    sk_mon_destroy(core->umon);
 
     // destroy log templates
     sk_log_tpl_destroy(core->info_log_tpl);

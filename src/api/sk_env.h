@@ -41,6 +41,7 @@ typedef struct skull_sched_t {
 typedef struct skull_core_t {
     // ======= private =======
     sk_mon_t*        mon;
+    sk_mon_t*        umon; // user mon
 
     // ======= public  =======
     skull_cmd_args_t cmd_args;
