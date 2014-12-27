@@ -17,6 +17,8 @@ config_name = ""
 header_name = ""
 source_name = ""
 
+METRICS_TYPE = ["static", "dynamic"]
+
 ####################### STATIC TEMPALTES #########################
 ########################## Header Part ###########################
 HEADER_CONTENT_START = "\
@@ -71,23 +73,23 @@ double _skull_%s_%s_get()\n\
 # dynamic metrics
 ## global dynamic metrics
 FUNC_DYN_INC_CONTENT = "static\n\
-void _skull_%s_dynamic_inc(const char* name, double value)\n\
+void _skull_%s_%s_dynamic_inc(const char* name, double value)\n\
 {\n\
     char full_name[256] = {0};\n\
-    snprintf(full_name, 256, \"skull.user.%s.%%s\", name);\n\
+    snprintf(full_name, 256, \"skull.user.%s.%%s.%s\", name);\n\
     skull_metric_inc(full_name, value);\n\
 }\n\n"
 
 FUNC_DYN_GET_CONTENT = "static\n\
-double _skull_%s_dynamic_get(const char* name)\n\
+double _skull_%s_%s_dynamic_get(const char* name)\n\
 {\n\
     char full_name[256] = {0};\n\
-    snprintf(full_name, 256, \"skull.user.%s.%%s\", name);\n\
+    snprintf(full_name, 256, \"skull.user.%s.%%s.%s\", name);\n\
     return skull_metric_get(full_name);\n\
 }\n\n"
 
 METRICS_INIT_CONTENT = "    .%s = { .inc = _skull_%s_%s_inc, .get =  _skull_%s_%s_get},\n"
-METRICS_DYN_INIT_CONTENT = "    .dynamic = { .inc = _skull_%s_dynamic_inc, .get =  _skull_%s_dynamic_get},\n"
+METRICS_DYN_INIT_CONTENT = "    .%s = { .inc = _skull_%s_%s_dynamic_inc, .get =  _skull_%s_%s_dynamic_get},\n"
 
 ############################## Internal APIs ############################
 def load_yaml_config():
@@ -97,7 +99,24 @@ def load_yaml_config():
     yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
-def gen_c_header_metrics(scope_name, metrics_map):
+def gen_c_header_metrics(scope_name, metrics_obj):
+    global METRICS_TYPE
+
+    if not metrics_obj.get("type"):
+        print "Fatal: don't find 'type' field in the config, please check it again"
+        sys.exit(1)
+
+    type = metrics_obj['type']
+    if type not in METRICS_TYPE:
+        print "Fatal: 'type' field must be 'static' or 'dynamic', please check it again"
+        sys.exit(1)
+
+    if not metrics_obj.get("metrics"):
+        print "Fatal: don't find 'metrics' field in the config, please check it again"
+        sys.exit(1)
+
+    metrics_map = metrics_obj['metrics']
+
     # define the type name
     metrics_type_name = "skull_metrics_%s_t" % scope_name
 
@@ -105,16 +124,16 @@ def gen_c_header_metrics(scope_name, metrics_map):
     content = "/*==========================================================*/\n"
     content += "typedef struct " + metrics_type_name + " {\n"
 
-    # assemble dynamic metrics
-    content += "    // dynamic metrics handler\n"
-    content += "    skull_metrics_dynamic_t dynamic;\n"
-
     for name in metrics_map:
         items = metrics_map[name]
         desc = items['desc']
 
         content += "    // " + desc + "\n"
-        content += "    skull_metrics_t " + name + ";\n"
+
+        if type == "static":
+            content += "    skull_metrics_t " + name + ";\n"
+        else:
+            content += "    skull_metrics_dynamic_t " + name + ";\n"
 
     # assemble tailer
     content += "} " + metrics_type_name + ";\n\n"
@@ -142,30 +161,47 @@ def generate_c_header():
     header_file.write(content)
     header_file.close()
 
-def gen_c_source_metrics(scope_name, metrics_map):
-    content = "// ==========================================================\n"
+def gen_c_source_metrics(scope_name, metrics_obj):
+    global METRICS_TYPE
 
-    # 0. add the dynamic handler for this metrics scope only once
-    content += FUNC_DYN_INC_CONTENT % (scope_name, scope_name)
-    content += FUNC_DYN_GET_CONTENT % (scope_name, scope_name)
+    if not metrics_obj.get("type"):
+        print "Fatal: don't find 'type' field in the config, please check it again"
+        sys.exit(1)
+
+    type = metrics_obj['type']
+    if type not in METRICS_TYPE:
+        print "Fatal: 'type' field must be 'static' or 'dynamic', please check it again"
+        sys.exit(1)
+
+    if not metrics_obj.get("metrics"):
+        print "Fatal: don't find 'metrics' field in the config, please check it again"
+        sys.exit(1)
+
+    metrics_map = metrics_obj['metrics']
+
+    content = "// ==========================================================\n"
 
     # 1. assemble metrics methods
     for name in metrics_map:
-        content += FUNC_INC_CONTENT % (scope_name, name, scope_name, name)
-        content += FUNC_GET_CONTENT % (scope_name, name, scope_name, name)
+        if type == "static":
+            content += FUNC_INC_CONTENT % (scope_name, name, scope_name, name)
+            content += FUNC_GET_CONTENT % (scope_name, name, scope_name, name)
+        else:
+            content += FUNC_DYN_INC_CONTENT % (scope_name, name, scope_name, name)
+            content += FUNC_DYN_GET_CONTENT % (scope_name, name, scope_name, name)
 
     # 2. assemble metrics
     # 2.1 assemble the metrics header
     content += "skull_metrics_%s_t skull_metrics_%s = {\n" % (scope_name, scope_name)
 
-    # 2.2 assemble dynamic metrics api
-    content += METRICS_DYN_INIT_CONTENT % (scope_name, scope_name)
-
-    # 2.3 assemble static metris api
+    # 2.2 assemble static metris api
     for name in metrics_map:
-        content += METRICS_INIT_CONTENT % (name, scope_name, name, scope_name, name)
+        if type == "static":
+            content += METRICS_INIT_CONTENT % (name, scope_name, name, scope_name, name)
+        else:
+            content += METRICS_DYN_INIT_CONTENT % (name, scope_name, name, scope_name, name)
 
-    # 2.4 end of the metrics
+    # 2.3 end of the metrics
     content += "};\n\n"
 
     return content

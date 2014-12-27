@@ -4,6 +4,9 @@
 #
 # NOTES: This is included by the main script `skull`
 
+# For build actions, we will do it as much as careful
+set -e
+
 function action_build()
 {
     # Fork and move to the top level of the project to do the build
