@@ -1,3 +1,6 @@
+* 2014-12-28 0.2.2
+   * **user:** Rename `components` folder to `src`
+   * **user:** Fix few config and makefile issues
 * 2014-12-28 0.2.1
    * Add skull metrics apis
    * Add skull user metrics apis
