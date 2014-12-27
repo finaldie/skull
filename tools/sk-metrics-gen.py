@@ -32,11 +32,6 @@ typedef struct sk_metrics_t {\n\
     void   (*inc)(double value);\n\
     double (*get)();\n\
 } sk_metrics_t;\n\
-\n\
-typedef struct sk_metrics_dynamic_t {\n\
-    void   (*inc)(const char* name, double value);\n\
-    double (*get)(const char* name);\n\
-} sk_metrics_dynamic_t;\n\
 \n"
 
 HEADER_CONTENT_END = "#endif\n\n"
@@ -67,14 +62,12 @@ double _sk_%s_%s_get()\n\
     return sk_mon_get(mon, \"skull.core.%s.%s\");\n\
 }\n\n"
 
-
-
 FUNC_THREAD_INC_CONTENT = "static\n\
 void _sk_%s_%s_inc(double value)\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     char name[256] = {0};\n\
-    snprintf(name, 256, \"skull.core.%s.%%s%%d.%s\",\n\
+    snprintf(name, 256, \"skull.core.%s.%s.%%s%%d\",\n\
              SK_THREAD_ENV->name, SK_THREAD_ENV->idx);\n\
     sk_mon_inc(mon, name, value);\n\
 }\n\n"
@@ -84,46 +77,12 @@ double _sk_%s_%s_get()\n\
 {\n\
     sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
     char name[256] = {0};\n\
-    snprintf(name, 256, \"skull.core.%s.%%s%%d.%s\",\n\
+    snprintf(name, 256, \"skull.core.%s.%s,%%s%%d\",\n\
              SK_THREAD_ENV->name, SK_THREAD_ENV->idx);\n\
     return sk_mon_get(mon, name);\n\
 }\n\n"
 
-# dynamic metrics
-## global dynamic metrics
-FUNC_GLOBAL_DYN_INC_CONTENT = "static\n\
-void _sk_global_dynamic_inc(const char* name, double value)\n\
-{\n\
-    sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
-    sk_mon_inc(mon, name, value);\n\
-}\n\n"
-
-FUNC_GLOBAL_DYN_GET_CONTENT = "static\n\
-double _sk_global_dynamic_get(const char* name)\n\
-{\n\
-    sk_mon_t* mon = SK_THREAD_ENV_CORE->mon;\n\
-    return sk_mon_get(mon, name);\n\
-}\n\n"
-
-## thread dynamic metrics
-FUNC_THREAD_DYN_INC_CONTENT = "static\n\
-void _sk_thread_dynamic_inc(const char* name, double value)\n\
-{\n\
-    sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
-    sk_mon_inc(mon, name, value);\n\
-}\n\n"
-
-FUNC_THREAD_DYN_GET_CONTENT = "static\n\
-double _sk_thread_dynamic_get(const char* name)\n\
-{\n\
-    sk_mon_t* mon = SK_THREAD_ENV_MON;\n\
-    return sk_mon_get(mon, name);\n\
-}\n\n"
-
 METRICS_INIT_CONTENT = "    .%s = { .inc = _sk_%s_%s_inc, .get = _sk_%s_%s_get},\n"
-
-METRICS_DYN_INC_INIT_CONTENT = "    metrics->dynamic.inc = _sk_%s_dynamic_inc;\n"
-METRICS_DYN_GET_INIT_CONTENT = "    metrics->dynamic.get = _sk_%s_dynamic_get;\n"
 
 ############################## Internal APIs ############################
 def load_yaml_config():
@@ -235,12 +194,6 @@ def generate_c_source():
 
     # generate header
     content += SOURCE_CONTENT_START
-
-    # generate dynamic metrcis implementations
-    content += FUNC_GLOBAL_DYN_INC_CONTENT
-    content += FUNC_GLOBAL_DYN_GET_CONTENT
-    content += FUNC_THREAD_DYN_INC_CONTENT
-    content += FUNC_THREAD_DYN_GET_CONTENT
 
     # generate body
     for scope_name in yaml_obj:

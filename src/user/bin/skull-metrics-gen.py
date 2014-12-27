@@ -36,8 +36,8 @@ typedef struct skull_metrics_t {\n\
 } skull_metrics_t;\n\
 \n\
 typedef struct skull_metrics_dynamic_t {\n\
-    void   (*inc)(const char* name, double value);\n\
-    double (*get)(const char* name);\n\
+    void   (*inc)(double value, const char* fmt, ...);\n\
+    double (*get)(const char* fmt, ...);\n\
 } skull_metrics_dynamic_t;\n\
 \n"
 
@@ -53,6 +53,7 @@ SOURCE_CONTENT_START = "\
 #include <stdlib.h>\n\
 #include <string.h>\n\
 #include <stdio.h>\n\
+#include <stdarg.h>\n\
 \n\
 #include <skull/metrics_utils.h>\n\
 #include \"skull_metrics.h\"\n\
@@ -61,30 +62,38 @@ SOURCE_CONTENT_START = "\
 FUNC_INC_CONTENT = "static\n\
 void _skull_%s_%s_inc(double value)\n\
 {\n\
-    skull_metric_inc(\"skull.user.%s.%s\", value);\n\
+    skull_metric_inc(\"skull.user.s.%s.%s\", value);\n\
 }\n\n"
 
 FUNC_GET_CONTENT = "static\n\
 double _skull_%s_%s_get()\n\
 {\n\
-    return skull_metric_get(\"skull.user.%s.%s\");\n\
+    return skull_metric_get(\"skull.user.s.%s.%s\");\n\
 }\n\n"
 
 # dynamic metrics
 ## global dynamic metrics
 FUNC_DYN_INC_CONTENT = "static\n\
-void _skull_%s_%s_dynamic_inc(const char* name, double value)\n\
+void _skull_%s_%s_dynamic_inc(double value, const char* fmt, ...)\n\
 {\n\
     char full_name[256] = {0};\n\
-    snprintf(full_name, 256, \"skull.user.%s.%%s.%s\", name);\n\
+    int hlen = snprintf(full_name, 256, \"skull.user.d.%s.%s.\");\n\
+    va_list ap;\n\
+    va_start(ap, fmt);\n\
+    vsnprintf(full_name + hlen, 256 - hlen, fmt, ap);\n\
     skull_metric_inc(full_name, value);\n\
+    va_end(ap);\n\
 }\n\n"
 
 FUNC_DYN_GET_CONTENT = "static\n\
-double _skull_%s_%s_dynamic_get(const char* name)\n\
+double _skull_%s_%s_dynamic_get(const char* fmt, ...)\n\
 {\n\
     char full_name[256] = {0};\n\
-    snprintf(full_name, 256, \"skull.user.%s.%%s.%s\", name);\n\
+    int hlen = snprintf(full_name, 256, \"skull.user.d.%s.%s.\");\n\
+    va_list ap;\n\
+    va_start(ap, fmt);\n\
+    vsnprintf(full_name + hlen, 256 - hlen, fmt, ap);\n\
+    va_end(ap);\n\
     return skull_metric_get(full_name);\n\
 }\n\n"
 
