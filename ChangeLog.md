@@ -1,3 +1,8 @@
+* 2014-12-28 0.2.1
+   * Add skull metrics apis
+   * Add skull user metrics apis
+   * Add metrics generator both for engine and user
+   * Done the integration with skull-admin-c module
 * 2014-11-11 0.2.0
    * Initialization 0.2.0
 * 2014-11-07 0.1.2
