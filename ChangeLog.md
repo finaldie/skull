@@ -1,3 +1,5 @@
+* 2015-01-03 0.2.3
+   * re-structure the local deployment folder structure, make it cleaner
 * 2014-12-28 0.2.2
    * **user:** Rename `components` folder to `src`
    * **user:** Fix few config and makefile issues
