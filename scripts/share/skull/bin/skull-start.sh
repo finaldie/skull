@@ -9,6 +9,6 @@ fi
 
 # 2. Start skull engine
 skull_config=$1
-export LD_LIBRARY_PATH=`pwd`/common/c
+export LD_LIBRARY_PATH=`pwd`/lib
 
 skull-engine -c $skull_config

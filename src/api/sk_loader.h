@@ -13,7 +13,7 @@
 //  \_ config.yaml
 //  \_ mod.so (or mod.lua ...)
 #define SK_MODULE_CONFIG_NAME "config.yaml"
-#define SK_MODULE_PREFIX_NAME "mod"
+#define SK_MODULE_PREFIX_NAME "libskull-modules-"
 
 typedef struct sk_loader_t {
     // module loader type
