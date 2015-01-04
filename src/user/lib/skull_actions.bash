@@ -1,6 +1,7 @@
 # This is the bash script for C language
 # NOTES: This script must implement the following functions:
-#  - `action_$lang_add`
+#  - `action_$lang_module_add`
+#  - `action_$lang_common_create`
 #  - `action_$lang_gen_metrics`
 #
 # NOTES2: before running any methods in file, skull will change the current
@@ -9,7 +10,7 @@
 
 LANGUAGE_PATH=share/skull/lang/c
 
-function action_c_add()
+function action_c_module_add()
 {
     local module=$1
     if [ -d src/modules/$module ]; then
@@ -36,21 +37,30 @@ function action_c_add()
 
 COMMON_FILE_LOCATION=src/common/c
 
+function action_c_common_create()
+{
+    if [ -d "$COMMON_FILE_LOCATION" ]; then
+        echo "notice: the common/c folder has already exist, ignore it"
+        return 0
+    fi
+
+    # create common folers
+    mkdir -p $COMMON_FILE_LOCATION/src
+    mkdir -p $COMMON_FILE_LOCATION/tests
+
+    # move the Makefile to common/c only when there is no Makefile in common/c
+    if [ ! -f $COMMON_FILE_LOCATION/Makefile ]; then
+        cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.tpl $COMMON_FILE_LOCATION/Makefile
+    fi
+}
+
 function action_c_gen_metrics()
 {
     local config=$1
 
     # TODO: compare the md5 of the new metrics and old metrics' files, do not to
     # replace them if they are same, it will reduce the compiling time
-    mkdir -p $COMMON_FILE_LOCATION/src
-    mkdir -p $COMMON_FILE_LOCATION/tests
-
     $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-metrics-gen.py -c $config \
         -h $COMMON_FILE_LOCATION/src/skull_metrics.h \
         -s $COMMON_FILE_LOCATION/src/skull_metrics.c
-
-    # move the Makefile to common/c only when there is no Makefile in common/c
-    if [ ! -f $COMMON_FILE_LOCATION/Makefile ]; then
-        cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.tpl $COMMON_FILE_LOCATION/Makefile
-    fi
 }

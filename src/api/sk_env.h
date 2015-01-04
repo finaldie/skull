@@ -15,15 +15,15 @@
 #include "api/sk_mon.h"
 
 // per-thread data and macros, most of time, normally you only need to use these macros
-#define SK_THREAD_ENV            (sk_thread_env())
-#define SK_THREAD_ENV_CORE       (sk_thread_env()->core)
+#define SK_ENV            (sk_thread_env())
+#define SK_ENV_CORE       (sk_thread_env()->core)
 
-#define SK_THREAD_ENV_SCHED      (sk_thread_env()->sched->sched)
-#define SK_THREAD_ENV_ENTITY_MGR (sk_thread_env()->sched->entity_mgr)
-#define SK_THREAD_ENV_EVENTLOOP  (sk_thread_env()->sched->evlp)
-#define SK_THREAD_ENV_WORKFLOWS  (sk_thread_env()->core->workflows)
-#define SK_THREAD_ENV_LOGGER     (sk_thread_env()->logger)
-#define SK_THREAD_ENV_MON        (sk_thread_env()->sched->mon)
+#define SK_ENV_SCHED      (sk_thread_env()->sched->sched)
+#define SK_ENV_ENTITY_MGR (sk_thread_env()->sched->entity_mgr)
+#define SK_ENV_EVENTLOOP  (sk_thread_env()->sched->evlp)
+#define SK_ENV_WORKFLOWS  (sk_thread_env()->core->workflows)
+#define SK_ENV_LOGGER     (sk_thread_env()->core->logger)
+#define SK_ENV_MON        (sk_thread_env()->sched->mon)
 
 // skull core related structures
 typedef struct skull_cmd_args_t {
@@ -70,7 +70,6 @@ typedef struct sk_thread_env_t {
     // ======== public  ========
     skull_core_t*    core;
     skull_sched_t*   sched;
-    sk_logger_t*     logger;
 
     // used for logging or debugging
     char name[SK_ENV_NAME_LEN];

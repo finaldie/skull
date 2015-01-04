@@ -122,10 +122,14 @@ function _action_module_add()
             fi
         done
 
-        action_${language}_add $module
+        action_${language}_module_add $module
     fi
 
     # 4. Add module into main config
     $SKULL_ROOT/bin/skull-workflow.py -m add_module -c $skull_conf -M $module -i $workflow_idx
+
+    # 5. add common folder
+    action_${language}_common_create
+
     echo "module [$module] added successfully"
 }

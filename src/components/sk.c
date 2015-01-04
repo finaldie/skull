@@ -35,13 +35,6 @@ sk_thread_env_t* _sk_env_create(skull_core_t* core,
     thread_env->core = core;
     thread_env->sched = worker_sched;
 
-    // create a per-thread logger which use the same log name of main scheduler
-    const sk_config_t* config = core->config;
-    const char* working_dir = core->working_dir;
-    const char* log_name = config->log_name;
-    int log_level = config->log_level;
-    thread_env->logger = sk_logger_create(working_dir, log_name, log_level);
-
     snprintf(thread_env->name, SK_ENV_NAME_LEN, "%s", name);
     thread_env->idx = idx;
 
@@ -87,7 +80,7 @@ static
 void _sk_accept(fev_state* fev, int fd, void* ud)
 {
     sk_workflow_t* workflow = ud;
-    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
+    sk_sched_t* sched = SK_ENV_SCHED;
 
     sk_entity_t* entity = sk_entity_create(workflow);
     sk_print("create a new entity(%d)\n", fd);
@@ -192,7 +185,7 @@ void* main_io_thread(void* arg)
     sk_logger_setcookie(SK_CORE_LOG_COOKIE);
 
     // Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros
-    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
+    sk_sched_t* sched = SK_ENV_SCHED;
     sk_sched_start(sched);
     return 0;
 }
@@ -206,7 +199,7 @@ void* worker_io_thread(void* arg)
     sk_logger_setcookie(SK_CORE_LOG_COOKIE);
 
     // Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros
-    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
+    sk_sched_t* sched = SK_ENV_SCHED;
     sk_sched_start(sched);
     return 0;
 }
