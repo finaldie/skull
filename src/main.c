@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "api/sk_utils.h"
-#include "api/sk.h"
+#include "api/sk_core.h"
 
 static
 void _print_usage()
@@ -47,14 +47,14 @@ void _check_args(sk_cmd_args_t* cmd_args)
 
 int main(int argc, char** argv)
 {
-    skull_core_t core;
+    sk_core_t core;
     memset(&core, 0, sizeof(core));
     _read_commands(argc, argv, &core.cmd_args);
     _check_args(&core.cmd_args);
 
-    skull_init(&core);
-    skull_start(&core);
+    sk_core_init(&core);
+    sk_core_start(&core);
 
-    skull_destroy(&core);
+    sk_core_destroy(&core);
     return 0;
 }

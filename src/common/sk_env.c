@@ -31,7 +31,7 @@ sk_thread_env_t* sk_thread_env()
     return pthread_getspecific(sk_env_key);
 }
 
-sk_thread_env_t* sk_thread_env_create(skull_core_t* core,
+sk_thread_env_t* sk_thread_env_create(sk_core_t* core,
                                       sk_engine_t* engine,
                                       const char* name,
                                       int idx)

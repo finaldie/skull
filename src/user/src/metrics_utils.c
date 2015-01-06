@@ -20,7 +20,7 @@ double skull_metric_get(const char* name)
 
 void skull_metric_foreach(skull_metric_each metric_cb, void* ud)
 {
-    skull_core_t* core = SK_ENV->core;
+    sk_core_t* core = SK_ENV->core;
 
     // iterate global metrics
     sk_mon_foreach(core->mon, metric_cb, ud);

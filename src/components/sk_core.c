@@ -21,12 +21,12 @@
 #include "api/sk_env.h"
 #include "api/sk_log.h"
 #include "api/sk_log_tpl.h"
-#include "api/sk.h"
+#include "api/sk_core.h"
 
 // INTERNAL APIs
 
 static
-void _skull_setup_schedulers(skull_core_t* core)
+void _sk_setup_engines(sk_core_t* core)
 {
     sk_config_t* config = core->config;
 
@@ -64,7 +64,7 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
 }
 
 static
-void _setup_net_trigger(sk_engine_t* sched, sk_workflow_t* workflow)
+void _sk_setup_net_trigger(sk_engine_t* sched, sk_workflow_t* workflow)
 {
     fev_state* fev = sched->evlp;
     int listen_fd = workflow->trigger.network.listen_fd;
@@ -74,7 +74,7 @@ void _setup_net_trigger(sk_engine_t* sched, sk_workflow_t* workflow)
 }
 
 static
-void _skull_setup_trigger(skull_core_t* core, sk_workflow_t* workflow)
+void _sk_setup_trigger(sk_core_t* core, sk_workflow_t* workflow)
 {
     if (workflow->type == SK_WORKFLOW_MAIN) {
         sk_print("no need to set up trigger\n");
@@ -84,14 +84,14 @@ void _skull_setup_trigger(skull_core_t* core, sk_workflow_t* workflow)
     if (workflow->type == SK_WORKFLOW_TRIGGER) {
         // setup main evloop
         sk_engine_t* master = core->master;
-        _setup_net_trigger(master, workflow);
+        _sk_setup_net_trigger(master, workflow);
     }
 
     SK_LOG_INFO(core->logger, "set up triggers successfully");
 }
 
 static
-void _skull_setup_workflow(skull_core_t* core)
+void _sk_setup_workflow(sk_core_t* core)
 {
     sk_config_t* config = core->config;
     core->workflows = flist_create();
@@ -138,14 +138,14 @@ void _skull_setup_workflow(skull_core_t* core)
             fhash_str_set(core->unique_modules, module_name, module);
         }
 
-        // store this workflow to skull_core::workflows
+        // store this workflow to sk_core::workflows
         int ret = flist_push(core->workflows, workflow);
         SK_ASSERT(!ret);
         SK_LOG_INFO(core->logger, "setup one workflow successfully");
 
         // set up trigger
         sk_print("set up trigger...\n");
-        _skull_setup_trigger(core, workflow);
+        _sk_setup_trigger(core, workflow);
     }
 }
 
@@ -178,14 +178,14 @@ void* worker_io_thread(void* arg)
 }
 
 static
-void _skull_init_config(skull_core_t* core)
+void _sk_init_config(sk_core_t* core)
 {
     core->config = sk_config_create(core->cmd_args.config_location);
     sk_config_print(core->config);
 }
 
 static
-void _skull_chdir(skull_core_t* core)
+void _sk_chdir(sk_core_t* core)
 {
     char* raw_path = strdup(core->cmd_args.config_location);
     const char* config_dir = dirname(raw_path);
@@ -199,7 +199,7 @@ void _skull_chdir(skull_core_t* core)
 }
 
 static
-void _skull_module_init(skull_core_t* core)
+void _sk_module_init(sk_core_t* core)
 {
     fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
     sk_module_t* module = NULL;
@@ -213,7 +213,7 @@ void _skull_module_init(skull_core_t* core)
 }
 
 static
-void _skull_init_log(skull_core_t* core)
+void _sk_init_log(sk_core_t* core)
 {
     const sk_config_t* config = core->config;
     const char* working_dir = core->working_dir;
@@ -233,7 +233,7 @@ void _skull_init_log(skull_core_t* core)
 }
 
 static
-void _skull_init_log_tpls(skull_core_t* core)
+void _sk_init_log_tpls(sk_core_t* core)
 {
     const char* working_dir = core->working_dir;
     char log_tpl_name[SK_LOG_TPL_NAME_MAX_LEN];
@@ -272,7 +272,7 @@ void _skull_init_log_tpls(skull_core_t* core)
 }
 
 static
-void _skull_init_moniter(skull_core_t* core)
+void _sk_init_moniter(sk_core_t* core)
 {
     core->mon = sk_mon_create();
     core->umon = sk_mon_create();
@@ -283,37 +283,37 @@ void _skull_init_moniter(skull_core_t* core)
 // The skull core context initialization function, please *BE CAREFUL* for the
 // execution orders, if you quite understand it, do not modify the calling ord-
 // ers.
-void skull_init(skull_core_t* core)
+void sk_core_init(sk_core_t* core)
 {
     // 1. prepare the thread env
     sk_thread_env_init();
 
     // 2. load config
-    _skull_init_config(core);
+    _sk_init_config(core);
 
     // 3. change working-dir to the config dir
-    _skull_chdir(core);
+    _sk_chdir(core);
 
     // 4. init logger
-    _skull_init_log(core);
+    _sk_init_log(core);
 
     // 5. init log tempaltes
-    _skull_init_log_tpls(core);
+    _sk_init_log_tpls(core);
 
     // 6. init global monitor
-    _skull_init_moniter(core);
+    _sk_init_moniter(core);
 
     // 7. init schedulers
-    _skull_setup_schedulers(core);
+    _sk_setup_engines(core);
 
     // 8. load working flows
-    _skull_setup_workflow(core);
+    _sk_setup_workflow(core);
 }
 
-void skull_start(skull_core_t* core)
+void sk_core_start(sk_core_t* core)
 {
     // 1. module init
-    _skull_module_init(core);
+    _sk_module_init(core);
 
     sk_config_t* config = core->config;
 
@@ -353,7 +353,7 @@ void skull_start(skull_core_t* core)
     sk_engine_wait(master);
 }
 
-void skull_stop(skull_core_t* core)
+void sk_core_stop(sk_core_t* core)
 {
     sk_print("skull engine stoping...\n");
     SK_LOG_INFO(core->logger, "skull engine stop");
@@ -361,12 +361,13 @@ void skull_stop(skull_core_t* core)
     if (!core) return;
 
     sk_engine_stop(core->master);
+
     for (int i = 0; i < core->config->threads; i++) {
         sk_engine_stop(core->workers[i]);
     }
 }
 
-void skull_destroy(skull_core_t* core)
+void sk_core_destroy(sk_core_t* core)
 {
     if (!core) {
         return;
@@ -384,7 +385,6 @@ void skull_destroy(skull_core_t* core)
     free(core->workers);
 
     sk_logger_destroy(core->logger);
-    // destroy log templates
     sk_log_tpl_destroy(core->info_log_tpl);
     sk_log_tpl_destroy(core->warn_log_tpl);
     sk_log_tpl_destroy(core->error_log_tpl);

@@ -69,7 +69,7 @@ void sk_mon_inc(sk_mon_t* sk_mon, const char* name, double value)
                   &new_value, sizeof(new_value));
 
         sk_print("metrics inc: %s - %f, thread name: %s\n",
-                 name, value, SK_THREAD_ENV->name);
+                 name, value, SK_ENV->name);
     }
     pthread_mutex_unlock(&sk_mon->lock);
 }
@@ -121,7 +121,7 @@ void sk_mon_foreach(sk_mon_t* sk_mon, sk_mon_cb cb, void* ud)
         while((value = fhash_next(&iter))) {
             sk_print("metrics cb: %s - %f, thread name: %s\n",
                      (const char*)iter.key, *(double*)value,
-                     SK_THREAD_ENV->name);
+                     SK_ENV->name);
 
             cb(iter.key, *(double*)value, ud);
         }
