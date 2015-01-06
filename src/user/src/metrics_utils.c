@@ -26,13 +26,13 @@ void skull_metric_foreach(skull_metric_each metric_cb, void* ud)
     sk_mon_foreach(core->mon, metric_cb, ud);
 
     // iterate master metrics
-    skull_sched_t* master = &core->main_sched;
+    sk_engine_t* master = core->master;
     sk_mon_foreach(master->mon, metric_cb, ud);
 
     // iterate worker metrics
     int threads = core->config->threads;
     for (int i = 0; i < threads; i++) {
-        skull_sched_t* worker = &core->worker_sched[i];
+        sk_engine_t* worker = core->workers[i];
         sk_mon_foreach(worker->mon, metric_cb, ud);
     }
 

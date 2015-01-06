@@ -17,9 +17,9 @@ typedef struct sk_engine_t {
 sk_engine_t* sk_engine_create();
 void sk_engine_destroy(sk_engine_t*);
 
-void sk_engine_start(sk_engine_t*, void* env);
+int sk_engine_start(sk_engine_t*, void* env);
 void sk_engine_stop(sk_engine_t*);
-void sk_engine_wait(sk_engine_t*);
+int sk_engine_wait(sk_engine_t*);
 
 void sk_engine_link(sk_engine_t* src, sk_engine_t* dst);
 

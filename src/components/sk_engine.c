@@ -43,11 +43,9 @@ void* _sk_engine_thread(void* arg)
     return NULL;
 }
 
-void sk_engine_start(sk_engine_t* engine, void* env)
+int sk_engine_start(sk_engine_t* engine, void* env)
 {
-    int ret = pthread_create(&engine->io_thread, NULL, _sk_engine_thread, env);
-    SK_ASSERT_MSG(ret, "sk engine start failed, ret: %d, errno: %d\n",
-                  ret, errno);
+    return pthread_create(&engine->io_thread, NULL, _sk_engine_thread, env);
 }
 
 void sk_engine_stop(sk_engine_t* engine)
@@ -55,9 +53,9 @@ void sk_engine_stop(sk_engine_t* engine)
     sk_print("sk engine stop\n");
 }
 
-void sk_engine_wait(sk_engine_t* engine)
+int sk_engine_wait(sk_engine_t* engine)
 {
-    pthread_join(engine->io_thread, NULL);
+    return pthread_join(engine->io_thread, NULL);
 }
 
 void sk_engine_link(sk_engine_t* src, sk_engine_t* dst)

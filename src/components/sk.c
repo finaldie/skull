@@ -26,48 +26,21 @@
 // INTERNAL APIs
 
 static
-sk_thread_env_t* _sk_env_create(skull_core_t* core,
-                                          skull_sched_t* worker_sched,
-                                          const char* name,
-                                          int idx)
-{
-    sk_thread_env_t* thread_env = calloc(1, sizeof(*thread_env));
-    thread_env->core = core;
-    thread_env->sched = worker_sched;
-
-    snprintf(thread_env->name, SK_ENV_NAME_LEN, "%s", name);
-    thread_env->idx = idx;
-
-    return thread_env;
-}
-
-static
 void _skull_setup_schedulers(skull_core_t* core)
 {
     sk_config_t* config = core->config;
 
     // create main scheduler
-    skull_sched_t* main_sched = &core->main_sched;
-    main_sched->evlp = sk_eventloop_create();
-    main_sched->entity_mgr = sk_entity_mgr_create(65535);
-    main_sched->mon = sk_mon_create();
-    main_sched->sched = sk_sched_create(main_sched->evlp,
-                                        main_sched->entity_mgr);
+    core->master = sk_engine_create();
 
     // create worker schedulers
-    core->worker_sched = calloc((size_t)config->threads, sizeof(skull_sched_t));
+    core->workers = calloc((size_t)config->threads, sizeof(sk_engine_t*));
 
     for (int i = 0; i < config->threads; i++) {
-        skull_sched_t* worker_sched = &core->worker_sched[i];
-
-        worker_sched->evlp = sk_eventloop_create();
-        worker_sched->entity_mgr = sk_entity_mgr_create(65535);
-        worker_sched->sched = sk_sched_create(worker_sched->evlp,
-                                              worker_sched->entity_mgr);
-        worker_sched->mon = sk_mon_create();
+        core->workers[i] = sk_engine_create();
         SK_LOG_INFO(core->logger, "worker scheduler [%d] init successfully", i);
 
-        sk_sched_setup_bridge(main_sched->sched, worker_sched->sched);
+        sk_engine_link(core->master, core->workers[i]);
         SK_LOG_INFO(core->logger, "io bridge [%d] init successfully", i);
     }
 
@@ -91,7 +64,7 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
 }
 
 static
-void _setup_net_trigger(skull_sched_t* sched, sk_workflow_t* workflow)
+void _setup_net_trigger(sk_engine_t* sched, sk_workflow_t* workflow)
 {
     fev_state* fev = sched->evlp;
     int listen_fd = workflow->trigger.network.listen_fd;
@@ -110,8 +83,8 @@ void _skull_setup_trigger(skull_core_t* core, sk_workflow_t* workflow)
 
     if (workflow->type == SK_WORKFLOW_TRIGGER) {
         // setup main evloop
-        skull_sched_t* main_sched = &core->main_sched;
-        _setup_net_trigger(main_sched, workflow);
+        sk_engine_t* master = core->master;
+        _setup_net_trigger(master, workflow);
     }
 
     SK_LOG_INFO(core->logger, "set up triggers successfully");
@@ -253,7 +226,7 @@ void _skull_init_log(skull_core_t* core)
     // create a thread env for the main thread, this is necessary since during
     // the phase of loading modules, user may log something, if the thread_env
     // does not exist, the logs will be dropped
-    sk_thread_env_t* env = _sk_env_create(core, NULL, "main", 0);
+    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "main", 0);
     sk_thread_env_set(env);
 
     SK_LOG_INFO(core->logger, "skull logger initialization successfully");
@@ -349,25 +322,23 @@ void skull_start(skull_core_t* core)
     sk_print("skull engine starting...\n");
 
     // 2.
-    skull_sched_t* main_sched = &core->main_sched;
+    sk_engine_t* master = core->master;
     // this *main_thread_env* will be deleted when thread exit
-    sk_thread_env_t* main_thread_env = _sk_env_create(core, main_sched,
-                                                      "master", 0);
-    int ret = pthread_create(&main_sched->io_thread, NULL,
-                             main_io_thread, main_thread_env);
+    sk_thread_env_t* master_env = sk_thread_env_create(core, master,
+                                                       "master", 0);
+    int ret = sk_engine_start(master, master_env);
     if (ret) {
-        sk_print("create main io thread failed, errno: %d\n", errno);
+        sk_print("create master io thread failed, errno: %d\n", errno);
         exit(ret);
     }
 
     // 3.
     for (int i = 0; i < config->threads; i++) {
-        skull_sched_t* worker_sched = &core->worker_sched[i];
+        sk_engine_t* worker = core->workers[i];
         // this *worker_thread_env* will be deleted when thread exit
-        sk_thread_env_t* worker_thread_env = _sk_env_create(core, worker_sched,
-                                                            "worker", i);
-        ret = pthread_create(&worker_sched->io_thread, NULL,
-                             worker_io_thread, worker_thread_env);
+        sk_thread_env_t* worker_env = sk_thread_env_create(core, worker,
+                                                           "worker", i);
+        int ret = sk_engine_start(worker, worker_env);
         if (ret) {
             sk_print("create worker io thread failed, errno: %d\n", errno);
             exit(ret);
@@ -377,32 +348,51 @@ void skull_start(skull_core_t* core)
 
     // 4. wait them quit
     for (int i = 0; i < config->threads; i++) {
-        pthread_join(core->worker_sched[i].io_thread, NULL);
+        sk_engine_wait(core->workers[i]);
     }
-    pthread_join(main_sched->io_thread, NULL);
+    sk_engine_wait(master);
 }
 
 void skull_stop(skull_core_t* core)
 {
     sk_print("skull engine stoping...\n");
     SK_LOG_INFO(core->logger, "skull engine stop");
+
+    if (!core) return;
+
+    sk_engine_stop(core->master);
     for (int i = 0; i < core->config->threads; i++) {
-        sk_sched_destroy(core->worker_sched[i].sched);
+        sk_engine_stop(core->workers[i]);
+    }
+}
+
+void skull_destroy(skull_core_t* core)
+{
+    if (!core) {
+        return;
     }
 
-    free(core->worker_sched);
-    sk_sched_destroy(core->main_sched.sched);
-    sk_config_destroy(core->config);
-    flist_delete(core->workflows);
-    fhash_str_delete(core->unique_modules);
-    sk_logger_destroy(core->logger);
     sk_mon_destroy(core->mon);
     sk_mon_destroy(core->umon);
 
+    sk_config_destroy(core->config);
+
+    sk_engine_destroy(core->master);
+    for (int i = 0; i < core->config->threads; i++) {
+        sk_engine_destroy(core->workers[i]);
+    }
+    free(core->workers);
+
+    sk_logger_destroy(core->logger);
     // destroy log templates
     sk_log_tpl_destroy(core->info_log_tpl);
     sk_log_tpl_destroy(core->warn_log_tpl);
     sk_log_tpl_destroy(core->error_log_tpl);
     sk_log_tpl_destroy(core->fatal_log_tpl);
-}
 
+    flist_delete(core->workflows);
+
+    fhash_str_delete(core->unique_modules);
+
+    free((void*)core->working_dir);
+}

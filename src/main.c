@@ -13,7 +13,7 @@ void _print_usage()
 }
 
 static
-void _read_commands(int argc, char** argv, skull_cmd_args_t* cmd_args)
+void _read_commands(int argc, char** argv, sk_cmd_args_t* cmd_args)
 {
     if (argc == 1) {
         _print_usage();
@@ -36,7 +36,7 @@ void _read_commands(int argc, char** argv, skull_cmd_args_t* cmd_args)
 }
 
 static
-void _check_args(skull_cmd_args_t* cmd_args)
+void _check_args(sk_cmd_args_t* cmd_args)
 {
     if (NULL == cmd_args->config_location) {
         fprintf(stderr, "empty configuraton\n");
@@ -54,5 +54,7 @@ int main(int argc, char** argv)
 
     skull_init(&core);
     skull_start(&core);
+
+    skull_destroy(&core);
     return 0;
 }
