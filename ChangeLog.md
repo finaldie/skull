@@ -1,3 +1,6 @@
+* 2015-01-06 0.2.4
+   * replace skull_sched_t with sk_engine_t
+   * replace skull_core_t with sk_core_t
 * 2015-01-03 0.2.3
    * re-structure the local deployment folder structure, make it cleaner
 * 2014-12-28 0.2.2
