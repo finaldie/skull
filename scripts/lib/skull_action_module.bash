@@ -8,8 +8,6 @@
 # 2. Change the main config
 function action_module()
 {
-    _preload_language_actions
-
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
 
     # parse the command args
@@ -58,49 +56,6 @@ function action_module_usage()
     echo "  skull module -h|--help"
 }
 
-function _preload_language_actions()
-{
-    # Load Language action scripts, for now, we only have C language
-    for lang_dir in $SKULL_ROOT/share/skull/lang/*;
-    do
-        if [ -d $lang_dir ]; then
-            . $lang_dir/lib/skull_actions.bash
-        fi
-    done
-}
-
-function _get_language_list()
-{
-    local langs
-    local idx=0
-
-    for lang_dir in $SKULL_ROOT/share/skull/lang/*;
-    do
-        if [ -d $lang_dir ]; then
-            local lang_name=`basename $lang_dir`
-            langs[$idx]=$lang_name
-            idx=`expr $idx + 1`
-        fi
-    done
-
-    echo ${langs[*]}
-}
-
-function _check_language()
-{
-    local langs=$1
-    local input_lang=$2
-
-    for lang in "$langs"; do
-        if [ "$lang" = "$input_lang" ]; then
-            return 0
-        fi
-    done
-
-    echo "Fatal: module add failed, input the correct language" >&2
-    return 1
-}
-
 # module name must be in [0-9a-zA-Z_]
 function _check_module_name()
 {
@@ -117,9 +72,9 @@ function _check_module_name()
         return 1
     fi
 
-    if [ -d $SKULL_PROJ_ROOT/components/modules/$module_name ]; then
-        echo "Error: module [$module_name] has already exist, change to another name" >&2
-        return 1
+    if [ -d "$SKULL_PROJ_ROOT/src/modules/$module_name" ]; then
+        echo "Warn: Found the module [$module_name] has already exist, please" \
+            " make sure its a valid module" >&2
     fi
 
     return 0
@@ -155,20 +110,26 @@ function _action_module_add()
         fi
     done
 
-    while true; do
-        read -p "which language the module belongs to?($lang_names) " language
+    # 3. Add basic folder structure if the target module does not exist
+    if [ ! -d "$SKULL_PROJ_ROOT/src/modules/$module" ]; then
+        # NOTES: currently, we only support C language
+        while true; do
+            read -p "which language the module belongs to?($lang_names) " language
 
-        # verify the language valid or not
-        if $(_check_language $langs $language); then
-            break;
-        fi
-    done
+            # verify the language valid or not
+            if $(_check_language $langs $language); then
+                break;
+            fi
+        done
 
-    # 3. Add basic folder structure
-    # NOTES: currently, we only support C language
-    action_${language}_add $module
+        action_${language}_module_add $module
+    fi
 
     # 4. Add module into main config
     $SKULL_ROOT/bin/skull-workflow.py -m add_module -c $skull_conf -M $module -i $workflow_idx
+
+    # 5. add common folder
+    action_${language}_common_create
+
     echo "module [$module] added successfully"
 }

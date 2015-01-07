@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "api/sk_utils.h"
-#include "api/sk.h"
+#include "api/sk_core.h"
 
 static
 void _print_usage()
@@ -13,7 +13,7 @@ void _print_usage()
 }
 
 static
-void _read_commands(int argc, char** argv, skull_cmd_args_t* cmd_args)
+void _read_commands(int argc, char** argv, sk_cmd_args_t* cmd_args)
 {
     if (argc == 1) {
         _print_usage();
@@ -36,7 +36,7 @@ void _read_commands(int argc, char** argv, skull_cmd_args_t* cmd_args)
 }
 
 static
-void _check_args(skull_cmd_args_t* cmd_args)
+void _check_args(sk_cmd_args_t* cmd_args)
 {
     if (NULL == cmd_args->config_location) {
         fprintf(stderr, "empty configuraton\n");
@@ -47,12 +47,14 @@ void _check_args(skull_cmd_args_t* cmd_args)
 
 int main(int argc, char** argv)
 {
-    skull_core_t core;
+    sk_core_t core;
     memset(&core, 0, sizeof(core));
     _read_commands(argc, argv, &core.cmd_args);
     _check_args(&core.cmd_args);
 
-    skull_init(&core);
-    skull_start(&core);
+    sk_core_init(&core);
+    sk_core_start(&core);
+
+    sk_core_destroy(&core);
     return 0;
 }

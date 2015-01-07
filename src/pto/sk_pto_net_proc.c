@@ -11,6 +11,7 @@
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
 #include "api/sk_env.h"
+#include "api/sk_metrics.h"
 #include "api/sk_sched.h"
 
 #define SK_MAX_COOKIE_LEN 256
@@ -61,6 +62,15 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     } else {
         sk_print("write data sz:%zu\n", packed_data_sz);
         sk_entity_write(entity, packed_data, packed_data_sz);
+
+        // record metrics
+        sk_metrics_worker.response.inc(1);
+        sk_metrics_global.response.inc(1);
+
+        unsigned long long alivetime = sk_txn_alivetime(txn);
+        sk_print("txn time: %llu\n", alivetime);
+        sk_metrics_worker.latency.inc((uint32_t)alivetime);
+        sk_metrics_global.latency.inc((uint32_t)alivetime);
     }
 
     // 4. the transcation is over, destroy sk_txn structure

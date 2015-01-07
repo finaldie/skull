@@ -11,7 +11,12 @@ flibs:
 protos:
 	cd src && $(MAKE) $@
 
-dep: flibs protos
+metrics:
+	cd config && ../tools/sk-metrics-gen.py -c metrics.yaml
+	mv config/sk_metrics.h src/api
+	mv config/sk_metrics.c src/common
+
+dep: flibs protos metrics
 
 core:
 	cd src && $(MAKE)
@@ -22,8 +27,13 @@ check:
 valgrind-check:
 	cd tests && $(MAKE) $@
 
-install: install_scripts install_others
-	cd src && $(MAKE) $@
+install: install_core install_scripts install_api install_others
+
+install_core:
+	cd src && $(MAKE) install
+
+install_api:
+	cd src/user && $(MAKE) install
 
 install_others:
 	test -d $(prefix)/etc/skull || mkdir -p $(prefix)/etc/skull

@@ -11,8 +11,8 @@ function _skull_create()
     # build the basic workspace folder structure
     mkdir -p $workspace
     mkdir -p $workspace/.skull
-    mkdir -p $workspace/components/modules
-    mkdir -p $workspace/components/common
+    mkdir -p $workspace/src/modules
+    mkdir -p $workspace/src/common
     mkdir -p $workspace/scripts
     mkdir -p $workspace/tests
     mkdir -p $workspace/config
@@ -20,7 +20,6 @@ function _skull_create()
 
     # copy templates to the target workspace
     cp $SKULL_ROOT/share/skull/Makefile.tpl $workspace/Makefile
-    cp $SKULL_ROOT/share/skull/Makefile.inc $workspace/components/common/Makefile.inc
     cp $SKULL_ROOT/share/skull/ChangeLog.md.tpl $workspace/ChangeLog.md
     cp $SKULL_ROOT/share/skull/README.md.tpl $workspace/README.md
     cp -R $SKULL_ROOT/share/skull/bin/* $workspace/bin

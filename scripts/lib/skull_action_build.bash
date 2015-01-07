@@ -4,6 +4,9 @@
 #
 # NOTES: This is included by the main script `skull`
 
+# For build actions, we will do it as much as careful
+set -e
+
 function action_build()
 {
     # Fork and move to the top level of the project to do the build
@@ -11,6 +14,8 @@ function action_build()
     # all the args will be passed to the main Makefile(e.g. 'CC=clang').
     (
         cd $SKULL_PROJ_ROOT
+
+        action_metrics --gen
         make $@
     )
 }

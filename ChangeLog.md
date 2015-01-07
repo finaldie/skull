@@ -1,3 +1,18 @@
+* 2015-01-06 0.2.5
+   * replace skull_sched_t with sk_engine_t
+   * replace skull_core_t with sk_core_t
+* 2015-01-03 0.2.3
+   * re-structure the local deployment folder structure, make it cleaner
+* 2014-12-28 0.2.2
+   * **user:** Rename `components` folder to `src`
+   * **user:** Fix few config and makefile issues
+* 2014-12-28 0.2.1
+   * Add skull metrics apis
+   * Add skull user metrics apis
+   * Add metrics generator both for engine and user
+   * Done the integration with skull-admin-c module
+* 2014-11-11 0.2.0
+   * Initialization 0.2.0
 * 2014-11-07 0.1.2
    * Upgrade flibs to 0.6.5
 * 2014-11-06 0.1.1

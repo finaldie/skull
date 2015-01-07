@@ -14,6 +14,7 @@ function print_usage()
     echo " \_ skull create project_name"
     echo " \_ skull workflow"
     echo " \_ skull module"
+    echo " \_ skull metrics"
     echo " \_ skull build"
     echo " \_ skull deploy"
     echo " \_ skull start"
@@ -45,9 +46,11 @@ function prepare()
 
     # 2. Load the lib scripts
     . $SKULL_ROOT/lib/skull/skull_env.bash
+    . $SKULL_ROOT/lib/skull/skull_utils.bash
     . $SKULL_ROOT/lib/skull/skull_action_create.bash
     . $SKULL_ROOT/lib/skull/skull_action_workflow.bash
     . $SKULL_ROOT/lib/skull/skull_action_module.bash
+    . $SKULL_ROOT/lib/skull/skull_action_metrics.bash
     . $SKULL_ROOT/lib/skull/skull_action_build.bash
     . $SKULL_ROOT/lib/skull/skull_action_deploy.bash
     . $SKULL_ROOT/lib/skull/skull_action_start.bash
@@ -65,6 +68,9 @@ function prepare()
         echo "Fatal: Not a skull project" >&2
         exit 1
     fi
+
+    # 4. load language scripts
+    _preload_language_actions
 }
 
 ###################################### MAIN ####################################
@@ -83,7 +89,7 @@ case "$1" in
 
         action_$entry $@
         ;;
-    (workflow|module|build|deploy|start)
+    (workflow|module|metrics|build|deploy|start)
         prepare true
         entry=$1
         shift

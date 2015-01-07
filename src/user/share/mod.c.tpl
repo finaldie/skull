@@ -1,13 +1,14 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "skull/skull_api.h"
-#include "skull/sk_utils.h"
+#include "skull/api.h"
 #include "skull/sk_txn.h"
+#include "skull_metrics.h"
 
 void module_init()
 {
-    sk_print("module(test): init\n");
+    printf("module(test): init\n");
     SKULL_LOG_TRACE("skull trace log test %d", 1);
     SKULL_LOG_DEBUG("skull debug log test %d", 2);
     SKULL_LOG_INFO(1, "skull info log test %d", 3);
@@ -18,10 +19,8 @@ void module_init()
 
 size_t module_unpack(const char* data, size_t data_sz)
 {
-    SK_ASSERT(data);
-    SK_ASSERT(data_sz);
-
-    sk_print("module_unpack(test): data sz:%zu\n", data_sz);
+    skull_metrics_module.request.inc(1);
+    printf("module_unpack(test): data sz:%zu\n", data_sz);
     SKULL_LOG_INFO(1, "module_unpack(test): data sz:%zu", data_sz);
     return data_sz;
 }
@@ -33,7 +32,7 @@ int module_run(sk_txn_t* txn)
     char* tmp = calloc(1, data_sz + 1);
     memcpy(tmp, data, data_sz);
 
-    sk_print("receive data: %s\n", tmp);
+    printf("receive data: %s\n", tmp);
     SKULL_LOG_INFO(1, "receive data: %s", tmp);
     free(tmp);
     return 0;
@@ -44,7 +43,8 @@ void module_pack(sk_txn_t* txn)
     size_t data_sz = 0;
     const char* data = sk_txn_input(txn, &data_sz);
 
-    sk_print("module_pack(test): data sz:%zu\n", data_sz);
+    skull_metrics_module.response.inc(1);
+    printf("module_pack(test): data sz:%zu\n", data_sz);
     SKULL_LOG_INFO(1, "module_pack(test): data sz:%zu", data_sz);
     sk_txn_output_append(txn, data, data_sz);
 }

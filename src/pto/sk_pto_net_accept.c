@@ -11,6 +11,7 @@
 #include "api/sk_entity.h"
 #include "api/sk_txn.h"
 #include "api/sk_env.h"
+#include "api/sk_metrics.h"
 #include "api/sk_sched.h"
 
 // -----------------------------------------------------------------------------
@@ -18,7 +19,7 @@
 static
 void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 {
-    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
+    sk_sched_t* sched = SK_ENV_SCHED;
     sk_workflow_t* workflow = sk_entity_workflow(entity);
 
     // 1. get the first module, and try to unpack the data
@@ -67,6 +68,9 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 
     // consume the evbuff
     fevbuff_pop(evbuff, consumed);
+
+    sk_metrics_worker.request.inc(1);
+    sk_metrics_global.request.inc(1);
 }
 
 // EventLoop trigger this callback
@@ -94,7 +98,7 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_print("evbuff destroy...\n");
     sk_entity_t* entity = arg;
-    sk_sched_t* sched = SK_THREAD_ENV_SCHED;
+    sk_sched_t* sched = SK_ENV_SCHED;
 
     NetDestroy destroy_msg = NET_DESTROY__INIT;
     sk_sched_push(sched, entity, NULL, SK_PTO_NET_DESTROY, &destroy_msg);
@@ -110,12 +114,15 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 
     NetAccept* accept_msg = proto_msg;
     int client_fd = accept_msg->fd;
-    fev_state* fev = SK_THREAD_ENV_EVENTLOOP;
+    fev_state* fev = SK_ENV_EVENTLOOP;
 
     fev_buff* evbuff = fevbuff_new(fev, client_fd, _read_cb, _error, entity);
     SK_ASSERT(evbuff);
 
     sk_net_entity_create(entity, evbuff);
+
+    sk_metrics_worker.accept.inc(1);
+    sk_metrics_global.connection.inc(1);
     return 0;
 }
 

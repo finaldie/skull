@@ -42,7 +42,7 @@ def process_show():
 
 
 def usage():
-    print "usage: skull-show_workflow.py -m mode -c yaml_file ..."
+    print "usage: skull-workflow.py -m mode -c yaml_file ..."
 
 def create_workflow():
     return {

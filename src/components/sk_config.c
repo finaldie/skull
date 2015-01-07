@@ -212,7 +212,6 @@ void sk_config_print(sk_config_t* config)
     sk_print("thread_num: %d\n", config->threads);
     sk_print("log_name: %s\n", config->log_name);
     sk_print("log_level: %d\n", config->log_level);
-    sk_print("error_log_template: %d\n", config->error_log_template);
 
     sk_workflow_cfg_t* workflow = NULL;
     flist_iter iter = flist_new_iter(config->workflows);
