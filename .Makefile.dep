@@ -1,0 +1,40 @@
+
+# dependency targets
+flibs:
+	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs || exit "$$?"
+
+protos:
+	cd src && $(MAKE) $@
+
+metrics:
+	cd config && ../tools/sk-metrics-gen.py -c metrics.yaml
+	mv config/sk_metrics.h src/api
+	mv config/sk_metrics.c src/common
+
+.PHONY: flibs protos metrics
+
+# install targets
+install_core:
+	cd src && $(MAKE) install
+
+install_api:
+	cd src/user-c && $(MAKE) install
+
+install_others:
+	test -d $(prefix)/etc/skull || mkdir -p $(prefix)/etc/skull
+	cp ChangeLog.md $(prefix)/etc/skull
+
+install_scripts:
+	cd scripts && $(MAKE) install
+
+.PHONY: install_core install_api install_others install_scripts
+
+# clean targets
+
+clean_flibs:
+	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs clean || exit "$$?"
+
+clean_protos:
+	cd src && $(MAKE) $@
+
+.PHONY: clean_dep clean_flibs clean_protos

@@ -54,10 +54,6 @@ prefix ?= /usr/local
 # binaries
 SKULL_ENGINE = skull-engine
 
-# headers
-SKULL_HEADERS = \
-    api/sk_txn.h
-
 # Objs
 COMMON_OBJS = \
     common/sk_loader.o \
@@ -85,9 +81,6 @@ COMPONENTS_OBJS = \
     components/sk_config.o \
     components/sk_engine.o
 
-LOADER_OBJS = \
-    loaders/c_loader.o
-
 PTO_OBJS = \
     pto/sk_pto.o \
     pto/sk_pto_net_accept.o \
@@ -99,9 +92,10 @@ PTO_IDLS_OBJS = \
     pto/idls/net_proc.pb-c.o \
     pto/idls/net_destroy.pb-c.o
 
-USER_OBJS = \
-    user/src/logger_private.o \
-    user/src/metrics_utils.o
+USER_C_OBJS = \
+    user-c/src/logger_private.o \
+    user-c/src/metrics_utils.o \
+    user-c/loader/loader.o
 
 SKULL_MAIN_OBJ = main.o
 
@@ -109,11 +103,10 @@ SKULL_OBJS = \
     $(COMMON_OBJS) \
     $(ENTITY_OBJS) \
     $(COMPONENTS_OBJS) \
-    $(LOADER_OBJS) \
     $(SKULL_MAIN_OBJ) \
     $(PTO_OBJS) \
     $(PTO_IDLS_OBJS) \
-    $(USER_OBJS)
+    $(USER_C_OBJS)
 
 PROTO_IDLS = \
     net_accept.proto \
@@ -142,8 +135,6 @@ protos: $(PROTO_IDLS)
 install:
 	test -d $(prefix)/bin || mkdir -p $(prefix)/bin
 	test -x $(SKULL_ENGINE) && cp $(SKULL_ENGINE) $(prefix)/bin
-	test -d $(prefix)/include/skull || mkdir -p $(prefix)/include/skull
-	cp $(SKULL_HEADERS) $(prefix)/include/skull
 
 clean:
 	rm -f $(SKULL_ENGINE) $(SKULL_OBJS)
