@@ -5,7 +5,17 @@
 #include "api/sk_utils.h"
 #include "api/sk_loader.h"
 
-#define SK_C_MODULE_FULLNAME_MAXLEN 1024
+#define SK_MODULE_INIT_FUNCNAME   "module_init"
+#define SK_MODULE_RUN_FUNCNAME    "module_run"
+#define SK_MODULE_UNPACK_FUNCNAME "module_unpack"
+#define SK_MODULE_PACK_FUNCNAME   "module_pack"
+
+// Every module has the same file structure:
+// module
+//  \_ config.yaml
+//  \_ mod.so (or mod.lua ...)
+#define SK_MODULE_CONFIG_NAME "config.yaml"
+#define SK_MODULE_PREFIX_NAME "libskull-modules-"
 
 typedef struct sk_c_mdata {
     void* handle;
@@ -33,7 +43,7 @@ sk_module_t* sk_c_module_open(const char* filename)
     }
 
     // create module and its private data
-    sk_c_mdata* md = malloc(sizeof(*md));
+    sk_c_mdata* md = calloc(1, sizeof(*md));
     md->handle = handle;
 
     sk_module_t* module = calloc(1, sizeof(*module));
