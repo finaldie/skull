@@ -1,10 +1,6 @@
 #ifndef SKULL_LOGGER_PRIVATE_H
 #define SKULL_LOGGER_PRIVATE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -35,10 +31,6 @@ const char* skull_log_error_msg(int log_id);
 const char* skull_log_error_solution(int log_id);
 const char* skull_log_fatal_msg(int log_id);
 const char* skull_log_fatal_solution(int log_id);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 

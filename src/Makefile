@@ -13,7 +13,7 @@ MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE
 INC = \
     -I. \
     -I../deps/flibs \
-    -Iuser/include/ \
+    -Iuser-c/include/ \
     -isystem./pto/idls
 
 ifeq ($(debug), false)
@@ -95,7 +95,8 @@ PTO_IDLS_OBJS = \
 USER_C_OBJS = \
     user-c/src/logger_private.o \
     user-c/src/metrics_utils.o \
-    user-c/loader/loader.o
+    user-c/src/loader.o \
+    user-c/src/txn.o
 
 SKULL_MAIN_OBJ = main.o
 

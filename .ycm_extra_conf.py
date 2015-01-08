@@ -71,7 +71,7 @@ flags = [
 '-I',
 './src/',
 '-I',
-'./src/user/include',
+'./src/user-c/include',
 '-I',
 './deps/flibs',
 '-I',

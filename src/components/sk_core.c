@@ -207,7 +207,7 @@ void _sk_module_init(sk_core_t* core)
     while ((module = fhash_str_next(&iter))) {
         sk_print("module [%s] init...\n", module->name);
         sk_logger_setcookie("module.%s", module->name);
-        module->sk_module_init();
+        module->init(module->md);
         sk_logger_setcookie(SK_CORE_LOG_COOKIE);
     }
 }

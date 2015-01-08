@@ -24,7 +24,7 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 
     // 1. get the first module, and try to unpack the data
     sk_module_t* first_module = sk_workflow_first_module(workflow);
-    SK_ASSERT_MSG(first_module->sk_module_unpack, "missing unpack callback\n");
+    SK_ASSERT_MSG(first_module->unpack, "missing unpack callback\n");
 
     // 2. calculate how many bytes we need to read
     size_t used_len = fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
@@ -44,7 +44,8 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 
     // 3. try to unpack the user data
     const void* data = fevbuff_rawget(evbuff);
-    size_t consumed = first_module->sk_module_unpack(data, (size_t)bytes);
+    size_t consumed = first_module->unpack(first_module->md, data,
+                                           (size_t)bytes);
     if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", bytes);
