@@ -1,3 +1,8 @@
+* 2015-01-09 0.3.1
+   * **user:** Add `skull/txn.h` instead of `skull/sk_txn.h`
+   * **user:** Fix add module folders incorrect issue
+   * **user:** Fix add common folder failure issue due to set language incorrectly
+   * **user:** Refactor user-c folder structure
 * 2015-01-06 0.2.5
    * replace skull_sched_t with sk_engine_t
    * replace skull_core_t with sk_core_t
