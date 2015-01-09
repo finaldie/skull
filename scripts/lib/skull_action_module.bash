@@ -110,18 +110,18 @@ function _action_module_add()
         fi
     done
 
+    # NOTES: currently, we only support C language
+    while true; do
+        read -p "which language the module belongs to?($lang_names) " language
+
+        # verify the language valid or not
+        if $(_check_language $langs $language); then
+            break;
+        fi
+    done
+
     # 3. Add basic folder structure if the target module does not exist
     if [ ! -d "$SKULL_PROJ_ROOT/src/modules/$module" ]; then
-        # NOTES: currently, we only support C language
-        while true; do
-            read -p "which language the module belongs to?($lang_names) " language
-
-            # verify the language valid or not
-            if $(_check_language $langs $language); then
-                break;
-            fi
-        done
-
         action_${language}_module_add $module
     fi
 
