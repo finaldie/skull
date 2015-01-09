@@ -13,15 +13,15 @@ LANGUAGE_PATH=share/skull/lang/c
 function action_c_module_add()
 {
     local module=$1
-    if [ -d src/modules/$module ]; then
+    if [ -d $SKULL_PROJ_ROOT/src/modules/$module ]; then
         echo "Notice: the module [$module] has already exist"
         return 1
     fi
 
     # add module folder and files
-    mkdir -p src/modules/$module/src
-    mkdir -p src/modules/$module/tests
-    mkdir -p src/modules/$module/config
+    mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/src
+    mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/tests
+    mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/config
 
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/mod.c.tpl src/modules/$module/src/mod.c
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/config.yaml.tpl src/modules/$module/config/config.yaml
@@ -35,7 +35,7 @@ function action_c_module_add()
     return 0
 }
 
-COMMON_FILE_LOCATION=src/common/c
+COMMON_FILE_LOCATION=$SKULL_PROJ_ROOT/src/common/c
 
 function action_c_common_create()
 {
