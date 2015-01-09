@@ -1,3 +1,5 @@
+* 2015-01-09 0.3.2
+   * Integrate with travis CI
 * 2015-01-09 0.3.1
    * **user:** Add `skull/txn.h` instead of `skull/sk_txn.h`
    * **user:** Fix add module folders incorrect issue
