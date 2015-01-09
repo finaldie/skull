@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/finaldie/skull.svg?branch=0.3)](https://travis-ci.org/finaldie/skull)
+
 skull
 =====
 
