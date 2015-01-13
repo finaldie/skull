@@ -21,8 +21,8 @@ install: install_core install_scripts install_api install_others
 clean:
 	cd src && $(MAKE) $@
 
-clean_dep: clean_flibs clean_protos
+clean-dep: clean-flibs clean-protos
 
-.PHONY: all dep core check valgrind-check install clean clean_dep
+.PHONY: all dep core check valgrind-check install clean clean-dep
 
 include .Makefile.dep

@@ -1,7 +1,9 @@
 #ifndef SK_CONFIG_H
 #define SK_CONFIG_H
 
-#include "flist/flist.h"
+#include <netinet/in.h>
+
+#include "flibs/flist.h"
 #include "api/sk_module.h"
 
 #define SK_CONFIG_LOCATION_LEN    1024
@@ -16,9 +18,10 @@
 
 typedef struct sk_workflow_cfg_t {
     int concurrent;
-    int port;
+    in_port_t port;
+    short _reserved; // useless, for padding
 
-    flist* modules; // store module names
+    flist* modules;  // store module names
 } sk_workflow_cfg_t;
 
 typedef struct sk_config_t {

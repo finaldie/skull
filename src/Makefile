@@ -12,7 +12,7 @@ LDFLAGS += -Wl,-E
 MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE
 INC = \
     -I. \
-    -I../deps/flibs \
+    -I../deps/flibs/include \
     -Iuser-c/include/ \
     -isystem./pto/idls
 
@@ -25,7 +25,7 @@ MACRO += -DSK_DEBUG -O0 -finstrument-functions
 endif
 
 # linking flags
-DEPS_LDFLAGS = -L../deps/flibs/final_libraries/lib
+DEPS_LDFLAGS = -L../deps/flibs/lib
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(SHARED) $(OTHER) $(INC)
 SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(OPT) $(SHARED) $(OTHER) $(DEPS_LDFLAGS)
@@ -37,7 +37,7 @@ SKULL_LIBS = \
     -lfhash \
     -lfmbuf \
     -lflist \
-    -lftimer \
+    -lftime \
     -lprotobuf-c \
     -pthread \
     -ldl \

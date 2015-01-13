@@ -2,7 +2,7 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "fhash/fhash.h"
+#include "flibs/fhash.h"
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_mon.h"

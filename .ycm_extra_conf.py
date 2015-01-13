@@ -73,7 +73,7 @@ flags = [
 '-I',
 './src/user-c/include',
 '-I',
-'./deps/flibs',
+'./deps/flibs/include',
 '-I',
 './tests/',
 '-isystem',

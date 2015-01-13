@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "fev/fev.h"
-#include "fev/fev_buff.h"
+#include "flibs/fev.h"
+#include "flibs/fev_buff.h"
 #include "api/sk_utils.h"
 #include "api/sk_event.h"
 #include "api/sk_pto.h"

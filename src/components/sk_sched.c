@@ -6,8 +6,8 @@
 #include <sys/eventfd.h>
 #include <google/protobuf-c/protobuf-c.h>
 
-#include "fmbuf/fmbuf.h"
-#include "fev/fev.h"
+#include "flibs/fmbuf.h"
+#include "flibs/fev.h"
 
 #include "api/sk_utils.h"
 #include "api/sk_pto.h"

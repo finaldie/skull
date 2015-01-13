@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "fev/fev.h"
+#include "flibs/fev.h"
 
 #define SK_EVENTLOOP_MAX_EVENTS 65535
 

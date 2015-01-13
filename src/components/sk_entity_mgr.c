@@ -2,8 +2,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "fhash/fhash.h"
-#include "flist/flist.h"
+#include "flibs/fhash.h"
+#include "flibs/flist.h"
 #include "api/sk_utils.h"
 #include "api/sk_entity_mgr.h"
 

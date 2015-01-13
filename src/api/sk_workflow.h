@@ -1,7 +1,9 @@
 #ifndef SK_WORKFLOW_H
 #define SK_WORKFLOW_H
 
-#include "flist/flist.h"
+#include <netinet/in.h>
+
+#include "flibs/flist.h"
 #include "api/sk_module.h"
 
 #define SK_WORKFLOW_NONCONCURRENT 0
@@ -26,7 +28,7 @@ typedef struct sk_workflow_t {
     flist* modules; // sk_module_t list
 } sk_workflow_t;
 
-sk_workflow_t* sk_workflow_create(int concurrent, int port);
+sk_workflow_t* sk_workflow_create(int concurrent, in_port_t port);
 void sk_workflow_destroy(sk_workflow_t* workflow);
 
 // @return 0 if success or non-zero if failure

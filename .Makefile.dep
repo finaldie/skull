@@ -1,7 +1,7 @@
 
 # dependency targets
 flibs:
-	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs || exit "$$?"
+	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs -j4 || exit "$$?"
 
 protos:
 	cd src && $(MAKE) $@
@@ -14,27 +14,27 @@ metrics:
 .PHONY: flibs protos metrics
 
 # install targets
-install_core:
+install-core:
 	cd src && $(MAKE) install
 
-install_api:
+install-api:
 	cd src/user-c && $(MAKE) install
 
-install_others:
+install-others:
 	test -d $(prefix)/etc/skull || mkdir -p $(prefix)/etc/skull
 	cp ChangeLog.md $(prefix)/etc/skull
 
-install_scripts:
+install-scripts:
 	cd scripts && $(MAKE) install
 
-.PHONY: install_core install_api install_others install_scripts
+.PHONY: install-core install-api install-others install-scripts
 
 # clean targets
 
-clean_flibs:
+clean-flibs:
 	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs clean || exit "$$?"
 
-clean_protos:
+clean-protos:
 	cd src && $(MAKE) $@
 
-.PHONY: clean_dep clean_flibs clean_protos
+.PHONY: clean_flibs clean_protos

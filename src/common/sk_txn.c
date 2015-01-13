@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fmbuf/fmbuf.h"
-#include "ftimer/ftimer.h"
+#include "flibs/flist.h"
+#include "flibs/fmbuf.h"
+#include "flibs/ftime.h"
 
 #include "api/sk_workflow.h"
 #include "api/sk_sched.h"

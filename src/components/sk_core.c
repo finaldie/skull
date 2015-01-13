@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <libgen.h>
 
-#include "fnet/fnet_core.h"
-#include "fev/fev.h"
-#include "fev/fev_listener.h"
+#include "flibs/fnet.h"
+#include "flibs/fev.h"
+#include "flibs/fev_listener.h"
 
 #include "api/sk_types.h"
 #include "api/sk_utils.h"
