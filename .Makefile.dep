@@ -1,7 +1,7 @@
 
 # dependency targets
 flibs:
-	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs -j4 || exit "$$?"
+	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs || exit "$$?"
 
 protos:
 	cd src && $(MAKE) $@
