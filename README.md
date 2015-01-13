@@ -33,34 +33,41 @@ make debug=true -j4
 sudo make install
 ```
 
-## Start with a Skull Project
-Now, skull environment has been set up, so let's create a Skull project and play
-with it.
+## A Quick Demo
+After you installed skull into your system, you can run the following steps to
+create your skull project.
 
-### Create Skull Project
+### Create a skull project
 ```
-skull create test_proj
-```
-
-### Add a Module
-```
-skull module --add
-```
-
-### Build Skull Project
-```
+skull create project
+cd project
+skull module -add # then input $module_name, $workflow_index and $language
 skull build
-```
-
-### Deploy Skull Project
-```
 skull deploy
-
-```
-
-### Start Skull
-```
 skull start
 ```
 
+**notes:** By default, the new module with a example code which is used for echo-back message
+
+### Play with skull
+```
+telnet localhost 7758
+Trying ::1...
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+hello skull
+hello skull
+have fun :)
+have fun :)
+
+```
+
+## Exsiting Modules
+Module Name | Descrption
+------------+-----------
+[Admin Module][1] | This is a example module for showing the metrics
+
 ## Frequent Questions
+
+[1]: https://github.com/finaldie/skull-admin-c
