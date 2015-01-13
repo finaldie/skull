@@ -30,7 +30,7 @@ make debug=true -j4
 
 ### Install Skull and its related Scripts
 ```
-sudo make install
+make install
 ```
 
 ## A Quick Demo
