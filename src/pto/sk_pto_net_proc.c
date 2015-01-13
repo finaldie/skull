@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "fev/fev_buff.h"
+#include "flibs/fev_buff.h"
 #include "api/sk_utils.h"
 #include "api/sk_const.h"
 #include "api/sk_event.h"
@@ -30,7 +30,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_logger_setcookie("module.%s", module->name);
 
     // run the module
-    int ret = module->sk_module_run(txn);
+    int ret = module->run(module->md, txn);
     sk_print("module execution return code=%d\n", ret);
 
     // after module exit, set back the module name
@@ -51,7 +51,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     }
 
     // 3. pack the data, and send the response if needed
-    module->sk_module_pack(txn);
+    module->pack(module->md, txn);
 
     size_t packed_data_sz = 0;
     const char* packed_data = sk_txn_output(txn, &packed_data_sz);

@@ -7,6 +7,7 @@ extern "C" {
 
 #include <skull/logger.h>
 #include <skull/metrics_utils.h>
+#include <skull/txn.h>
 
 #ifdef __cplusplus
 }

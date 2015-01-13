@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "fmbuf/fmbuf.h"
+#include "flibs/fmbuf.h"
 #include "api/sk_utils.h"
 #include "api/sk_io.h"
 

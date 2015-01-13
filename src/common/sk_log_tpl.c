@@ -2,7 +2,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "fhash/fhash.h"
+#include "flibs/fhash.h"
 #include "api/sk_utils.h"
 #include "api/sk_config_loader.h"
 #include "api/sk_log_tpl.h"

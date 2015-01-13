@@ -1,8 +1,8 @@
 #ifndef SK_CONFIG_LOADER_H
 #define SK_CONFIG_LOADER_H
 
-#include "fhash/fhash.h"
-#include "flist/flist.h"
+#include "flibs/fhash.h"
+#include "flibs/flist.h"
 
 typedef enum sk_cfg_node_type_t {
     SK_CFG_NODE_VALUE = 0,   // a value of integer or string...

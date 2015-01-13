@@ -1,0 +1,30 @@
+language: c
+
+compiler:
+    - clang
+    - gcc
+
+before_install:
+    - uname -a
+    - cat /etc/issue
+    - sudo apt-get update -qq
+    - sudo apt-get install valgrind libyaml-dev libprotobuf-c0 libprotobuf-c0-dev protobuf-c-compiler python-yaml
+
+install: true
+
+before_script: true
+
+script:
+    - make -j4 dep
+    - make -j4 && make clean
+    - make debug=true -j4 && make clean
+
+after_success: make install
+
+after_script: true
+
+after_failure: true
+
+notifications:
+    email:
+      - hyzwowtools@gmail.com

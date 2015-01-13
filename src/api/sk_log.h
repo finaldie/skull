@@ -3,7 +3,7 @@
 
 #include <stdarg.h>
 #include <stdbool.h>
-#include "flog/flog.h"
+#include "flibs/flog.h"
 
 // SK Logger helper macros
 #define SK_LOG_TRACE(logger, ...) FLOG_TRACE(logger, __VA_ARGS__);

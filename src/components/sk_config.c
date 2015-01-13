@@ -2,7 +2,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "flog/flog.h"
+#include "flibs/flog.h"
 
 #include "api/sk_utils.h"
 #include "api/sk_config_loader.h"
@@ -102,7 +102,11 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
             } else if (0 == strcmp(key, "concurrent")) {
                 workflow->concurrent = sk_config_getint(child);
             } else if (0 == strcmp(key, "port")) {
-                workflow->port = sk_config_getint(child);
+                int port = sk_config_getint(child);
+                SK_ASSERT_MSG(port > 0 && port <= 65535, "port[%d] should be "
+                              "in (0, 65535]\n", port);
+
+                workflow->port = (in_port_t)port;
             }
         }
         fhash_str_iter_release(&item_iter);

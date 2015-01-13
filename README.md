@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/finaldie/skull.svg?branch=0.3)](https://travis-ci.org/finaldie/skull)
+
 skull
 =====
 
@@ -8,7 +10,7 @@ Use Ubuntu14.04 as an example.
 
 ### Install dependencies
 ```
-apt-get install libyaml-dev libpcap0.8-dev libpcap0.8 libprotobuf-c0 libprotobuf-c0-dev python-yaml
+apt-get install libyaml-dev libpcap0.8-dev libpcap0.8 libprotobuf-c0 libprotobuf-c0-dev protobuf-c-compiler python-yaml
 
 git clone git@github.com:finaldie/skull.git
 cd skull

@@ -3,18 +3,6 @@
 
 #include "api/sk_module.h"
 
-#define SK_MODULE_INIT_FUNCNAME   "module_init"
-#define SK_MODULE_RUN_FUNCNAME    "module_run"
-#define SK_MODULE_UNPACK_FUNCNAME "module_unpack"
-#define SK_MODULE_PACK_FUNCNAME   "module_pack"
-
-// Every module has the same file structure:
-// module
-//  \_ config.yaml
-//  \_ mod.so (or mod.lua ...)
-#define SK_MODULE_CONFIG_NAME "config.yaml"
-#define SK_MODULE_PREFIX_NAME "libskull-modules-"
-
 typedef struct sk_loader_t {
     // module loader type
     sk_mtype_t type;

@@ -1,8 +1,8 @@
 #ifndef SK_CORE_H
 #define SK_CORE_H
 
-#include "flist/flist.h"
-#include "fhash/fhash.h"
+#include "flibs/flist.h"
+#include "flibs/fhash.h"
 
 #include "api/sk_config.h"
 #include "api/sk_log.h"

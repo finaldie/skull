@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "flog/flog.h"
+#include "flibs/flog.h"
 #include "api/sk_utils.h"
 #include "api/sk_const.h"
 #include "api/sk_env.h"
@@ -10,7 +10,7 @@
 
 // INTERNAL APIs
 static
-void _skull_log_notification_cb(FLOG_EVENT event)
+void _skull_log_notification_cb(flog_event_t event)
 {
     switch (event) {
     case FLOG_EVENT_ERROR_WRITE:

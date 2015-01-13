@@ -18,10 +18,10 @@ typedef struct sk_module_t {
     int         padding;
 #endif
 
-    void   (*sk_module_init)();
-    int    (*sk_module_run)(struct sk_txn_t* txn);
-    size_t (*sk_module_unpack)(const void* data, size_t data_len);
-    void   (*sk_module_pack)(struct sk_txn_t* txn);
+    void   (*init)   (void* md);
+    int    (*run)    (void* md, struct sk_txn_t* txn);
+    size_t (*unpack) (void* md, const void* data, size_t data_len);
+    void   (*pack)   (void* md, struct sk_txn_t* txn);
 } sk_module_t;
 
 #endif

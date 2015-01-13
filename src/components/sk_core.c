@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <libgen.h>
 
-#include "fnet/fnet_core.h"
-#include "fev/fev.h"
-#include "fev/fev_listener.h"
+#include "flibs/fnet.h"
+#include "flibs/fev.h"
+#include "flibs/fev_listener.h"
 
 #include "api/sk_types.h"
 #include "api/sk_utils.h"
@@ -207,7 +207,7 @@ void _sk_module_init(sk_core_t* core)
     while ((module = fhash_str_next(&iter))) {
         sk_print("module [%s] init...\n", module->name);
         sk_logger_setcookie("module.%s", module->name);
-        module->sk_module_init();
+        module->init(module->md);
         sk_logger_setcookie(SK_CORE_LOG_COOKIE);
     }
 }

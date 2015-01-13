@@ -5,17 +5,6 @@ MAKE_FLAGS += "--no-print-directory"
 
 all: core
 
-flibs:
-	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs || exit "$$?"
-
-protos:
-	cd src && $(MAKE) $@
-
-metrics:
-	cd config && ../tools/sk-metrics-gen.py -c metrics.yaml
-	mv config/sk_metrics.h src/api
-	mv config/sk_metrics.c src/common
-
 dep: flibs protos metrics
 
 core:
@@ -29,26 +18,11 @@ valgrind-check:
 
 install: install_core install_scripts install_api install_others
 
-install_core:
-	cd src && $(MAKE) install
-
-install_api:
-	cd src/user && $(MAKE) install
-
-install_others:
-	test -d $(prefix)/etc/skull || mkdir -p $(prefix)/etc/skull
-	cp ChangeLog.md $(prefix)/etc/skull
-
-install_scripts:
-	cd scripts && $(MAKE) install
-
-clean: clean_dep clean_protos
+clean:
 	cd src && $(MAKE) $@
 
-clean_dep:
-	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs clean || exit "$$?"
+clean-dep: clean-flibs clean-protos
 
-clean_protos:
-	cd src && $(MAKE) $@
+.PHONY: all dep core check valgrind-check install clean clean-dep
 
-.PHONY: all dep clean clean_dep clean_protos core check valgrind-check install flibs protos install_scripts
+include .Makefile.dep

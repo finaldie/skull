@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "fnet/fnet_core.h"
+#include "flibs/fnet.h"
 #include "api/sk_utils.h"
 #include "api/sk_loader.h"
 #include "api/sk_workflow.h"
@@ -14,7 +14,7 @@ sk_workflow_t* _workflow_create()
     return workflow;
 }
 
-sk_workflow_t* sk_workflow_create(int concurrent, int port)
+sk_workflow_t* sk_workflow_create(int concurrent, in_port_t port)
 {
     sk_workflow_t* workflow = _workflow_create();
     workflow->concurrent = concurrent;
@@ -23,7 +23,7 @@ sk_workflow_t* sk_workflow_create(int concurrent, int port)
         workflow->type = SK_WORKFLOW_TRIGGER;
         workflow->trigger.network.port = port;
         workflow->trigger.network.listen_fd =
-            fnet_create_listen(NULL, port, 1024, 0);
+            fnet_listen(NULL, port, 1024, 0);
     } else {
         workflow->type = SK_WORKFLOW_MAIN;
     }
