@@ -112,9 +112,10 @@ void _sk_setup_workflow(sk_core_t* core)
         char* module_name = NULL;
         while ((module_name = flist_each(&name_iter))) {
             sk_print("loading module: %s\n", module_name);
-            // 1. load the module
-            // 2. add the module into workflow
-            // 3. store it to the unique module list
+            // 1. Load the module
+            // 2. Add the module into workflow
+            // 3. Store it to the unique module list to avoid load one module
+            //    twice
 
             // 1.
             // TODO: use current folder as the default module location
