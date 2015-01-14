@@ -65,7 +65,7 @@ have fun :)
 
 ## Exsiting Modules
 Module Name | Descrption
-------------+-----------
+------------|-----------
 [Admin Module][1] | This is a example module for showing the metrics
 
 ## Frequent Questions
