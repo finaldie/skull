@@ -18,14 +18,9 @@ git submodule update --init --recursive
 make dep
 ```
 
-### Build Release Version
+### Build
 ```
 make -j4
-```
-
-### Build Debug Version
-```
-make debug=true -j4
 ```
 
 ### Install Skull and its related Scripts
