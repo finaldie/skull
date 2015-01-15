@@ -4,17 +4,11 @@
 #include <netinet/in.h>
 
 #include "flibs/flist.h"
+#include "api/sk_types.h"
 #include "api/sk_module.h"
 
-#define SK_WORKFLOW_NONCONCURRENT 0
-#define SK_WORKFLOW_CONCURRENT    1
-
-// the type of workflow
-#define SK_WORKFLOW_MAIN    0
-#define SK_WORKFLOW_TRIGGER 1
-
 typedef struct sk_workflow_t {
-    int type;
+    sk_workflow_type_t type;
     int concurrent;
 
     union {

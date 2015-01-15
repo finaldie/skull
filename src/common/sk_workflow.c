@@ -22,8 +22,7 @@ sk_workflow_t* sk_workflow_create(int concurrent, in_port_t port)
     if (port) {
         workflow->type = SK_WORKFLOW_TRIGGER;
         workflow->trigger.network.port = port;
-        workflow->trigger.network.listen_fd =
-            fnet_listen(NULL, port, 1024, 0);
+        workflow->trigger.network.listen_fd = fnet_listen(NULL, port, 1024, 0);
     } else {
         workflow->type = SK_WORKFLOW_MAIN;
     }
