@@ -42,17 +42,19 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     }
 
     // 2. check whether is the last module:
-    // if no, send a event for next module
-    // if yes, pack
+    // 2.1 if no, send a event for next module
     if (!sk_txn_is_last_module(txn)) {
         sk_print("doesn't reach the last module\n");
         sk_sched_push(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
         return 0;
     }
 
-    // 3. pack the data, and send the response if needed
-    module->pack(module->md, txn);
+    // 2.2 no pack function means no need to send response
+    if (!module->pack) {
+        goto module_exit;
+    }
 
+    // 3. pack the data, and send the response if needed
     size_t packed_data_sz = 0;
     const char* packed_data = sk_txn_output(txn, &packed_data_sz);
     sk_print("module packed data size=%zu\n", packed_data_sz);
@@ -73,6 +75,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
         sk_metrics_global.latency.inc((uint32_t)alivetime);
     }
 
+module_exit:
     // 4. the transcation is over, destroy sk_txn structure
     sk_print("txn destroy\n");
     sk_txn_destroy(txn);

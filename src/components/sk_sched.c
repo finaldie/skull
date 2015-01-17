@@ -292,6 +292,7 @@ int _emit_event(sk_sched_t* sched, sk_io_type_t io_type, sk_entity_t* entity,
     event.pto_id = pto_id;
     event.entity = entity;
     event.txn = txn;
+
     if (proto_msg) {
         event.sz = protobuf_c_message_get_packed_size(proto_msg);
         event.data = malloc(event.sz);
