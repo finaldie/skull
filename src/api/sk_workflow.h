@@ -4,25 +4,18 @@
 #include <netinet/in.h>
 
 #include "flibs/flist.h"
-#include "api/sk_types.h"
 #include "api/sk_module.h"
 
 typedef struct sk_workflow_t {
-    sk_workflow_type_t type;
+    flist* modules; // sk_module_t list
     int concurrent;
 
-    union {
-        // when the type == SK_WORKFLOW_TRIGGER
-        struct {
-            int port;
-            int listen_fd;
-        } network;
-    } trigger;
-
-    flist* modules; // sk_module_t list
+#if __WORDSIZE == 64
+    int padding;
+#endif
 } sk_workflow_t;
 
-sk_workflow_t* sk_workflow_create(int concurrent, in_port_t port);
+sk_workflow_t* sk_workflow_create(int concurrent);
 void sk_workflow_destroy(sk_workflow_t* workflow);
 
 // @return 0 if success or non-zero if failure

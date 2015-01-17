@@ -12,10 +12,5 @@ typedef union sk_ud_t {
     void*    ud;
 } sk_ud_t;
 
-typedef enum sk_workflow_type_t {
-    SK_WORKFLOW_MAIN = 0,
-    SK_WORKFLOW_TRIGGER
-} sk_workflow_type_t;
-
 #endif
 

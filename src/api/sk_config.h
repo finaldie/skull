@@ -10,10 +10,11 @@
 #define SK_CONFIG_LOCATION_LEN    1024
 #define SK_CONFIG_LOGNAME_LEN	  1024
 
+#define SK_CONFIG_NO_PORT         -1
+
 typedef struct sk_workflow_cfg_t {
     int concurrent;
-    in_port_t port;
-    short _reserved; // useless, for padding
+    int port;
 
     flist* modules;  // store module names
 } sk_workflow_cfg_t;

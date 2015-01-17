@@ -12,6 +12,7 @@ static
 sk_workflow_cfg_t* _create_workflow_cfg()
 {
     sk_workflow_cfg_t* workflow = calloc(1, sizeof(*workflow));
+    workflow->port = SK_CONFIG_NO_PORT;
     workflow->modules = flist_create();
     return workflow;
 }
@@ -106,7 +107,7 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
                 SK_ASSERT_MSG(port > 0 && port <= 65535, "port[%d] should be "
                               "in (0, 65535]\n", port);
 
-                workflow->port = (in_port_t)port;
+                workflow->port = port;
             }
         }
         fhash_str_iter_release(&item_iter);

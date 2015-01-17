@@ -74,6 +74,11 @@ ENTITY_OBJS = \
     entities/sk_entity.o \
     entities/sk_net_entity.o
 
+TRIGGER_OBJS = \
+    triggers/sk_trigger.o \
+    triggers/sk_trigger_immedia.o \
+    triggers/sk_trigger_sock.o
+
 COMPONENTS_OBJS = \
     components/sk_sched.o \
     components/sk_core.o \
@@ -103,6 +108,7 @@ SKULL_MAIN_OBJ = main.o
 SKULL_OBJS = \
     $(COMMON_OBJS) \
     $(ENTITY_OBJS) \
+    $(TRIGGER_OBJS) \
     $(COMPONENTS_OBJS) \
     $(SKULL_MAIN_OBJ) \
     $(PTO_OBJS) \
