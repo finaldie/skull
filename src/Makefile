@@ -140,7 +140,7 @@ install:
 clean:
 	rm -f $(SKULL_ENGINE) $(SKULL_OBJS)
 
-clean_protos:
+clean-protos:
 	rm -f pto/idls/*.pb-c.*
 
-.PHONY: skull clean install protos clean_protos
+.PHONY: skull clean install protos clean-protos
