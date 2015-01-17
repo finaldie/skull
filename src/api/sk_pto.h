@@ -1,7 +1,6 @@
 #ifndef SK_PTO_H
 #define SK_PTO_H
 
-#include <stdint.h>
 #include "api/sk_entity.h"
 #include "api/sk_txn.h"
 
@@ -43,10 +42,10 @@ typedef struct sk_proto_t {
 #define SK_PTO_NET_ACCEPT 0
 extern sk_proto_t sk_pto_net_accept;
 
-// Protocol 2, net process
-#include "pto/idls/net_proc.pb-c.h"
-#define SK_PTO_NET_PROC   1
-extern sk_proto_t sk_pto_net_proc;
+// Protocol 2, run the workflow
+#include "pto/idls/workflow_run.pb-c.h"
+#define SK_PTO_WORKFLOW_RUN   1
+extern sk_proto_t sk_pto_workflow_run;
 
 // Protocol 3, net process
 #include "pto/idls/net_destroy.pb-c.h"

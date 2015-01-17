@@ -46,7 +46,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // if yes, pack
     if (!sk_txn_is_last_module(txn)) {
         sk_print("doesn't reach the last module\n");
-        sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, NULL);
+        sk_sched_push(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
         return 0;
     }
 
@@ -80,8 +80,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     return 0;
 }
 
-sk_proto_t sk_pto_net_proc = {
+sk_proto_t sk_pto_workflow_run = {
     .priority = SK_PTO_PRI_5,
-    .descriptor = &net_proc__descriptor,
+    .descriptor = &workflow_run__descriptor,
     .run = _run
 };

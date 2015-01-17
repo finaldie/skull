@@ -65,7 +65,7 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
     sk_entity_inc_task_cnt(entity);
 
     // 6. prepare and send a workflow processing event
-    sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, NULL);
+    sk_sched_push(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
 
     // consume the evbuff
     fevbuff_pop(evbuff, consumed);
