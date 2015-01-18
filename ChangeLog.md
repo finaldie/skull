@@ -1,3 +1,9 @@
+* 2015-01-18 0.4.1
+   * Add sk_triggers both for passive and proactive type
+   * Rename the net_proc protocol to workflow_run
+   * Fix the clean-dep
+   * Fix `skull module -add` cannot be ran except the top of project
+   * Fix the coredump in proactive trigger and workflow_run
 * 2015-01-13 0.3.3
    * Integrate with flibs 0.7.4
 * 2015-01-09 0.3.2
