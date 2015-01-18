@@ -26,7 +26,10 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
-    SK_ASSERT(module);
+    if (!module) {
+        SK_LOG_ERROR(SK_ENV_LOGGER, "no module in this workflow, skip it");
+        goto module_exit;
+    }
 
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
