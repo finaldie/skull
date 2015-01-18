@@ -22,6 +22,7 @@ void sk_workflow_destroy(sk_workflow_t* workflow);
 int sk_workflow_add_module(sk_workflow_t* workflow, sk_module_t* module);
 sk_module_t* sk_workflow_first_module(sk_workflow_t* workflow);
 sk_module_t* sk_workflow_last_module(sk_workflow_t* workflow);
+int sk_workflow_module_cnt(sk_workflow_t*);
 
 #endif
 

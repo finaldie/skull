@@ -40,3 +40,19 @@ sk_module_t* sk_workflow_last_module(sk_workflow_t* workflow)
 {
     return flist_tail(workflow->modules);
 }
+
+int sk_workflow_module_cnt(sk_workflow_t* workflow)
+{
+    if (flist_empty(workflow->modules)) {
+        return 0;
+    }
+
+    flist_iter iter = flist_new_iter(workflow->modules);
+    sk_module_t* module = NULL;
+    int module_cnt = 0;
+    while ((module = flist_each(&iter))) {
+        module_cnt++;
+    }
+
+    return module_cnt;
+}

@@ -1,6 +1,5 @@
 #include <stdlib.h>
 
-#include <flibs/flist.h>
 #include "api/sk_utils.h"
 #include "api/sk_pto.h"
 #include "api/sk_trigger.h"
@@ -22,8 +21,8 @@ void _trigger_immedia_run(sk_trigger_t* trigger)
     sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
     sk_entity_inc_task_cnt(entity);
 
-    if (flist_empty(workflow->modules)) {
-        sk_print("there is no modules for the workflow, skip to run\n");
+    if (0 == sk_workflow_module_cnt(workflow)) {
+        sk_print("there is no module for the workflow, skip to run\n");
         return;
     }
 
