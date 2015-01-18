@@ -1,6 +1,8 @@
 #include <stdlib.h>
 
+#include <flibs/flist.h>
 #include "api/sk_utils.h"
+#include "api/sk_pto.h"
 #include "api/sk_trigger.h"
 
 static
@@ -12,7 +14,20 @@ void _trigger_immedia_create(sk_trigger_t* trigger, sk_workflow_cfg_t* cfg)
 static
 void _trigger_immedia_run(sk_trigger_t* trigger)
 {
-    return;
+    sk_engine_t* engine = trigger->engine;
+    sk_sched_t* sched = engine->sched;
+    sk_workflow_t* workflow = trigger->workflow;
+
+    sk_entity_t* entity = sk_entity_create(workflow);
+    sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
+    sk_entity_inc_task_cnt(entity);
+
+    if (flist_empty(workflow->modules)) {
+        sk_print("there is no modules for the workflow, skip to run\n");
+        return;
+    }
+
+    sk_sched_send(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
 }
 
 static

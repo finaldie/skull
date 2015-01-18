@@ -22,8 +22,11 @@
 static
 int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
+    SK_ASSERT(sched && entity && txn);
+
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
+    SK_ASSERT(module);
 
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
@@ -59,7 +62,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     const char* packed_data = sk_txn_output(txn, &packed_data_sz);
     sk_print("module packed data size=%zu\n", packed_data_sz);
 
-    if (!packed_data) {
+    if (!packed_data || !packed_data_sz) {
         sk_print("module no need to send response\n");
     } else {
         sk_print("write data sz:%zu\n", packed_data_sz);

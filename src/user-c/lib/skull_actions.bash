@@ -23,11 +23,11 @@ function action_c_module_add()
     mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/tests
     mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/config
 
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/mod.c.tpl src/modules/$module/src/mod.c
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/config.yaml.tpl src/modules/$module/config/config.yaml
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/src/mod.c
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/config.yaml.tpl $SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
 
     # copy makefiel templates
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.tpl src/modules/$module/Makefile
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.tpl $SKULL_PROJ_ROOT/src/modules/$module/Makefile
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.inc.tpl $SKULL_PROJ_ROOT/.Makefile.inc.c
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_PROJ_ROOT/.Makefile.targets.c
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.targets.tpl $SKULL_PROJ_ROOT/.Makefile.common.targets.c

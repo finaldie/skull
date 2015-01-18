@@ -12,7 +12,7 @@ EXTRA += -Winline -Wdisabled-optimization -fPIC
 EXTRA += -fstack-protector
 
 # Enable the following line to build a strong program
-#EXTRA += -pedantic -Wpadded -Wconversion
+EXTRA += -pedantic -Wpadded -Wconversion
 
 SHARED = -shared
 MACRO = -D_POSIX_C_SOURCE=200809L

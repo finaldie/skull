@@ -278,8 +278,9 @@ void sk_core_start(sk_core_t* core)
     SK_LOG_INFO(core->logger, "skull engine start");
 
     // 3. start triggers
+    flist_iter iter = flist_new_iter(core->triggers);
     sk_trigger_t* trigger = NULL;
-    while ((trigger = flist_pop(core->triggers))) {
+    while ((trigger = flist_each(&iter))) {
         sk_trigger_run(trigger);
     }
 
