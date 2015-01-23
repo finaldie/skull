@@ -61,6 +61,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     }
 
     // 3. pack the data, and send the response if needed
+    module->pack(module->md, txn);
+
     size_t packed_data_sz = 0;
     const char* packed_data = sk_txn_output(txn, &packed_data_sz);
     sk_print("module packed data size=%zu\n", packed_data_sz);
