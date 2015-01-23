@@ -1,14 +1,30 @@
 # This is the bash script for C language
 # NOTES: This script must implement the following functions:
+#  - `action_$lang_module_valid`
 #  - `action_$lang_module_add`
 #  - `action_$lang_common_create`
 #  - `action_$lang_gen_metrics`
+#  - `action_$lang_gen_config`
 #
 # NOTES2: before running any methods in file, skull will change the current
 # folder to the top of the project `SKULL_PROJECT_ROOT`, so it's no need to
 # change it again manually
 
 LANGUAGE_PATH=share/skull/lang/c
+
+# return:
+#  - 0 if this is a valid C module
+#  - 1 if this is not a valid C module
+function action_c_module_valid()
+{
+    # for now, just check whether there is mod.c exist
+    local module=$1
+    if [ -f $SKULL_PROJ_ROOT/src/modules/$module/src/mod.c ]; then
+        return 0
+    else
+        return 1
+    fi
+}
 
 function action_c_module_add()
 {
@@ -32,6 +48,9 @@ function action_c_module_add()
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_PROJ_ROOT/.Makefile.targets.c
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.targets.tpl $SKULL_PROJ_ROOT/.Makefile.common.targets.c
 
+    # convert config to code
+    action_c_gen_config $SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
+
     return 0
 }
 
@@ -52,6 +71,9 @@ function action_c_common_create()
     if [ ! -f $COMMON_FILE_LOCATION/Makefile ]; then
         cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.tpl $COMMON_FILE_LOCATION/Makefile
     fi
+
+    # generate the metrics
+    action_c_gen_metrics $SKULL_METRICS_FILE
 }
 
 function action_c_gen_metrics()
@@ -63,4 +85,27 @@ function action_c_gen_metrics()
     $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-metrics-gen.py -c $config \
         -h $COMMON_FILE_LOCATION/src/skull_metrics.h \
         -s $COMMON_FILE_LOCATION/src/skull_metrics.c
+}
+
+function action_c_gen_config()
+{
+    local config=$1
+    local confdir=`dirname $config`
+    local targetdir=$confdir/../src
+    local tmpdir=/tmp
+
+    # TODO: compare the md5 of the new metrics and old metrics' files, do not to
+    # replace them if they are same, it will reduce the compiling time
+    $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-config-gen.py -c $config \
+        -h $tmpdir/config.h \
+        -s $tmpdir/config.c
+
+    # if the new config.x are different from the old ones, replace them
+    if ! $(_compare_file $targetdir/config.h $tmpdir/config.h); then
+        cp $tmpdir/config.h $targetdir/config.h
+    fi
+
+    if ! $(_compare_file $targetdir/config.c $tmpdir/config.c); then
+        cp $tmpdir/config.c $targetdir/config.c
+    fi
 }

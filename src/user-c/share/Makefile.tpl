@@ -11,7 +11,8 @@ TEST_DEPS_LIBS +=
 
 # Objs and deployment related items
 SRCS = \
-    src/mod.c
+    src/mod.c \
+    src/config.c
 
 TEST_SRCS =
 

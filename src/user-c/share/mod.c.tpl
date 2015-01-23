@@ -4,6 +4,7 @@
 
 #include "skull/api.h"
 #include "skull_metrics.h"
+#include "config.h"
 
 void module_init()
 {
@@ -14,6 +15,10 @@ void module_init()
     SKULL_LOG_WARN(1, "skull warn log test %d", 4);
     SKULL_LOG_ERROR(1, "skull error log test %d", 5);
     SKULL_LOG_FATAL(1, "skull fatal log test %d", 6);
+
+    SKULL_LOG_DEBUG("config test_item: %d, type: %d",
+                     skull_config.test_item,
+                     skull_config.test_item_type);
 }
 
 size_t module_unpack(const void* data, size_t data_sz)
