@@ -1,3 +1,6 @@
+* 2015-01-25 0.4.2
+   * **New:** Add module configure file support (C API)
+   * **Fix:** Fix the workflow_run missing `pack` data issue
 * 2015-01-18 0.4.1
    * Add sk_triggers both for passive and proactive type
    * Rename the net_proc protocol to workflow_run
