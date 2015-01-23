@@ -19,3 +19,10 @@ function action_build()
         make $@
     )
 }
+
+function action_build_usage()
+{
+    echo "usage:"
+    echo "  skull build"
+    echo "  skull build clean"
+}

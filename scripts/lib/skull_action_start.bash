@@ -12,3 +12,9 @@ function action_start()
         ./bin/skull-start.sh $deploy_dir/skull-config.yaml
     )
 }
+
+function action_start_usage()
+{
+    echo "usage:"
+    echo "  skull start"
+}

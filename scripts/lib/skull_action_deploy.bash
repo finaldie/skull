@@ -51,6 +51,12 @@ function action_deploy()
 
 }
 
+function action_deploy_usage()
+{
+    echo "usage:"
+    echo "  skull deploy"
+}
+
 function _action_deploy_dev()
 {
     # Fork a process to do the deployment, since we will change the working

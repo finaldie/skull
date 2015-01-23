@@ -46,3 +46,10 @@ function action_create()
     _skull_create $workspace
     echo "create skull workspace done"
 }
+
+function action_create_usage()
+{
+    echo "usage:"
+    echo "  skull create project"
+    echo "  skull create ./"
+}

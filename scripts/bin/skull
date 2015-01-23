@@ -11,7 +11,7 @@ SKULL_ROOT=
 function print_usage()
 {
     echo "usage:"
-    echo " \_ skull create project_name"
+    echo " \_ skull create"
     echo " \_ skull workflow"
     echo " \_ skull module"
     echo " \_ skull metrics"
@@ -19,6 +19,7 @@ function print_usage()
     echo " \_ skull deploy"
     echo " \_ skull start"
     echo " \_ skull version"
+    echo " \_ skull help"
 }
 
 # Get the skull scripts root directory folder, it should be run only once
@@ -45,7 +46,6 @@ function prepare()
     get_root
 
     # 2. Load the lib scripts
-    . $SKULL_ROOT/lib/skull/skull_env.bash
     . $SKULL_ROOT/lib/skull/skull_utils.bash
     . $SKULL_ROOT/lib/skull/skull_action_create.bash
     . $SKULL_ROOT/lib/skull/skull_action_workflow.bash
@@ -69,7 +69,11 @@ function prepare()
         exit 1
     fi
 
-    # 4. load language scripts
+
+    # 4. load the env variables
+    . $SKULL_ROOT/lib/skull/skull_env.bash
+
+    # 5. load language scripts
     _preload_language_actions
 }
 
@@ -98,6 +102,14 @@ case "$1" in
         # the "xxx" is the command arg, for example: user run `skull workflow`,
         # so the action_workflow will be called
         action_$entry $@
+        ;;
+    (help)
+        shift
+        prepare false
+        entry=$1
+        shift
+
+        action_${entry}_usage
         ;;
     (*)
         echo "Error: Unknown command parameter $1" >&2
