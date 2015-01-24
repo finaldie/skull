@@ -3,7 +3,7 @@
 skull
 =====
 
-Fast to start-up, easy to maintain, high productivity server framework.
+Fast to start-up, easy to maintain, high productivity serving framework.
 
 ## How to Build
 Use Ubuntu14.04 as an example.
