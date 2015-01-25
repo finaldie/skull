@@ -8,7 +8,7 @@ LOCAL_SHARE_DIR := share
 SKULL_BIN_DIR := $(prefix)/bin
 SKULL_LIB_DIR := $(prefix)/lib/skull
 SKULL_ETC_DIR := $(prefix)/etc/skull
-SKULL_SHARE_DIR := $(prefix)/share
+SKULL_SHARE_DIR := $(prefix)/share/skull
 
 install: prepare
 	cp -R $(LOCAL_BIN_DIR)/* $(SKULL_BIN_DIR)
