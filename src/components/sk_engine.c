@@ -29,6 +29,7 @@ void sk_engine_destroy(sk_engine_t* engine)
     sk_eventloop_destroy(engine->evlp);
     sk_entity_mgr_destroy(engine->entity_mgr);
     sk_mon_destroy(engine->mon);
+    free(engine);
 }
 
 void* _sk_engine_thread(void* arg)
@@ -51,6 +52,11 @@ int sk_engine_start(sk_engine_t* engine, void* env)
 void sk_engine_stop(sk_engine_t* engine)
 {
     sk_print("sk engine stop\n");
+    if (!engine) {
+        return;
+    }
+
+    sk_sched_stop(engine->sched);
 }
 
 int sk_engine_wait(sk_engine_t* engine)

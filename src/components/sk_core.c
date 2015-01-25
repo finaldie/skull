@@ -66,13 +66,21 @@ void _sk_setup_workflow(sk_core_t* core)
         char* module_name = NULL;
         while ((module_name = flist_each(&name_iter))) {
             sk_print("loading module: %s\n", module_name);
-            // 1. Load the module
-            // 2. Add the module into workflow
-            // 3. Store it to the unique module list to avoid load one module
+
+            // 1. check whether has loaded
+            // 2. Load the module
+            // 3. Add the module into workflow
+            // 4. Store it to the unique module list to avoid load one module
             //    twice
 
             // 1.
-            // TODO: use current folder as the default module location
+            if (fhash_str_get(core->unique_modules, module_name)) {
+                sk_print("we have already loaded this module(%s), skip it\n",
+                         module_name);
+                continue;
+            }
+
+            // 2.
             sk_module_t* module = sk_module_load(module_name);
             if (module) {
                 sk_print("load module [%s] successful\n", module_name);
@@ -84,12 +92,12 @@ void _sk_setup_workflow(sk_core_t* core)
                           module_name);
             }
 
-            // 2.
+            // 3.
             int ret = sk_workflow_add_module(workflow, module);
             SK_ASSERT_MSG(!ret, "add module {%s} to workflow failed\n",
                           module_name);
 
-            // 3.
+            // 4.
             fhash_str_set(core->unique_modules, module_name, module);
         }
 
@@ -311,43 +319,43 @@ void sk_core_destroy(sk_core_t* core)
         return;
     }
 
-    // 1. destroy moniters
-    sk_mon_destroy(core->mon);
-    sk_mon_destroy(core->umon);
-
-    // 2. destroy config
-    sk_config_destroy(core->config);
-
-    // 3. destroy engines
-    sk_engine_destroy(core->master);
-    for (int i = 0; i < core->config->threads; i++) {
-        sk_engine_destroy(core->workers[i]);
-    }
-    free(core->workers);
-
-    // 4. destroy loggers
-    sk_logger_destroy(core->logger);
-    sk_log_tpl_destroy(core->info_log_tpl);
-    sk_log_tpl_destroy(core->warn_log_tpl);
-    sk_log_tpl_destroy(core->error_log_tpl);
-    sk_log_tpl_destroy(core->fatal_log_tpl);
-
-    // 5. destroy workflows
-    sk_workflow_t* workflow = NULL;
-    while ((workflow = flist_pop(core->workflows))) {
-        sk_workflow_destroy(workflow);
-    }
-    flist_delete(core->workflows);
-
-    // 6. destroy triggers
+    // 1. destroy triggers
     sk_trigger_t* trigger = NULL;
     while ((trigger = flist_pop(core->triggers))) {
         sk_trigger_destroy(trigger);
     }
     flist_delete(core->triggers);
 
-    // 7. destroy unique module list
+    // 2. destroy engines
+    sk_engine_destroy(core->master);
+    for (int i = 0; i < core->config->threads; i++) {
+        sk_engine_destroy(core->workers[i]);
+    }
+    free(core->workers);
+
+    // 3. destroy unique module list
     fhash_str_delete(core->unique_modules);
+
+    // 4. destroy moniters
+    sk_mon_destroy(core->mon);
+    sk_mon_destroy(core->umon);
+
+    // 5. destroy config
+    sk_config_destroy(core->config);
+
+    // 6. destroy loggers
+    sk_logger_destroy(core->logger);
+    sk_log_tpl_destroy(core->info_log_tpl);
+    sk_log_tpl_destroy(core->warn_log_tpl);
+    sk_log_tpl_destroy(core->error_log_tpl);
+    sk_log_tpl_destroy(core->fatal_log_tpl);
+
+    // 7. destroy workflows
+    sk_workflow_t* workflow = NULL;
+    while ((workflow = flist_pop(core->workflows))) {
+        sk_workflow_destroy(workflow);
+    }
+    flist_delete(core->workflows);
 
     // 8. destroy working dir string
     free((void*)core->working_dir);

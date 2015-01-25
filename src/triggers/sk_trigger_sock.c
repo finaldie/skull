@@ -15,6 +15,7 @@ typedef struct sk_trigger_sock_data_t {
     short     _reserved;
 
     int listen_fd;
+    fev_listen_info* listener;
 } sk_trigger_sock_data_t;
 
 // this is running on the main scheduler io thread
@@ -56,14 +57,17 @@ void _trigger_sock_run(sk_trigger_t* trigger)
     fev_state* fev = engine->evlp;
     int listen_fd = data->listen_fd;
 
-    fev_listen_info* fli = fev_add_listener_byfd(fev, listen_fd,
-                                                 _sk_accept, trigger);
-    SK_ASSERT(fli);
+    data->listener = fev_add_listener_byfd(fev, listen_fd, _sk_accept, trigger);
+    SK_ASSERT(data->listener);
 }
 
 static
 void _trigger_sock_destroy(sk_trigger_t* trigger)
 {
+    sk_trigger_sock_data_t* data = trigger->data;
+    // notes: no need to close listen_fd again, since fev_del_listener has
+    // already does it
+    fev_del_listener(trigger->engine->evlp, data->listener);
     free(trigger->data);
 }
 

@@ -110,6 +110,11 @@ sk_io_bridge_t* sk_io_bridge_create(sk_sched_t* dst, size_t size)
 static
 void sk_io_bridge_destroy(sk_io_bridge_t* io_bridge)
 {
+    if (!io_bridge) {
+        return;
+    }
+
+    fmbuf_delete(io_bridge->mq);
     close(io_bridge->evfd);
     free(io_bridge);
 }
@@ -334,14 +339,14 @@ sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr)
 
 void sk_sched_destroy(sk_sched_t* sched)
 {
-    for (int i = 0; i < SK_PTO_PRI_SZ; i++) {
-        // destroy io
-        sk_io_destroy(sched->io_tbl[i]);
+    // destroy io bridge
+    for (uint32_t bri_idx = 0; bri_idx < sched->bridge_size; bri_idx++) {
+        sk_io_bridge_destroy(sched->bridge_tbl[bri_idx]);
+    }
 
-        // destroy io bridge
-        for (uint32_t bri_idx = 0; bri_idx < sched->bridge_size; bri_idx++) {
-            sk_io_bridge_destroy(sched->bridge_tbl[bri_idx]);
-        }
+    // destroy io
+    for (int i = 0; i < SK_PTO_PRI_SZ; i++) {
+        sk_io_destroy(sched->io_tbl[i]);
     }
 
     free(sched);
