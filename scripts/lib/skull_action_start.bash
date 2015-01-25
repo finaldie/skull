@@ -9,7 +9,7 @@ function action_start()
 
     (
         cd $deploy_dir
-        ./bin/skull-start.sh $deploy_dir/skull-config.yaml
+        ./bin/skull-start.sh -c $deploy_dir/skull-config.yaml $@
     )
 }
 
@@ -17,4 +17,5 @@ function action_start_usage()
 {
     echo "usage:"
     echo "  skull start"
+    echo "  skull start --memcheck"
 }
