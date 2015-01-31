@@ -54,22 +54,17 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 
     // Now, the one user packge has been unpacked succefully
     // 4. prepare a sk_txn and set the input data
-    // 5. increase the txn reference in entity object
-
-    // 4.
     sk_print("create a new transcation\n");
     sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
     sk_txn_set_input(txn, data, (size_t)bytes);
 
-    // 5.
-    sk_entity_inc_task_cnt(entity);
-
-    // 6. prepare and send a workflow processing event
+    // 5. prepare and send a workflow processing event
     sk_sched_push(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
 
-    // consume the evbuff
+    // 6. consume the evbuff
     fevbuff_pop(evbuff, consumed);
 
+    // 7. update metrics
     sk_metrics_worker.request.inc(1);
     sk_metrics_global.request.inc(1);
 }

@@ -42,11 +42,18 @@ sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
     txn->workflow_idx = flist_new_iter(workflow->modules);
     txn->start_time = fgettime();
 
+    // update the entity ref
+    sk_entity_inc_task_cnt(entity);
     return txn;
 }
 
 void sk_txn_destroy(sk_txn_t* txn)
 {
+    if (!txn) {
+        return;
+    }
+
+    sk_entity_dec_task_cnt(txn->entity);
     fmbuf_delete(txn->output);
     free(txn->input);
     free(txn);

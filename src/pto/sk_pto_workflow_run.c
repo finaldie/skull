@@ -87,7 +87,6 @@ module_exit:
     // 4. the transcation is over, destroy sk_txn structure
     sk_print("txn destroy\n");
     sk_txn_destroy(txn);
-    sk_entity_dec_task_cnt(entity);
     return 0;
 }
 

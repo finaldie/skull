@@ -24,7 +24,6 @@ void _trigger_immedia_run(sk_trigger_t* trigger)
 
     sk_entity_t* entity = sk_entity_create(workflow);
     sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
-    sk_entity_inc_task_cnt(entity);
 
     sk_sched_send(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
 }
