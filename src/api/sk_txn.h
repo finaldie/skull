@@ -33,5 +33,11 @@ int sk_txn_is_last_module(sk_txn_t* txn);
 // sk_txn's alive time from it be created
 unsigned long long sk_txn_alivetime(sk_txn_t* txn);
 
+// set user data
+void sk_txn_setudata(sk_txn_t* txn, void* data);
+
+// get user data
+void* sk_txn_udata(sk_txn_t* txn);
+
 #endif
 
