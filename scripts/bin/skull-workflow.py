@@ -26,6 +26,7 @@ def process_show():
     for workflow in workflows:
         print "workflow [%d]:" % workflow_cnt
         print " - concurrent: %s" % workflow['concurrent']
+        print " - idl: %s" % workflow['idl']
 
         if workflow.get("port"):
             print " - port: %s" % workflow['port']
