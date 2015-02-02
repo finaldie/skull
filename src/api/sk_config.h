@@ -16,7 +16,8 @@ typedef struct sk_workflow_cfg_t {
     int concurrent;
     int port;
 
-    flist* modules;  // store module names
+    const char* idl_name; // workflow idl name
+    flist* modules;       // module name list
 } sk_workflow_cfg_t;
 
 typedef struct sk_config_t {
@@ -34,7 +35,7 @@ typedef struct sk_config_t {
     // log level of flog, from LOG_LEVEL_TRACE(0) - LOG_LEVEL_FATAL(5)
     int log_level;
 
-    // workflows list
+    // sk_workflow_cfg_t list
     flist* workflows;
 } sk_config_t;
 
