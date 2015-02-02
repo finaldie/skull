@@ -144,7 +144,7 @@ def generate_config():
     generate_source()
 
 def usage():
-    print "usage: skull-config-gen.py -c config -h header_file -o source_file"
+    print "usage: skull-config-gen.py -c config -h header_file -s source_file"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
