@@ -4,11 +4,13 @@
 
 #include "api/sk_entity.h"
 #include "api/sk_workflow.h"
+#include "api/sk_txn.h"
 
 struct sk_entity_t {
     struct sk_entity_mgr_t* owner;
-    sk_workflow_t*  workflow;
-    sk_entity_opt_t opt;
+    sk_workflow_t*          workflow;
+    sk_txn_t*               txn;      // used for storing the inactive txn
+    sk_entity_opt_t         opt;
 
     sk_entity_status_t status;
     int   task_cnt;
@@ -51,6 +53,11 @@ void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr)
     entity->owner = mgr;
 }
 
+void sk_entity_settxn(sk_entity_t* entity, sk_txn_t* txn)
+{
+    entity->txn = txn;
+}
+
 void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status)
 {
     entity->status = status;
@@ -64,6 +71,11 @@ struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity)
 sk_workflow_t* sk_entity_workflow(sk_entity_t* entity)
 {
     return entity->workflow;
+}
+
+sk_txn_t* sk_entity_txn(sk_entity_t* entity)
+{
+    return entity->txn;
 }
 
 sk_entity_status_t sk_entity_status(sk_entity_t* entity)

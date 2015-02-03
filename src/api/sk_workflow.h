@@ -5,17 +5,14 @@
 
 #include "flibs/flist.h"
 #include "api/sk_module.h"
+#include "api/sk_config.h"
 
 typedef struct sk_workflow_t {
-    flist* modules; // sk_module_t list
-    int concurrent;
-
-#if __WORDSIZE == 64
-    int padding;
-#endif
+    const sk_workflow_cfg_t* cfg; // config ref
+    flist* modules;               // sk_module_t list
 } sk_workflow_t;
 
-sk_workflow_t* sk_workflow_create(int concurrent);
+sk_workflow_t* sk_workflow_create(const sk_workflow_cfg_t* cfg);
 void sk_workflow_destroy(sk_workflow_t* workflow);
 
 // @return 0 if success or non-zero if failure

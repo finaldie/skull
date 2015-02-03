@@ -13,9 +13,8 @@ typedef enum sk_entity_status_t {
 
 struct sk_entity_mgr_t;
 struct sk_workflow_t;
+struct sk_txn_t;
 typedef struct sk_entity_t sk_entity_t;
-
-typedef uint64_t sk_entity_id_t;
 
 typedef struct sk_entity_opt_t {
     ssize_t (*read)    (sk_entity_t*, void* buf, size_t len, void* ud);
@@ -33,10 +32,11 @@ ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len);
 sk_entity_status_t sk_entity_status(sk_entity_t* entity);
 struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity);
 struct sk_workflow_t* sk_entity_workflow(sk_entity_t* entity);
-sk_entity_id_t sk_entity_id(sk_entity_t* entity);
+struct sk_txn_t* sk_entity_txn(sk_entity_t* entity);
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud);
 void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr);
+void sk_entity_settxn(sk_entity_t* entity, struct sk_txn_t* txn);
 void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status);
 
 // increase the query count
@@ -48,7 +48,7 @@ void sk_entity_dec_task_cnt(sk_entity_t* entity);
 // get task cnt
 int sk_entity_task_cnt(sk_entity_t* entity);
 
-// create network entity from an empty entity
+// create network entity from a base entity
 void sk_net_entity_create(sk_entity_t* entity, void* ud);
 
 #endif

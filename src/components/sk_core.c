@@ -59,7 +59,7 @@ void _sk_setup_workflow(sk_core_t* core)
         SK_LOG_INFO(core->logger, "setup one workflow...");
 
         // set up the type and concurrent
-        sk_workflow_t* workflow = sk_workflow_create(workflow_cfg->concurrent);
+        sk_workflow_t* workflow = sk_workflow_create(workflow_cfg);
 
         // set up modules
         flist_iter name_iter = flist_new_iter(workflow_cfg->modules);

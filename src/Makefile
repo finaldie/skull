@@ -101,7 +101,9 @@ USER_C_OBJS = \
     user-c/src/logger_private.o \
     user-c/src/metrics_utils.o \
     user-c/src/loader.o \
-    user-c/src/txn.o
+    user-c/src/txn.o \
+    user-c/src/idl.o \
+    user-c/src/module_executor.o
 
 SKULL_MAIN_OBJ = main.o
 

@@ -12,10 +12,10 @@ sk_workflow_t* _workflow_create()
     return workflow;
 }
 
-sk_workflow_t* sk_workflow_create(int concurrent)
+sk_workflow_t* sk_workflow_create(const sk_workflow_cfg_t* cfg)
 {
     sk_workflow_t* workflow = _workflow_create();
-    workflow->concurrent = concurrent;
+    workflow->cfg = cfg;
 
     return workflow;
 }

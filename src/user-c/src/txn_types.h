@@ -5,6 +5,7 @@
 
 struct _skull_txn_t {
     sk_txn_t* txn;
+    void* idl;
 };
 
 #endif

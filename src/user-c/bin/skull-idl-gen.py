@@ -15,8 +15,8 @@ source_name = ""
 
 # static
 HEADER_CONTENT_START = "\
-#ifndef SKULL_IDL_H\n\
-#define SKULL_IDL_H\n\
+#ifndef SKULL_IDL_USER_H\n\
+#define SKULL_IDL_USER_H\n\
 \n\
 #include <skull/txn.h>\n\
 \n\

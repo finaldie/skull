@@ -20,7 +20,8 @@ typedef struct sk_module_t {
 
     void   (*init)   (void* md);
     int    (*run)    (void* md, struct sk_txn_t* txn);
-    size_t (*unpack) (void* md, const void* data, size_t data_len);
+    size_t (*unpack) (void* md, struct sk_txn_t* txn,
+                      const void* data, size_t data_len);
     void   (*pack)   (void* md, struct sk_txn_t* txn);
 } sk_module_t;
 
