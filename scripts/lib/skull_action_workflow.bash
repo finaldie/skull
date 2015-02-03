@@ -61,6 +61,7 @@ function _action_workflow_add()
     # prepare add workflow
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
     local concurrent=1
+    local idl=""
     local port=1234
 
     local yn_concurrent=true
@@ -72,13 +73,25 @@ function _action_workflow_add()
         concurrent=0
     fi
 
+    # set idl
+    while true; do
+        read -p "input the idl name: " idl
+
+        if [ -z "$idl" ]; then
+            echo "Error: please input a non-empty idl name" >&2
+        else
+            break
+        fi
+    done
+
     # set the port
     read -p "Need listen on a port? (y/n)" yn_port
     if [ $yn_port = "y" ]; then
         read -p "Input the port you want(1025-65535): " port
     fi
 
-    $SKULL_ROOT/bin/skull-workflow.py -m add_workflow -c $skull_conf -C $concurrent -p $port
+    $SKULL_ROOT/bin/skull-workflow.py -m add_workflow -c $skull_conf \
+        -C $concurrent -i $idl -p $port
 }
 
 function action_workflow_show()

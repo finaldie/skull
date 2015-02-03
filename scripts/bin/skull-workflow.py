@@ -23,6 +23,11 @@ def process_show():
     workflows = yaml_obj['workflows']
     workflow_cnt = 0
 
+    if workflows is None:
+        print "no workflow"
+        print "note: run 'skull workflow --add' to create a new workflow"
+        return
+
     for workflow in workflows:
         print "workflow [%d]:" % workflow_cnt
         print " - concurrent: %s" % workflow['concurrent']
@@ -41,13 +46,13 @@ def process_show():
 
     print "total %d workflows" % (workflow_cnt)
 
-
 def usage():
     print "usage: skull-workflow.py -m mode -c yaml_file ..."
 
-def create_workflow():
+def _create_workflow():
     return {
     'concurrent' : 1,
+    'idl': "",
     'port' : 1234,
     'modules' : []
     }
@@ -57,27 +62,47 @@ def process_add_workflow():
     global config_name
 
     try:
-        opts, args = getopt.getopt(sys.argv[5:], 'C:p:')
+        # 1. update the skull config
+        opts, args = getopt.getopt(sys.argv[5:], 'C:i:p:')
 
         workflow_concurrent = 1
         workflow_port = 1234
+        workflow_idl = ""
 
         for op, value in opts:
             if op == "-C":
                 workflow_concurrent = int(value)
+            elif op == "-i":
+                workflow_idl = value
             elif op == "-p":
                 workflow_port = int(value)
 
         # Now add these workflow_x to yaml obj and dump it
-        workflow_frame = create_workflow()
+        workflow_frame = _create_workflow()
         workflow_frame['concurrent'] = workflow_concurrent
+        workflow_frame['idl'] = workflow_idl
         workflow_frame['port'] = workflow_port
-        yaml_obj['workflows'].append(workflow_frame)
 
+        # create if the workflows list do not exist
+        if yaml_obj['workflows'] is None:
+            yaml_obj['workflows'] = []
+
+        yaml_obj['workflows'].append(workflow_frame)
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
+        # 2. generate the protobuf file into config
+        proto_file_name = "%s.proto" % workflow_idl
+        proto_file = file(proto_file_name, 'w')
+        content = "package skull;\n\n"
+        content += "message %s {\n" % workflow_idl
+        content += "    required bytes data = 1;\n"
+        content += "}\n"
+
+        proto_file.write(content)
+        proto_file.close()
+
     except Exception, e:
-        print "Fatal: process_add: " + str(e)
+        print "Fatal: process_add_workflow: " + str(e)
         usage()
         sys.exit(1)
 
@@ -104,7 +129,7 @@ def process_add_module():
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
     except Exception, e:
-        print "Fatal: process_add: " + str(e)
+        print "Fatal: process_add_module: " + str(e)
         usage()
         sys.exit(1)
 
