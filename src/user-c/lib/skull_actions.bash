@@ -5,6 +5,7 @@
 #  - `action_$lang_common_create`
 #  - `action_$lang_gen_metrics`
 #  - `action_$lang_gen_config`
+#  - `action_$lang_gen_idl`
 #
 # NOTES2: before running any methods in file, skull will change the current
 # folder to the top of the project `SKULL_PROJECT_ROOT`, so it's no need to
@@ -49,7 +50,11 @@ function action_c_module_add()
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.targets.tpl $SKULL_PROJ_ROOT/.Makefile.common.targets.c
 
     # convert config to code
-    action_c_gen_config $SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
+    local module_config=$SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
+    action_c_gen_config $module_config
+
+    # generate idl source code according to the idls
+    action_c_gen_idl
 
     return 0
 }
@@ -108,4 +113,21 @@ function action_c_gen_config()
     if ! $(_compare_file $targetdir/config.c $tmpdir/config.c); then
         cp $tmpdir/config.c $targetdir/config.c
     fi
+}
+
+function action_c_gen_idl()
+{
+    # 1. generate protobuf-c source code
+    (
+        cd $SKULL_PROJ_ROOT
+        for idl in ./*.proto; do
+            proto-c --c_out=$SKULL_PROJ_ROOT/src/common/c/src $idl
+        done
+    )
+
+    # 2. generate user api source code
+    local config=$SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
+    $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-idl-gen.py -c $config \
+        -h $SKULL_PROJ_ROOT/src/common/c/src/skull_idl.h \
+        -s $SKULL_PROJ_ROOT/src/common/c/src/skull_idl.c
 }
