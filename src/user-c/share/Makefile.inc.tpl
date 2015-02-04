@@ -28,7 +28,7 @@ OPT = -O0
 endif
 
 # Linking flags
-DEPS_LDFLAGS +=
+DEPS_LDFLAGS += -rdynamic
 
 # Skull cc and ld
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)

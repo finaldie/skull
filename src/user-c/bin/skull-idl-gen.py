@@ -80,7 +80,7 @@ def generate_header():
         content += _generate_header(idl_name)
 
     # add desc tbl api
-    content += "extern const ProtobufCMessageDescriptor** skull_idl_desc_tbl;\n"
+    content += "extern const ProtobufCMessageDescriptor* skull_idl_desc_tbl[];\n"
 
     # generate tailer
     content += HEADER_CONTENT_END

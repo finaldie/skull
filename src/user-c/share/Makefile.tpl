@@ -6,7 +6,11 @@ INC = \
     -I../../common/c/src
 
 DEPS_LDFLAGS += -L../../common/c
-DEPS_LIBS += -lskull-common-c
+
+DEPS_LIBS += \
+    -lprotobuf-c \
+    -lskull-common-c
+
 TEST_DEPS_LIBS +=
 
 # Objs and deployment related items

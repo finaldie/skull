@@ -53,9 +53,6 @@ function action_c_module_add()
     local module_config=$SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
     action_c_gen_config $module_config
 
-    # generate idl source code according to the idls
-    action_c_gen_idl
-
     return 0
 }
 
@@ -79,6 +76,9 @@ function action_c_common_create()
 
     # generate the metrics
     action_c_gen_metrics $SKULL_METRICS_FILE
+
+    # generate idl source code according to the idls
+    action_c_gen_idl
 }
 
 function action_c_gen_metrics()
@@ -119,14 +119,14 @@ function action_c_gen_idl()
 {
     # 1. generate protobuf-c source code
     (
-        cd $SKULL_PROJ_ROOT
+        cd $SKULL_PROJ_ROOT/config
         for idl in ./*.proto; do
-            proto-c --c_out=$SKULL_PROJ_ROOT/src/common/c/src $idl
+            protoc-c --c_out=$SKULL_PROJ_ROOT/src/common/c/src $idl
         done
     )
 
     # 2. generate user api source code
-    local config=$SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
+    local config=$SKULL_PROJ_ROOT/config/skull-config.yaml
     $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-idl-gen.py -c $config \
         -h $SKULL_PROJ_ROOT/src/common/c/src/skull_idl.h \
         -s $SKULL_PROJ_ROOT/src/common/c/src/skull_idl.c

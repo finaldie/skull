@@ -9,6 +9,7 @@ extern "C" {
 #include <skull/metrics_utils.h>
 #include <skull/txn.h>
 #include <skull/config.h>
+#include <skull/idl.h>
 
 #ifdef __cplusplus
 }

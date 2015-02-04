@@ -10,11 +10,10 @@ DEPS_LIBS +=
 TEST_DEPS_LIBS +=
 
 # Source files
-SRCS = \
-    src/skull_metrics.c
+SRCS = $(shell find src -name "*.c")
 
 # Source files of UT
-TEST_SRCS =
+TEST_SRCS = $(shell find tests -name "*.c")
 
 # Include the basic Makefile targets
 include $(SKULL_SRCTOP)/.Makefile.common.targets.c

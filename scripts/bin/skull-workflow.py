@@ -11,6 +11,7 @@ import yaml
 
 yaml_obj = None
 config_name = ""
+config_path = ""
 
 def load_yaml_config():
     global yaml_obj
@@ -60,6 +61,7 @@ def _create_workflow():
 def process_add_workflow():
     global yaml_obj
     global config_name
+    global config_path
 
     try:
         # 1. update the skull config
@@ -77,21 +79,22 @@ def process_add_workflow():
             elif op == "-p":
                 workflow_port = int(value)
 
-        # Now add these workflow_x to yaml obj and dump it
+        ## 1.1 Now add these workflow_x to yaml obj and dump it
         workflow_frame = _create_workflow()
         workflow_frame['concurrent'] = workflow_concurrent
         workflow_frame['idl'] = workflow_idl
         workflow_frame['port'] = workflow_port
 
-        # create if the workflows list do not exist
+        ## 1.2 create if the workflows list do not exist
         if yaml_obj['workflows'] is None:
             yaml_obj['workflows'] = []
 
+        ## 1.3 update the skull-config.yaml
         yaml_obj['workflows'].append(workflow_frame)
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
         # 2. generate the protobuf file into config
-        proto_file_name = "%s.proto" % workflow_idl
+        proto_file_name = "%s/%s.proto" % (config_path, workflow_idl)
         proto_file = file(proto_file_name, 'w')
         content = "package skull;\n\n"
         content += "message %s {\n" % workflow_idl
@@ -145,6 +148,7 @@ if __name__ == "__main__":
         for op, value in opts:
             if op == "-c":
                 config_name = value
+                config_path = os.path.dirname(config_name)
                 load_yaml_config()
             elif op == "-m":
                 work_mode = value
