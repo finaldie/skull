@@ -29,9 +29,9 @@ skull_config=""
 memcheck=false
 
 args=`getopt -a \
-        -o c: \
-        -l memcheck \
-        -n "skull_start.sh" -- "$@"`
+        -o c:h \
+        -l memcheck,help \
+        -n "skull-start.sh" -- "$@"`
 if [ $? != 0 ]; then
     echo "Error: Invalid parameters" >&2
     usage >&2
@@ -50,6 +50,11 @@ while true; do
         --memcheck)
             shift
             memcheck=true
+            ;;
+        -h|--help)
+            shift
+            usage >&2
+            exit 0
             ;;
         --)
             shift; break
