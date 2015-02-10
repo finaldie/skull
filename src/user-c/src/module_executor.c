@@ -32,7 +32,8 @@ int    skull_module_run    (void* md, sk_txn_t* txn)
     // 2. run module
     skull_txn_t skull_txn = {
         .txn = txn,
-        .idl = msg
+        .idl = msg,
+        .descriptor = desc
     };
 
     sk_c_mdata* mdata = md;
@@ -44,8 +45,8 @@ int    skull_module_run    (void* md, sk_txn_t* txn)
     size_t packed_sz = protobuf_c_message_pack(msg, new_msg_data);
     SK_ASSERT(new_msg_sz == packed_sz);
 
-    free(idl_data->data);
     protobuf_c_message_free_unpacked(msg, NULL);
+    free(idl_data->data);
 
     idl_data->data = new_msg_data;
     idl_data->data_sz = packed_sz;
@@ -69,7 +70,8 @@ size_t skull_module_unpack (void* md, sk_txn_t* txn,
     // 2. run unpack
     skull_txn_t skull_txn = {
         .txn = txn,
-        .idl = msg
+        .idl = msg,
+        .descriptor = desc
     };
 
     sk_c_mdata* mdata = md;
@@ -80,9 +82,7 @@ size_t skull_module_unpack (void* md, sk_txn_t* txn,
     void *new_msg_data = calloc(1, new_msg_sz);
     size_t packed_sz = protobuf_c_message_pack(msg, new_msg_data);
     SK_ASSERT(new_msg_sz == packed_sz);
-
     protobuf_c_message_free_unpacked(msg, NULL);
-    free(msg);
 
     skull_idl_data_t* idl_data = calloc(1, sizeof(*idl_data));
     idl_data->data = new_msg_data;
@@ -107,7 +107,8 @@ void   skull_module_pack   (void* md, sk_txn_t* txn)
     // 2. run pack
     skull_txn_t skull_txn = {
         .txn = txn,
-        .idl = msg
+        .idl = msg,
+        .descriptor = desc
     };
 
     sk_c_mdata* mdata = md;
