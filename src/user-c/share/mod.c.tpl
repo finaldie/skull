@@ -34,7 +34,8 @@ size_t module_unpack(skull_txn_t* txn, const void* data, size_t data_sz)
     // deserialize data to transcation data
     Skull__Example* example = skull_txndata_example(txn);
     example->data.len = data_sz;
-    example->data.data = (uint8_t*)data;
+    example->data.data = calloc(1, data_sz);
+    memcpy(example->data.data, data, data_sz);
 
     return data_sz;
 }
