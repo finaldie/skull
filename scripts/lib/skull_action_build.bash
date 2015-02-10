@@ -15,7 +15,8 @@ function action_build()
     (
         cd $SKULL_PROJ_ROOT
 
-        action_metrics --gen
+        action_common --metrics-gen
+        action_common --idl-gen
         make $@
     )
 }

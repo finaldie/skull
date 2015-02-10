@@ -78,7 +78,8 @@ function action_c_common_create()
     action_c_gen_metrics $SKULL_METRICS_FILE
 
     # generate idl source code according to the idls
-    action_c_gen_idl
+    local config=$SKULL_PROJ_ROOT/config/skull-config.yaml
+    action_c_gen_idl $config
 }
 
 function action_c_gen_metrics()
@@ -126,7 +127,7 @@ function action_c_gen_idl()
     )
 
     # 2. generate user api source code
-    local config=$SKULL_PROJ_ROOT/config/skull-config.yaml
+    local config=$1
     $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-idl-gen.py -c $config \
         -h $SKULL_PROJ_ROOT/src/common/c/src/skull_idl.h \
         -s $SKULL_PROJ_ROOT/src/common/c/src/skull_idl.c

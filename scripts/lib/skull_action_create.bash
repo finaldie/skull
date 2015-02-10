@@ -23,7 +23,6 @@ function _skull_create()
     cp $SKULL_ROOT/share/skull/ChangeLog.md.tpl $workspace/ChangeLog.md
     cp $SKULL_ROOT/share/skull/README.md.tpl $workspace/README.md
     cp -R $SKULL_ROOT/share/skull/bin/* $workspace/bin
-    cp -R $SKULL_ROOT/share/skull/scripts/* $workspace/scripts
     cp -R $SKULL_ROOT/etc/skull/* $workspace/config
 }
 
