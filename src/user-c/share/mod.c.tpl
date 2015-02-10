@@ -4,6 +4,7 @@
 
 #include "skull/api.h"
 #include "skull_metrics.h"
+#include "skull_idl.h"
 #include "config.h"
 
 void module_init()
@@ -19,33 +20,46 @@ void module_init()
     SKULL_LOG_DEBUG("config test_item: %d, type: %d",
                      skull_config.test_item,
                      skull_config.test_item_type);
+
+    // For c module, must register the idl table during the initialization
+    skull_idl_register(skull_idl_desc_tbl);
 }
 
-size_t module_unpack(const void* data, size_t data_sz)
+size_t module_unpack(skull_txn_t* txn, const void* data, size_t data_sz)
 {
     skull_metrics_module.request.inc(1);
     printf("module_unpack(test): data sz:%zu\n", data_sz);
     SKULL_LOG_INFO(1, "module_unpack(test): data sz:%zu", data_sz);
+
+    // deserialize data to transcation data
+    Skull__Example* example = skull_txndata_example(txn);
+    example->data.len = data_sz;
+    example->data.data = (uint8_t*)data;
+
     return data_sz;
 }
 
 int module_run(skull_txn_t* txn)
 {
-    size_t data_sz = 0;
-    const char* data = skull_txn_input(txn, &data_sz);
+    Skull__Example* example = skull_txndata_example(txn);
+    size_t data_sz = example->data.len;
+    const char* data = (const char*)example->data.data;
+
     char* tmp = calloc(1, data_sz + 1);
     memcpy(tmp, data, data_sz);
 
     printf("receive data: %s\n", tmp);
     SKULL_LOG_INFO(1, "receive data: %s", tmp);
+
     free(tmp);
     return 0;
 }
 
 void module_pack(skull_txn_t* txn)
 {
-    size_t data_sz = 0;
-    const char* data = skull_txn_input(txn, &data_sz);
+    Skull__Example* example = skull_txndata_example(txn);
+    size_t data_sz = example->data.len;
+    const char* data = (const char*)example->data.data;
 
     skull_metrics_module.response.inc(1);
     printf("module_pack(test): data sz:%zu\n", data_sz);
