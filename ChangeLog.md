@@ -1,3 +1,8 @@
+* 2015-02-10 0.4.3
+   * **New:** Add IDL for module shared data
+   * **New:** Add `skull common` actions
+   * **New:** Add `skull start --memcheck`
+   * **Fix:** Graceful shutdown skull engine
 * 2015-01-25 0.4.2
    * **New:** Add module configure file support (C API)
    * **Fix:** Fix the workflow_run missing `pack` data issue
