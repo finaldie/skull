@@ -36,6 +36,7 @@ create your skull project.
 ```
 skull create project
 cd project
+skull workflow -add # then input $concurrent, $idl_name, $port
 skull module -add # then input $module_name, $workflow_index and $language
 skull build
 skull deploy
