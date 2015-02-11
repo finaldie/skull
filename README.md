@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/finaldie/skull.svg?branch=0.4)](https://travis-ci.org/finaldie/skull)
+[![Build Status](https://travis-ci.org/finaldie/skull.svg?branch=master)](https://travis-ci.org/finaldie/skull)
 
 skull
 =====
