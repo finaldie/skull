@@ -1,5 +1,5 @@
 # Include the basic Makefile template
-include $(SKULL_SRCTOP)/.Makefile.inc.c
+include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.c.inc
 
 INC = \
     -Isrc \
@@ -21,4 +21,4 @@ SRCS = \
 TEST_SRCS =
 
 # Include the basic Makefile targets
-include $(SKULL_SRCTOP)/.Makefile.targets.c
+include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.c.targets

@@ -14,3 +14,6 @@ SKULL_LANG_GEN_CONFIG="gen_config"
 
 ## metrics config
 SKULL_METRICS_FILE=$SKULL_PROJ_ROOT/config/metrics.yaml
+
+## Makefiles folder
+SKULL_MAKEFILE_FOLDER=$SKULL_PROJ_ROOT/.skull/makefiles

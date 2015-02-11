@@ -1,5 +1,5 @@
 # Include the basic Makefile template
-include $(SKULL_SRCTOP)/.Makefile.inc.c
+include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.c.inc
 
 # Include folders
 INC =
@@ -16,4 +16,4 @@ SRCS = $(shell find src -name "*.c")
 TEST_SRCS = $(shell find tests -name "*.c")
 
 # Include the basic Makefile targets
-include $(SKULL_SRCTOP)/.Makefile.common.targets.c
+include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.common.c.targets

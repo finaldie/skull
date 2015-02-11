@@ -10,7 +10,7 @@ function _skull_create()
     local workspace=$1
     # build the basic workspace folder structure
     mkdir -p $workspace
-    mkdir -p $workspace/.skull
+    mkdir -p $workspace/.skull/makefiles
     mkdir -p $workspace/src/modules
     mkdir -p $workspace/src/common
     mkdir -p $workspace/scripts

@@ -45,9 +45,8 @@ function action_c_module_add()
 
     # copy makefiel templates
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.tpl $SKULL_PROJ_ROOT/src/modules/$module/Makefile
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.inc.tpl $SKULL_PROJ_ROOT/.Makefile.inc.c
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_PROJ_ROOT/.Makefile.targets.c
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.targets.tpl $SKULL_PROJ_ROOT/.Makefile.common.targets.c
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.inc.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.inc
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.targets
 
     # convert config to code
     local module_config=$SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
@@ -71,8 +70,12 @@ function action_c_common_create()
 
     # move the Makefile to common/c only when there is no Makefile in common/c
     if [ ! -f $COMMON_FILE_LOCATION/Makefile ]; then
-        cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.tpl $COMMON_FILE_LOCATION/Makefile
+        cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.tpl \
+            $COMMON_FILE_LOCATION/Makefile
     fi
+
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.targets.tpl \
+        $SKULL_MAKEFILE_FOLDER/Makefile.common.c.targets
 
     # generate the metrics
     action_c_gen_metrics $SKULL_METRICS_FILE
