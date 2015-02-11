@@ -1,3 +1,6 @@
+* 2015-02-11 0.4.4
+   * **Enhancement:** No longer copy the skull changelog.md to a new project
+   * **Enhancement:** Move the user makefiles to .skull/makefiles
 * 2015-02-10 0.4.3
    * **New:** Add IDL for module shared data
    * **New:** Add `skull common` actions
