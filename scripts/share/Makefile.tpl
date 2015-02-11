@@ -71,7 +71,7 @@ prepare_deploy_files:
 	cp ChangeLog.md README.md $(DEPLOY_DIR_ROOT)
 	cp $(SKULL_CONFIG_DIR)/skull-config.yaml $(DEPLOY_DIR_ROOT)
 	cp $(SKULL_CONFIG_DIR)/skull-log-*-tpl.yaml $(DEPLOY_ETC_ROOT)
-	cp -R $(SKULL_BIN_DIR)/* $(DEPLOY_BIN_ROOT)
+	cp -r $(SKULL_BIN_DIR)/* $(DEPLOY_BIN_ROOT)
 
 .PHONY: build check valgrind-check deploy clean prepare_deploy
 .PHONY: prepare_deploy_dirs prepare_deploy_files
