@@ -90,7 +90,6 @@ void sk_logger_destroy(sk_logger_t* logger)
     }
 
     flog_destroy(logger);
-    free(logger);
 }
 
 void sk_logger_setcookie(const char* fmt, ...)

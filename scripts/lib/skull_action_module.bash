@@ -11,7 +11,9 @@ function action_module()
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
 
     # parse the command args
-    local args=`getopt -a -o ah -l add,help \
+    local args=`getopt -a \
+        -o ah \
+        -l add,help,conf-gen,conf-cat,conf-edit,conf-check \
         -n "skull_action_module.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -35,6 +37,26 @@ function action_module()
                 action_module_usage >&2
                 exit 0
                 ;;
+            --conf-gen)
+                shift
+                _action_module_config_gen
+                exit 0
+                ;;
+            --conf-cat)
+                shift
+                _action_module_config_cat
+                exit 0
+                ;;
+            --conf-edit)
+                shift
+                _action_module_config_edit
+                exit 0
+                ;;
+            --conf-check)
+                shift
+                _action_module_config_check
+                exit 0
+                ;;
             --)
                 shift; break
                 exit 0
@@ -54,6 +76,10 @@ function action_module_usage()
     echo "usage: "
     echo "  skull module -a|--add"
     echo "  skull module -h|--help"
+    echo "  skull module --conf-gen"
+    echo "  skull module --conf-cat"
+    echo "  skull module --conf-edit"
+    echo "  skull module --conf-check"
 }
 
 # module name must be in [0-9a-zA-Z_]
@@ -132,4 +158,64 @@ function _action_module_add()
     action_${language}_common_create
 
     echo "module [$module] added successfully"
+}
+
+function _action_module_config_gen()
+{
+    local module=$(_current_module)
+    if [ -z "$module" ]; then
+        echo "Error: not in a module" >&2
+        exit 1
+    fi
+
+    local module_config=$(_current_module_config $module)
+    if [ ! -f $module_config ]; then
+        echo "Error: not found $module_config" >&2
+        exit 1
+    fi
+
+    # now, run the config generator
+    _run_module_action $SKULL_LANG_GEN_CONFIG $module_config
+}
+
+function _action_module_config_cat()
+{
+    local module=$(_current_module)
+    if [ -z "$module" ]; then
+        echo "Error: not in a module" >&2
+        exit 1
+    fi
+
+    local module_config=$(_current_module_config $module)
+    if [ ! -f $module_config ]; then
+        echo "Error: not found $module_config" >&2
+        exit 1
+    fi
+
+    cat $module_config
+}
+
+function _action_module_config_edit()
+{
+    local module=$(_current_module)
+    if [ -z "$module" ]; then
+        echo "Error: not in a module" >&2
+        exit 1
+    fi
+
+    local module_config=$(_current_module_config $module)
+    if [ ! -f $module_config ]; then
+        echo "Error: not found $module_config" >&2
+        exit 1
+    fi
+
+    # TODO: should load a per-user config to identify which editor will be used
+    # instead of hardcode `vi` in here
+    vim $module_config
+}
+
+function _action_module_config_check()
+{
+    echo "Error: Unimplemented!" >&2
+    exit 1
 }

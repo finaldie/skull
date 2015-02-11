@@ -15,7 +15,15 @@ function action_build()
     (
         cd $SKULL_PROJ_ROOT
 
-        action_metrics --gen
+        action_common --metrics-gen
+        action_common --idl-gen
         make $@
     )
+}
+
+function action_build_usage()
+{
+    echo "usage:"
+    echo "  skull build"
+    echo "  skull build clean"
 }

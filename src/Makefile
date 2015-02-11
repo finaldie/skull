@@ -74,6 +74,11 @@ ENTITY_OBJS = \
     entities/sk_entity.o \
     entities/sk_net_entity.o
 
+TRIGGER_OBJS = \
+    triggers/sk_trigger.o \
+    triggers/sk_trigger_immedia.o \
+    triggers/sk_trigger_sock.o
+
 COMPONENTS_OBJS = \
     components/sk_sched.o \
     components/sk_core.o \
@@ -84,25 +89,28 @@ COMPONENTS_OBJS = \
 PTO_OBJS = \
     pto/sk_pto.o \
     pto/sk_pto_net_accept.o \
-    pto/sk_pto_net_proc.o \
-    pto/sk_pto_net_destroy.o
+    pto/sk_pto_net_destroy.o \
+    pto/sk_pto_workflow_run.o
 
 PTO_IDLS_OBJS = \
     pto/idls/net_accept.pb-c.o \
-    pto/idls/net_proc.pb-c.o \
-    pto/idls/net_destroy.pb-c.o
+    pto/idls/net_destroy.pb-c.o \
+    pto/idls/workflow_run.pb-c.o
 
 USER_C_OBJS = \
     user-c/src/logger_private.o \
     user-c/src/metrics_utils.o \
     user-c/src/loader.o \
-    user-c/src/txn.o
+    user-c/src/txn.o \
+    user-c/src/idl.o \
+    user-c/src/module_executor.o
 
 SKULL_MAIN_OBJ = main.o
 
 SKULL_OBJS = \
     $(COMMON_OBJS) \
     $(ENTITY_OBJS) \
+    $(TRIGGER_OBJS) \
     $(COMPONENTS_OBJS) \
     $(SKULL_MAIN_OBJ) \
     $(PTO_OBJS) \
@@ -111,8 +119,8 @@ SKULL_OBJS = \
 
 PROTO_IDLS = \
     net_accept.proto \
-    net_proc.proto \
-    net_destroy.proto
+    net_destroy.proto \
+    workflow_run.proto
 
 # target rules
 all: $(SKULL_ENGINE)
@@ -140,7 +148,7 @@ install:
 clean:
 	rm -f $(SKULL_ENGINE) $(SKULL_OBJS)
 
-clean_protos:
+clean-protos:
 	rm -f pto/idls/*.pb-c.*
 
-.PHONY: skull clean install protos clean_protos
+.PHONY: skull clean install protos clean-protos

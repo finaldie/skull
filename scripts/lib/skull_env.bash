@@ -1,26 +1,19 @@
 # This is the bash script for creating basic environment of skull scripts
 # NOTES: This is included by the main script `skull`
 
-function get_proj_root()
-{
-    local current_dir=`pwd`
+# Global Variables
+## The location where the user run the `skull` command
+SKULL_OLD_LOACTION=`pwd`
 
-    if [ -d .skull ]; then
-        SKULL_PROJ_ROOT=$current_dir
-        return 0
-    fi
+## Suffix of language action names
+SKULL_LANG_MODULE_VALID="module_valid"
+SKULL_LANG_MODULE_ADD="module_add"
+SKULL_LANG_COMMON_CREATE="common_create"
+SKULL_LANG_GEN_METRICS="gen_metrics"
+SKULL_LANG_GEN_CONFIG="gen_config"
 
-    # If doesn't find the .skull in current folder, find its parent folder
-    current_dir=`dirname $current_dir`
-    while [ ! -d $current_dir/.skull ]; do
-        if [ $current_dir = "/" ]; then
-            return 1
-        else
-            current_dir=`dirname $current_dir`
-        fi
-    done
+## metrics config
+SKULL_METRICS_FILE=$SKULL_PROJ_ROOT/config/metrics.yaml
 
-    SKULL_PROJ_ROOT=$current_dir
-    return 0
-}
-
+## Makefiles folder
+SKULL_MAKEFILE_FOLDER=$SKULL_PROJ_ROOT/.skull/makefiles

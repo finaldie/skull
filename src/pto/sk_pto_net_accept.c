@@ -42,10 +42,19 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
         return;
     }
 
+    // get or create a sk_txn
+    sk_txn_t* txn = sk_entity_txn(entity);
+    if (!txn) {
+        sk_print("create a new transcation\n");
+        txn = sk_txn_create(sched, workflow, entity);
+        SK_ASSERT(txn);
+        sk_entity_settxn(entity, txn);
+    }
+
     // 3. try to unpack the user data
     const void* data = fevbuff_rawget(evbuff);
-    size_t consumed = first_module->unpack(first_module->md, data,
-                                           (size_t)bytes);
+    size_t consumed = first_module->unpack(first_module->md, txn,
+                                           data, (size_t)bytes);
     if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", bytes);
@@ -53,23 +62,17 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
     }
 
     // Now, the one user packge has been unpacked succefully
-    // 4. prepare a sk_txn and set the input data
-    // 5. increase the txn reference in entity object
-
-    // 4.
-    sk_print("create a new transcation\n");
-    sk_txn_t* txn = sk_txn_create(sched, workflow, entity);
+    // 4. set the input data into txn and reset and entity txn pointer
     sk_txn_set_input(txn, data, (size_t)bytes);
+    sk_entity_settxn(entity, NULL);
 
-    // 5.
-    sk_entity_inc_task_cnt(entity);
+    // 5. prepare and send a workflow processing event
+    sk_sched_push(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
 
-    // 6. prepare and send a workflow processing event
-    sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, NULL);
-
-    // consume the evbuff
+    // 6. consume the evbuff
     fevbuff_pop(evbuff, consumed);
 
+    // 7. update metrics
     sk_metrics_worker.request.inc(1);
     sk_metrics_global.request.inc(1);
 }
@@ -82,7 +85,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_entity_t* entity = arg;
     sk_workflow_t* workflow = sk_entity_workflow(entity);
-    int concurrent = workflow->concurrent;
+    int concurrent = workflow->cfg->concurrent;
 
     // check whether allow concurrent
     if (!concurrent && sk_entity_task_cnt(entity) > 0) {

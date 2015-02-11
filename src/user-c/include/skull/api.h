@@ -8,6 +8,8 @@ extern "C" {
 #include <skull/logger.h>
 #include <skull/metrics_utils.h>
 #include <skull/txn.h>
+#include <skull/config.h>
+#include <skull/idl.h>
 
 #ifdef __cplusplus
 }

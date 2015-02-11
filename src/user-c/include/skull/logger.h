@@ -4,14 +4,14 @@
 #include <skull/logger_private.h>
 
 //  logging helper macros
-#define SKULL_LOG_TRACE(fmt, ...) \
+#define SKULL_LOG_TRACE(...) \
     if (skull_log_enable_trace()) { \
-        skull_log(SKULL_LOG_PREFIX " TRACE - " fmt, __VA_ARGS__); \
+        skull_log(SKULL_LOG_PREFIX " TRACE - " __VA_ARGS__); \
     }
 
-#define SKULL_LOG_DEBUG(fmt, ...) \
+#define SKULL_LOG_DEBUG(...) \
     if (skull_log_enable_debug()) { \
-        skull_log(SKULL_LOG_PREFIX " DEBUG - " fmt, __VA_ARGS__); \
+        skull_log(SKULL_LOG_PREFIX " DEBUG - " __VA_ARGS__); \
     }
 
 #define SKULL_LOG_INFO(log_id, fmt, ...) \
@@ -19,7 +19,7 @@
         skull_log(SKULL_LOG_PREFIX " INFO - [%d] %s; " fmt, \
                   log_id, \
                   skull_log_info_msg(log_id), \
-                  __VA_ARGS__); \
+                  ##__VA_ARGS__); \
     }
 
 #define SKULL_LOG_WARN(log_id, fmt, ...) \
@@ -28,7 +28,7 @@
                   log_id, \
                   skull_log_warn_msg(log_id), \
                   skull_log_warn_solution(log_id), \
-                  __VA_ARGS__); \
+                  ##__VA_ARGS__); \
     }
 
 #define SKULL_LOG_ERROR(log_id, fmt, ...) \
@@ -37,7 +37,7 @@
                   log_id, \
                   skull_log_error_msg(log_id), \
                   skull_log_error_solution(log_id), \
-                  __VA_ARGS__); \
+                  ##__VA_ARGS__); \
     }
 
 #define SKULL_LOG_FATAL(log_id, fmt, ...) \
@@ -46,7 +46,7 @@
                   log_id, \
                   skull_log_fatal_msg(log_id), \
                   skull_log_fatal_solution(log_id), \
-                  __VA_ARGS__); \
+                  ##__VA_ARGS__); \
     }
 
 #endif

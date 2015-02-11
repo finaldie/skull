@@ -10,7 +10,7 @@ function _skull_create()
     local workspace=$1
     # build the basic workspace folder structure
     mkdir -p $workspace
-    mkdir -p $workspace/.skull
+    mkdir -p $workspace/.skull/makefiles
     mkdir -p $workspace/src/modules
     mkdir -p $workspace/src/common
     mkdir -p $workspace/scripts
@@ -22,9 +22,11 @@ function _skull_create()
     cp $SKULL_ROOT/share/skull/Makefile.tpl $workspace/Makefile
     cp $SKULL_ROOT/share/skull/ChangeLog.md.tpl $workspace/ChangeLog.md
     cp $SKULL_ROOT/share/skull/README.md.tpl $workspace/README.md
-    cp -R $SKULL_ROOT/share/skull/bin/* $workspace/bin
-    cp -R $SKULL_ROOT/share/skull/scripts/* $workspace/scripts
-    cp -R $SKULL_ROOT/etc/skull/* $workspace/config
+    cp -r $SKULL_ROOT/share/skull/bin/* $workspace/bin
+
+    # copy all the configurations except ChangeLog.md
+    local copy_list=`find $SKULL_ROOT/etc/skull/* -name "*" | grep -v "ChangeLog.md"`
+    cp -r $copy_list $workspace/config
 }
 
 function action_create()
@@ -45,4 +47,11 @@ function action_create()
 
     _skull_create $workspace
     echo "create skull workspace done"
+}
+
+function action_create_usage()
+{
+    echo "usage:"
+    echo "  skull create project"
+    echo "  skull create ./"
 }

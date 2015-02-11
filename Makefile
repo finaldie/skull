@@ -16,7 +16,7 @@ check:
 valgrind-check:
 	cd tests && $(MAKE) $@
 
-install: install_core install_scripts install_api install_others
+install: install-core install-scripts install-api install-others
 
 clean:
 	cd src && $(MAKE) $@

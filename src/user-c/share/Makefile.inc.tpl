@@ -12,7 +12,7 @@ EXTRA += -Winline -Wdisabled-optimization -fPIC
 EXTRA += -fstack-protector
 
 # Enable the following line to build a strong program
-#EXTRA += -pedantic -Wpadded -Wconversion
+EXTRA += -pedantic -Wpadded -Wconversion
 
 SHARED = -shared
 MACRO = -D_POSIX_C_SOURCE=200809L
@@ -28,7 +28,7 @@ OPT = -O0
 endif
 
 # Linking flags
-DEPS_LDFLAGS +=
+DEPS_LDFLAGS += -rdynamic
 
 # Skull cc and ld
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)

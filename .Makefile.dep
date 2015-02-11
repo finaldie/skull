@@ -37,4 +37,4 @@ clean-flibs:
 clean-protos:
 	cd src && $(MAKE) $@
 
-.PHONY: clean_flibs clean_protos
+.PHONY: clean-flibs clean-protos

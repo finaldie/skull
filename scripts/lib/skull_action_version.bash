@@ -13,3 +13,9 @@ function action_version()
     echo "high productivity server framework."
     echo "More information see https://github.com/finaldie/skull"
 }
+
+function action_version_usage()
+{
+    echo "usage:"
+    echo "  skull version"
+}

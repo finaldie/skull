@@ -12,6 +12,7 @@ static
 sk_workflow_cfg_t* _create_workflow_cfg()
 {
     sk_workflow_cfg_t* workflow = calloc(1, sizeof(*workflow));
+    workflow->port = SK_CONFIG_NO_PORT;
     workflow->modules = flist_create();
     return workflow;
 }
@@ -24,6 +25,8 @@ void _delete_workflow_cfg(sk_workflow_cfg_t* workflow)
         free(module_name);
     }
     flist_delete(workflow->modules);
+
+    free((void*)workflow->idl_name);
     free(workflow);
 }
 
@@ -45,16 +48,6 @@ void _delete_config(sk_config_t* config)
     }
     flist_delete(config->workflows);
     free(config);
-}
-
-static
-int _get_int(sk_cfg_node_t* node)
-{
-    long int value = strtol(node->data.value, NULL, 10);
-    SK_ASSERT_MSG(errno != EINVAL && errno != ERANGE,
-                  "load config errno: %d, %s\n", errno, strerror(errno));
-
-    return (int)value;
 }
 
 static
@@ -99,6 +92,8 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
 
             if (0 == strcmp(key, "modules")) {
                 _load_modules(child, workflow);
+            } else if (0 == strcmp(key, "idl")) {
+                workflow->idl_name = strdup(child->data.value);
             } else if (0 == strcmp(key, "concurrent")) {
                 workflow->concurrent = sk_config_getint(child);
             } else if (0 == strcmp(key, "port")) {
@@ -106,7 +101,7 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
                 SK_ASSERT_MSG(port > 0 && port <= 65535, "port[%d] should be "
                               "in (0, 65535]\n", port);
 
-                workflow->port = (in_port_t)port;
+                workflow->port = port;
             }
         }
         fhash_str_iter_release(&item_iter);

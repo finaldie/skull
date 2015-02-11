@@ -9,6 +9,7 @@
 #include "api/sk_log_tpl.h"
 #include "api/sk_mon.h"
 #include "api/sk_engine.h"
+#include "api/sk_trigger.h"
 
 // skull core related structures
 typedef struct sk_cmd_args_t {
@@ -37,6 +38,7 @@ typedef struct sk_core_t {
     sk_log_tpl_t*    fatal_log_tpl;
 
     flist*           workflows;      // element type: sk_workflow_t
+    flist*           triggers;       // emement type: sk_trigger_t
     fhash*           unique_modules; // key: module name; value: sk_module_t
     const char*      working_dir;
 } sk_core_t;

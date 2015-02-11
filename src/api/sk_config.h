@@ -4,24 +4,20 @@
 #include <netinet/in.h>
 
 #include "flibs/flist.h"
+#include "api/sk_types.h"
 #include "api/sk_module.h"
 
 #define SK_CONFIG_LOCATION_LEN    1024
 #define SK_CONFIG_LOGNAME_LEN	  1024
 
-#define SK_WORKFLOW_NONCONCURRENT 0
-#define SK_WORKFLOW_CONCURRENT    1
-
-// the type of workflow
-#define SK_WORKFLOW_MAIN    0
-#define SK_WORKFLOW_NETWORK 1
+#define SK_CONFIG_NO_PORT         -1
 
 typedef struct sk_workflow_cfg_t {
     int concurrent;
-    in_port_t port;
-    short _reserved; // useless, for padding
+    int port;
 
-    flist* modules;  // store module names
+    const char* idl_name; // workflow idl name
+    flist* modules;       // module name list
 } sk_workflow_cfg_t;
 
 typedef struct sk_config_t {
@@ -39,7 +35,7 @@ typedef struct sk_config_t {
     // log level of flog, from LOG_LEVEL_TRACE(0) - LOG_LEVEL_FATAL(5)
     int log_level;
 
-    // workflows list
+    // sk_workflow_cfg_t list
     flist* workflows;
 } sk_config_t;
 

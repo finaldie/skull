@@ -28,11 +28,6 @@ void sk_entity_mgr_destroy(sk_entity_mgr_t* mgr)
     free(mgr);
 }
 
-sk_entity_t* sk_entity_mgr_get(sk_entity_mgr_t* mgr, sk_entity_id_t id)
-{
-    return fhash_u64_get(mgr->entity_mgr, id);
-}
-
 void sk_entity_mgr_add(sk_entity_mgr_t* mgr, sk_entity_t* entity)
 {
     fhash_u64_set(mgr->entity_mgr, (uint64_t)entity, entity);

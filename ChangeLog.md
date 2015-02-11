@@ -1,3 +1,21 @@
+* 2015-02-11 0.4.4
+   * **Enhancement:** No longer copy the skull changelog.md to a new project
+   * **Enhancement:** Move the user makefiles to .skull/makefiles
+* 2015-02-10 0.4.3
+   * **New:** Add IDL for module shared data
+   * **New:** Add `skull common` actions
+   * **New:** Add `skull start --memcheck`
+   * **Fix:** Graceful shutdown skull engine
+   * **Enhancement:** Split part of user-c loader logic to module executor
+* 2015-01-25 0.4.2
+   * **New:** Add module configure file support (C API)
+   * **Fix:** Fix the workflow_run missing `pack` data issue
+* 2015-01-18 0.4.1
+   * Add sk_triggers both for passive and proactive type
+   * Rename the net_proc protocol to workflow_run
+   * Fix the clean-dep
+   * Fix `skull module -add` cannot be ran except the top of project
+   * Fix the coredump in proactive trigger and workflow_run
 * 2015-01-13 0.3.3
    * Integrate with flibs 0.7.4
 * 2015-01-09 0.3.2

@@ -2,9 +2,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 
 #include "api/sk_utils.h"
 #include "api/sk_core.h"
+
+// skull engine core data structure
+static sk_core_t core;
 
 static
 void _print_usage()
@@ -45,14 +49,44 @@ void _check_args(sk_cmd_args_t* cmd_args)
     }
 }
 
+static
+void sig_handler(int sig, siginfo_t *si, void *uc)
+{
+    sk_core_stop(&core);
+}
+
+static
+void setup_signal(sk_core_t* core)
+{
+    struct sigaction sa;
+    sigfillset(&sa.sa_mask);
+    sa.sa_flags = SA_SIGINFO;
+    sa.sa_sigaction = &sig_handler;
+
+    if (sigaction(SIGHUP, &sa, NULL) == -1) {
+        fprintf(stderr, "Error: cannot set up SIGHUP");
+        exit(1);
+    }
+
+    if (sigaction(SIGUSR1, &sa, NULL) == -1) {
+        fprintf(stderr, "Error: cannot set up SIGUSR1");
+        exit(1);
+    }
+
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        fprintf(stderr, "Error: cannot set up SIGINT");
+        exit(1);
+    }
+}
+
 int main(int argc, char** argv)
 {
-    sk_core_t core;
     memset(&core, 0, sizeof(core));
     _read_commands(argc, argv, &core.cmd_args);
     _check_args(&core.cmd_args);
 
     sk_core_init(&core);
+    setup_signal(&core);
     sk_core_start(&core);
 
     sk_core_destroy(&core);

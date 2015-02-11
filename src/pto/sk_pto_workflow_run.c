@@ -22,8 +22,14 @@
 static
 int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
+    SK_ASSERT(sched && entity && txn);
+
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
+    if (!module) {
+        SK_LOG_ERROR(SK_ENV_LOGGER, "no module in this workflow, skip it");
+        goto module_exit;
+    }
 
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
@@ -42,12 +48,16 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     }
 
     // 2. check whether is the last module:
-    // if no, send a event for next module
-    // if yes, pack
+    // 2.1 if no, send a event for next module
     if (!sk_txn_is_last_module(txn)) {
         sk_print("doesn't reach the last module\n");
-        sk_sched_push(sched, entity, txn, SK_PTO_NET_PROC, NULL);
+        sk_sched_push(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
         return 0;
+    }
+
+    // 2.2 no pack function means no need to send response
+    if (!module->pack) {
+        goto module_exit;
     }
 
     // 3. pack the data, and send the response if needed
@@ -57,7 +67,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     const char* packed_data = sk_txn_output(txn, &packed_data_sz);
     sk_print("module packed data size=%zu\n", packed_data_sz);
 
-    if (!packed_data) {
+    if (!packed_data || !packed_data_sz) {
         sk_print("module no need to send response\n");
     } else {
         sk_print("write data sz:%zu\n", packed_data_sz);
@@ -73,15 +83,15 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
         sk_metrics_global.latency.inc((uint32_t)alivetime);
     }
 
+module_exit:
     // 4. the transcation is over, destroy sk_txn structure
     sk_print("txn destroy\n");
     sk_txn_destroy(txn);
-    sk_entity_dec_task_cnt(entity);
     return 0;
 }
 
-sk_proto_t sk_pto_net_proc = {
+sk_proto_t sk_pto_workflow_run = {
     .priority = SK_PTO_PRI_5,
-    .descriptor = &net_proc__descriptor,
+    .descriptor = &workflow_run__descriptor,
     .run = _run
 };

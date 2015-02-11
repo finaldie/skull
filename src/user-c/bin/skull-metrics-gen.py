@@ -12,7 +12,6 @@ import yaml
 
 # global variables
 yaml_obj = None
-topdir = ""
 config_name = ""
 header_name = ""
 source_name = ""
@@ -80,7 +79,7 @@ void _skull_%s_%s_dynamic_inc(double value, const char* fmt, ...)\n\
     int hlen = snprintf(full_name, 256, \"skull.user.d.%s.%s.\");\n\
     va_list ap;\n\
     va_start(ap, fmt);\n\
-    vsnprintf(full_name + hlen, 256 - hlen, fmt, ap);\n\
+    vsnprintf(full_name + hlen, (size_t)(256 - hlen), fmt, ap);\n\
     skull_metric_inc(full_name, value);\n\
     va_end(ap);\n\
 }\n\n"
@@ -92,7 +91,7 @@ double _skull_%s_%s_dynamic_get(const char* fmt, ...)\n\
     int hlen = snprintf(full_name, 256, \"skull.user.d.%s.%s.\");\n\
     va_list ap;\n\
     va_start(ap, fmt);\n\
-    vsnprintf(full_name + hlen, 256 - hlen, fmt, ap);\n\
+    vsnprintf(full_name + hlen, (size_t)(256 - hlen), fmt, ap);\n\
     va_end(ap);\n\
     return skull_metric_get(full_name);\n\
 }\n\n"
@@ -237,7 +236,7 @@ def process_core():
     generate_c_source()
 
 def usage():
-    print "usage: skull-metrics-gen.py -p topdir -h header_file -o source_file"
+    print "usage: skull-metrics-gen.py -c config -h header_file -s source_file"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
