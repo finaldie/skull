@@ -40,7 +40,7 @@ sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
     txn->entity = entity;
     txn->output = fmbuf_create(0);
     txn->workflow_idx = flist_new_iter(workflow->modules);
-    txn->start_time = fgettime();
+    txn->start_time = ftime_gettime();
 
     // update the entity ref
     sk_entity_inc_task_cnt(entity);
@@ -140,7 +140,7 @@ int sk_txn_is_last_module(sk_txn_t* txn)
 
 unsigned long long sk_txn_alivetime(sk_txn_t* txn)
 {
-    return fgettime() - txn->start_time;
+    return ftime_gettime() - txn->start_time;
 }
 
 void sk_txn_setudata(sk_txn_t* txn, void* data)
