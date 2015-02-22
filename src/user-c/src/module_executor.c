@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <flibs/compiler.h>
 
 #include "api/sk_workflow.h"
 #include "api/sk_utils.h"
@@ -24,10 +25,16 @@ int    skull_module_run    (void* md, sk_txn_t* txn)
     sk_workflow_t* workflow = sk_txn_workflow(txn);
     const char* idl_name = workflow->cfg->idl_name;
     const ProtobufCMessageDescriptor* desc = skull_idl_descriptor(idl_name);
-    skull_idl_data_t* idl_data = sk_txn_udata(txn);
 
-    ProtobufCMessage *msg = protobuf_c_message_unpack(
-        desc, NULL, idl_data->data_sz, idl_data->data);
+    ProtobufCMessage* msg = NULL;
+    skull_idl_data_t* idl_data = sk_txn_udata(txn);
+    if (likely(idl_data)) {
+        msg = protobuf_c_message_unpack(
+            desc, NULL, idl_data->data_sz, idl_data->data);
+    } else {
+        msg = calloc(1, desc->sizeof_message);
+        protobuf_c_message_init(desc, msg);
+    }
 
     // 2. run module
     skull_txn_t skull_txn = {
@@ -46,10 +53,17 @@ int    skull_module_run    (void* md, sk_txn_t* txn)
     SK_ASSERT(new_msg_sz == packed_sz);
 
     protobuf_c_message_free_unpacked(msg, NULL);
-    free(idl_data->data);
+    if (likely(idl_data)) {
+        free(idl_data->data);
 
-    idl_data->data = new_msg_data;
-    idl_data->data_sz = packed_sz;
+        idl_data->data = new_msg_data;
+        idl_data->data_sz = packed_sz;
+    } else {
+        idl_data = calloc(1, sizeof(*idl_data));
+        idl_data->data = new_msg_data;
+        idl_data->data_sz = packed_sz;
+        sk_txn_setudata(txn, idl_data);
+    }
 
     return ret;
 }
