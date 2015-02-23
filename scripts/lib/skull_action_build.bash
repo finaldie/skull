@@ -24,6 +24,14 @@ function action_build()
 function action_build_usage()
 {
     echo "usage:"
-    echo "  skull build"
-    echo "  skull build clean"
+    echo "  skull build [arg(s)...]"
+    echo ""
+    echo "args:"
+    echo "  - check"
+    echo "  - valgrind-check"
+    echo "  - clean"
+    echo ""
+    echo "example:"
+    echo "  skull buld"
+    echo "  skull buld CC=clang"
 }

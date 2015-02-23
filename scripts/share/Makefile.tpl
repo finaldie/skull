@@ -18,10 +18,14 @@ DEPLOY_ETC_ROOT := $(DEPLOY_DIR_ROOT)/etc
 
 # Get all the sub dirs which have Makefile
 COMMON_DIRS := $(shell find src/common -name Makefile)
-COMMON_DIRS := $(shell dirname $(COMMON_DIRS))
+ifneq ($(COMMON_DIRS),)
+    COMMON_DIRS := $(shell dirname $(COMMON_DIRS))
+endif
 
 MOD_DIRS := $(shell find src/modules -name Makefile)
-MOD_DIRS := $(shell dirname $(MOD_DIRS))
+ifneq ($(MOD_DIRS),)
+    MOD_DIRS := $(shell dirname $(MOD_DIRS))
+endif
 
 SUB_DIRS = \
     $(COMMON_DIRS) \
@@ -74,4 +78,11 @@ prepare_deploy_files:
 	cp -r $(SKULL_BIN_DIR)/* $(DEPLOY_BIN_ROOT)
 
 .PHONY: build check valgrind-check deploy clean prepare_deploy
-.PHONY: prepare_deploy_dirs prepare_deploy_files
+.PHONY: prepare_deploy_dirs prepare_deploy_files help
+
+help:
+	@echo "make options:"
+	@echo "- check"
+	@echo "- valgrind-check"
+	@echo "- clean"
+	@echo "- deploy"
