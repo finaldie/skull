@@ -43,12 +43,12 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
     }
 
     // get or create a sk_txn
-    sk_txn_t* txn = sk_entity_txn(entity);
+    sk_txn_t* txn = sk_entity_halftxn(entity);
     if (!txn) {
         sk_print("create a new transcation\n");
         txn = sk_txn_create(sched, workflow, entity);
         SK_ASSERT(txn);
-        sk_entity_settxn(entity, txn);
+        sk_entity_sethalftxn(entity, txn);
     }
 
     // 3. try to unpack the user data
@@ -64,7 +64,7 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
     // Now, the one user packge has been unpacked succefully
     // 4. set the input data into txn and reset and entity txn pointer
     sk_txn_set_input(txn, data, (size_t)bytes);
-    sk_entity_settxn(entity, NULL);
+    sk_entity_sethalftxn(entity, NULL);
 
     // 5. prepare and send a workflow processing event
     sk_sched_push(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);

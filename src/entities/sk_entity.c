@@ -10,7 +10,7 @@
 struct sk_entity_t {
     struct sk_entity_mgr_t* owner;
     sk_workflow_t*          workflow;
-    sk_txn_t*               txn;      // used for storing the inactive txn
+    sk_txn_t*               half_txn; // store the incompleted txn
     sk_entity_opt_t         opt;
 
     sk_entity_status_t status;
@@ -84,9 +84,9 @@ void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr)
     entity->owner = mgr;
 }
 
-void sk_entity_settxn(sk_entity_t* entity, sk_txn_t* txn)
+void sk_entity_sethalftxn(sk_entity_t* entity, sk_txn_t* half_txn)
 {
-    entity->txn = txn;
+    entity->half_txn = half_txn;
 }
 
 void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status)
@@ -104,9 +104,9 @@ sk_workflow_t* sk_entity_workflow(sk_entity_t* entity)
     return entity->workflow;
 }
 
-sk_txn_t* sk_entity_txn(sk_entity_t* entity)
+sk_txn_t* sk_entity_halftxn(sk_entity_t* entity)
 {
-    return entity->txn;
+    return entity->half_txn;
 }
 
 sk_entity_status_t sk_entity_status(sk_entity_t* entity)
