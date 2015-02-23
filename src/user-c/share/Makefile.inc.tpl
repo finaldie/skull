@@ -58,5 +58,5 @@ TEST_OBJS = $(patsubst %.c,%.o,$(TEST_SRCS))
 DIRNAME ?= $(shell basename $(shell pwd))
 PARENT_DIRNAME ?= $(shell basename $(shell pwd | xargs dirname))
 TARGET ?= lib/libskull-$(PARENT_DIRNAME)-$(DIRNAME).so
-TEST_TARGET ?= test-mod
+TEST_TARGET ?= test.out
 CONF_TARGET ?= skull-$(PARENT_DIRNAME)-$(DIRNAME).yaml
