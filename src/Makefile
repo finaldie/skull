@@ -5,9 +5,9 @@ STD = -std=c99
 WARN = -Wall
 EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter
 EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
-EXTRA += -Wconversion
+EXTRA += -Wconversion -fPIC
 OTHER = -pipe -g -ggdb3
-SHARED =
+SHARED = -shared
 LDFLAGS += -Wl,-E
 MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE
 INC = \
@@ -26,9 +26,12 @@ endif
 
 # linking flags
 DEPS_LDFLAGS = -L../deps/flibs/lib
-SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(SHARED) $(OTHER) $(INC)
+SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
-SKULL_LDFLAGS = $(LDFLAGS) $(OPT) $(SHARED) $(OTHER) $(DEPS_LDFLAGS)
+SKULL_LDFLAGS = $(LDFLAGS) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
+SKULL_UTLDFLAGS = $(LDFLAGS) $(SHARED) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
+
+# dependency library list
 SKULL_LIBS = \
     -lyaml \
     -lfev \
@@ -47,12 +50,16 @@ SKULL_LIBS = \
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
 SKULL_TP_CC = $(CC) $(SKULL_TP_CFLAGS)
 SKULL_LD = $(CC) $(SKULL_LDFLAGS)
+SKULL_UTLD = $(CC) $(SKULL_UTLDFLAGS)
 
 # prefix
 prefix ?= /usr/local
 
 # binaries
 SKULL_ENGINE = skull-engine
+
+# ut library
+SKULL_UTLIB_C = libskull-unittest-c.so
 
 # Objs
 COMMON_OBJS = \
@@ -122,11 +129,43 @@ PROTO_IDLS = \
     net_destroy.proto \
     workflow_run.proto
 
-# target rules
-all: $(SKULL_ENGINE)
+UT_OBJS = \
+    user-c/src/unittest.o \
+    user-c/src/module_executor.o \
+    user-c/src/loader.o \
+    user-c/src/idl.o \
+    common/sk_utils.o \
+    common/sk_loader.o \
+    common/sk_txn.o \
+    common/sk_workflow.o \
+    entities/sk_entity.o
 
+# target rules
+all: $(SKULL_ENGINE) $(SKULL_UTLIB_C)
+
+# compile proto idls
+protos: $(PROTO_IDLS)
+
+install:
+	test -d $(prefix)/bin || mkdir -p $(prefix)/bin
+	test -x $(SKULL_ENGINE) && cp $(SKULL_ENGINE) $(prefix)/bin
+	test -f $(SKULL_UTLIB_C) && cp $(SKULL_UTLIB_C) $(prefix)/lib
+
+clean:
+	rm -f $(SKULL_ENGINE) $(SKULL_UTLIB_C) $(SKULL_OBJS) $(UT_OBJS)
+
+clean-protos:
+	rm -f pto/idls/*.pb-c.*
+
+.PHONY: skull clean install protos clean-protos
+
+# sub targets
 $(SKULL_ENGINE): $(SKULL_OBJS)
 	$(SKULL_LD) -o $@ $^ $(SKULL_LIBS)
+
+# compile UT lib
+$(SKULL_UTLIB_C): $(UT_OBJS)
+	$(SKULL_UTLD) -o $(SKULL_UTLIB_C) $(UT_OBJS) $(SKULL_LIBS)
 
 # compile protocol file without -Wpadded
 %.pb-c.o: %.pb-c.c
@@ -135,20 +174,5 @@ $(SKULL_ENGINE): $(SKULL_OBJS)
 %.o: %.c
 	$(SKULL_CC) -c $< -o $@
 
-# compile proto idls
-protos: $(PROTO_IDLS)
-
 %.proto:
 	cd pto/idls && protoc-c --c_out=. $@
-
-install:
-	test -d $(prefix)/bin || mkdir -p $(prefix)/bin
-	test -x $(SKULL_ENGINE) && cp $(SKULL_ENGINE) $(prefix)/bin
-
-clean:
-	rm -f $(SKULL_ENGINE) $(SKULL_OBJS)
-
-clean-protos:
-	rm -f pto/idls/*.pb-c.*
-
-.PHONY: skull clean install protos clean-protos

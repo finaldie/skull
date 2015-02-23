@@ -1,0 +1,139 @@
+#include <stdlib.h>
+#include <string.h>
+
+#include <google/protobuf-c/protobuf-c.h>
+
+#include "api/sk_utils.h"
+#include "api/sk_module.h"
+#include "api/sk_workflow.h"
+#include "api/sk_entity.h"
+#include "api/sk_txn.h"
+#include "api/sk_loader.h"
+
+#include "skull/idl.h"
+#include "idl_internal.h"
+#include "skull/unittest.h"
+
+// The same as module_executor's skull_idl_data_t
+typedef struct skull_idl_data_t {
+    void*  data;
+    size_t data_sz;
+} skull_idl_data_t;
+
+struct skull_utenv_t {
+    const skull_config_t* config;
+    sk_module_t*    module;
+
+    sk_workflow_t*  workflow;
+    sk_entity_t*    entity;
+    sk_txn_t*       txn;
+
+    sk_workflow_cfg_t* workflow_cfg;
+};
+
+skull_utenv_t* skull_utenv_create(const char* module_name,
+                              const skull_config_t* config)
+{
+    skull_utenv_t* env = calloc(1, sizeof(*env));
+    env->module = sk_module_load(module_name);
+    env->config = config;
+
+    env->workflow_cfg = calloc(1, sizeof(sk_workflow_cfg_t));
+    env->workflow_cfg->idl_name = env->module->name;
+    env->workflow_cfg->port = SK_CONFIG_NO_PORT;
+    env->workflow = sk_workflow_create(env->workflow_cfg);
+    env->entity = sk_entity_create(env->workflow);
+    env->txn = sk_txn_create(NULL, env->workflow, env->entity);
+
+    // run init
+    env->module->init(env->module->md);
+
+    return env;
+}
+
+void skull_utenv_destroy(skull_utenv_t* env)
+{
+    if (!env) {
+        return;
+    }
+
+    sk_module_unload(env->module);
+    sk_txn_destroy(env->txn);
+    sk_entity_destroy(env->entity);
+    sk_workflow_destroy(env->workflow);
+    free(env->workflow_cfg);
+    free(env);
+}
+
+int skull_utenv_run(skull_utenv_t* env, bool run_unapck, bool run_pack)
+{
+    int ret = env->module->run(env->module->md, env->txn);
+    return ret;
+}
+
+void* skull_utenv_idldata(skull_utenv_t* env)
+{
+    const ProtobufCMessageDescriptor* desc =
+        skull_idl_descriptor(env->workflow_cfg->idl_name);
+
+    ProtobufCMessage* msg = NULL;
+    skull_idl_data_t* idl_data = sk_txn_udata(env->txn);
+    if (idl_data) {
+        msg = protobuf_c_message_unpack(
+            desc, NULL, idl_data->data_sz, idl_data->data);
+    } else {
+        msg = calloc(1, desc->sizeof_message);
+        protobuf_c_message_init(desc, msg);
+    }
+
+    return msg;
+}
+
+void  skull_utenv_idldata_release(void* data)
+{
+    if (!data) {
+        return;
+    }
+
+    protobuf_c_message_free_unpacked(data, NULL);
+}
+
+void  skull_utenv_reset_idldata(skull_utenv_t* env, const void* msg)
+{
+    sk_txn_t* txn = env->txn;
+    skull_idl_data_t* idl_data = sk_txn_udata(txn);
+    if (!msg) {
+        if (idl_data) {
+            free(idl_data->data);
+        }
+
+        return;
+    }
+
+    size_t new_msg_sz = protobuf_c_message_get_packed_size(msg);
+    void*  new_msg_data = calloc(1, new_msg_sz);
+    size_t packed_sz = protobuf_c_message_pack(msg, new_msg_data);
+    SK_ASSERT(new_msg_sz == packed_sz);
+
+    if (!idl_data) {
+        idl_data = calloc(1, sizeof(*idl_data));
+        idl_data->data = new_msg_data;
+        idl_data->data_sz = packed_sz;
+        sk_txn_setudata(txn, idl_data);
+    } else {
+        free(idl_data->data);
+
+        idl_data->data = new_msg_data;
+        idl_data->data_sz = packed_sz;
+    }
+}
+
+// Mock API for skull_txn (no needed, link the txn.o)
+
+// Mock API for skull_log
+
+// Mock API for skull_metrics
+
+// Mock API for skull_idl
+
+// Mock API for config
