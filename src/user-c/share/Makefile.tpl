@@ -24,12 +24,13 @@ TEST_SRCS = \
     tests/test_mod.c
 
 # valgrind suppresion file
+#  note: if the suppresion file is exist, then need to append
+#        `--suppresions=$(SUPPRESION)` to `VALGRIND`
 SUPPRESION :=
 
 # valgrind command
 VALGRIND := valgrind --tool=memcheck --leak-check=full \
-    --gen-suppressions=all --error-exitcode=1 \
-    --suppressions=$(SUPPRESION)
+    --gen-suppressions=all --error-exitcode=1
 
 # Include the basic Makefile targets
 include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.c.targets

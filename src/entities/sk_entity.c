@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "api/sk_entity.h"
 #include "api/sk_workflow.h"
@@ -17,11 +18,41 @@ struct sk_entity_t {
     void* ud;
 };
 
+// default opts
+static
+ssize_t _default_read(sk_entity_t* entity, void* buf, size_t buf_len, void* ud)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+static
+ssize_t _default_write(sk_entity_t* entity, const void* buf, size_t buf_len,
+                       void* ud)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+static
+void _default_destroy(sk_entity_t* entity, void* ud)
+{
+    return;
+}
+
+sk_entity_opt_t default_entity_opt = {
+    .read = _default_read,
+    .write = _default_write,
+    .destroy = _default_destroy
+};
+
+// APIs
 sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
 {
     sk_entity_t* entity = calloc(1, sizeof(*entity));
     entity->owner = NULL;
     entity->workflow = workflow;
+    entity->opt = default_entity_opt;
     entity->status = SK_ENTITY_ACTIVE;
     return entity;
 }
