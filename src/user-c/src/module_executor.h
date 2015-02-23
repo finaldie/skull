@@ -15,6 +15,11 @@ typedef struct sk_c_mdata {
     void   (*pack)   (skull_txn_t* txn);
 } sk_c_mdata;
 
+typedef struct skull_idl_data_t {
+    void*  data;
+    size_t data_sz;
+} skull_idl_data_t;
+
 void   skull_module_init   (void* md);
 int    skull_module_run    (void* md, sk_txn_t*);
 size_t skull_module_unpack (void* md, sk_txn_t* txn,

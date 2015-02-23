@@ -14,13 +14,9 @@
 #include "skull/idl.h"
 #include "skull/metrics_utils.h"
 #include "idl_internal.h"
-#include "skull/unittest.h"
+#include "module_executor.h"
 
-// The same as module_executor's skull_idl_data_t
-typedef struct skull_idl_data_t {
-    void*  data;
-    size_t data_sz;
-} skull_idl_data_t;
+#include "skull/unittest.h"
 
 struct skull_utenv_t {
     const skull_config_t* config;
@@ -61,7 +57,12 @@ void skull_utenv_destroy(skull_utenv_t* env)
     }
 
     sk_module_unload(env->module);
+
+    skull_idl_data_t* idl_data = sk_txn_udata(env->txn);
+    free(idl_data->data);
+    free(idl_data);
     sk_txn_destroy(env->txn);
+
     sk_entity_destroy(env->entity);
     sk_workflow_destroy(env->workflow);
     free(env->workflow_cfg);

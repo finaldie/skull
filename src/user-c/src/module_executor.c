@@ -8,11 +8,6 @@
 
 #include "module_executor.h"
 
-typedef struct skull_idl_data_t {
-    void*  data;
-    size_t data_sz;
-} skull_idl_data_t;
-
 void   skull_module_init   (void* md)
 {
     sk_c_mdata* mdata = md;
