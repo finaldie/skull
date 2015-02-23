@@ -1,0 +1,51 @@
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Libraries
+*.lib
+*.a
+lib/*
+src/modules/**/lib/*
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Python
+*.pyc
+
+# ctag
+.tags
+tags
+
+# cscope
+.cscope.*
+cscope.*
+
+# protobuf-c files
+*.pb-c.*
+
+# generated metrics source files
+src/common/c/src/skull_metrics.*
+
+# generated idl source files
+src/common/c/src/skull_idl.*
+
+# generated config wrapper files
+src/modules/**/src/config.*
+
+# deployment directory
+run/**

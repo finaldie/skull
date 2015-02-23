@@ -23,6 +23,7 @@ function _skull_create()
     cp $SKULL_ROOT/share/skull/ChangeLog.md.tpl $workspace/ChangeLog.md
     cp $SKULL_ROOT/share/skull/README.md.tpl $workspace/README.md
     cp -r $SKULL_ROOT/share/skull/bin/* $workspace/bin
+    cp $SKULL_ROOT/share/skull/gitignore $workspace/.gitignore
 
     # copy all the configurations except ChangeLog.md
     local copy_list=`find $SKULL_ROOT/etc/skull/* -name "*" | grep -v "ChangeLog.md"`
