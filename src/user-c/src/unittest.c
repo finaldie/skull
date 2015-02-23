@@ -152,12 +152,12 @@ bool skull_log_enable_warn()  { return true; }
 bool skull_log_enable_error() { return true; }
 bool skull_log_enable_fatal() { return true; }
 
-const char* skull_log_info_msg(int log_id) { return "fake info message;"; }
-const char* skull_log_warn_msg(int log_id) { return "fake warn message;"; }
-const char* skull_log_warn_solution(int log_id) { return "fake warn solution;"; }
-const char* skull_log_error_msg(int log_id) { return "fake error message;"; }
+const char* skull_log_info_msg(int log_id) { return "fake info message"; }
+const char* skull_log_warn_msg(int log_id) { return "fake warn message"; }
+const char* skull_log_warn_solution(int log_id) { return "fake warn solution"; }
+const char* skull_log_error_msg(int log_id) { return "fake error message"; }
 const char* skull_log_error_solution(int log_id) { return "fake error solution"; }
-const char* skull_log_fatal_msg(int log_id) { return "fake fatal message;"; }
+const char* skull_log_fatal_msg(int log_id) { return "fake fatal message"; }
 const char* skull_log_fatal_solution(int log_id) { return "fake fatal solution"; }
 
 // Mock API for skull_metrics
