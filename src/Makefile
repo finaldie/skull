@@ -134,6 +134,7 @@ UT_OBJS = \
     user-c/src/module_executor.o \
     user-c/src/loader.o \
     user-c/src/idl.o \
+    user-c/src/txn.o \
     common/sk_utils.o \
     common/sk_loader.o \
     common/sk_txn.o \

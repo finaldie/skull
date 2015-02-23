@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <google/protobuf-c/protobuf-c.h>
 
@@ -11,6 +12,7 @@
 #include "api/sk_loader.h"
 
 #include "skull/idl.h"
+#include "skull/metrics_utils.h"
 #include "idl_internal.h"
 #include "skull/unittest.h"
 
@@ -131,9 +133,48 @@ void  skull_utenv_reset_idldata(skull_utenv_t* env, const void* msg)
 // Mock API for skull_txn (no needed, link the txn.o)
 
 // Mock API for skull_log
+//  Redirect the logger to stdout
+void skull_log(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+}
+
+bool skull_log_enable_trace() { return true; }
+bool skull_log_enable_debug() { return true; }
+bool skull_log_enable_info()  { return true; }
+bool skull_log_enable_warn()  { return true; }
+bool skull_log_enable_error() { return true; }
+bool skull_log_enable_fatal() { return true; }
+
+const char* skull_log_info_msg(int log_id) { return "fake info message;"; }
+const char* skull_log_warn_msg(int log_id) { return "fake warn message;"; }
+const char* skull_log_warn_solution(int log_id) { return "fake warn solution;"; }
+const char* skull_log_error_msg(int log_id) { return "fake error message;"; }
+const char* skull_log_error_solution(int log_id) { return "fake error solution"; }
+const char* skull_log_fatal_msg(int log_id) { return "fake fatal message;"; }
+const char* skull_log_fatal_solution(int log_id) { return "fake fatal solution"; }
 
 // Mock API for skull_metrics
+void skull_metric_inc(const char* name, double value)
+{
+    // No implementation, note: test metrics in FT
+}
 
-// Mock API for skull_idl
+double skull_metric_get(const char* name)
+{
+    // No implementation, note: test metrics in FT
+    return 0.0f;
+}
+
+void skull_metric_foreach(skull_metric_each metric_cb, void* ud)
+{
+    // No implementation, note: test metrics in FT
+}
+
+// Mock API for skull_idl (no needed, link idl.o)
 
 // Mock API for config
+
