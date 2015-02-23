@@ -30,12 +30,21 @@ endif
 # Linking flags
 DEPS_LDFLAGS += -rdynamic
 
+# linking flags (for unit test)
+DEPS_LDFLAGS += \
+    -Wl,-rpath,./lib \
+    -Wl,-rpath,../../common/c/lib \
+    -Wl,-rpath,/usr/local/lib
+
 # Skull cc and ld
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
 
 SKULL_LDFLAGS = $(LDFLAGS) $(SHARED) $(OTHER) $(DEPS_LDFLAGS)
 SKULL_LD = $(CC) $(SKULL_LDFLAGS)
+
+SKULL_BIN_LDFLAGS = $(LDFLAGS) $(OTHER) $(DEPS_LDFLAGS)
+SKULL_BIN_LD = $(CC) $(SKULL_BIN_LDFLAGS)
 
 # Obj compiling
 %.o: %.c
@@ -48,7 +57,6 @@ TEST_OBJS = $(patsubst %.c,%.o,$(TEST_SRCS))
 # bin/lib Name
 DIRNAME ?= $(shell basename $(shell pwd))
 PARENT_DIRNAME ?= $(shell basename $(shell pwd | xargs dirname))
-TARGET ?= libskull-$(PARENT_DIRNAME)-$(DIRNAME).so
-CONF_TARGET ?= skull-$(PARENT_DIRNAME)-$(DIRNAME).yaml
-
+TARGET ?= lib/libskull-$(PARENT_DIRNAME)-$(DIRNAME).so
 TEST_TARGET ?= test-mod
+CONF_TARGET ?= skull-$(PARENT_DIRNAME)-$(DIRNAME).yaml

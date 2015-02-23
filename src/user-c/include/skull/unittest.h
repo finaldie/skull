@@ -26,6 +26,7 @@ typedef struct skull_utenv_t skull_utenv_t;
 typedef struct skull_config_t skull_config_t;
 
 skull_utenv_t* skull_utenv_create(const char* module_so_location,
+                                  const char* idl_name,
                                   const skull_config_t* config);
 void skull_utenv_destroy(skull_utenv_t*);
 int  skull_utenv_run(skull_utenv_t*, bool run_unpack, bool run_pack);

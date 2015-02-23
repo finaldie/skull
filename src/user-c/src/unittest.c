@@ -34,14 +34,15 @@ struct skull_utenv_t {
 };
 
 skull_utenv_t* skull_utenv_create(const char* module_name,
-                              const skull_config_t* config)
+                                  const char* idl_name,
+                                  const skull_config_t* config)
 {
     skull_utenv_t* env = calloc(1, sizeof(*env));
     env->module = sk_module_load(module_name);
     env->config = config;
 
     env->workflow_cfg = calloc(1, sizeof(sk_workflow_cfg_t));
-    env->workflow_cfg->idl_name = env->module->name;
+    env->workflow_cfg->idl_name = idl_name;
     env->workflow_cfg->port = SK_CONFIG_NO_PORT;
     env->workflow = sk_workflow_create(env->workflow_cfg);
     env->entity = sk_entity_create(env->workflow);
@@ -139,6 +140,7 @@ void skull_log(const char* fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     vprintf(fmt, ap);
+    printf("\n");
     va_end(ap);
 }
 

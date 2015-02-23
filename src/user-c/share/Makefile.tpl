@@ -5,20 +5,31 @@ INC = \
     -Isrc \
     -I../../common/c/src
 
-DEPS_LDFLAGS += -L../../common/c
+DEPS_LDFLAGS += -L../../common/c/lib
 
 DEPS_LIBS += \
     -lprotobuf-c \
     -lskull-common-c
 
-TEST_DEPS_LIBS +=
+TEST_DEPS_LIBS += \
+    $(DEPS_LIBS) \
+    -lskull-unittest-c
 
 # Objs and deployment related items
 SRCS = \
     src/mod.c \
     src/config.c
 
-TEST_SRCS =
+TEST_SRCS = \
+    tests/test_mod.c
+
+# valgrind suppresion file
+SUPPRESION :=
+
+# valgrind command
+VALGRIND := valgrind --tool=memcheck --leak-check=full \
+    --gen-suppressions=all --error-exitcode=1 \
+    --suppressions=$(SUPPRESION)
 
 # Include the basic Makefile targets
 include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.c.targets

@@ -39,8 +39,10 @@ function action_c_module_add()
     mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/src
     mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/tests
     mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/config
+    mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/lib
 
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/src/mod.c
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/tests/test_mod.c
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/config.yaml.tpl $SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
 
     # copy makefiel templates
@@ -67,6 +69,7 @@ function action_c_common_create()
     # create common folers
     mkdir -p $COMMON_FILE_LOCATION/src
     mkdir -p $COMMON_FILE_LOCATION/tests
+    mkdir -p $COMMON_FILE_LOCATION/lib
 
     # move the Makefile to common/c only when there is no Makefile in common/c
     if [ ! -f $COMMON_FILE_LOCATION/Makefile ]; then
@@ -83,6 +86,10 @@ function action_c_common_create()
     # generate idl source code according to the idls
     local config=$SKULL_PROJ_ROOT/config/skull-config.yaml
     action_c_gen_idl $config
+
+    # copy the unit test file
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_common.c.tpl \
+            $COMMON_FILE_LOCATION/tests/test_common.c
 }
 
 function action_c_gen_metrics()

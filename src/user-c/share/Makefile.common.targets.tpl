@@ -2,8 +2,14 @@
 $(TARGET): $(OBJS)
 	$(SKULL_LD) -o $(TARGET) $(OBJS) $(DEPS_LIBS)
 
-check: $(TEST_OBJS)
-	$(SKULL_LD) -o $(TEST_TARGET) $(TEST_OBJS) $(TARGET) $(TEST_DEPS_LIBS)
+check: $(TEST_TARGET) $(TARGET)
+	./$(TEST_TARGET)
+
+valgrind-check: $(TEST_TARGET) $(TARGET)
+	$(VALGRIND) ./$(TEST_TARGET)
+
+$(TEST_TARGET): $(TEST_OBJS) $(TARGET)
+	$(SKULL_BIN_LD) -o $(TEST_TARGET) $(TEST_OBJS) $(TARGET) $(TEST_DEPS_LIBS)
 
 deploy:
 	test -d $(DEPLOY_DIR) || mkdir -p $(DEPLOY_DIR)
