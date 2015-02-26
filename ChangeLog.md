@@ -1,3 +1,9 @@
+* 2015-02-26 0.5.1
+   * **New:** Add unit test support for C module
+   * **New:** Add gitignore and ycm config when 'skull create'
+   * **Fix:** Potential crash of C module executor
+   * **Enhancement:** Refine part of command output
+   * **Enhancement:** Upgrade submodule 'flibs' to 0.8.1
 * 2015-02-11 0.4.4
    * **Enhancement:** No longer copy the skull changelog.md to a new project
    * **Enhancement:** Move the user makefiles to .skull/makefiles
