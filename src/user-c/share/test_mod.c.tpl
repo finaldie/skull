@@ -4,6 +4,14 @@
 #include <skull/unittest.h>
 #include "skull_idl.h"
 
+/**
+ * Basic Unit Test Rules for skull project:
+ * 1. Test the IDL transcation data
+ * 2. Test the important algorithm
+ * 3. DO NOT Test log content, since it's inconstant and FT may covered it
+ * 4. DO NOT Test metrics, since FT may covered it
+ */
+
 static
 void test_example()
 {
