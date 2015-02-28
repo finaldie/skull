@@ -3,7 +3,7 @@
 
 #include "api/sk_module.h"
 
-typedef struct sk_loader_t {
+typedef struct sk_module_loader_t {
     // module loader type
     sk_mtype_t type;
 
@@ -11,15 +11,15 @@ typedef struct sk_loader_t {
     int         padding;
 #endif
 
-    const char* (*sk_module_name)(const char* short_name,
-                                  char* fullname, size_t sz);
-    const char* (*conf_name)(const char* short_name,
-                             char* confname, size_t confname_sz);
-    int (*module_load_config)(sk_module_t*, const char* filename);
-    sk_module_t* (*sk_module_open)(const char* filename);
+    const char* (*name)      (const char* short_name,
+                              char* fullname, size_t sz);
+    const char* (*conf_name) (const char* short_name,
+                              char* confname, size_t confname_sz);
 
-    int   (*sk_module_close)(sk_module_t* module);
-} sk_loader_t;
+    sk_module_t* (*open)        (const char* filename);
+    int          (*load_config) (sk_module_t*, const char* filename);
+    int          (*close)       (sk_module_t* module);
+} sk_module_loader_t;
 
 /**
  * load a module

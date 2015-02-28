@@ -20,7 +20,7 @@
 #define SK_MODULE_CONF_PREFIX_NAME "skull-modules-"
 
 static
-const char* sk_c_module_name(const char* short_name, char* fullname, size_t sz)
+const char* _module_name(const char* short_name, char* fullname, size_t sz)
 {
     memset(fullname, 0, sz);
 
@@ -30,7 +30,7 @@ const char* sk_c_module_name(const char* short_name, char* fullname, size_t sz)
 }
 
 static
-const char* sk_c_conf_name(const char* short_name, char* confname, size_t sz)
+const char* _conf_name(const char* short_name, char* confname, size_t sz)
 {
     memset(confname, 0, sz);
 
@@ -41,7 +41,7 @@ const char* sk_c_conf_name(const char* short_name, char* confname, size_t sz)
 }
 
 static
-sk_module_t* sk_c_module_open(const char* filename)
+sk_module_t* _module_open(const char* filename)
 {
     // 1. empty all errors first
     dlerror();
@@ -97,7 +97,7 @@ sk_module_t* sk_c_module_open(const char* filename)
 }
 
 static
-int sk_c_module_close(sk_module_t* module)
+int _module_close(sk_module_t* module)
 {
     skull_c_mdata* md = module->md;
     void* handler = md->handler;
@@ -109,7 +109,7 @@ int sk_c_module_close(sk_module_t* module)
 }
 
 static
-int sk_c_module_load_config(sk_module_t* module, const char* filename)
+int _module_load_config(sk_module_t* module, const char* filename)
 {
     if (!filename) {
         sk_print("error: module config name is NULL\n");
@@ -121,11 +121,11 @@ int sk_c_module_load_config(sk_module_t* module, const char* filename)
     return 0;
 }
 
-sk_loader_t sk_c_loader = {
+sk_module_loader_t sk_c_module_loader = {
     .type = SK_C_MODULE_TYPE,
-    .sk_module_name = sk_c_module_name,
-    .conf_name = sk_c_conf_name,
-    .module_load_config = sk_c_module_load_config,
-    .sk_module_open = sk_c_module_open,
-    .sk_module_close = sk_c_module_close
+    .name = _module_name,
+    .conf_name = _conf_name,
+    .load_config = _module_load_config,
+    .open = _module_open,
+    .close = _module_close
 };
