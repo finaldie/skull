@@ -44,7 +44,7 @@ function action_c_module_add()
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/src/mod.c
     cp $SKULL_ROOT/$LANGUAGE_PATH/etc/config.yaml $SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/tests/test_mod.c
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_config.yaml $SKULL_PROJ_ROOT/src/modules/$module/tests/test_config.yaml
+    cp $SKULL_ROOT/$LANGUAGE_PATH/etc/test_config.yaml $SKULL_PROJ_ROOT/src/modules/$module/tests/test_config.yaml
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/gitignore-module $SKULL_PROJ_ROOT/src/modules/$module/.gitignore
 
     # copy makefile templates
