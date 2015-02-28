@@ -19,7 +19,7 @@ script:
     - make -j4 && make clean
     - make debug=true -j4 && make clean
 
-after_success: make install
+after_success: sudo make install
 
 after_script: true
 
