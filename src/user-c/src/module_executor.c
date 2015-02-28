@@ -127,8 +127,12 @@ void   skull_module_pack   (void* md, sk_txn_t* txn)
         .descriptor = desc
     };
 
+    skull_txndata_t skull_txndata = {
+        .txn = txn
+    };
+
     skull_c_mdata* mdata = md;
-    mdata->pack(&skull_txn);
+    mdata->pack(&skull_txn, &skull_txndata);
 
     // 3. destroy the user layer structure and the binary data
     protobuf_c_message_free_unpacked(msg, NULL);

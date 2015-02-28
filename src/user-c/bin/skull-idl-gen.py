@@ -24,7 +24,7 @@ HEADER_CONTENT_START = "\
 
 HEADER_CONTENT_END = "\
 \n\
-#endif\n\
+#endif\n\n\
 "
 
 SOURCE_CONTENT_START = "\
@@ -46,7 +46,7 @@ def load_yaml_config():
 def _generate_header(idl_name):
     content = ""
     content += "#include \"%s.pb-c.h\"\n" % idl_name
-    content += "void* skull_txndata_%s(skull_txn_t*);\n\n" % idl_name
+    content += "void* skull_idldata_%s(skull_txn_t*);\n\n" % idl_name
 
     return content
 
@@ -91,9 +91,9 @@ def generate_header():
 
 def __generate_txn_data_api(idl_name):
     content = ""
-    content += "void* skull_txndata_%s(skull_txn_t* txn) {\n" % idl_name
+    content += "void* skull_idldata_%s(skull_txn_t* txn) {\n" % idl_name
     content += "    assert(strcmp(skull_txn_idlname(txn), \"%s\"));\n" % idl_name
-    content += "    return skull_txn_data(txn);\n"
+    content += "    return skull_txn_idldata(txn);\n"
     content += "}\n\n"
 
     return content

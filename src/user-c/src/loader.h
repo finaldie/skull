@@ -2,6 +2,7 @@
 #define SKULL_C_LOADER_H
 
 #include <skull/txn.h>
+#include <skull/txndata.h>
 #include <skull/config.h>
 
 typedef struct skull_c_mdata {
@@ -18,7 +19,7 @@ typedef struct skull_c_mdata {
     void*  (*init)   (skull_config_t*);
     int    (*run)    (skull_txn_t* txn);
     size_t (*unpack) (skull_txn_t* txn, const void* data, size_t data_len);
-    void   (*pack)   (skull_txn_t* txn);
+    void   (*pack)   (skull_txn_t* txn, skull_txndata_t* txndata);
     void   (*release)(void* user_data);
 } skull_c_mdata;
 

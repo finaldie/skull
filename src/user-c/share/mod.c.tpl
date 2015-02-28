@@ -42,7 +42,7 @@ size_t module_unpack(skull_txn_t* txn, const void* data, size_t data_sz)
     SKULL_LOG_INFO(1, "module_unpack(test): data sz:%zu", data_sz);
 
     // deserialize data to transcation data
-    Skull__Example* example = skull_txndata_example(txn);
+    Skull__Example* example = skull_idldata_example(txn);
     example->data.len = data_sz;
     example->data.data = calloc(1, data_sz);
     memcpy(example->data.data, data, data_sz);
@@ -52,7 +52,7 @@ size_t module_unpack(skull_txn_t* txn, const void* data, size_t data_sz)
 
 int module_run(skull_txn_t* txn)
 {
-    Skull__Example* example = skull_txndata_example(txn);
+    Skull__Example* example = skull_idldata_example(txn);
     size_t data_sz = example->data.len;
     const char* data = (const char*)example->data.data;
 
@@ -66,14 +66,14 @@ int module_run(skull_txn_t* txn)
     return 0;
 }
 
-void module_pack(skull_txn_t* txn)
+void module_pack(skull_txn_t* txn, skull_txndata_t* txndata)
 {
-    Skull__Example* example = skull_txndata_example(txn);
+    Skull__Example* example = skull_idldata_example(txn);
     size_t data_sz = example->data.len;
     const char* data = (const char*)example->data.data;
 
     skull_metrics_module.response.inc(1);
     printf("module_pack(test): data sz:%zu\n", data_sz);
     SKULL_LOG_INFO(1, "module_pack(test): data sz:%zu", data_sz);
-    skull_txn_output_append(txn, data, data_sz);
+    skull_txndata_output_append(txndata, data, data_sz);
 }

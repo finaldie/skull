@@ -14,5 +14,9 @@ struct _skull_txn_t {
     const ProtobufCMessageDescriptor* descriptor;
 };
 
+struct skull_txndata_t {
+    sk_txn_t* txn;
+};
+
 #endif
 
