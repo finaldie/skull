@@ -42,8 +42,9 @@ function action_c_module_add()
     mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/lib
 
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/src/mod.c
+    cp $SKULL_ROOT/$LANGUAGE_PATH/etc/config.yaml $SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/tests/test_mod.c
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/config.yaml.tpl $SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_config.yaml $SKULL_PROJ_ROOT/src/modules/$module/tests/test_config.yaml
 
     # copy makefiel templates
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.tpl $SKULL_PROJ_ROOT/src/modules/$module/Makefile
@@ -110,7 +111,7 @@ function action_c_gen_config()
     local targetdir=$confdir/../src
     local tmpdir=/tmp
 
-    # TODO: compare the md5 of the new metrics and old metrics' files, do not to
+    # Compare the md5 of the new metrics and old metrics' files, do not to
     # replace them if they are same, it will reduce the compiling time
     $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-config-gen.py -c $config \
         -h $tmpdir/config.h \

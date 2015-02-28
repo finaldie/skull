@@ -16,7 +16,7 @@ static
 void test_example()
 {
     // 1. create a ut env
-    skull_utenv_t* env = skull_utenv_create("test", "example", NULL);
+    skull_utenv_t* env = skull_utenv_create("test", "example", "tests/test_config.yaml");
 
     // 2. set the global idl data before execution
     Skull__Example example = SKULL__EXAMPLE__INIT;
