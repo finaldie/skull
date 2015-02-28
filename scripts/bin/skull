@@ -80,6 +80,9 @@ function prepare()
 ###################################### MAIN ####################################
 # 1. Basic checking for parameter count
 if [ $# = 0 ]; then
+    prepare false
+    action_version
+    echo ""
     print_usage
     exit 1
 fi
