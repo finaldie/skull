@@ -41,7 +41,7 @@ void skull_config_destroy(skull_config_t* config)
     free(config);
 }
 
-int    skull_config_getint    (skull_config_t* config, const char* key_name,
+int    skull_config_getint    (const skull_config_t* config, const char* key_name,
                                int default_value)
 {
     sk_cfg_node_t* root = config->config;
@@ -61,7 +61,7 @@ int    skull_config_getint    (skull_config_t* config, const char* key_name,
     return value;
 }
 
-double skull_config_getdouble (skull_config_t* config, const char* key_name,
+double skull_config_getdouble (const skull_config_t* config, const char* key_name,
                                double default_value)
 {
     sk_cfg_node_t* root = config->config;
@@ -81,7 +81,8 @@ double skull_config_getdouble (skull_config_t* config, const char* key_name,
     return value;
 }
 
-const char* skull_config_getstring(skull_config_t* config, const char* key_name)
+const char* skull_config_getstring(const skull_config_t* config,
+                                   const char* key_name)
 {
     sk_cfg_node_t* root = config->config;
     SK_ASSERT_MSG(root->type == SK_CFG_NODE_MAPPING,

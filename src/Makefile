@@ -141,6 +141,7 @@ UT_OBJS = \
     common/sk_loader.o \
     common/sk_txn.o \
     common/sk_workflow.o \
+    common/sk_config_loader.o \
     entities/sk_entity.o
 
 # target rules
