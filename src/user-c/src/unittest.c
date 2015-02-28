@@ -53,6 +53,7 @@ void skull_utenv_destroy(skull_utenv_t* env)
         return;
     }
 
+    env->module->release(env->module->md);
     sk_module_unload(env->module);
 
     skull_idl_data_t* idl_data = sk_txn_udata(env->txn);

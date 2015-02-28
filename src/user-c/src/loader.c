@@ -10,10 +10,11 @@
 #include "skull/txn.h"
 #include "loader.h"
 
-#define SK_MODULE_INIT_FUNCNAME   "module_init"
-#define SK_MODULE_RUN_FUNCNAME    "module_run"
-#define SK_MODULE_UNPACK_FUNCNAME "module_unpack"
-#define SK_MODULE_PACK_FUNCNAME   "module_pack"
+#define SK_MODULE_INIT_FUNCNAME    "module_init"
+#define SK_MODULE_RUN_FUNCNAME     "module_run"
+#define SK_MODULE_UNPACK_FUNCNAME  "module_unpack"
+#define SK_MODULE_PACK_FUNCNAME    "module_pack"
+#define SK_MODULE_RELEASE_FUNCNAME "module_release"
 
 #define SK_MODULE_CONFIG_NAME "config.yaml"
 #define SK_MODULE_PREFIX_NAME "libskull-modules-"
@@ -92,6 +93,14 @@ sk_module_t* _module_open(const char* filename)
                  SK_MODULE_PACK_FUNCNAME, error);
     }
     module->pack = skull_module_pack;
+
+    // 3.5 load release
+    *(void**)(&md->release) = dlsym(handler, SK_MODULE_RELEASE_FUNCNAME);
+    if ((error = dlerror()) != NULL) {
+        sk_print("warning: load %s failed: %s\n",
+                 SK_MODULE_RELEASE_FUNCNAME, error);
+    }
+    module->release = skull_module_release;
 
     return module;
 }

@@ -50,6 +50,8 @@ const skull_static_config_t* skull_static_config();\n\
  */\n\
 void skull_static_config_convert(const skull_config_t* config);\n\
 \n\
+void skull_static_config_destroy();\n\
+\n\
 #endif\n\n"
 
 SOURCE_CONTENT_START = "\
@@ -90,6 +92,11 @@ void _skull_static_config_reset(skull_static_config_t* config)\n\
 const skull_static_config_t* skull_static_config()\n\
 {\n\
     return g_static_config;\n\
+}\n\
+\n\
+void skull_static_config_destroy()\n\
+{\n\
+    _skull_static_config_destroy(g_static_config);\n\
 }\n\
 "
 

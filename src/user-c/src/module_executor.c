@@ -12,7 +12,13 @@
 void   skull_module_init   (void* md)
 {
     skull_c_mdata* mdata = md;
-    mdata->init(mdata->config);
+    mdata->ud = mdata->init(mdata->config);
+}
+
+void   skull_module_release(void* md)
+{
+    skull_c_mdata* mdata = md;
+    mdata->release(mdata->ud);
 }
 
 int    skull_module_run    (void* md, sk_txn_t* txn)
