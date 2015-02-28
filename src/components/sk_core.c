@@ -153,6 +153,24 @@ void _sk_module_init(sk_core_t* core)
 }
 
 static
+void _sk_module_destroy(sk_core_t* core)
+{
+    fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+    sk_module_t* module = NULL;
+
+    while ((module = fhash_str_next(&iter))) {
+        sk_logger_setcookie("module.%s", module->name);
+        module->release(module->md);
+        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+
+        sk_module_unload(module);
+    }
+
+    fhash_str_iter_release(&iter);
+    fhash_str_delete(core->unique_modules);
+}
+
+static
 void _sk_init_log(sk_core_t* core)
 {
     const sk_config_t* config = core->config;
@@ -334,7 +352,7 @@ void sk_core_destroy(sk_core_t* core)
     free(core->workers);
 
     // 3. destroy unique module list
-    fhash_str_delete(core->unique_modules);
+    _sk_module_destroy(core);
 
     // 4. destroy moniters
     sk_mon_destroy(core->mon);
