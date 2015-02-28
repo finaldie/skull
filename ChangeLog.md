@@ -1,3 +1,13 @@
+* 2015-03-02 0.5.2
+   * Core
+     * **New:** Add 'module_release' callback for module
+     * **Fix:** Load the config file when a module be loaded into skull
+     * **Fix:** Fix a memory leak when module unloading
+     * **Enhancement:** Refine many internal api names
+   * Scripts
+     * **Enhancement:** Hide useless output for top Makefile
+   * User API
+     * **Enhancement:** Add gitignore for common and module
 * 2015-02-26 0.5.1
    * **New:** Add unit test support for C module
    * **New:** Add gitignore and ycm config when 'skull create'
