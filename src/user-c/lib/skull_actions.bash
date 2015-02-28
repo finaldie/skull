@@ -45,13 +45,14 @@ function action_c_module_add()
     cp $SKULL_ROOT/$LANGUAGE_PATH/etc/config.yaml $SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/tests/test_mod.c
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_config.yaml $SKULL_PROJ_ROOT/src/modules/$module/tests/test_config.yaml
+    cp $SKULL_ROOT/$LANGUAGE_PATH/share/gitignore-module $SKULL_PROJ_ROOT/src/modules/$module/.gitignore
 
-    # copy makefiel templates
+    # copy makefile templates
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.tpl $SKULL_PROJ_ROOT/src/modules/$module/Makefile
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.inc.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.inc
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.targets
 
-    # convert config to code
+    # generate a static config code for user
     local module_config=$SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
     action_c_gen_config $module_config
 
@@ -67,7 +68,7 @@ function action_c_common_create()
         return 0
     fi
 
-    # create common folers
+    # create common folders
     mkdir -p $COMMON_FILE_LOCATION/src
     mkdir -p $COMMON_FILE_LOCATION/tests
     mkdir -p $COMMON_FILE_LOCATION/lib
@@ -78,6 +79,13 @@ function action_c_common_create()
             $COMMON_FILE_LOCATION/Makefile
     fi
 
+    # copy gitignore
+    if [ ! -f $COMMON_FILE_LOCATION/.gitignore ]; then
+        cp $SKULL_ROOT/$LANGUAGE_PATH/share/gitignore-common \
+            $COMMON_FILE_LOCATION/.gitignore
+    fi
+
+    # copy common makefile targets
     cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.targets.tpl \
         $SKULL_MAKEFILE_FOLDER/Makefile.common.c.targets
 

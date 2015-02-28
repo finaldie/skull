@@ -8,7 +8,6 @@
 *.lib
 *.a
 lib/*
-src/modules/**/lib/*
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -34,18 +33,6 @@ tags
 # cscope
 .cscope.*
 cscope.*
-
-# protobuf-c files
-*.pb-c.*
-
-# generated metrics source files
-src/common/c/src/skull_metrics.*
-
-# generated idl source files
-src/common/c/src/skull_idl.*
-
-# generated config wrapper files
-src/modules/**/src/config.*
 
 # deployment directory
 run/**
