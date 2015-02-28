@@ -6,7 +6,7 @@
 
 extern sk_loader_t* sk_loaders[];
 
-sk_module_t* sk_module_load(const char* short_name)
+sk_module_t* sk_module_load(const char* short_name, const char* conf_name)
 {
     for (int i = 0; sk_loaders[i] != NULL; i++) {
         sk_loader_t* loader = sk_loaders[i];
@@ -25,6 +25,20 @@ sk_module_t* sk_module_load(const char* short_name)
         //  the short_name is the config value, feel free to use it
         module->type = loader->type;
         module->name = short_name;
+
+        // load config
+        char real_confname[1024] = {0};
+        if (!conf_name) {
+            conf_name = loader->conf_name(short_name, real_confname, 1024);
+        }
+        sk_print("module config name: %s\n", conf_name);
+
+        int ret = loader->module_load_config(module, conf_name);
+        if (ret) {
+            sk_print("module config %s load failed\n", conf_name);
+            return NULL;
+        }
+
         sk_print("load module{%s:%d} successfully\n", short_name, module->type);
         return module;
     }

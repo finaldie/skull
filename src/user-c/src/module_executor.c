@@ -5,13 +5,14 @@
 #include "api/sk_utils.h"
 #include "txn_types.h"
 #include "idl_internal.h"
+#include "loader.h"
 
 #include "module_executor.h"
 
 void   skull_module_init   (void* md)
 {
-    sk_c_mdata* mdata = md;
-    mdata->init();
+    skull_c_mdata* mdata = md;
+    mdata->init(mdata->config);
 }
 
 int    skull_module_run    (void* md, sk_txn_t* txn)
@@ -38,7 +39,7 @@ int    skull_module_run    (void* md, sk_txn_t* txn)
         .descriptor = desc
     };
 
-    sk_c_mdata* mdata = md;
+    skull_c_mdata* mdata = md;
     int ret = mdata->run(&skull_txn);
 
     // 3. serialize the user layer structure back to the binary data
@@ -83,7 +84,7 @@ size_t skull_module_unpack (void* md, sk_txn_t* txn,
         .descriptor = desc
     };
 
-    sk_c_mdata* mdata = md;
+    skull_c_mdata* mdata = md;
     size_t consumed_sz = mdata->unpack(&skull_txn, data, data_len);
 
     // 3. serialize the user layer idl data to binary data
@@ -120,7 +121,7 @@ void   skull_module_pack   (void* md, sk_txn_t* txn)
         .descriptor = desc
     };
 
-    sk_c_mdata* mdata = md;
+    skull_c_mdata* mdata = md;
     mdata->pack(&skull_txn);
 
     // 3. destroy the user layer structure and the binary data

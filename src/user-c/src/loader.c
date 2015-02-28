@@ -8,6 +8,7 @@
 #include "module_executor.h"
 
 #include "skull/txn.h"
+#include "loader.h"
 
 #define SK_MODULE_INIT_FUNCNAME   "module_init"
 #define SK_MODULE_RUN_FUNCNAME    "module_run"
@@ -16,6 +17,7 @@
 
 #define SK_MODULE_CONFIG_NAME "config.yaml"
 #define SK_MODULE_PREFIX_NAME "libskull-modules-"
+#define SK_MODULE_CONF_PREFIX_NAME "skull-modules-"
 
 static
 const char* sk_c_module_name(const char* short_name, char* fullname, size_t sz)
@@ -28,6 +30,17 @@ const char* sk_c_module_name(const char* short_name, char* fullname, size_t sz)
 }
 
 static
+const char* sk_c_conf_name(const char* short_name, char* confname, size_t sz)
+{
+    memset(confname, 0, sz);
+
+    // The full name format: lib/libskull-modules-%s.so
+    snprintf(confname, sz, "etc/" SK_MODULE_CONF_PREFIX_NAME "%s.yaml",
+             short_name);
+    return confname;
+}
+
+static
 sk_module_t* sk_c_module_open(const char* filename)
 {
     // 1. empty all errors first
@@ -36,12 +49,12 @@ sk_module_t* sk_c_module_open(const char* filename)
     char* error = NULL;
     void* handler = dlopen(filename, RTLD_NOW);
     if (!handler) {
-        sk_print("cannot open %s: %s\n", filename, dlerror());
+        sk_print("error: cannot open %s: %s\n", filename, dlerror());
         return NULL;
     }
 
     // 2. create module and its private data
-    sk_c_mdata* md = calloc(1, sizeof(*md));
+    skull_c_mdata* md = calloc(1, sizeof(*md));
     md->handler = handler;
 
     sk_module_t* module = calloc(1, sizeof(*module));
@@ -51,7 +64,7 @@ sk_module_t* sk_c_module_open(const char* filename)
     // 3.1 load init
     *(void**)(&md->init) = dlsym(handler, SK_MODULE_INIT_FUNCNAME);
     if ((error = dlerror()) != NULL) {
-        sk_print("load %s failed: %s\n", SK_MODULE_INIT_FUNCNAME, error);
+        sk_print("error: load %s failed: %s\n", SK_MODULE_INIT_FUNCNAME, error);
         return NULL;
     }
     module->init = skull_module_init;
@@ -59,7 +72,7 @@ sk_module_t* sk_c_module_open(const char* filename)
     // 3.2 load run
     *(void**)(&md->run) = dlsym(handler, SK_MODULE_RUN_FUNCNAME);
     if ((error = dlerror()) != NULL) {
-        sk_print("load %s failed: %s\n", SK_MODULE_RUN_FUNCNAME, error);
+        sk_print("error: load %s failed: %s\n", SK_MODULE_RUN_FUNCNAME, error);
         return NULL;
     }
     module->run = skull_module_run;
@@ -86,17 +99,33 @@ sk_module_t* sk_c_module_open(const char* filename)
 static
 int sk_c_module_close(sk_module_t* module)
 {
-    sk_c_mdata* md = module->md;
+    skull_c_mdata* md = module->md;
     void* handler = md->handler;
+    skull_config_destroy(md->config);
 
     free(md);
     free(module);
     return dlclose(handler);
 }
 
+static
+int sk_c_module_load_config(sk_module_t* module, const char* filename)
+{
+    if (!filename) {
+        sk_print("error: module config name is NULL\n");
+        return 1;
+    }
+
+    skull_c_mdata* md = module->md;
+    md->config = skull_config_create(filename);
+    return 0;
+}
+
 sk_loader_t sk_c_loader = {
     .type = SK_C_MODULE_TYPE,
     .sk_module_name = sk_c_module_name,
+    .conf_name = sk_c_conf_name,
+    .module_load_config = sk_c_module_load_config,
     .sk_module_open = sk_c_module_open,
     .sk_module_close = sk_c_module_close
 };

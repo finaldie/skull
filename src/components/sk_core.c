@@ -81,7 +81,7 @@ void _sk_setup_workflow(sk_core_t* core)
             }
 
             // 2.
-            sk_module_t* module = sk_module_load(module_name);
+            sk_module_t* module = sk_module_load(module_name, NULL);
             if (module) {
                 sk_print("load module [%s] successful\n", module_name);
                 SK_LOG_INFO(core->logger, "load module [%s] successful",

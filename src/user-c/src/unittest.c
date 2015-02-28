@@ -14,12 +14,10 @@
 #include "skull/idl.h"
 #include "skull/metrics_utils.h"
 #include "idl_internal.h"
-#include "module_executor.h"
 
 #include "skull/unittest.h"
 
 struct skull_utenv_t {
-    const skull_config_t* config;
     sk_module_t*    module;
 
     sk_workflow_t*  workflow;
@@ -31,11 +29,10 @@ struct skull_utenv_t {
 
 skull_utenv_t* skull_utenv_create(const char* module_name,
                                   const char* idl_name,
-                                  const skull_config_t* config)
+                                  const char* conf_name)
 {
     skull_utenv_t* env = calloc(1, sizeof(*env));
-    env->module = sk_module_load(module_name);
-    env->config = config;
+    env->module = sk_module_load(module_name, conf_name);
 
     env->workflow_cfg = calloc(1, sizeof(sk_workflow_cfg_t));
     env->workflow_cfg->idl_name = idl_name;

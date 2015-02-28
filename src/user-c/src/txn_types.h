@@ -3,9 +3,11 @@
 
 #include <google/protobuf-c/protobuf-c.h>
 #include "api/sk_txn.h"
+#include "skull/config.h"
 
 struct _skull_txn_t {
     sk_txn_t* txn;
+    skull_config_t* config;
 
     // protobuf message related data
     ProtobufCMessage* idl;

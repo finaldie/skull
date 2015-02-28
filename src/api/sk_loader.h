@@ -13,6 +13,9 @@ typedef struct sk_loader_t {
 
     const char* (*sk_module_name)(const char* short_name,
                                   char* fullname, size_t sz);
+    const char* (*conf_name)(const char* short_name,
+                             char* confname, size_t confname_sz);
+    int (*module_load_config)(sk_module_t*, const char* filename);
     sk_module_t* (*sk_module_open)(const char* filename);
 
     int   (*sk_module_close)(sk_module_t* module);
@@ -25,9 +28,11 @@ typedef struct sk_loader_t {
  * or a cpp/lua/python... module
  *
  * @param[in] short_name    short name of a module
+ * @param[in] config_name   config name of a module
  * @return a module object if success or NULL if failure
  */
-sk_module_t* sk_module_load(const char* short_name);
+sk_module_t* sk_module_load(const char* short_name,
+                            const char* config_name);
 
 void sk_module_unload(sk_module_t* module);
 
