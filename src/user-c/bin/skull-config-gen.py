@@ -162,7 +162,7 @@ def _generate_convertor_source_item(name, value):
     elif type(value) is float:
         content += "    new_config->%s = skull_config_getdouble(config, \"%s\", 0.0f);\n" % (name, name)
     elif type(value) is str:
-        content += "    new_config->%s = skull_config_getstring(config, \"%s\");\n" % (name, name)
+        content += "    new_config->%s = (char*)skull_config_getstring(config, \"%s\");\n" % (name, name)
     else:
         print "unsupported name: %s, type: %s" % (name, type(value))
 
