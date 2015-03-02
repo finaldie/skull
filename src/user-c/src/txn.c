@@ -8,15 +8,13 @@
 
 const char* skull_txn_idlname(skull_txn_t* txn)
 {
-    sk_workflow_t* workflow = sk_txn_workflow(txn->txn);
-    const char* idl_name = workflow->cfg->idl_name;
     size_t offset = 0;
     size_t package_name_len = strlen(txn->descriptor->package_name);
     if (package_name_len > 0) {
         offset = package_name_len + 1;
     }
 
-    return idl_name + offset;
+    return txn->descriptor->name + offset;
 }
 
 void* skull_txn_idldata(skull_txn_t* txn)
