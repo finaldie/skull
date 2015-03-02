@@ -1,6 +1,9 @@
 # Required Targets
-$(TARGET): $(OBJS)
+$(TARGET): prepare $(OBJS)
 	$(SKULL_LD) -o $(TARGET) $(OBJS) $(DEPS_LIBS)
+
+prepare:
+	test -d lib || mkdir lib
 
 check: $(TEST_TARGET) $(TARGET)
 	./$(TEST_TARGET)
