@@ -20,10 +20,13 @@ HEADER_CONTENT_START = "\
 \n\
 #include <skull/txn.h>\n\
 \n\
+#pragma GCC diagnostic push\n\
+#pragma GCC diagnostic ignored \"-Wpadded\"\n\
 "
 
 HEADER_CONTENT_END = "\
 \n\
+#pragma GCC diagnostic pop\n\
 #endif\n\n\
 "
 
@@ -92,7 +95,7 @@ def generate_header():
 def __generate_txn_data_api(idl_name):
     content = ""
     content += "void* skull_idldata_%s(skull_txn_t* txn) {\n" % idl_name
-    content += "    assert(strcmp(skull_txn_idlname(txn), \"%s\"));\n" % idl_name
+    content += "    assert(0 == strcmp(skull_txn_idlname(txn), \"%s\"));\n" % idl_name
     content += "    return skull_txn_idldata(txn);\n"
     content += "}\n\n"
 
