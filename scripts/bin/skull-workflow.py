@@ -58,18 +58,19 @@ def _create_workflow():
     'modules' : []
     }
 
-def process_add_workflow(is_generate_idl):
+def process_add_workflow():
     global yaml_obj
     global config_name
     global config_path
 
     try:
         # 1. update the skull config
-        opts, args = getopt.getopt(sys.argv[5:], 'C:i:p:')
+        opts, args = getopt.getopt(sys.argv[5:], 'C:i:p:g:')
 
         workflow_concurrent = 1
         workflow_port = 1234
         workflow_idl = ""
+        is_generate_idl = True
 
         for op, value in opts:
             if op == "-C":
@@ -78,6 +79,8 @@ def process_add_workflow(is_generate_idl):
                 workflow_idl = value
             elif op == "-p":
                 workflow_port = int(value)
+            elif op == "-g":
+                is_generate_idl = bool(value)
 
         ## 1.1 Now add these workflow_x to yaml obj and dump it
         workflow_frame = _create_workflow()
@@ -144,8 +147,7 @@ if __name__ == "__main__":
 
     try:
         work_mode = None
-        is_generate_idl = True
-        opts, args = getopt.getopt(sys.argv[1:5], 'c:m:i:')
+        opts, args = getopt.getopt(sys.argv[1:5], 'c:m:')
 
         for op, value in opts:
             if op == "-c":
@@ -154,14 +156,12 @@ if __name__ == "__main__":
                 load_yaml_config()
             elif op == "-m":
                 work_mode = value
-            elif op == '-i':
-                is_generate_idl = bool(value)
 
         # Now run the process func according the mode
         if work_mode == "show":
             process_show()
         elif work_mode == "add_workflow":
-            process_add_workflow(is_generate_idl)
+            process_add_workflow()
         elif work_mode == "add_module":
             process_add_module()
         else:

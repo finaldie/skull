@@ -84,7 +84,7 @@ function _action_workflow_add()
         fi
     done
 
-    is_gen_idl="True"
+    local is_gen_idl="True"
     if [ -f $SKULL_PROJ_ROOT/config/${idl}.proto ]; then
         is_gen_idl="False"
     fi
@@ -96,8 +96,8 @@ function _action_workflow_add()
     fi
 
     # add workflow into skull-config.yaml
-    $SKULL_ROOT/bin/skull-workflow.py -m add_workflow -c $skull_conf \
-        -C $concurrent -i $idl -p $port -i $is_gen_idl
+    $SKULL_ROOT/bin/skull-workflow.py -m add_workflow \
+        -c $skull_conf -C $concurrent -i $idl -p $port -g $is_gen_idl
 }
 
 function action_workflow_show()
