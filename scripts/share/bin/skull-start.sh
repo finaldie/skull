@@ -5,7 +5,7 @@ set -e
 ##################################### Utils ####################################
 usage() {
     echo "usage:"
-    echo "  skull-start.sh -c config [--memcheck]"
+    echo "  skull-start.sh -c config [--memcheck|--gdb]"
 }
 
 skull_start() {
@@ -15,6 +15,12 @@ skull_start() {
 skull_start_memcheck() {
     valgrind --tool=memcheck --leak-check=full \
         skull-engine -c $skull_config
+}
+
+skull_start_gdb() {
+    echo "After gdb started, type 'run -c $skull_config'"
+    echo ""
+    gdb skull-engine
 }
 ################################## End of Utils ################################
 
@@ -27,10 +33,11 @@ fi
 # 1. Parse the parameters
 skull_config=""
 memcheck=false
+gdb=false
 
 args=`getopt -a \
         -o c:h \
-        -l memcheck,help \
+        -l memcheck,gdb,help \
         -n "skull-start.sh" -- "$@"`
 if [ $? != 0 ]; then
     echo "Error: Invalid parameters" >&2
@@ -50,6 +57,10 @@ while true; do
         --memcheck)
             shift
             memcheck=true
+            ;;
+        --gdb)
+            shift
+            gdb=true
             ;;
         -h|--help)
             shift
@@ -83,6 +94,8 @@ export LD_LIBRARY_PATH=$skull_rundir/lib
 # 5. Start skull
 if $memcheck; then
     skull_start_memcheck
+elif $gdb; then
+    skull_start_gdb
 else
     skull_start
 fi
