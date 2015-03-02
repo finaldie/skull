@@ -5,8 +5,9 @@ debug ?= false
 # Compiling flags
 STD = -std=c99
 WARN = -Wall -Werror
+BASIC = -fPIC
 EXTRA = -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal
-EXTRA += -Winline -Wdisabled-optimization -fPIC
+EXTRA += -Winline -Wdisabled-optimization
 # It's better to use `-fstack-protector-strong`, but most of environment do not
 # have gcc 4.9, so use `-fstack-protector` first
 EXTRA += -fstack-protector
@@ -37,8 +38,11 @@ DEPS_LDFLAGS += \
     -Wl,-rpath,/usr/local/lib
 
 # Skull cc and ld
-SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
+SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(BASIC) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_CC = $(CC) $(SKULL_CFLAGS)
+
+SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(BASIC) $(MACRO) $(OPT) $(OTHER) $(INC)
+SKULL_TP_CC = $(CC) $(SKULL_TP_CFLAGS)
 
 SKULL_LDFLAGS = $(LDFLAGS) $(SHARED) $(OTHER) $(DEPS_LDFLAGS)
 SKULL_LD = $(CC) $(SKULL_LDFLAGS)
@@ -47,6 +51,9 @@ SKULL_BIN_LDFLAGS = $(LDFLAGS) $(OTHER) $(DEPS_LDFLAGS)
 SKULL_BIN_LD = $(CC) $(SKULL_BIN_LDFLAGS)
 
 # Obj compiling
+%.pb-c.o: %.pb-c.c
+	$(SKULL_TP_CC) -c $< -o $@
+
 %.o: %.c
 	$(SKULL_CC) -c $< -o $@
 
