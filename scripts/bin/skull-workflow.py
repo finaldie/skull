@@ -58,7 +58,7 @@ def _create_workflow():
     'modules' : []
     }
 
-def process_add_workflow():
+def process_add_workflow(is_generate_idl):
     global yaml_obj
     global config_name
     global config_path
@@ -94,15 +94,16 @@ def process_add_workflow():
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
         # 2. generate the protobuf file into config
-        proto_file_name = "%s/%s.proto" % (config_path, workflow_idl)
-        proto_file = file(proto_file_name, 'w')
-        content = "package skull;\n\n"
-        content += "message %s {\n" % workflow_idl
-        content += "    required bytes data = 1;\n"
-        content += "}\n"
+        if is_generate_idl:
+            proto_file_name = "%s/%s.proto" % (config_path, workflow_idl)
+            proto_file = file(proto_file_name, 'w')
+            content = "package skull;\n\n"
+            content += "message %s {\n" % workflow_idl
+            content += "    required bytes data = 1;\n"
+            content += "}\n"
 
-        proto_file.write(content)
-        proto_file.close()
+            proto_file.write(content)
+            proto_file.close()
 
     except Exception, e:
         print "Fatal: process_add_workflow: " + str(e)
@@ -143,7 +144,8 @@ if __name__ == "__main__":
 
     try:
         work_mode = None
-        opts, args = getopt.getopt(sys.argv[1:5], 'c:m:')
+        is_generate_idl = True
+        opts, args = getopt.getopt(sys.argv[1:5], 'c:m:i:')
 
         for op, value in opts:
             if op == "-c":
@@ -152,12 +154,14 @@ if __name__ == "__main__":
                 load_yaml_config()
             elif op == "-m":
                 work_mode = value
+            elif op == '-i':
+                is_generate_idl = bool(value)
 
         # Now run the process func according the mode
         if work_mode == "show":
             process_show()
         elif work_mode == "add_workflow":
-            process_add_workflow()
+            process_add_workflow(is_generate_idl)
         elif work_mode == "add_module":
             process_add_module()
         else:

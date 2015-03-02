@@ -84,14 +84,20 @@ function _action_workflow_add()
         fi
     done
 
+    is_gen_idl="True"
+    if [ -f $SKULL_PROJ_ROOT/config/${idl}.proto ]; then
+        is_gen_idl="False"
+    fi
+
     # set the port
     read -p "Need listen on a port? (y/n)" yn_port
     if [ $yn_port = "y" ]; then
         read -p "Input the port you want(1025-65535): " port
     fi
 
+    # add workflow into skull-config.yaml
     $SKULL_ROOT/bin/skull-workflow.py -m add_workflow -c $skull_conf \
-        -C $concurrent -i $idl -p $port
+        -C $concurrent -i $idl -p $port -i $is_gen_idl
 }
 
 function action_workflow_show()
