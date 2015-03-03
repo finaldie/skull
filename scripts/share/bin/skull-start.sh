@@ -5,7 +5,7 @@ set -e
 ##################################### Utils ####################################
 usage() {
     echo "usage:"
-    echo "  skull-start.sh -c config [--memcheck|--gdb]"
+    echo "  skull-start.sh -c config [--memcheck|--gdb|--strace]"
 }
 
 skull_start() {
@@ -22,6 +22,10 @@ skull_start_gdb() {
     echo ""
     gdb skull-engine
 }
+
+skull_start_strace() {
+    strace -f skull-engine -c $skull_config
+}
 ################################## End of Utils ################################
 
 if [ $# = 0 ]; then
@@ -33,11 +37,12 @@ fi
 # 1. Parse the parameters
 skull_config=""
 memcheck=false
-gdb=false
+run_by_gdb=false
+run_by_strace=false
 
 args=`getopt -a \
         -o c:h \
-        -l memcheck,gdb,help \
+        -l memcheck,gdb,strace,help \
         -n "skull-start.sh" -- "$@"`
 if [ $? != 0 ]; then
     echo "Error: Invalid parameters" >&2
@@ -60,7 +65,11 @@ while true; do
             ;;
         --gdb)
             shift
-            gdb=true
+            run_by_gdb=true
+            ;;
+        --strace)
+            shift
+            run_by_strace=true
             ;;
         -h|--help)
             shift
@@ -94,8 +103,10 @@ export LD_LIBRARY_PATH=$skull_rundir/lib
 # 5. Start skull
 if $memcheck; then
     skull_start_memcheck
-elif $gdb; then
+elif $run_by_gdb; then
     skull_start_gdb
+elif $run_by_strace; then
+    skull_start_strace
 else
     skull_start
 fi
