@@ -47,9 +47,6 @@ def process_show():
 
     print "total %d workflows" % (workflow_cnt)
 
-def usage():
-    print "usage: skull-workflow.py -m mode -c yaml_file ..."
-
 def _create_workflow():
     return {
     'concurrent' : 1,
@@ -61,16 +58,16 @@ def _create_workflow():
 def process_add_workflow():
     global yaml_obj
     global config_name
-    global config_path
 
     try:
         # 1. update the skull config
-        opts, args = getopt.getopt(sys.argv[5:], 'C:i:p:g:')
+        opts, args = getopt.getopt(sys.argv[5:], 'C:i:p:g:P:')
 
         workflow_concurrent = 1
         workflow_port = 1234
         workflow_idl = ""
         is_generate_idl = True
+        idl_path = ""
 
         for op, value in opts:
             if op == "-C":
@@ -81,6 +78,8 @@ def process_add_workflow():
                 workflow_port = int(value)
             elif op == "-g":
                 is_generate_idl = bool(value)
+            elif op == "-P":
+                idl_path = value
 
         ## 1.1 Now add these workflow_x to yaml obj and dump it
         workflow_frame = _create_workflow()
@@ -98,7 +97,7 @@ def process_add_workflow():
 
         # 2. generate the protobuf file into config
         if is_generate_idl:
-            proto_file_name = "%s/%s.proto" % (config_path, workflow_idl)
+            proto_file_name = "%s/%s.proto" % (idl_path, workflow_idl)
             proto_file = file(proto_file_name, 'w')
             content = "package skull;\n\n"
             content += "message %s {\n" % workflow_idl
@@ -139,6 +138,12 @@ def process_add_module():
         print "Fatal: process_add_module: " + str(e)
         usage()
         sys.exit(1)
+
+def usage():
+    print "usage:"
+    print "  skull-workflow.py -m show -c $yaml_file"
+    print "  skull-workflow.py -m add_workflow -c $yaml_file -C $concurrent -i $idl_name -p $port -g $is_gen_idl -P $idl_path"
+    print "  skull-workflow.py -m add_module -c $yaml_file -M $module_name -i $workflow_index"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

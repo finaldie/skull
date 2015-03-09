@@ -137,9 +137,9 @@ function action_c_gen_config()
 
 function action_c_gen_idl()
 {
-    # 1. generate protobuf-c source code
+    # 1. generate protobuf-c source code for workflows
     (
-        cd $SKULL_PROJ_ROOT/config
+        cd $SKULL_WORKFLOW_IDL_FOLDER
         for idl in ./*.proto; do
             protoc-c --c_out=$SKULL_PROJ_ROOT/src/common/c/src $idl
         done

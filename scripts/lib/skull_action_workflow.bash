@@ -59,7 +59,7 @@ function action_workflow_usage()
 function _action_workflow_add()
 {
     # prepare add workflow
-    local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
+    local skull_conf=$SKULL_CONFIG_FILE
     local concurrent=1
     local idl=""
     local port=1234
@@ -84,8 +84,9 @@ function _action_workflow_add()
         fi
     done
 
+    local idl_path=$SKULL_WORKFLOW_IDL_FOLDER
     local is_gen_idl="True"
-    if [ -f $SKULL_PROJ_ROOT/config/${idl}.proto ]; then
+    if [ -f $SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto ]; then
         is_gen_idl="False"
     fi
 
@@ -97,7 +98,8 @@ function _action_workflow_add()
 
     # add workflow into skull-config.yaml
     $SKULL_ROOT/bin/skull-workflow.py -m add_workflow \
-        -c $skull_conf -C $concurrent -i $idl -p $port -g $is_gen_idl
+        -c $skull_conf -C $concurrent -i $idl -p $port \
+        -g $is_gen_idl -P $idl_path
 }
 
 function action_workflow_show()
