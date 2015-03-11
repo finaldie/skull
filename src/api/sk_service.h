@@ -18,9 +18,6 @@ sk_service_t* sk_service_create(const char* service_name,
                                 void* srv_data);
 void sk_service_destroy(sk_service_t*);
 
-int sk_service_start(sk_service_t*);
-void sk_service_stop(sk_service_t*);
-
 const char* sk_service_name(const sk_service_t*);
 sk_service_type_t sk_service_type(const sk_service_t*);
 

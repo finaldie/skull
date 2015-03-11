@@ -40,6 +40,7 @@ typedef struct sk_core_t {
     flist*           workflows;      // element type: sk_workflow_t
     flist*           triggers;       // emement type: sk_trigger_t
     fhash*           unique_modules; // key: module name; value: sk_module_t
+    fhash*           services;       // key: service name; value: sk_service_t
     const char*      working_dir;
 } sk_core_t;
 

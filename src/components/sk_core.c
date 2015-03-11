@@ -11,6 +11,7 @@
 #include "api/sk_pto.h"
 #include "api/sk_config.h"
 #include "api/sk_module.h"
+#include "api/sk_service.h"
 #include "api/sk_workflow.h"
 #include "api/sk_trigger.h"
 #include "api/sk_loader.h"
@@ -51,7 +52,7 @@ void _sk_setup_engines(sk_core_t* core)
 }
 
 static
-void _sk_setup_workflow(sk_core_t* core)
+void _sk_setup_workflows(sk_core_t* core)
 {
     sk_config_t* config = core->config;
     core->workflows = flist_create();
@@ -177,6 +178,24 @@ void _sk_module_destroy(sk_core_t* core)
 }
 
 static
+void _sk_setup_services(sk_core_t* core)
+{
+
+}
+
+static
+void _sk_service_init(sk_core_t* core)
+{
+
+}
+
+static
+void _sk_service_destroy(sk_core_t* core)
+{
+
+}
+
+static
 void _sk_init_log(sk_core_t* core)
 {
     const sk_config_t* config = core->config;
@@ -271,7 +290,10 @@ void sk_core_init(sk_core_t* core)
     _sk_setup_engines(core);
 
     // 8. load workflows and related triggers
-    _sk_setup_workflow(core);
+    _sk_setup_workflows(core);
+
+    // 9. load services
+    _sk_setup_services(core);
 }
 
 void sk_core_start(sk_core_t* core)
@@ -279,14 +301,15 @@ void sk_core_start(sk_core_t* core)
     // 1. module init
     _sk_module_init(core);
 
-    sk_config_t* config = core->config;
+    // 2. service init
+    _sk_service_init(core);
 
-    // 2. start engines
+    // 3. start engines
     sk_print("skull engine starting...\n");
 
-    // 2.1 start master engine
+    // 3.1 start master engine
     sk_engine_t* master = core->master;
-    // this *main_thread_env* will be deleted when thread exit
+    //  This *master_env* will be deleted when thread exit
     sk_thread_env_t* master_env = sk_thread_env_create(core, master,
                                                        "master", 0);
     int ret = sk_engine_start(master, master_env);
@@ -295,7 +318,9 @@ void sk_core_start(sk_core_t* core)
         exit(ret);
     }
 
-    // 2.2 start worker engines
+    // 3.2 start worker engines
+    sk_config_t* config = core->config;
+
     for (int i = 0; i < config->threads; i++) {
         sk_engine_t* worker = core->workers[i];
         // this *worker_thread_env* will be deleted when thread exit
@@ -309,14 +334,14 @@ void sk_core_start(sk_core_t* core)
     }
     SK_LOG_INFO(core->logger, "skull engine start");
 
-    // 3. start triggers
+    // 4. start triggers
     flist_iter iter = flist_new_iter(core->triggers);
     sk_trigger_t* trigger = NULL;
     while ((trigger = flist_each(&iter))) {
         sk_trigger_run(trigger);
     }
 
-    // 4. wait them quit
+    // 5. wait them quit
     for (int i = 0; i < config->threads; i++) {
         sk_engine_wait(core->workers[i]);
     }
@@ -357,30 +382,33 @@ void sk_core_destroy(sk_core_t* core)
     }
     free(core->workers);
 
-    // 3. destroy unique module list
+    // 3. destroy modules
     _sk_module_destroy(core);
 
-    // 4. destroy moniters
+    // 4. destroy services
+    _sk_service_destroy(core);
+
+    // 5. destroy moniters
     sk_mon_destroy(core->mon);
     sk_mon_destroy(core->umon);
 
-    // 5. destroy config
+    // 6. destroy config
     sk_config_destroy(core->config);
 
-    // 6. destroy loggers
+    // 7. destroy loggers
     sk_logger_destroy(core->logger);
     sk_log_tpl_destroy(core->info_log_tpl);
     sk_log_tpl_destroy(core->warn_log_tpl);
     sk_log_tpl_destroy(core->error_log_tpl);
     sk_log_tpl_destroy(core->fatal_log_tpl);
 
-    // 7. destroy workflows
+    // 8. destroy workflows
     sk_workflow_t* workflow = NULL;
     while ((workflow = flist_pop(core->workflows))) {
         sk_workflow_destroy(workflow);
     }
     flist_delete(core->workflows);
 
-    // 8. destroy working dir string
+    // 9. destroy working dir string
     free((void*)core->working_dir);
 }
