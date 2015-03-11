@@ -30,18 +30,19 @@ skull_utenv_t* skull_utenv_create(const char* module_so_location,
 void skull_utenv_destroy(skull_utenv_t*);
 int  skull_utenv_run(skull_utenv_t*, bool run_unpack, bool run_pack);
 
-// When user call `skull_utenv_idldata`, then must call the *release api to
-// free the idl data memory
-void* skull_utenv_idldata(skull_utenv_t*);
+// When user call `skull_utenv_sharedata`, then must call the *release api to
+// free the share data memory
+// return a data which based on `ProtobufCMessage`
+void* skull_utenv_sharedata(skull_utenv_t*);
 
-// Release the memory allocated by the `skull_utenv_idldata`
+// Release the memory allocated by the `skull_utenv_sharedata`
 // Note: the data arg must a structure which base on `ProtobufCMessage`
-void  skull_utenv_idldata_release(void* data);
+void  skull_utenv_sharedata_release(void* data);
 
 // Reset the idl data for a utenv
 // Note: the data arg must a structure which base on `ProtobufCMessage`
 // Note: If the data is NULL, it will clear the old idl data
-void  skull_utenv_reset_idldata(skull_utenv_t*, const void* data);
+void  skull_utenv_sharedata_reset(skull_utenv_t*, const void* data);
 
 #endif
 

@@ -4,7 +4,7 @@
 
 #include "skull/api.h"
 #include "skull_metrics.h"
-#include "skull_idl.h"
+#include "skull_txn_sharedata.h"
 #include "config.h"
 
 void* module_init(skull_config_t* config)
@@ -42,7 +42,7 @@ size_t module_unpack(skull_txn_t* txn, const void* data, size_t data_sz)
     SKULL_LOG_INFO(1, "module_unpack(test): data sz:%zu", data_sz);
 
     // deserialize data to transcation data
-    Skull__Example* example = skull_idldata_example(txn);
+    Skull__Example* example = skull_txn_sharedata_example(txn);
     example->data.len = data_sz;
     example->data.data = calloc(1, data_sz);
     memcpy(example->data.data, data, data_sz);
@@ -52,7 +52,7 @@ size_t module_unpack(skull_txn_t* txn, const void* data, size_t data_sz)
 
 int module_run(skull_txn_t* txn)
 {
-    Skull__Example* example = skull_idldata_example(txn);
+    Skull__Example* example = skull_txn_sharedata_example(txn);
     size_t data_sz = example->data.len;
     const char* data = (const char*)example->data.data;
 
@@ -68,7 +68,7 @@ int module_run(skull_txn_t* txn)
 
 void module_pack(skull_txn_t* txn, skull_txndata_t* txndata)
 {
-    Skull__Example* example = skull_idldata_example(txn);
+    Skull__Example* example = skull_txn_sharedata_example(txn);
     size_t data_sz = example->data.len;
     const char* data = (const char*)example->data.data;
 

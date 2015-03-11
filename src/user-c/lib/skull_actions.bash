@@ -11,7 +11,9 @@
 # folder to the top of the project `SKULL_PROJECT_ROOT`, so it's no need to
 # change it again manually
 
-LANGUAGE_PATH=share/skull/lang/c
+# static env var
+LANGUAGE_PATH=$SKULL_ROOT/share/skull/lang/c
+COMMON_FILE_LOCATION=$SKULL_PROJ_ROOT/src/common/c
 
 # return:
 #  - 0 if this is a valid C module
@@ -30,36 +32,36 @@ function action_c_module_valid()
 function action_c_module_add()
 {
     local module=$1
-    if [ -d $SKULL_PROJ_ROOT/src/modules/$module ]; then
+    local module_path=$SKULL_PROJ_ROOT/src/modules/$module
+
+    if [ -d "$module_path" ]; then
         echo "Notice: the module [$module] has already exist"
         return 1
     fi
 
     # add module folder and files
-    mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/src
-    mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/tests
-    mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/config
-    mkdir -p $SKULL_PROJ_ROOT/src/modules/$module/lib
+    mkdir -p $module_path/src
+    mkdir -p $module_path/tests
+    mkdir -p $module_path/config
+    mkdir -p $module_path/lib
 
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/src/mod.c
-    cp $SKULL_ROOT/$LANGUAGE_PATH/etc/config.yaml $SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_mod.c.tpl $SKULL_PROJ_ROOT/src/modules/$module/tests/test_mod.c
-    cp $SKULL_ROOT/$LANGUAGE_PATH/etc/test_config.yaml $SKULL_PROJ_ROOT/src/modules/$module/tests/test_config.yaml
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/gitignore-module $SKULL_PROJ_ROOT/src/modules/$module/.gitignore
+    cp $LANGUAGE_PATH/share/mod.c.tpl        $module_path/src/mod.c
+    cp $LANGUAGE_PATH/etc/config.yaml        $module_path/config/config.yaml
+    cp $LANGUAGE_PATH/share/test_mod.c.tpl   $module_path/tests/test_mod.c
+    cp $LANGUAGE_PATH/etc/test_config.yaml   $module_path/tests/test_config.yaml
+    cp $LANGUAGE_PATH/share/gitignore-module $module_path/.gitignore
 
     # copy makefile templates
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.tpl $SKULL_PROJ_ROOT/src/modules/$module/Makefile
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.inc.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.inc
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.targets
+    cp $LANGUAGE_PATH/share/Makefile.tpl $module_path/Makefile
+    cp $LANGUAGE_PATH/share/Makefile.inc.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.inc
+    cp $LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.targets
 
     # generate a static config code for user
-    local module_config=$SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
+    local module_config=$module_path/config/config.yaml
     action_c_gen_config $module_config
 
     return 0
 }
-
-COMMON_FILE_LOCATION=$SKULL_PROJ_ROOT/src/common/c
 
 function action_c_common_create()
 {
@@ -75,18 +77,18 @@ function action_c_common_create()
 
     # move the Makefile to common/c only when there is no Makefile in common/c
     if [ ! -f $COMMON_FILE_LOCATION/Makefile ]; then
-        cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.tpl \
+        cp $LANGUAGE_PATH/share/Makefile.common.tpl \
             $COMMON_FILE_LOCATION/Makefile
     fi
 
     # copy gitignore
     if [ ! -f $COMMON_FILE_LOCATION/.gitignore ]; then
-        cp $SKULL_ROOT/$LANGUAGE_PATH/share/gitignore-common \
+        cp $LANGUAGE_PATH/share/gitignore-common \
             $COMMON_FILE_LOCATION/.gitignore
     fi
 
     # copy common makefile targets
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/Makefile.common.targets.tpl \
+    cp $LANGUAGE_PATH/share/Makefile.common.targets.tpl \
         $SKULL_MAKEFILE_FOLDER/Makefile.common.c.targets
 
     # generate the metrics
@@ -97,8 +99,8 @@ function action_c_common_create()
     action_c_gen_idl $config
 
     # copy the unit test file
-    cp $SKULL_ROOT/$LANGUAGE_PATH/share/test_common.c.tpl \
-            $COMMON_FILE_LOCATION/tests/test_common.c
+    cp $LANGUAGE_PATH/share/test_common.c.tpl \
+        $COMMON_FILE_LOCATION/tests/test_common.c
 }
 
 function action_c_gen_metrics()
@@ -107,7 +109,7 @@ function action_c_gen_metrics()
 
     # TODO: compare the md5 of the new metrics and old metrics' files, do not to
     # replace them if they are same, it will reduce the compiling time
-    $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-metrics-gen.py -c $config \
+    $LANGUAGE_PATH/bin/skull-metrics-gen.py -c $config \
         -h $COMMON_FILE_LOCATION/src/skull_metrics.h \
         -s $COMMON_FILE_LOCATION/src/skull_metrics.c
 }
@@ -121,7 +123,7 @@ function action_c_gen_config()
 
     # Compare the md5 of the new metrics and old metrics' files, do not to
     # replace them if they are same, it will reduce the compiling time
-    $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-config-gen.py -c $config \
+    $LANGUAGE_PATH/bin/skull-config-gen.py -c $config \
         -h $tmpdir/config.h \
         -s $tmpdir/config.c
 
@@ -141,13 +143,13 @@ function action_c_gen_idl()
     (
         cd $SKULL_WORKFLOW_IDL_FOLDER
         for idl in ./*.proto; do
-            protoc-c --c_out=$SKULL_PROJ_ROOT/src/common/c/src $idl
+            protoc-c --c_out=$COMMON_FILE_LOCATION/src $idl
         done
     )
 
     # 2. generate user api source code
     local config=$1
-    $SKULL_ROOT/$LANGUAGE_PATH/bin/skull-idl-gen.py -c $config \
-        -h $SKULL_PROJ_ROOT/src/common/c/src/skull_idl.h \
-        -s $SKULL_PROJ_ROOT/src/common/c/src/skull_idl.c
+    $LANGUAGE_PATH/bin/skull-idl-gen.py -c $config \
+        -h $COMMON_FILE_LOCATION/src/skull_txn_sharedata.h \
+        -s $COMMON_FILE_LOCATION/src/skull_txn_sharedata.c
 }

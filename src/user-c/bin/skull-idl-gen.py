@@ -15,13 +15,14 @@ source_name = ""
 
 # static
 HEADER_CONTENT_START = "\
-#ifndef SKULL_IDL_USER_H\n\
-#define SKULL_IDL_USER_H\n\
+#ifndef SKULL_TXN_SHAREDATA_USER_H\n\
+#define SKULL_TXN_SHAREDATA_USER_H\n\
 \n\
 #include <skull/txn.h>\n\
 \n\
 #pragma GCC diagnostic push\n\
 #pragma GCC diagnostic ignored \"-Wpadded\"\n\
+\n\
 "
 
 HEADER_CONTENT_END = "\
@@ -49,7 +50,7 @@ def load_yaml_config():
 def _generate_header(idl_name):
     content = ""
     content += "#include \"%s.pb-c.h\"\n" % idl_name
-    content += "void* skull_idldata_%s(skull_txn_t*);\n\n" % idl_name
+    content += "void* skull_txn_sharedata_%s(skull_txn_t*);\n\n" % idl_name
 
     return content
 
@@ -94,7 +95,7 @@ def generate_header():
 
 def __generate_txn_data_api(idl_name):
     content = ""
-    content += "void* skull_idldata_%s(skull_txn_t* txn) {\n" % idl_name
+    content += "void* skull_txn_sharedata_%s(skull_txn_t* txn) {\n" % idl_name
     content += "    assert(0 == strcmp(skull_txn_idlname(txn), \"%s\"));\n" % idl_name
     content += "    return skull_txn_idldata(txn);\n"
     content += "}\n\n"
@@ -150,7 +151,7 @@ def generate_source():
     content = ""
 
     # generate header
-    content += SOURCE_CONTENT_START % header_name
+    content += SOURCE_CONTENT_START % os.path.basename(header_name)
 
     # generate txn data apis
     content += _generate_txn_data_api()

@@ -73,7 +73,7 @@ int skull_utenv_run(skull_utenv_t* env, bool run_unapck, bool run_pack)
     return ret;
 }
 
-void* skull_utenv_idldata(skull_utenv_t* env)
+void* skull_utenv_sharedata(skull_utenv_t* env)
 {
     const ProtobufCMessageDescriptor* desc =
         skull_idl_descriptor(env->workflow_cfg->idl_name);
@@ -91,7 +91,7 @@ void* skull_utenv_idldata(skull_utenv_t* env)
     return msg;
 }
 
-void  skull_utenv_idldata_release(void* data)
+void  skull_utenv_sharedata_release(void* data)
 {
     if (!data) {
         return;
@@ -100,7 +100,7 @@ void  skull_utenv_idldata_release(void* data)
     protobuf_c_message_free_unpacked(data, NULL);
 }
 
-void  skull_utenv_reset_idldata(skull_utenv_t* env, const void* msg)
+void  skull_utenv_sharedata_reset(skull_utenv_t* env, const void* msg)
 {
     sk_txn_t* txn = env->txn;
     skull_idl_data_t* idl_data = sk_txn_udata(txn);
