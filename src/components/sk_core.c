@@ -37,7 +37,13 @@ void _sk_setup_engines(sk_core_t* core)
         core->workers[i] = sk_engine_create();
         SK_LOG_INFO(core->logger, "worker scheduler [%d] init successfully", i);
 
+        // create both-way links
+        //  - create a link from master to worker
         sk_engine_link(core->master, core->workers[i]);
+
+        //  - create a link from worker to master
+        sk_engine_link(core->workers[i], core->master);
+
         SK_LOG_INFO(core->logger, "io bridge [%d] init successfully", i);
     }
 
