@@ -31,10 +31,30 @@ void _delete_workflow_cfg(sk_workflow_cfg_t* workflow)
 }
 
 static
+sk_service_cfg_t* _service_cfg_item_create()
+{
+    sk_service_cfg_t* cfg = calloc(1, sizeof(*cfg));
+    cfg->enable = false;
+
+    return cfg;
+}
+
+static
+void _service_cfg_item_destroy(sk_service_cfg_t* cfg)
+{
+    if (!cfg) {
+        return;
+    }
+
+    free(cfg);
+}
+
+static
 sk_config_t* _create_config()
 {
     sk_config_t* config = calloc(1, sizeof(*config));
     config->workflows = flist_create();
+    config->services = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     return config;
 }
 
@@ -43,10 +63,23 @@ void _delete_config(sk_config_t* config)
 {
     sk_workflow_cfg_t* workflow = NULL;
 
+    // destroy workflow
     while ((workflow = flist_pop(config->workflows))) {
         _delete_workflow_cfg(workflow);
     }
     flist_delete(config->workflows);
+
+    // destroy service
+    fhash_str_iter srv_iter = fhash_str_iter_new(config->services);
+    sk_service_cfg_t* srv_cfg_item = NULL;
+
+    while ((srv_cfg_item = fhash_str_next(&srv_iter))) {
+        _service_cfg_item_destroy(srv_cfg_item);
+    }
+
+    fhash_str_iter_release(&srv_iter);
+    fhash_str_delete(config->services);
+
     free(config);
 }
 
@@ -150,6 +183,47 @@ void _load_log_level(sk_cfg_node_t* child, sk_config_t* config)
 }
 
 static
+void _load_service(const char* service_name, sk_cfg_node_t* node,
+                   sk_config_t* config)
+{
+    SK_ASSERT_MSG(node->type == SK_CFG_NODE_MAPPING,
+                  "service item config must be a mapping\n");
+
+    sk_service_cfg_t* service_cfg = _service_cfg_item_create();
+    fhash_str_iter iter = fhash_str_iter_new(node->data.mapping);
+    sk_cfg_node_t* child = NULL;
+
+    while ((child = fhash_str_next(&iter))) {
+        const char* key = iter.key;
+
+        if (0 == strcmp(key, "enable")) {
+            service_cfg->enable = sk_config_getint(child);
+        }
+    }
+
+    fhash_str_iter_release(&iter);
+    fhash_str_set(config->services, service_name, service_cfg);
+}
+
+static
+void _load_services(sk_cfg_node_t* node, sk_config_t* config)
+{
+    SK_ASSERT_MSG(node->type == SK_CFG_NODE_MAPPING,
+                  "service config must be a mapping\n");
+
+    sk_cfg_node_t* child = NULL;
+    fhash_str_iter iter = fhash_str_iter_new(node->data.mapping);
+
+    while ((child = fhash_str_next(&iter))) {
+        const char* service_name = iter.key;
+
+        _load_service(service_name, child, config);
+    }
+
+    fhash_str_iter_release(&iter);
+}
+
+static
 void _load_config(sk_cfg_node_t* root, sk_config_t* config)
 {
     SK_ASSERT_MSG(root->type == SK_CFG_NODE_MAPPING,
@@ -178,6 +252,11 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         // load log level: trace|debug|info|warn|error|fatal
         if (0 == strcmp(key, "log_level")) {
             _load_log_level(child, config);
+        }
+
+        // load services
+        if (0 == strcmp(key, "services")) {
+            _load_services(child, config);
         }
     }
 

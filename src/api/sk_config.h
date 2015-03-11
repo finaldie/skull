@@ -1,9 +1,11 @@
 #ifndef SK_CONFIG_H
 #define SK_CONFIG_H
 
+#include <stdbool.h>
 #include <netinet/in.h>
 
 #include "flibs/flist.h"
+#include "flibs/fhash.h"
 #include "api/sk_types.h"
 #include "api/sk_module.h"
 
@@ -19,6 +21,10 @@ typedef struct sk_workflow_cfg_t {
     const char* idl_name; // workflow idl name
     flist* modules;       // module name list
 } sk_workflow_cfg_t;
+
+typedef struct sk_service_cfg_t {
+    bool enable;
+} sk_service_cfg_t;
 
 typedef struct sk_config_t {
     // the location of the config file, while this is root location of the
@@ -37,6 +43,9 @@ typedef struct sk_config_t {
 
     // sk_workflow_cfg_t list
     flist* workflows;
+
+    // key: service name, value: sk_service_t*
+    fhash* services;
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);
