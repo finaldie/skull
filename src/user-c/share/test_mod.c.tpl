@@ -10,6 +10,7 @@
  * 2. Test the important algorithm
  * 3. DO NOT Test the log content, since it's inconstant and FT may covered it
  * 4. DO NOT Test metrics, since FT may covered it
+ * 5. DO NOT strive for 100% test coverage, set a meaningful goal, like 80%
  */
 
 static
