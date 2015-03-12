@@ -95,8 +95,9 @@ void _sk_setup_workflows(sk_core_t* core)
                           module_name);
             } else {
                 sk_print("load module [%s] failed\n", module_name);
-                SK_LOG_INFO(core->logger, "load module [%s] failed",
-                          module_name);
+                SK_LOG_ERROR(core->logger, "load module [%s] failed",
+                             module_name);
+                exit(1);
             }
 
             // 3.
@@ -166,10 +167,12 @@ void _sk_module_destroy(sk_core_t* core)
     sk_module_t* module = NULL;
 
     while ((module = fhash_str_next(&iter))) {
+        // 1. release module user layer data
         sk_logger_setcookie("module.%s", module->name);
         module->release(module->md);
         sk_logger_setcookie(SK_CORE_LOG_COOKIE);
 
+        // 2. release module core layer data
         sk_module_unload(module);
     }
 
@@ -180,19 +183,72 @@ void _sk_module_destroy(sk_core_t* core)
 static
 void _sk_setup_services(sk_core_t* core)
 {
+    sk_config_t* config = core->config;
+    core->services = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    fhash_str_iter srv_cfg_iter = fhash_str_iter_new(config->services);
+    sk_service_cfg_t* srv_cfg_item = NULL;
 
+    while ((srv_cfg_item = fhash_str_next(&srv_cfg_iter))) {
+        const char* service_name = srv_cfg_iter.key;
+        SK_LOG_INFO(core->logger, "setup service %s", service_name);
+
+        // create and load a service
+        sk_service_t* service = sk_service_create(service_name, srv_cfg_item);
+        int ret = sk_service_load(service, NULL);
+        if (ret) {
+            SK_LOG_ERROR(core->logger, "setup service %s failed", service_name);
+            exit(1);
+        }
+
+        // store service into core->service hash table
+        fhash_str_set(core->services, service_name, service);
+
+        SK_LOG_INFO(core->logger, "setup service %s successful", service_name);
+    }
+
+    fhash_str_iter_release(&srv_cfg_iter);
 }
 
 static
 void _sk_service_init(sk_core_t* core)
 {
+    fhash_str_iter srv_iter = fhash_str_iter_new(core->services);
+    sk_service_t* service = NULL;
 
+    while ((service = fhash_str_next(&srv_iter))) {
+        const char* service_name = sk_service_name(service);
+        SK_LOG_INFO(core->logger, "init service %s", service_name);
+
+        sk_logger_setcookie("service.%s", service_name);
+        sk_service_start(service);
+        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+    }
+
+    fhash_str_iter_release(&srv_iter);
 }
 
 static
 void _sk_service_destroy(sk_core_t* core)
 {
+    fhash_str_iter srv_iter = fhash_str_iter_new(core->services);
+    sk_service_t* service = NULL;
 
+    while ((service = fhash_str_next(&srv_iter))) {
+        const char* service_name = sk_service_name(service);
+        SK_LOG_INFO(core->logger, "destroy service %s", service_name);
+
+        // 1. release service user layer data
+        sk_logger_setcookie("service.%s", service_name);
+        sk_service_stop(service);
+        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+
+        // 2. release service core layer data
+        sk_service_unload(service);
+        SK_LOG_INFO(core->logger, "destroy service %s complete", service_name);
+    }
+
+    fhash_str_iter_release(&srv_iter);
+    fhash_str_delete(core->services);
 }
 
 static

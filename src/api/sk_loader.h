@@ -34,6 +34,9 @@ typedef struct sk_module_loader_t {
 sk_module_t* sk_module_load(const char* short_name,
                             const char* config_name);
 
+/**
+ * unload a module and release the core layer data
+ */
 void sk_module_unload(sk_module_t* module);
 
 // =============================================================================
@@ -48,20 +51,30 @@ typedef struct sk_service_loader_t {
     int         padding;
 #endif
 
-    const char* (*name)      (const char* short_name,
-                              char* fullname, size_t sz);
-    const char* (*conf_name) (const char* short_name,
-                              char* confname, size_t confname_sz);
+    const char* (*name)       (const char* short_name,
+                               char* fullname, size_t sz);
+    const char* (*conf_name)  (const char* short_name,
+                               char* confname, size_t confname_sz);
 
-    sk_service_t* (*open)  (const char* service_name, const char* filename);
-    int           (*close) (sk_service_t* service);
+    int (*open)  (const char* filename, sk_service_opt_t* /*out*/);
+    int (*close) (sk_service_t* service);
 
-    int           (*load_config) (sk_service_t*, const char* filename);
+    int (*load_config) (sk_service_t*, const char* user_cfg_filename);
 } sk_service_loader_t;
 
-sk_service_t* sk_service_load(const char* service_name,
-                              const char* config_name);
+/**
+ * load a service
+ *
+ * @param srv              a pointer of sk_service_t
+ * @param user_config_name
+ *
+ * @return 0 if success, 1 if failure
+ */
+int sk_service_load(sk_service_t* srv, const char* user_config_name);
 
+/**
+ * unload a service and release the core layer data
+ */
 void sk_service_unload(sk_service_t* service);
 
 #endif

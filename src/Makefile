@@ -91,7 +91,8 @@ COMPONENTS_OBJS = \
     components/sk_core.o \
     components/sk_entity_mgr.o \
     components/sk_config.o \
-    components/sk_engine.o
+    components/sk_engine.o \
+    components/sk_service.o
 
 PTO_OBJS = \
     pto/sk_pto.o \

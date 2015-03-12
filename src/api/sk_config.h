@@ -2,6 +2,7 @@
 #define SK_CONFIG_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <netinet/in.h>
 
 #include "flibs/flist.h"
