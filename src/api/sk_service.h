@@ -3,6 +3,7 @@
 
 #include "api/sk_config.h"
 #include "api/sk_txn.h"
+#include "api/sk_queue.h"
 #include "api/sk_service_data.h"
 
 typedef struct sk_service_t sk_service_t;
@@ -11,28 +12,35 @@ typedef enum sk_service_type_t {
     SK_C_SERICE_TYPE = 0
 } sk_service_type_t;
 
-typedef enum sk_srv_req_type_t {
-    SK_SRV_REQ_TYPE_EXCLUSIVE = 0,
-    SK_SRV_REQ_TYPE_RO = 1,
-    SK_SRV_REQ_TYPE_WO = 2
-} sk_srv_req_type_t;
-
+// service status
 typedef enum sk_srv_status_t {
     SK_SRV_STATUS_OK               = 0,
-    SK_SRV_STATUS_INVALID_SRV_NAME = 1, // error: invalid service name
-    SK_SRV_STATUS_BUSY             = 2, // error: cannot push new task
-    SK_SRV_STATUS_TASK_FAILED      = 3,
-    SK_SRV_STATUS_PENDING          = 4, // cannot pop task (pending tasks)
-    SK_SRV_STATUS_IDLE             = 5  // cannot pop task (there is no task)
+
+    // for user
+    SK_SRV_STATUS_BUSY             = 1, // error: cannot push new task
+
+    // internal
+    SK_SRV_STATUS_TASK_FAILED      = 2,
+    SK_SRV_STATUS_PENDING          = 3, // cannot pop task (pending tasks)
+    SK_SRV_STATUS_IDLE             = 4, // cannot pop task (there is no task)
+    SK_SRV_STATUS_NOT_PUSHED       = 5
 } sk_srv_status_t;
 
+// service status for user layer
+typedef enum sk_srv_io_status_t {
+    SK_SRV_IO_STATUS_OK = 0,
+    SK_SRV_IO_STATUS_INVALID_SRV_NAME = 1,
+    SK_SRV_IO_STATUS_BUSY = 2,
+    SK_SRV_IO_STATUS_MAX // DO NOT USE IT
+} sk_srv_io_status_t;
+
 typedef struct sk_srv_task_t {
+    sk_queue_elem_base_t base;  // This must be placed at the front
+    sk_srv_io_status_t   io_status;
+
     sk_service_t* service;
     sk_txn_t*     txn;
     const char*   api_name;
-
-    sk_srv_req_type_t req_type;
-    sk_srv_status_t srv_status;
 
     const void* request;
     size_t request_sz;
@@ -45,6 +53,7 @@ typedef struct sk_service_opt_t {
     void (*release) (void* srv_data);
 
     int (*io_call)  (void* srv_data, const char* api_name,
+                     sk_srv_io_status_t ustatus,
                      const void* request, size_t request_sz);
 } sk_service_opt_t;
 
@@ -65,12 +74,13 @@ const sk_service_cfg_t* sk_service_config(const sk_service_t*);
 
 // APIs for master
 sk_srv_status_t sk_service_push_task(sk_service_t*, const sk_srv_task_t*);
-int sk_service_schedule_tasks(sk_service_t*);
+size_t sk_service_schedule_tasks(sk_service_t*);
 void sk_service_schedule_task(sk_service_t*, const sk_srv_task_t*);
 void sk_service_task_complete(sk_service_t*);
 
 // APIs for worker
 sk_srv_status_t sk_service_run_iocall(sk_service_t*, const char* api_name,
+                                      sk_srv_io_status_t io_status,
                                       const void* req, size_t req_sz);
 
 #endif

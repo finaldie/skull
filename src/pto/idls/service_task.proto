@@ -4,7 +4,11 @@ message service_task_run {
     required string service_name = 2;
 
     required string api_name = 3;
-    required bytes request = 4;
+    // 0: OK
+    // 1: invalid service name
+    // 2: service busy
+    required uint32 io_status = 4;
+    required bytes request = 5;
 }
 
 // notify master the task is complete, and master will update the status

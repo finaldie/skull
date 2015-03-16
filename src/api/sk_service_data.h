@@ -3,7 +3,8 @@
 
 typedef enum sk_srv_data_mode_t {
     SK_SRV_DATA_MODE_EXCLUSIVE = 0,
-    SK_SRV_DATA_MODE_RW = 1         // prefer write
+    SK_SRV_DATA_MODE_RW_PR = 1,     // prefer read
+    SK_SRV_DATA_MODE_RW_PW = 2      // prefer write
 } sk_srv_data_mode_t;
 
 typedef struct sk_srv_data_t sk_srv_data_t;
