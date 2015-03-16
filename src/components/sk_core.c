@@ -468,3 +468,12 @@ void sk_core_destroy(sk_core_t* core)
     // 9. destroy working dir string
     free((void*)core->working_dir);
 }
+
+// Utils APIs
+sk_service_t* sk_core_get_service(sk_core_t* core, const char* service_name)
+{
+    SK_ASSERT(core);
+    SK_ASSERT(service_name);
+
+    return fhash_str_get(core->services, service_name);
+}
