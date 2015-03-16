@@ -87,7 +87,7 @@ int sk_service_load(sk_service_t* service, const char* conf_name)
         sk_print("try to load service: %s, type: %d - %s\n",
                  service_name, loader->type, fullname);
 
-        sk_service_opt_t service_opt = {NULL, NULL, NULL};
+        sk_service_opt_t service_opt = {NULL, NULL, NULL, NULL};
         int ret = loader->open(fullname, &service_opt);
         if (ret) {
             sk_print("load service: %s failed by loader [%d]\n",
