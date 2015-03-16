@@ -98,12 +98,17 @@ PTO_OBJS = \
     pto/sk_pto.o \
     pto/sk_pto_net_accept.o \
     pto/sk_pto_net_destroy.o \
-    pto/sk_pto_workflow_run.o
+    pto/sk_pto_workflow_run.o \
+    pto/sk_pto_service_iocall.o \
+    pto/sk_pto_service_task_run.o \
+    pto/sk_pto_service_task_complete.o
 
 PTO_IDLS_OBJS = \
     pto/idls/net_accept.pb-c.o \
     pto/idls/net_destroy.pb-c.o \
-    pto/idls/workflow_run.pb-c.o
+    pto/idls/workflow_run.pb-c.o \
+    pto/idls/service_iocall.pb-c.o \
+    pto/idls/service_task.pb-c.o
 
 USER_C_OBJS = \
     user-c/src/logger_private.o \
@@ -129,7 +134,9 @@ SKULL_OBJS = \
 PROTO_IDLS = \
     net_accept.proto \
     net_destroy.proto \
-    workflow_run.proto
+    workflow_run.proto \
+    service_iocall.proto \
+    service_task.proto
 
 UT_OBJS = \
     user-c/src/unittest.o \
