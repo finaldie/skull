@@ -1,0 +1,8 @@
+// call the master, and schedule a service task
+message service_iocall {
+    required string service_name = 1;
+    required string api_name = 2;
+    required int32  data_mode = 3;
+
+    required bytes request = 4;
+}
