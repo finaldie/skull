@@ -8,7 +8,7 @@ typedef struct sk_module_loader_t {
     sk_mtype_t type;
 
 #if __WORDSIZE == 64
-    int         padding;
+    int        _padding;
 #endif
 
     const char* (*name)      (const char* short_name,
@@ -48,7 +48,7 @@ typedef struct sk_service_loader_t {
     sk_service_type_t type;
 
 #if __WORDSIZE == 64
-    int         padding;
+    int         _padding;
 #endif
 
     const char* (*name)       (const char* short_name,
