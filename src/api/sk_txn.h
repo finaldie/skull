@@ -29,6 +29,9 @@ struct sk_module_t* sk_txn_current_module(sk_txn_t* txn);
 int sk_txn_is_first_module(sk_txn_t* txn);
 int sk_txn_is_last_module(sk_txn_t* txn);
 
+struct sk_sched_t* sk_txn_sched(sk_txn_t* txn);
+void sk_txn_sched_set(sk_txn_t* txn, struct sk_sched_t*);
+
 // sk_txn's alive time from it be created
 unsigned long long sk_txn_alivetime(sk_txn_t* txn);
 

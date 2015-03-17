@@ -322,6 +322,8 @@ void sk_service_data_set(sk_service_t* service, const void* data)
 
 // User call this api to invoke a service call, it will wrap a iocall
 // protocol, and send to master
+//
+// TODO: check whether it be invoked from user module
 int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
                       const char* api_name, sk_srv_data_mode_t data_mode,
                       const void* req, size_t req_sz)
@@ -336,12 +338,16 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
         SK_ASSERT(req_sz > 0);
     }
 
+    // 1. construct iocall protocol
     ServiceIocall iocall_msg = SERVICE_IOCALL__INIT;
     iocall_msg.service_name = (char*) service->name;
     iocall_msg.api_name     = (char*) api_name;
     iocall_msg.data_mode    = data_mode;
     iocall_msg.request.data = (unsigned char*) req;
     iocall_msg.request.len  = req_sz;
+
+    // 2. set the txn sched affinity
+    sk_txn_sched_set(txn, SK_ENV_SCHED);
 
     sk_sched_send(SK_ENV_SCHED, sk_txn_entity(txn), txn,
                   SK_PTO_SERVICE_IOCALL, &iocall_msg);
