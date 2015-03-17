@@ -35,7 +35,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // NOTES: the cookie have 256 bytes limitation
     sk_logger_setcookie("module.%s", module->name);
 
-    // run the module
+    // Run the module
     int ret = module->run(module->md, txn);
     sk_print("module execution return code=%d\n", ret);
 
@@ -47,20 +47,32 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
         return 1;
     }
 
-    // 2. check whether is the last module:
-    // 2.1 if no, send a event for next module
+    // 2. check whether the module is completed, if not, means there are some
+    //    service io calls on the fly. When all the service io calls have
+    //    completed, the master will re-schedule the 'workflow_run' protocol
+    //    again
+    if (sk_txn_module_complete(txn)) {
+        sk_print("txn pending, waiting for service io calls, module %s\n",
+                 module->name);
+        SK_LOG_DEBUG(SK_ENV_LOGGER, "txn pending, waiting for service calls, \
+                     module %s", module->name);
+        return 0;
+    }
+
+    // 3. check whether is the last module:
+    // 3.1 if no, send a event for next module
     if (!sk_txn_is_last_module(txn)) {
         sk_print("doesn't reach the last module\n");
         sk_sched_push(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
         return 0;
     }
 
-    // 2.2 no pack function means no need to send response
+    // 3.2 no pack function means no need to send response
     if (!module->pack) {
         goto module_exit;
     }
 
-    // 3. pack the data, and send the response if needed
+    // 4. pack the data, and send the response if needed
     module->pack(module->md, txn);
 
     size_t packed_data_sz = 0;

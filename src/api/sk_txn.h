@@ -10,12 +10,6 @@ struct sk_workflow_t;
 struct sk_entity_t;
 struct sk_module_t;
 
-typedef enum sk_txn_task_status_t {
-    SK_TXN_TASK_RUNNING = 0,
-    SK_TXN_TASK_DONE = 1,
-    SK_TXN_TASK_ERROR = 2
-} sk_txn_task_status_t;
-
 typedef struct sk_txn_t sk_txn_t;
 
 sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
@@ -52,6 +46,12 @@ bool sk_txn_module_complete(sk_txn_t* txn);
 /**
  * Async io task APIs
  */
+typedef enum sk_txn_task_status_t {
+    SK_TXN_TASK_RUNNING = 0,
+    SK_TXN_TASK_DONE = 1,
+    SK_TXN_TASK_ERROR = 2
+} sk_txn_task_status_t;
+
 void sk_txn_task_add(sk_txn_t*, uint64_t task_id);
 void sk_txn_task_setcomplete(sk_txn_t*, uint64_t task_id, sk_txn_task_status_t);
 sk_txn_task_status_t sk_txn_task_status(sk_txn_t*, uint64_t task_id);

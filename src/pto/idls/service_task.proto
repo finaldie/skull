@@ -8,11 +8,15 @@ message service_task_run {
     // 1: invalid service name
     // 2: service busy
     required uint32 io_status = 4;
-    required bytes request = 5;
+    required bytes  request = 5;
 }
 
 // notify master the task is complete, and master will update the status
 message service_task_complete {
     required uint64 task_id = 1 [default = 0];
     required string service_name = 2;
+
+    // 1: task done
+    // 2. task error
+    required uint32  status = 3;
 }

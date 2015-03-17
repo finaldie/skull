@@ -80,17 +80,21 @@ const sk_service_cfg_t* sk_service_config(const sk_service_t*);
 sk_srv_status_t sk_service_push_task(sk_service_t*, const sk_srv_task_t*);
 size_t sk_service_schedule_tasks(sk_service_t*);
 void sk_service_schedule_task(sk_service_t*, const sk_srv_task_t*);
-void sk_service_task_complete(sk_service_t*);
+void sk_service_task_setcomplete(sk_service_t*);
 
 // APIs for worker
 sk_srv_status_t sk_service_run_iocall(sk_service_t*, const char* api_name,
                                       sk_srv_io_status_t io_status,
                                       const void* req, size_t req_sz);
 
-// APIs for user (Experimental)
+// APIs for user
+//  Data APIs (Experimental)
 void* sk_service_data(sk_service_t*);
 const void* sk_service_data_const(sk_service_t*);
 void sk_service_data_set(sk_service_t*, const void* data);
+
+//  Invoke Service IO call
+int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name);
 
 #endif
 

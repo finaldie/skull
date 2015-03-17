@@ -236,7 +236,7 @@ size_t sk_service_schedule_tasks(sk_service_t* service)
     return scheduled_task;
 }
 
-void sk_service_task_complete(sk_service_t* service)
+void sk_service_task_setcomplete(sk_service_t* service)
 {
     SK_ASSERT(service);
     service->running_task_cnt--;

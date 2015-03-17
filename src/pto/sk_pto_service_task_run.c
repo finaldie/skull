@@ -55,6 +55,9 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     ServiceTaskComplete task_complete_msg = SERVICE_TASK_COMPLETE__INIT;
     task_complete_msg.task_id = task_id;
     task_complete_msg.service_name = (char*) service_name;
+    task_complete_msg.status = srv_status == SK_SRV_STATUS_OK
+                                ? SK_TXN_TASK_DONE
+                                : SK_TXN_TASK_ERROR;
 
     sk_sched_send(SK_ENV_SCHED, entity, txn,
                   SK_PTO_SERVICE_TASK_COMPLETE, &task_complete_msg);
