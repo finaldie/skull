@@ -5,15 +5,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-struct sk_sched_t;
 struct sk_workflow_t;
 struct sk_entity_t;
 struct sk_module_t;
 
 typedef struct sk_txn_t sk_txn_t;
 
-sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
-                        struct sk_workflow_t* workflow,
+sk_txn_t* sk_txn_create(struct sk_workflow_t* workflow,
                         struct sk_entity_t* entity);
 void sk_txn_destroy(sk_txn_t* txn);
 
@@ -23,7 +21,6 @@ void sk_txn_set_input(sk_txn_t* txn, const void* data, size_t sz);
 void sk_txn_output_append(sk_txn_t* txn, const void* data, size_t sz);
 const void* sk_txn_output(sk_txn_t* txn, size_t* sz);
 
-struct sk_sched_t* sk_txn_sched(sk_txn_t* txn);
 struct sk_workflow_t* sk_txn_workflow(sk_txn_t* txn);
 struct sk_entity_t* sk_txn_entity(sk_txn_t* txn);
 

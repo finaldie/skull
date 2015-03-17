@@ -27,7 +27,6 @@ typedef struct sk_txn_task_t {
 } sk_txn_task_t;
 
 struct sk_txn_t {
-    sk_sched_t*     sched;
     sk_workflow_t*  workflow;
     sk_entity_t*    entity;
 
@@ -70,12 +69,9 @@ void _sk_txn_task_destroy(sk_txn_task_t* task)
 }
 
 // Public APIs
-sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
-                        struct sk_workflow_t* workflow,
-                        struct sk_entity_t* entity)
+sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
 {
     sk_txn_t* txn = calloc(1, sizeof(*txn));
-    txn->sched = sched;
     txn->workflow = workflow;
     txn->entity = entity;
     txn->output = fmbuf_create(0);
@@ -141,11 +137,6 @@ const void* sk_txn_output(sk_txn_t* txn, size_t* sz)
 
     *sz = fmbuf_used(txn->output);
     return fmbuf_rawget(txn->output, &tmp, 1);
-}
-
-struct sk_sched_t* sk_txn_sched(sk_txn_t* txn)
-{
-    return txn->sched;
 }
 
 struct sk_workflow_t* sk_txn_workflow(sk_txn_t* txn)

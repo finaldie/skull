@@ -39,7 +39,7 @@ skull_utenv_t* skull_utenv_create(const char* module_name,
     env->workflow_cfg->port = SK_CONFIG_NO_PORT;
     env->workflow = sk_workflow_create(env->workflow_cfg);
     env->entity = sk_entity_create(env->workflow);
-    env->txn = sk_txn_create(NULL, env->workflow, env->entity);
+    env->txn = sk_txn_create(env->workflow, env->entity);
 
     // run init
     env->module->init(env->module->md);

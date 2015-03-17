@@ -46,7 +46,7 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
     sk_txn_t* txn = sk_entity_halftxn(entity);
     if (!txn) {
         sk_print("create a new transcation\n");
-        txn = sk_txn_create(sched, workflow, entity);
+        txn = sk_txn_create(workflow, entity);
         SK_ASSERT(txn);
         sk_entity_sethalftxn(entity, txn);
     }
