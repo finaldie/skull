@@ -31,7 +31,7 @@ struct sk_txn_t {
     sk_workflow_t*  workflow;
     sk_entity_t*    entity;
 
-    char*           input;
+    void*           input;
     size_t          input_sz;
     fmbuf*          output;
     flist_iter      workflow_idx;
@@ -101,13 +101,13 @@ void sk_txn_destroy(sk_txn_t* txn)
     free(txn);
 }
 
-const char* sk_txn_input(sk_txn_t* txn, size_t* sz)
+const void* sk_txn_input(sk_txn_t* txn, size_t* sz)
 {
     *sz = txn->input_sz;
     return txn->input;
 }
 
-void sk_txn_set_input(sk_txn_t* txn, const char* data, size_t sz)
+void sk_txn_set_input(sk_txn_t* txn, const void* data, size_t sz)
 {
     if (!sz || !data) {
         return;
@@ -118,7 +118,7 @@ void sk_txn_set_input(sk_txn_t* txn, const char* data, size_t sz)
     txn->input_sz = sz;
 }
 
-void sk_txn_output_append(sk_txn_t* txn, const char* data, size_t sz)
+void sk_txn_output_append(sk_txn_t* txn, const void* data, size_t sz)
 {
     if (sz == 0) {
         return;
@@ -135,7 +135,7 @@ void sk_txn_output_append(sk_txn_t* txn, const char* data, size_t sz)
     SK_ASSERT(!ret);
 }
 
-const char* sk_txn_output(sk_txn_t* txn, size_t* sz)
+const void* sk_txn_output(sk_txn_t* txn, size_t* sz)
 {
     char tmp;
 

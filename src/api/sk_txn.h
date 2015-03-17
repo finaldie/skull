@@ -17,11 +17,11 @@ sk_txn_t* sk_txn_create(struct sk_sched_t* sched,
                         struct sk_entity_t* entity);
 void sk_txn_destroy(sk_txn_t* txn);
 
-const char* sk_txn_input(sk_txn_t* txn, size_t* sz);
-void sk_txn_set_input(sk_txn_t* txn, const char* data, size_t sz);
+const void* sk_txn_input(sk_txn_t* txn, size_t* sz);
+void sk_txn_set_input(sk_txn_t* txn, const void* data, size_t sz);
 
-void sk_txn_output_append(sk_txn_t* txn, const char* data, size_t sz);
-const char* sk_txn_output(sk_txn_t* txn, size_t* sz);
+void sk_txn_output_append(sk_txn_t* txn, const void* data, size_t sz);
+const void* sk_txn_output(sk_txn_t* txn, size_t* sz);
 
 struct sk_sched_t* sk_txn_sched(sk_txn_t* txn);
 struct sk_workflow_t* sk_txn_workflow(sk_txn_t* txn);
