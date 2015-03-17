@@ -94,7 +94,8 @@ const void* sk_service_data_const(sk_service_t*);
 void sk_service_data_set(sk_service_t*, const void* data);
 
 //  Invoke Service IO call
-int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name);
+int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
+                      sk_srv_data_mode_t, const void* req, size_t req_sz);
 
 #endif
 

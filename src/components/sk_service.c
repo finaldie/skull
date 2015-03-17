@@ -319,3 +319,31 @@ void sk_service_data_set(sk_service_t* service, const void* data)
         SK_ASSERT(0);
     }
 }
+
+// User call this api to invoke a service call, it will wrap a iocall
+// protocol, and send to master
+int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
+                      const char* api_name, sk_srv_data_mode_t data_mode,
+                      const void* req, size_t req_sz)
+{
+    SK_ASSERT(service);
+    SK_ASSERT(txn);
+    SK_ASSERT(api_name);
+
+    if (NULL == req) {
+        SK_ASSERT(req_sz == 0);
+    } else {
+        SK_ASSERT(req_sz > 0);
+    }
+
+    ServiceIocall iocall_msg = SERVICE_IOCALL__INIT;
+    iocall_msg.service_name = (char*) service->name;
+    iocall_msg.api_name     = (char*) api_name;
+    iocall_msg.data_mode    = data_mode;
+    iocall_msg.request.data = (unsigned char*) req;
+    iocall_msg.request.len  = req_sz;
+
+    sk_sched_send(SK_ENV_SCHED, sk_txn_entity(txn), txn,
+                  SK_PTO_SERVICE_IOCALL, &iocall_msg);
+    return 0;
+}

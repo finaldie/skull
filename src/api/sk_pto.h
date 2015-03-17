@@ -54,7 +54,7 @@ extern sk_proto_t sk_pto_net_destroy;
 
 // Protocol 4, service io call
 #include "pto/idls/service_iocall.pb-c.h"
-#define SK_PTO_SERVIE_IOCALL 3
+#define SK_PTO_SERVICE_IOCALL 3
 extern sk_proto_t sk_pto_srv_iocall;
 
 // Protocol 5, run a service task
