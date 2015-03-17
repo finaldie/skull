@@ -76,7 +76,8 @@ COMMON_OBJS = \
     common/sk_log_tpl.o \
     common/sk_mon.o \
     common/sk_metrics.o \
-    common/sk_queue.o
+    common/sk_queue.o \
+    common/sk_service_data.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \

@@ -15,7 +15,8 @@ void sk_srv_data_destroy(sk_srv_data_t*);
 sk_srv_data_mode_t sk_srv_data_mode(sk_srv_data_t*);
 
 void* sk_srv_data_get(sk_srv_data_t*);
-void sk_srv_data_set(sk_srv_data_t*, void* data);
+const void* sk_srv_data_getconst(sk_srv_data_t*);
+void sk_srv_data_set(sk_srv_data_t*, const void* data);
 
 #endif
 

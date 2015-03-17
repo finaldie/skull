@@ -66,6 +66,30 @@ void _sk_service_handle_exception(sk_service_t* service, sk_srv_status_t st)
     }
 }
 
+static
+void _sk_service_data_create(sk_service_t* service, sk_srv_data_mode_t mode)
+{
+    service->data = sk_srv_data_create(mode);
+
+    sk_queue_mode_t queue_mode = 0;
+    switch (mode) {
+    case SK_SRV_DATA_MODE_EXCLUSIVE:
+        queue_mode = SK_QUEUE_EXCLUSIVE;
+        break;
+    case SK_SRV_DATA_MODE_RW_PR:
+        queue_mode = SK_QUEUE_RW_PR;
+        break;
+    case SK_SRV_DATA_MODE_RW_PW:
+        queue_mode = SK_QUEUE_RW_PW;
+        break;
+    default:
+        SK_ASSERT(0);
+    }
+
+    service->pending_tasks = sk_queue_create(queue_mode, SK_SRV_TASK_SZ,
+                                             0, SK_SRV_MAX_TASK);
+}
+
 // Public APIs of service
 sk_service_t* sk_service_create(const char* service_name,
                                 const sk_service_cfg_t* cfg)
@@ -87,40 +111,20 @@ void sk_service_destroy(sk_service_t* service)
     }
 
     sk_queue_destroy(service->pending_tasks);
+    sk_srv_data_destroy(service->data);
     free(service);
 }
 
 void sk_service_setopt(sk_service_t* service, sk_service_opt_t opt)
 {
     service->opt = opt;
+
+    _sk_service_data_create(service, opt.mode);
 }
 
 void sk_service_settype(sk_service_t* service, sk_service_type_t type)
 {
     service->type = type;
-}
-
-void sk_service_data_construct(sk_service_t* service, sk_srv_data_mode_t mode)
-{
-    service->data = sk_srv_data_create(mode);
-
-    sk_queue_mode_t queue_mode = 0;
-    switch (mode) {
-    case SK_SRV_DATA_MODE_EXCLUSIVE:
-        queue_mode = SK_QUEUE_EXCLUSIVE;
-        break;
-    case SK_SRV_DATA_MODE_RW_PR:
-        queue_mode = SK_QUEUE_RW_PR;
-        break;
-    case SK_SRV_DATA_MODE_RW_PW:
-        queue_mode = SK_QUEUE_RW_PW;
-        break;
-    default:
-        SK_ASSERT(0);
-    }
-
-    service->pending_tasks = sk_queue_create(queue_mode, SK_SRV_TASK_SZ,
-                                             0, SK_SRV_MAX_TASK);
 }
 
 void sk_service_start(sk_service_t* service)
@@ -263,4 +267,55 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
     }
 
     return status;
+}
+
+void* sk_service_data(sk_service_t* service)
+{
+    SK_ASSERT(service);
+
+    sk_queue_state_t state = sk_queue_state(service->pending_tasks);
+
+    switch (state) {
+    case SK_QUEUE_STATE_LOCK:
+    case SK_QUEUE_STATE_WRITE:
+        return sk_srv_data_get(service->data);
+    case SK_QUEUE_STATE_IDLE:
+    case SK_QUEUE_STATE_READ:
+        SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot get mutable data when \
+                     idle or reading data, please correct your logic",
+                     service->name);
+        SK_ASSERT(0);
+        return NULL;
+    default:
+        SK_ASSERT(0);
+    }
+
+    SK_ASSERT(0);
+    return NULL;
+}
+
+const void* sk_service_data_const(sk_service_t* service)
+{
+    SK_ASSERT(service);
+    return sk_srv_data_get(service->data);
+}
+
+void sk_service_data_set(sk_service_t* service, const void* data)
+{
+    SK_ASSERT(service);
+    sk_queue_state_t state = sk_queue_state(service->pending_tasks);
+
+    switch (state) {
+    case SK_QUEUE_STATE_LOCK:
+    case SK_QUEUE_STATE_WRITE:
+        sk_srv_data_set(service->data, data);
+    case SK_QUEUE_STATE_IDLE:
+    case SK_QUEUE_STATE_READ:
+        SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot set data when \
+                     idle or reading data, please correct your logic",
+                     service->name);
+        SK_ASSERT(0);
+    default:
+        SK_ASSERT(0);
+    }
 }

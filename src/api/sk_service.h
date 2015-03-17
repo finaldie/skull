@@ -48,11 +48,16 @@ typedef struct sk_srv_task_t {
 
 typedef struct sk_service_opt_t {
     void* srv_data;
+    sk_srv_data_mode_t mode;
+
+#if __WORDSIZE == 64
+    int _padding;
+#endif
 
     void (*init)    (void* srv_data);
     void (*release) (void* srv_data);
 
-    int (*io_call)  (void* srv_data, const char* api_name,
+    int  (*io_call) (void* srv_data, const char* api_name,
                      sk_srv_io_status_t ustatus,
                      const void* request, size_t request_sz);
 } sk_service_opt_t;
@@ -63,7 +68,6 @@ void sk_service_destroy(sk_service_t*);
 
 void sk_service_setopt(sk_service_t*, sk_service_opt_t opt);
 void sk_service_settype(sk_service_t*, sk_service_type_t type);
-void sk_service_data_construct(sk_service_t*, sk_srv_data_mode_t);
 
 void sk_service_start(sk_service_t*);
 void sk_service_stop(sk_service_t*);
@@ -82,6 +86,11 @@ void sk_service_task_complete(sk_service_t*);
 sk_srv_status_t sk_service_run_iocall(sk_service_t*, const char* api_name,
                                       sk_srv_io_status_t io_status,
                                       const void* req, size_t req_sz);
+
+// APIs for user (Experimental)
+void* sk_service_data(sk_service_t*);
+const void* sk_service_data_const(sk_service_t*);
+void sk_service_data_set(sk_service_t*, const void* data);
 
 #endif
 
