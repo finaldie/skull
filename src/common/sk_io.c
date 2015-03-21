@@ -13,13 +13,15 @@ struct sk_io_t {
 static
 size_t _get_new_size(fmbuf* mq, size_t nevents)
 {
-    size_t curr_sz = fmbuf_size(mq);
-    size_t used_sz = fmbuf_used(mq);
-    size_t new_sz = curr_sz ? curr_sz : 1;
+    size_t curr_cnt = fmbuf_size(mq) / SK_EVENT_SZ;
+    size_t used_cnt = fmbuf_used(mq) / SK_EVENT_SZ;
+    size_t new_cnt = curr_cnt ? curr_cnt : 1;
+    size_t new_sz = new_cnt * SK_EVENT_SZ;
 
     while (new_sz > 0) {
         new_sz *= 2;
-        if (new_sz - used_sz >= nevents * SK_EVENT_SZ) {
+
+        if (new_sz - (used_cnt * SK_EVENT_SZ) >= nevents * SK_EVENT_SZ) {
             break;
         }
     }
@@ -89,4 +91,17 @@ size_t sk_io_free(sk_io_t* io, sk_io_type_t type)
 {
     fmbuf* mq = io->mq[type];
     return fmbuf_free(mq) / SK_EVENT_SZ;
+}
+
+sk_event_t* sk_io_rawget(sk_io_t* io, sk_io_type_t type)
+{
+    fmbuf* mq = io->mq[type];
+    if (fmbuf_used(mq) == 0) {
+        return NULL;
+    }
+
+    sk_event_t tmp;
+    sk_event_t* event = fmbuf_rawget(mq, &tmp, SK_EVENT_SZ);
+    SK_ASSERT(event);
+    return event;
 }
