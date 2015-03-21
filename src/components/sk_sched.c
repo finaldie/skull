@@ -140,7 +140,7 @@ int sk_io_bridge_deliver(sk_io_bridge_t* io_bridge, sk_event_t* event)
     SK_ASSERT(event);
 
     // copy events from src_io to io bridge's mq
-    int ret = fmbuf_push(io_bridge->mq, &event, SK_EVENT_SZ);
+    int ret = fmbuf_push(io_bridge->mq, event, SK_EVENT_SZ);
     SK_ASSERT(!ret);
     return 1;
 }
@@ -218,7 +218,7 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
         // 2. get the affinity or round-robin io bridge
         sk_io_bridge_t* io_bridge = NULL;
         sk_txn_t* txn = raw_event->txn;
-        sk_sched_t* affinity_sched = sk_txn_sched(txn);
+        sk_sched_t* affinity_sched = txn ? sk_txn_sched(txn) : NULL;
 
         uint32_t bridge_index = 0;
         if (txn && affinity_sched) {

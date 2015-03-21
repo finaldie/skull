@@ -9,7 +9,7 @@
 typedef struct sk_service_t sk_service_t;
 
 typedef enum sk_service_type_t {
-    SK_C_SERICE_TYPE = 0
+    SK_C_SERVICE_TYPE = 0
 } sk_service_type_t;
 
 // service status

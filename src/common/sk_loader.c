@@ -3,7 +3,7 @@
 
 #include "api/sk_utils.h"
 #include "api/sk_const.h"
-#include "api/sk_env.h"
+//#include "api/sk_env.h"
 #include "api/sk_log.h"
 #include "api/sk_loader.h"
 
@@ -45,15 +45,10 @@ sk_module_t* sk_module_load(const char* short_name, const char* conf_name)
         int ret = loader->load_config(module, conf_name);
         if (ret) {
             sk_print("module config %s load failed\n", conf_name);
-            SK_LOG_INFO(SK_ENV_LOGGER, "module config %s load failed",
-                        conf_name);
             return NULL;
         }
 
         sk_print("load module{%s:%d} successfully\n", short_name, module->type);
-        SK_LOG_INFO(SK_ENV_LOGGER, "load service{%s:%d} successfully",
-                    short_name, module->type);
-
         return module;
     }
 
@@ -110,17 +105,11 @@ int sk_service_load(sk_service_t* service, const char* conf_name)
         ret = loader->load_config(service, conf_name);
         if (ret) {
             sk_print("service config %s load failed\n", conf_name);
-            SK_LOG_INFO(SK_ENV_LOGGER, "service config %s load failed",
-                        conf_name);
             return 1;
         }
 
         sk_print("load service{%s:%d} successfully\n", service_name,
                  sk_service_type(service));
-
-        SK_LOG_INFO(SK_ENV_LOGGER, "load service{%s:%d} successfully",
-                    service_name, sk_service_type(service));
-
         return 0;
     }
 

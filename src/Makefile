@@ -5,10 +5,10 @@ STD = -std=c99
 WARN = -Wall
 EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter
 EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
-EXTRA += -Wconversion -fPIC
-OTHER = -pipe -g -ggdb3
+EXTRA += -Wconversion
+OTHER = -pipe -g -ggdb3 -fPIC
 SHARED = -shared
-LDFLAGS += -Wl,-E
+LDFLAGS += -rdynamic -Wl,-E
 MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE
 INC = \
     -I. \
@@ -119,7 +119,8 @@ USER_C_OBJS = \
     user-c/src/txn.o \
     user-c/src/idl.o \
     user-c/src/config.o \
-    user-c/src/module_executor.o
+    user-c/src/module_executor.o \
+    user-c/src/srv_loader.o
 
 SKULL_MAIN_OBJ = main.o
 
@@ -147,12 +148,17 @@ UT_OBJS = \
     user-c/src/idl.o \
     user-c/src/txn.o \
     user-c/src/config.o \
+    user-c/src/srv_loader.o \
     common/sk_utils.o \
     common/sk_loader.o \
     common/sk_txn.o \
     common/sk_workflow.o \
     common/sk_config_loader.o \
-    entities/sk_entity.o
+    common/sk_queue.o \
+    common/sk_service_data.o \
+    entities/sk_entity.o \
+    pto/idls/service_iocall.pb-c.o \
+    pto/idls/service_task.pb-c.o
 
 # target rules
 all: $(SKULL_ENGINE) $(SKULL_UTLIB_C)

@@ -53,11 +53,11 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     //    service io calls on the fly. When all the service io calls have
     //    completed, the master will re-schedule the 'workflow_run' protocol
     //    again
-    if (sk_txn_module_complete(txn)) {
+    if (!sk_txn_module_complete(txn)) {
         sk_print("txn pending, waiting for service io calls, module %s\n",
                  module->name);
-        SK_LOG_DEBUG(SK_ENV_LOGGER, "txn pending, waiting for service calls, \
-                     module %s", module->name);
+        SK_LOG_DEBUG(SK_ENV_LOGGER, "txn pending, waiting for service calls, "
+                     "module %s", module->name);
         return 0;
     }
 
