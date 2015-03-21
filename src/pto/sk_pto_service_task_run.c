@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "api/sk_const.h"
 #include "api/sk_utils.h"
 #include "api/sk_sched.h"
 #include "api/sk_service.h"
@@ -43,6 +44,10 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // 3. run a specific service call
     // notes: even the user iocall failed, still need to send back a
     //        'task_complete' message, or the user module will be hanged
+
+    sk_logger_setcookie("service.%s", service_name);
+    sk_txn_setstate(txn, SK_TXN_IN_SERVICE);
+
     srv_status = sk_service_run_iocall(service, api_name, io_status,
                                        req, req_sz);
     if (srv_status != SK_SRV_STATUS_OK) {
@@ -50,6 +55,9 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
                      service_name: %s, api_name: %s", service_name, api_name);
         ret = 1;
     }
+
+    sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+    sk_txn_setstate(txn, SK_TXN_IN_CORE);
 
     // 4. send a complete protocol back to master
     ServiceTaskComplete task_complete_msg = SERVICE_TASK_COMPLETE__INIT;

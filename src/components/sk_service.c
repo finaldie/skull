@@ -338,7 +338,13 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
         SK_ASSERT(req_sz > 0);
     }
 
-    // 1. construct iocall protocol
+    // 1. checking, the service call must initialize from a module
+    sk_txn_state_t txn_state = sk_txn_state(txn);
+    SK_ASSERT_MSG(txn_state == SK_TXN_IN_MODULE, "Fatal: A service call must \
+                  invoke from a module, service_name: %s, api_name: %s\n",
+                  service->name, api_name);
+
+    // 2. construct iocall protocol
     ServiceIocall iocall_msg = SERVICE_IOCALL__INIT;
     iocall_msg.service_name = (char*) service->name;
     iocall_msg.api_name     = (char*) api_name;
@@ -346,7 +352,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     iocall_msg.request.data = (unsigned char*) req;
     iocall_msg.request.len  = req_sz;
 
-    // 2. set the txn sched affinity
+    // 3. set the txn sched affinity
     sk_txn_sched_set(txn, SK_ENV_SCHED);
 
     sk_sched_send(SK_ENV_SCHED, sk_txn_entity(txn), txn,

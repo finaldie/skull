@@ -9,6 +9,12 @@ struct sk_workflow_t;
 struct sk_entity_t;
 struct sk_module_t;
 
+typedef enum sk_txn_state_t {
+    SK_TXN_IN_CORE = 0,
+    SK_TXN_IN_MODULE = 1,
+    SK_TXN_IN_SERVICE = 2
+} sk_txn_state_t;
+
 typedef struct sk_txn_t sk_txn_t;
 
 sk_txn_t* sk_txn_create(struct sk_workflow_t* workflow,
@@ -42,6 +48,9 @@ void sk_txn_setudata(sk_txn_t* txn, void* data);
 void* sk_txn_udata(sk_txn_t* txn);
 
 bool sk_txn_module_complete(sk_txn_t* txn);
+
+void sk_txn_setstate(sk_txn_t*, sk_txn_state_t state);
+sk_txn_state_t sk_txn_state(sk_txn_t*);
 
 /**
  * Async io task APIs

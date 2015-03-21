@@ -44,7 +44,7 @@ struct sk_txn_t {
     unsigned long long start_time;
 
     int             is_unpacked;
-    int             _reserved;
+    sk_txn_state_t  state;
 
     void*           udata;
 };
@@ -79,6 +79,7 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
     txn->workflow_idx = flist_new_iter(workflow->modules);
     txn->task_tbl = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     txn->start_time = ftime_gettime();
+    txn->state = SK_TXN_IN_CORE;
 
     // update the entity ref
     sk_entity_inc_task_cnt(entity);
@@ -268,4 +269,14 @@ unsigned long long sk_txn_task_livetime(sk_txn_t* txn, uint64_t task_id)
     } else {
         return ftime_gettime() - task->start;
     }
+}
+
+void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
+{
+    txn->state = state;
+}
+
+sk_txn_state_t sk_txn_state(sk_txn_t* txn)
+{
+    return txn->state;
 }

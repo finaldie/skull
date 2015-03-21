@@ -34,6 +34,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
     sk_logger_setcookie("module.%s", module->name);
+    sk_txn_setstate(txn, SK_TXN_IN_MODULE);
 
     // Run the module
     int ret = module->run(module->md, txn);
@@ -41,6 +42,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 
     // after module exit, set back the module name
     sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+    sk_txn_setstate(txn, SK_TXN_IN_CORE);
 
     if (ret) {
         SK_ASSERT_MSG(!ret, "un-implemented code path\n");
