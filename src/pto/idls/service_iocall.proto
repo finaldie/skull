@@ -5,4 +5,5 @@ message service_iocall {
     required int32  data_mode = 3;
 
     required bytes request = 4;
+    optional bytes module_cb = 5;
 }

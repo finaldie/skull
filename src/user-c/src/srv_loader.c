@@ -10,28 +10,92 @@
 #include "skull/txn.h"
 #include "srv_loader.h"
 
+#define SKULL_SRV_REG_NAME "skull_service_register"
+
+#define SKULL_SRV_CONFIG_NAME "config.yaml"
+#define SKULL_SRV_PREFIX_NAME "libskull-services-"
+#define SKULL_SRV_CONF_PREFIX_NAME "skull-services-"
+
+static
 const char* _srv_name (const char* short_name, char* fullname, size_t sz)
 {
-    return NULL;
+    memset(fullname, 0, sz);
+
+    // The full name format: lib/libskull-modules-%s.so
+    snprintf(fullname, sz, "lib/" SKULL_SRV_PREFIX_NAME "%s.so", short_name);
+    return fullname;
 }
 
+static
 const char* _srv_conf_name (const char* short_name, char* confname, size_t sz)
 {
-    return NULL;
+    memset(confname, 0, sz);
+
+    // The full name format: lib/libskull-modules-%s.so
+    snprintf(confname, sz, "etc/" SKULL_SRV_CONF_PREFIX_NAME "%s.yaml",
+             short_name);
+    return confname;
 }
 
+static
 int _srv_open (const char* filename, sk_service_opt_t* opt/*out*/)
 {
+    // 1. empty all errors first
+    dlerror();
+
+    char* error = NULL;
+    void* handler = dlopen(filename, RTLD_NOW);
+    if (!handler) {
+        sk_print("error: cannot open %s: %s\n", filename, dlerror());
+        return 1;
+    }
+
+    // 2. create module and its private data
+    skull_c_srvdata* md = calloc(1, sizeof(*md));
+    md->handler = handler;
+
+    // 3. load service register func
+    *(void**)(&md->reg) = dlsym(handler, SKULL_SRV_REG_NAME);
+    if ((error = dlerror()) != NULL) {
+        sk_print("error: load %s failed: %s\n", SKULL_SRV_REG_NAME, error);
+        return 1;
+    }
+
+    md->entry = md->reg();
+
+    opt->mode = (sk_srv_data_mode_t) md->entry->data_access_mode;
+    opt->init = skull_srv_init;
+    opt->release = skull_srv_release;
+    opt->io_call = skull_srv_iocall;
+    opt->srv_data = md;
+
     return 0;
 }
 
+static
 int _srv_close (sk_service_t* service)
 {
-    return 0;
+    sk_service_opt_t* opt = sk_service_opt(service);
+    skull_c_srvdata* srv_data = opt->srv_data;
+    void* handler = srv_data->handler;
+    skull_config_destroy(srv_data->config);
+
+    free(srv_data);
+    free(opt);
+    return dlclose(handler);
 }
 
-int _srv_load_config (sk_service_t* service, const char* user_cfg_filename)
+static
+int _srv_load_config (sk_service_t* service, const char* filename)
 {
+    if (!filename) {
+        sk_print("error: service config name is NULL\n");
+        return 1;
+    }
+
+    sk_service_opt_t* opt = sk_service_opt(service);
+    skull_c_srvdata* srv_data = opt->srv_data;
+    srv_data->config = skull_config_create(filename);
     return 0;
 }
 

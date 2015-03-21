@@ -122,6 +122,11 @@ void sk_service_setopt(sk_service_t* service, sk_service_opt_t opt)
     _sk_service_data_create(service, opt.mode);
 }
 
+sk_service_opt_t* sk_service_opt(sk_service_t* service)
+{
+    return &service->opt;
+}
+
 void sk_service_settype(sk_service_t* service, sk_service_type_t type)
 {
     service->type = type;
@@ -129,12 +134,12 @@ void sk_service_settype(sk_service_t* service, sk_service_type_t type)
 
 void sk_service_start(sk_service_t* service)
 {
-    service->opt.init(service->opt.srv_data);
+    service->opt.init(service, service->opt.srv_data);
 }
 
 void sk_service_stop(sk_service_t* service)
 {
-    service->opt.release(service->opt.srv_data);
+    service->opt.release(service, service->opt.srv_data);
 }
 
 const char* sk_service_name(const sk_service_t* service)
@@ -259,7 +264,8 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
     sk_srv_status_t status = SK_SRV_STATUS_OK;
     void* user_srv_data = service->opt.srv_data;
 
-    int ret = service->opt.io_call(user_srv_data, api_name, io_st, req, req_sz);
+    int ret = service->opt.io_call(service, user_srv_data, api_name,
+                                   io_st, req, req_sz);
     if (ret) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "service: task failed, service_name: %s \
                      api_name: %s", service->name, api_name);

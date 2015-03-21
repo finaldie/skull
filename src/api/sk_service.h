@@ -54,10 +54,10 @@ typedef struct sk_service_opt_t {
     int _padding;
 #endif
 
-    void (*init)    (void* srv_data);
-    void (*release) (void* srv_data);
+    void (*init)    (sk_service_t*, void* srv_data);
+    void (*release) (sk_service_t*, void* srv_data);
 
-    int  (*io_call) (void* srv_data, const char* api_name,
+    int  (*io_call) (sk_service_t*, void* srv_data, const char* api_name,
                      sk_srv_io_status_t ustatus,
                      const void* request, size_t request_sz);
 } sk_service_opt_t;
@@ -67,6 +67,7 @@ sk_service_t* sk_service_create(const char* service_name,
 void sk_service_destroy(sk_service_t*);
 
 void sk_service_setopt(sk_service_t*, sk_service_opt_t opt);
+sk_service_opt_t* sk_service_opt(sk_service_t*);
 void sk_service_settype(sk_service_t*, sk_service_type_t type);
 
 void sk_service_start(sk_service_t*);
