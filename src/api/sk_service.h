@@ -41,9 +41,7 @@ typedef struct sk_srv_task_t {
     sk_service_t* service;
     sk_txn_t*     txn;
     const char*   api_name;
-
-    const void* request;
-    size_t request_sz;
+    uint64_t      task_id;
 } sk_srv_task_t;
 
 typedef struct sk_service_opt_t {
@@ -57,9 +55,8 @@ typedef struct sk_service_opt_t {
     void (*init)    (sk_service_t*, void* srv_data);
     void (*release) (sk_service_t*, void* srv_data);
 
-    int  (*io_call) (sk_service_t*, void* srv_data, const char* api_name,
-                     sk_srv_io_status_t ustatus,
-                     const void* request, size_t request_sz);
+    int  (*io_call) (sk_service_t*, sk_txn_t*, void* srv_data, uint64_t task_id,
+                     const char* api_name, sk_srv_io_status_t ustatus);
 } sk_service_opt_t;
 
 sk_service_t* sk_service_create(const char* service_name,
@@ -84,9 +81,10 @@ void sk_service_schedule_task(sk_service_t*, const sk_srv_task_t*);
 void sk_service_task_setcomplete(sk_service_t*);
 
 // APIs for worker
-sk_srv_status_t sk_service_run_iocall(sk_service_t*, const char* api_name,
-                                      sk_srv_io_status_t io_status,
-                                      const void* req, size_t req_sz);
+sk_srv_status_t sk_service_run_iocall(sk_service_t*, sk_txn_t* txn,
+                                      uint64_t task_id,
+                                      const char* api_name,
+                                      sk_srv_io_status_t io_status);
 
 // APIs for user
 //  Data APIs (Experimental)
@@ -96,7 +94,8 @@ void sk_service_data_set(sk_service_t*, const void* data);
 
 //  Invoke Service IO call
 int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
-                      sk_srv_data_mode_t, const void* req, size_t req_sz);
+                      sk_srv_data_mode_t, const void* req, size_t req_sz,
+                      sk_txn_module_cb cb, void* ud);
 
 #endif
 

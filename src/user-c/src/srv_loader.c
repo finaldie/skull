@@ -12,7 +12,6 @@
 
 #define SKULL_SRV_REG_NAME "skull_service_register"
 
-#define SKULL_SRV_CONFIG_NAME "config.yaml"
 #define SKULL_SRV_PREFIX_NAME "libskull-services-"
 #define SKULL_SRV_CONF_PREFIX_NAME "skull-services-"
 
@@ -63,7 +62,6 @@ int _srv_open (const char* filename, sk_service_opt_t* opt/*out*/)
 
     md->entry = md->reg();
 
-    opt->mode = (sk_srv_data_mode_t) md->entry->data_access_mode;
     opt->init = skull_srv_init;
     opt->release = skull_srv_release;
     opt->io_call = skull_srv_iocall;

@@ -15,8 +15,4 @@ message service_task_run {
 message service_task_complete {
     required uint64 task_id = 1 [default = 0];
     required string service_name = 2;
-
-    // 1: task done
-    // 2. task error
-    required uint32  status = 3;
 }

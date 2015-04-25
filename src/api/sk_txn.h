@@ -55,15 +55,36 @@ sk_txn_state_t sk_txn_state(sk_txn_t*);
 /**
  * Async io task APIs
  */
+
+typedef struct sk_txn_task_t sk_txn_task_t;
+
 typedef enum sk_txn_task_status_t {
     SK_TXN_TASK_RUNNING = 0,
     SK_TXN_TASK_DONE = 1,
     SK_TXN_TASK_ERROR = 2
 } sk_txn_task_status_t;
 
-void sk_txn_task_add(sk_txn_t*, uint64_t task_id);
+typedef void (*sk_txn_module_cb) ();
+typedef struct sk_txn_taskdata_t {
+    const void* request;
+    size_t      request_sz;
+    void*       user_data;
+    sk_txn_module_cb cb;
+} sk_txn_taskdata_t;
+
+/**
+ * Create and add a task into sk_txn
+ *
+ * @param request  The service iocall request data
+ * @param cb       The service iocall callback function
+ *
+ * @return taskid
+ */
+uint64_t sk_txn_task_add(sk_txn_t*, sk_txn_taskdata_t* task_data);
+
 void sk_txn_task_setcomplete(sk_txn_t*, uint64_t task_id, sk_txn_task_status_t);
 sk_txn_task_status_t sk_txn_task_status(sk_txn_t*, uint64_t task_id);
+sk_txn_taskdata_t* sk_txn_taskdata(sk_txn_t* txn, uint64_t task_id);
 
 /**
  * Get the whole life time of the txn task, unit microsecond

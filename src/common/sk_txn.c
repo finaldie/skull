@@ -12,19 +12,19 @@
 #include "api/sk_utils.h"
 #include "api/sk_txn.h"
 
-typedef struct sk_txn_task_t {
-    uint64_t task_id;
-
+struct sk_txn_task_t {
     // record the time of start and end
     unsigned long long start;
     unsigned long long end;   // If end is non-zero, means the task is done
+
+    sk_txn_taskdata_t task_data;
 
     sk_txn_task_status_t status;
 
 #if __WORDSIZE == 64
     int _padding;
 #endif
-} sk_txn_task_t;
+};
 
 struct sk_txn_t {
     sk_workflow_t*  workflow;
@@ -38,6 +38,7 @@ struct sk_txn_t {
     fhash*          task_tbl;   // key: task_id, value: sk_txn_task_t
     sk_sched_t*     working_sched; // which sched the txn module executed
 
+    uint64_t        latest_taskid;
     int             running_tasks;
     int             complete_tasks;
 
@@ -50,12 +51,15 @@ struct sk_txn_t {
 };
 
 // Internal APIs
-sk_txn_task_t* _sk_txn_task_create(uint64_t task_id)
+sk_txn_task_t* _sk_txn_task_create(sk_txn_taskdata_t* task_data)
 {
     sk_txn_task_t* task = calloc(1, sizeof(*task));
-    task->task_id = task_id;
-    task->status = SK_TXN_TASK_RUNNING;
     task->start = ftime_gettime();
+    if (task_data) {
+        task->task_data = *task_data;
+    }
+
+    task->status = SK_TXN_TASK_RUNNING;
 
     return task;
 }
@@ -78,6 +82,7 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
     txn->output = fmbuf_create(0);
     txn->workflow_idx = flist_new_iter(workflow->modules);
     txn->task_tbl = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
+    txn->latest_taskid = 0;
     txn->start_time = ftime_gettime();
     txn->state = SK_TXN_IN_CORE;
 
@@ -215,13 +220,15 @@ bool sk_txn_module_complete(sk_txn_t* txn)
 }
 
 // =============================================================================
-void sk_txn_task_add(sk_txn_t* txn, uint64_t task_id)
+uint64_t sk_txn_task_add(sk_txn_t* txn, sk_txn_taskdata_t* task_data)
 {
-    sk_txn_task_t* task = _sk_txn_task_create(task_id);
+    sk_txn_task_t* task = _sk_txn_task_create(task_data);
+    uint64_t task_id = txn->latest_taskid++;
     fhash_u64_set(txn->task_tbl, task_id, task);
-
-    SK_ASSERT(txn->complete_tasks <= txn->running_tasks);
     txn->running_tasks++;
+
+    SK_ASSERT(txn->complete_tasks < txn->running_tasks);
+    return task_id;
 }
 
 void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
@@ -244,6 +251,14 @@ sk_txn_task_status_t sk_txn_task_status(sk_txn_t* txn, uint64_t task_id)
     SK_ASSERT(task);
 
     return task->status;
+}
+
+sk_txn_taskdata_t* sk_txn_taskdata(sk_txn_t* txn, uint64_t task_id)
+{
+    sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
+    SK_ASSERT(task);
+
+    return &task->task_data;
 }
 
 unsigned long long sk_txn_task_lifetime(sk_txn_t* txn, uint64_t task_id)

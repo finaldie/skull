@@ -21,8 +21,6 @@ struct sk_service_t {
 
     sk_queue_t* pending_tasks; // This queue is only avaliable in master
     sk_srv_data_t* data;
-
-    uint64_t last_taskid;
 };
 
 // Internal APIs of service
@@ -185,18 +183,17 @@ void sk_service_schedule_task(sk_service_t* service,
 
     // construct protocol
     ServiceTaskRun task_run_pto = SERVICE_TASK_RUN__INIT;
-    task_run_pto.task_id = service->last_taskid++;
+    task_run_pto.task_id      = task->task_id;
     task_run_pto.service_name = (char*) sk_service_name(service);
-    task_run_pto.api_name = (char*) task->api_name;
-    task_run_pto.io_status = (uint32_t) task->io_status;
-    task_run_pto.request.data = (unsigned char*) task->request;
-    task_run_pto.request.len = task->request_sz;
+    task_run_pto.api_name     = (char*) task->api_name;
+    task_run_pto.io_status    = (uint32_t) task->io_status;
 
     // deliver the protocol
     sk_sched_send(SK_ENV_SCHED, sk_txn_entity(task->txn), task->txn,
                   SK_PTO_SERVICE_TASK_RUN, &task_run_pto);
 
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: deliver task to worker");
+    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
+                 task->task_id);
 }
 
 size_t sk_service_schedule_tasks(sk_service_t* service)
@@ -253,10 +250,10 @@ void sk_service_task_setcomplete(sk_service_t* service)
 }
 
 sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
+                                      sk_txn_t* txn,
+                                      uint64_t task_id,
                                       const char* api_name,
-                                      sk_srv_io_status_t io_st,
-                                      const void* req,
-                                      size_t req_sz)
+                                      sk_srv_io_status_t io_st)
 {
     SK_ASSERT(service);
     SK_ASSERT(api_name);
@@ -264,8 +261,8 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
     sk_srv_status_t status = SK_SRV_STATUS_OK;
     void* user_srv_data = service->opt.srv_data;
 
-    int ret = service->opt.io_call(service, user_srv_data, api_name,
-                                   io_st, req, req_sz);
+    int ret = service->opt.io_call(service, txn, user_srv_data, task_id,
+                                   api_name, io_st);
     if (ret) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "service: task failed, service_name: %s \
                      api_name: %s", service->name, api_name);
@@ -332,17 +329,12 @@ void sk_service_data_set(sk_service_t* service, const void* data)
 // TODO: check whether it be invoked from user module
 int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
                       const char* api_name, sk_srv_data_mode_t data_mode,
-                      const void* req, size_t req_sz)
+                      const void* req, size_t req_sz, sk_txn_module_cb cb,
+                      void* ud)
 {
     SK_ASSERT(service);
     SK_ASSERT(txn);
     SK_ASSERT(api_name);
-
-    if (NULL == req) {
-        SK_ASSERT(req_sz == 0);
-    } else {
-        SK_ASSERT(req_sz > 0);
-    }
 
     // 1. checking, the service call must initialize from a module
     sk_txn_state_t txn_state = sk_txn_state(txn);
@@ -350,13 +342,20 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
                   invoke from a module, service_name: %s, api_name: %s\n",
                   service->name, api_name);
 
+    // construct a sk_txn_task and add it
+    sk_txn_taskdata_t task_data;
+    task_data.request    = req;
+    task_data.request_sz = req_sz;
+    task_data.cb         = cb;
+    task_data.user_data  = ud;
+    uint64_t task_id = sk_txn_task_add(txn, &task_data);
+
     // 2. construct iocall protocol
     ServiceIocall iocall_msg = SERVICE_IOCALL__INIT;
+    iocall_msg.task_id      = task_id;
+    iocall_msg.data_mode    = data_mode;
     iocall_msg.service_name = (char*) service->name;
     iocall_msg.api_name     = (char*) api_name;
-    iocall_msg.data_mode    = data_mode;
-    iocall_msg.request.data = (unsigned char*) req;
-    iocall_msg.request.len  = req_sz;
 
     // 3. set the txn sched affinity
     sk_txn_sched_set(txn, SK_ENV_SCHED);

@@ -25,11 +25,11 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 
     // 1. unpack the parameters
     ServiceIocall* iocall_msg = proto_msg;
+    uint64_t task_id          = iocall_msg->task_id;
+    int32_t data_access_mode  = iocall_msg->data_mode;
     const char* service_name  = iocall_msg->service_name;
     const char* api_name      = iocall_msg->api_name;
-    int32_t data_access_mode  = iocall_msg->data_mode;
-    const void* req_data      = iocall_msg->request.data;
-    size_t req_data_sz        = iocall_msg->request.len;
+
     sk_srv_status_t srv_status   = SK_SRV_STATUS_OK;
     sk_srv_io_status_t io_status = SK_SRV_IO_STATUS_OK;
 
@@ -46,14 +46,13 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     memset(&task, 0, sizeof(task));
 
     task.base.type = (sk_queue_elem_type_t) data_access_mode;
-    task.service = service;
-    task.txn = txn;
-    task.api_name = api_name;
     task.io_status = io_status;
-    task.request = req_data;
-    task.request_sz = req_data_sz;
+    task.service   = service;
+    task.txn       = txn;
+    task.api_name  = api_name;
+    task.task_id   = task_id;
 
-    // 3.2 push to service
+    // 3.2 push task to service
     int ret = 1;
     srv_status = sk_service_push_task(service, &task);
     if (srv_status == SK_SRV_STATUS_BUSY) {
@@ -70,8 +69,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // 4. schedule 'service task' according the data mode
     //    (as much as possible) and deliver them to worker thread
     size_t scheduled_task = sk_service_schedule_tasks(service);
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "Service Iocall:, service name %s, \
-                 scheduled %zu tasks", service_name, scheduled_task);
+    SK_LOG_DEBUG(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
+                 "scheduled %zu tasks", service_name, scheduled_task);
 
     // TODO: add metrics
 

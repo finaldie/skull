@@ -27,7 +27,6 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     ServiceTaskComplete* task_complete_msg = proto_msg;
     uint64_t task_id         = task_complete_msg->task_id;
     const char* service_name = task_complete_msg->service_name;
-    uint32_t status           = task_complete_msg->status;
 
     // 2. find the target service
     sk_service_t* service = sk_core_get_service(SK_ENV_CORE, service_name);
@@ -36,20 +35,22 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // 3. do some updating job for this service
     sk_service_task_setcomplete(service);
 
-    // 4. update txn task table
-    sk_txn_task_setcomplete(txn, task_id, status);
-
     unsigned long long task_lifetime = sk_txn_task_lifetime(txn, task_id);
     SK_LOG_DEBUG(SK_ENV_LOGGER, "service: one task id: %d completed, \
                  cost %llu usec", task_id, task_lifetime);
 
-    // 5. check if all the tasks of the current module for this txn, trigger
+    // 4. check if all the tasks of the current module for this txn, trigger
     //    a 'workflow_run' protocol to continue
     //
     // note: This 'workflow' will also be ran in the previous worker
     if (sk_txn_module_complete(txn)) {
         sk_sched_send(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
     }
+
+    // 5. schedule another round of service call if exist
+    size_t scheduled_task = sk_service_schedule_tasks(service);
+    SK_LOG_DEBUG(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
+                 "scheduled %zu tasks", service_name, scheduled_task);
 
     // TODO: add metrics
 
