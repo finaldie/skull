@@ -6,6 +6,8 @@
 #  - `action_$lang_gen_metrics`
 #  - `action_$lang_gen_config`
 #  - `action_$lang_gen_idl`
+#  - `action_$lang_service_valid`
+#  - `action_$lang_service_add`
 #
 # NOTES2: before running any methods in file, skull will change the current
 # folder to the top of the project `SKULL_PROJECT_ROOT`, so it's no need to
@@ -152,4 +154,50 @@ function action_c_gen_idl()
     $LANGUAGE_PATH/bin/skull-idl-gen.py -c $config \
         -h $COMMON_FILE_LOCATION/src/skull_txn_sharedata.h \
         -s $COMMON_FILE_LOCATION/src/skull_txn_sharedata.c
+}
+
+# Service Related
+function action_c_service_valid()
+{
+    local service=$1
+    if [ -f $SKULL_PROJ_ROOT/src/services/$service/src/service.c ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function action_c_service_add()
+{
+    local service=$1
+    local srv_path=$SKULL_PROJ_ROOT/src/services/$service
+
+    if [ -d "$srv_path" ]; then
+        echo "Notice: the module [$service] has already exist"
+        return 1
+    fi
+
+    # add module folder and files
+    mkdir -p $srv_path/src
+    mkdir -p $srv_path/tests
+    mkdir -p $srv_path/config
+    mkdir -p $srv_path/lib
+    mkdir -p $srv_path/idl
+
+    cp $LANGUAGE_PATH/share/mod.c.tpl        $srv_path/src/mod.c
+    cp $LANGUAGE_PATH/etc/config.yaml        $srv_path/config/config.yaml
+    cp $LANGUAGE_PATH/share/test_mod.c.tpl   $srv_path/tests/test_mod.c
+    cp $LANGUAGE_PATH/etc/test_config.yaml   $srv_path/tests/test_config.yaml
+    cp $LANGUAGE_PATH/share/gitignore-module $srv_path/.gitignore
+
+    # copy makefile templates
+    cp $LANGUAGE_PATH/share/Makefile.tpl $srv_path/Makefile
+    cp $LANGUAGE_PATH/share/Makefile.inc.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.inc
+    cp $LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.targets
+
+    # generate a static config code for user
+    local srv_config=$srv_path/config/config.yaml
+    action_c_gen_config $srv_config
+
+    return 0
 }

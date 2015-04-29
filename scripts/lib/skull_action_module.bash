@@ -4,7 +4,7 @@
 # NOTES: This is included by the main script `skull`
 
 # Add module need 2 steps:
-# 1. Add the module folder structure into project according to its module language
+# 1. Add the module folder structure into project according to its language
 # 2. Change the main config
 function action_module()
 {
@@ -80,30 +80,6 @@ function action_module_usage()
     echo "  skull module --conf-cat"
     echo "  skull module --conf-edit"
     echo "  skull module --conf-check"
-}
-
-# module name must be in [0-9a-zA-Z_]
-function _check_module_name()
-{
-    local module_name=$1
-
-    if [ -z "$module_name" ]; then
-        echo "Error: module name must not be empty" >&2
-        return 1
-    fi
-
-    local ret=`echo $module_name | grep -P "[^\w]" | wc -l`
-    if [ "$ret" = "1" ]; then
-        echo "Error: module name must be [0-9a-zA-Z_]" >&2
-        return 1
-    fi
-
-    if [ -d "$SKULL_PROJ_ROOT/src/modules/$module_name" ]; then
-        echo "Warn: Found the module [$module_name] has already exist, please" \
-            " make sure its a valid module" >&2
-    fi
-
-    return 0
 }
 
 function _action_module_add()

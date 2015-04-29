@@ -153,17 +153,101 @@ function _run_module_action()
     shift
 
     local module=$(_current_module)
-    local module_lang=$(_module_language $module)
-
     if [ -z "$module" ]; then
         echo "Error: not in a module, please switch to a module folder first" >&2
         return 1
     fi
 
+    local module_lang=$(_module_language $module)
     if [ -z "$module_lang" ]; then
         echo "Error: unsupported module language type" >&2
         return 1
     fi
 
     _run_lang_action $module_lang $action $@
+}
+
+# module name must be in [0-9a-zA-Z_]
+function _check_module_name()
+{
+    local module_name=$1
+
+    if [ -z "$module_name" ]; then
+        echo "Error: module name must not be empty" >&2
+        return 1
+    fi
+
+    local ret=`echo "$module_name" | grep -P "[^\w]" | wc -l`
+    if [ "$ret" = "1" ]; then
+        echo "Error: module name must be [0-9a-zA-Z_]" >&2
+        return 1
+    fi
+
+    if [ -d "$SKULL_PROJ_ROOT/src/modules/$module_name" ]; then
+        echo "Warn: Found the module [$module_name] has already exist, please" \
+            " make sure its a valid module" >&2
+    fi
+
+    return 0
+}
+
+################ Service related ###############
+
+# return current module name if user indeed inside a module folder
+function _current_service()
+{
+    local srv_path=`echo "$SKULL_OLD_LOACTION" | grep -oP "src/services/(\w+)"`
+    local service=""
+    if [ ! -z "$srv_path" ]; then
+        service=`basename $srv_path`
+    fi
+
+    echo "$service"
+}
+
+function _current_service_config()
+{
+    local service=$1
+    local srv_config=$SKULL_PROJ_ROOT/src/services/$service/config/config.yaml
+    echo $srv_config
+}
+
+# param module_name
+# return
+#  - language name if this is a supported language. for exmaple: c
+#  - empty if this is a unsupported language
+function _service_language()
+{
+    local service=$1
+    local langs=$(_get_language_list)
+
+    for lang in "$langs"; do
+        if $(_run_lang_action $lang $SKULL_LANG_SERVICE_VALID $service); then
+            echo $lang
+        fi
+    done
+
+    echo ""
+}
+
+# param action_name
+# return the output of the corresponding output of that action
+function _run_service_action()
+{
+    local action=$1
+    shift
+
+    local service=$(_current_service)
+    if [ -z "$service" ]; then
+        echo "Error: not in a service, please switch to a service folder first" >&2
+        return 1
+    fi
+
+    local service_lang=$(_service_language $service)
+    if [ -z "$service_lang" ]; then
+        echo "Error: unsupported service language type [$service_lang]" >&2
+        return 1
+    fi
+
+    _run_lang_action $service_lang $action $@
 }

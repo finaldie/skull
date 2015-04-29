@@ -3,3 +3,5 @@ log_name: skull.log
 log_level: debug
 
 workflows:
+
+services:

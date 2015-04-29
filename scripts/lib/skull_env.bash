@@ -11,6 +11,8 @@ SKULL_LANG_MODULE_ADD="module_add"
 SKULL_LANG_COMMON_CREATE="common_create"
 SKULL_LANG_GEN_METRICS="gen_metrics"
 SKULL_LANG_GEN_CONFIG="gen_config"
+SKULL_LANG_SERVICE_VALID="service_valid"
+SKULL_LANG_SERVICE_ADD="service_add"
 
 ## Skull project configuration file
 SKULL_CONFIG_FILE=$SKULL_PROJ_ROOT/config/skull-config.yaml
@@ -23,6 +25,9 @@ SKULL_MAKEFILE_FOLDER=$SKULL_PROJ_ROOT/.skull/makefiles
 
 ## Workflow IDL folder
 SKULL_WORKFLOW_IDL_FOLDER=$SKULL_PROJ_ROOT/idls/workflow
+
+## Service IDL folder
+SKULL_SERVICE_IDL_FOLDER=$SKULL_PROJ_ROOT/idls/service
 
 ## Service IDL folder
 SKULL_SERVICE_IDL_FOLDER=$SKULL_PROJ_ROOT/idls/service
