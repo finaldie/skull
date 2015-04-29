@@ -9,8 +9,6 @@ export SKULL_SRCTOP
 # Static variables
 SKULL_BIN_DIR = bin
 SKULL_CONFIG_DIR = config
-SKULL_MODULE_DIR = modules
-SKULL_ETC_DIR = etc
 
 DEPLOY_DIR_ROOT ?= $(shell pwd)/run
 DEPLOY_BIN_ROOT := $(DEPLOY_DIR_ROOT)/bin
@@ -29,9 +27,15 @@ ifneq ($(MOD_DIRS),)
     MOD_DIRS := $(shell dirname $(MOD_DIRS))
 endif
 
+SRV_DIRS := $(shell find src/services -name Makefile)
+ifneq ($(SRV_DIRS),)
+    SRV_DIRS := $(shell dirname $(SRV_DIRS))
+endif
+
 SUB_DIRS = \
     $(COMMON_DIRS) \
-    $(MOD_DIRS)
+    $(MOD_DIRS) \
+    $(SRV_DIRS)
 
 # Required by skull
 build:

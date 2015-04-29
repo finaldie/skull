@@ -167,6 +167,11 @@ def generate_source():
     source_file.close()
 
 def generate_idl_files():
+    # basic check
+    workflows = yaml_obj['workflows']
+    if workflows is None:
+        return
+
     generate_header()
     generate_source()
 

@@ -139,11 +139,66 @@ def process_add_module():
         usage()
         sys.exit(1)
 
+################################## Service Related #############################
+def process_show_service():
+    services = yaml_obj['services']
+    services_cnt = 0
+
+    if services is None:
+        print "no service"
+        print "note: run 'skull service --add' to create a new service"
+        return
+
+    for name in services:
+        print "service [%s]:" % name
+
+        service_item = services[name]
+        print " - enable: %d" % service_item['enable']
+
+        # increase the workflow count
+        services_cnt += 1
+        print "\n",
+
+    print "total %d services" % (services_cnt)
+
+def process_add_service():
+    global yaml_obj
+    global config_name
+
+    try:
+        opts, args = getopt.getopt(sys.argv[5:], 'N:b:')
+        service_name = ""
+        service_enable = True
+
+        for op, value in opts:
+            if op == "-N":
+                service_name = value
+            elif op == "-b":
+                service_enable = value
+
+        # If service dict do not exist, create it
+        if yaml_obj['services'] is None:
+            yaml_obj['services'] = {}
+
+        # Now add a service item into services dict
+        services = yaml_obj['services']
+        services[service_name] = {'enable' : service_enable}
+
+        yaml.dump(yaml_obj, file(config_name, 'w'))
+
+    except Exception, e:
+        print "Fatal: process_add_service: " + str(e)
+        usage()
+        sys.exit(1)
+
+################################################################################
 def usage():
     print "usage:"
     print "  skull-workflow.py -m show -c $yaml_file"
     print "  skull-workflow.py -m add_workflow -c $yaml_file -C $concurrent -i $idl_name -p $port -g $is_gen_idl -P $idl_path"
     print "  skull-workflow.py -m add_module -c $yaml_file -M $module_name -i $workflow_index"
+    print "  skull-workflow.py -m show_service -c $yaml_file"
+    print "  skull-workflow.py -m add_service -c $yaml_file -N $service_name -b $enable"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -169,6 +224,10 @@ if __name__ == "__main__":
             process_add_workflow()
         elif work_mode == "add_module":
             process_add_module()
+        elif work_mode == "add_service":
+            process_add_service()
+        elif work_mode == "show_service":
+            process_show_service()
         else:
             print "Fatal: Unknown work_mode: %s" % work_mode
 

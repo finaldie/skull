@@ -11,9 +11,9 @@ function action_service()
 {
     # parse the command args
     local args=`getopt -a \
-        -o ah \
-        -l add,help,conf-gen,conf-cat,conf-edit,conf-check \
-        -n "skull_action_module.bash" -- "$@"`
+        -o ash \
+        -l add,show,help,conf-gen,conf-cat,conf-edit,conf-check \
+        -n "skull_action_service.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
         action_service_usage >&2
@@ -26,8 +26,6 @@ function action_service()
         case "$1" in
             -a|--add)
                 shift
-                action_service_show
-                echo ""
                 _action_service_add
                 exit 0
                 ;;
@@ -96,7 +94,7 @@ function action_service_usage()
 
 function action_service_show()
 {
-
+    $SKULL_ROOT/bin/skull-workflow.py -m show_service -c $SKULL_CONFIG_FILE
 }
 
 function _action_service_add()
@@ -112,10 +110,17 @@ function _action_service_add()
     while true; do
         read -p "service name? " service
 
-        if $(_check_service_name $service); then
+        if $(_check_name $service); then
             break;
         fi
     done
+
+    # 3. check whether this is a existing service
+    if [ -d "$SKULL_PROJ_ROOT/src/services/$service" ]; then
+        echo "Warn: Found the service [$service] has already exist, please" \
+            "make sure its a valid service" >&2
+        return 1
+    fi
 
     # NOTES: currently, we only support C language
     while true; do
@@ -127,18 +132,17 @@ function _action_service_add()
         fi
     done
 
-    # 3. Add basic folder structure if the target module does not exist
-    if [ ! -d "$SKULL_PROJ_ROOT/src/services/$service" ]; then
-        _run_service_action $SKULL_LANG_SERVICE_ADD $service
-    fi
+    # 4. Add basic folder structure if the target module does not exist
+    _run_lang_action $language $SKULL_LANG_SERVICE_ADD $service
 
-    # 4. Add module into main config
-    $SKULL_ROOT/bin/skull-workflow.py -m add_srv -c $skull_conf -S $service
+    # 5. Add module into main config
+    $SKULL_ROOT/bin/skull-workflow.py -m add_service -c $SKULL_CONFIG_FILE \
+        -N $service -b true
 
-    # 5. add common folder
-    _run_service_action $SKULL_LANG_COMMON_CREATE
+    # 6. add common folder
+    _run_lang_action $language $SKULL_LANG_COMMON_CREATE
 
-    echo "module [$module] added successfully"
+    echo "service [$service] added successfully"
 }
 
 function _action_service_config_gen()

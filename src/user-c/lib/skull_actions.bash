@@ -144,6 +144,11 @@ function action_c_gen_idl()
     # 1. generate protobuf-c source code for workflows
     (
         cd $SKULL_WORKFLOW_IDL_FOLDER
+        local proto_cnt=`ls ./ | grep ".proto" | wc -l`
+        if [ $proto_cnt -eq 0 ]; then
+            return 0
+        fi
+
         for idl in ./*.proto; do
             protoc-c --c_out=$COMMON_FILE_LOCATION/src $idl
         done
@@ -154,6 +159,8 @@ function action_c_gen_idl()
     $LANGUAGE_PATH/bin/skull-idl-gen.py -c $config \
         -h $COMMON_FILE_LOCATION/src/skull_txn_sharedata.h \
         -s $COMMON_FILE_LOCATION/src/skull_txn_sharedata.c
+
+    return 0
 }
 
 # Service Related
@@ -173,7 +180,7 @@ function action_c_service_add()
     local srv_path=$SKULL_PROJ_ROOT/src/services/$service
 
     if [ -d "$srv_path" ]; then
-        echo "Notice: the module [$service] has already exist"
+        echo "Notice: the service [$service] has already exist"
         return 1
     fi
 
@@ -184,15 +191,15 @@ function action_c_service_add()
     mkdir -p $srv_path/lib
     mkdir -p $srv_path/idl
 
-    cp $LANGUAGE_PATH/share/mod.c.tpl        $srv_path/src/mod.c
-    cp $LANGUAGE_PATH/etc/config.yaml        $srv_path/config/config.yaml
-    cp $LANGUAGE_PATH/share/test_mod.c.tpl   $srv_path/tests/test_mod.c
-    cp $LANGUAGE_PATH/etc/test_config.yaml   $srv_path/tests/test_config.yaml
-    cp $LANGUAGE_PATH/share/gitignore-module $srv_path/.gitignore
+    cp $LANGUAGE_PATH/share/service.c         $srv_path/src/service.c
+    cp $LANGUAGE_PATH/etc/config.yaml         $srv_path/config/config.yaml
+    cp $LANGUAGE_PATH/share/test_common.c.tpl $srv_path/tests/test_service.c
+    cp $LANGUAGE_PATH/etc/test_config.yaml    $srv_path/tests/test_config.yaml
+    cp $LANGUAGE_PATH/share/gitignore-service $srv_path/.gitignore
 
     # copy makefile templates
-    cp $LANGUAGE_PATH/share/Makefile.tpl $srv_path/Makefile
-    cp $LANGUAGE_PATH/share/Makefile.inc.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.inc
+    cp $LANGUAGE_PATH/share/Makefile.tpl         $srv_path/Makefile
+    cp $LANGUAGE_PATH/share/Makefile.inc.tpl     $SKULL_MAKEFILE_FOLDER/Makefile.c.inc
     cp $LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.targets
 
     # generate a static config code for user

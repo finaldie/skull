@@ -34,4 +34,6 @@ function action_build_usage()
     echo "example:"
     echo "  skull buld"
     echo "  skull buld CC=clang"
+    echo "  skull buld check"
+    echo "  skull buld valgrind-check"
 }

@@ -96,11 +96,18 @@ function _action_module_add()
     while true; do
         read -p "module name? " module
 
-        if $(_check_module_name $module); then
+        if $(_check_name $module); then
             break;
         fi
     done
 
+    # 3. check whether this is a existing module
+    if [ -d "$SKULL_PROJ_ROOT/src/modules/$module" ]; then
+        echo "Warn: Found the module [$module] has already exist, please" \
+            " make sure its a valid module" >&2
+    fi
+
+    # 4. add it into a specific workflow
     while true; do
         read -p "which workflow you want add it to? " workflow_idx
 
@@ -123,9 +130,7 @@ function _action_module_add()
     done
 
     # 3. Add basic folder structure if the target module does not exist
-    if [ ! -d "$SKULL_PROJ_ROOT/src/modules/$module" ]; then
-        action_${language}_module_add $module
-    fi
+    action_${language}_module_add $module
 
     # 4. Add module into main config
     $SKULL_ROOT/bin/skull-workflow.py -m add_module -c $skull_conf -M $module -i $workflow_idx

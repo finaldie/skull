@@ -167,25 +167,20 @@ function _run_module_action()
     _run_lang_action $module_lang $action $@
 }
 
-# module name must be in [0-9a-zA-Z_]
-function _check_module_name()
+# verify a name must be in [0-9a-zA-Z_]
+function _check_name()
 {
-    local module_name=$1
+    local name=$1
 
-    if [ -z "$module_name" ]; then
-        echo "Error: module name must not be empty" >&2
+    if [ -z "$name" ]; then
+        echo "Error: name must not be empty" >&2
         return 1
     fi
 
-    local ret=`echo "$module_name" | grep -P "[^\w]" | wc -l`
+    local ret=`echo "$name" | grep -P "[^\w]" | wc -l`
     if [ "$ret" = "1" ]; then
-        echo "Error: module name must be [0-9a-zA-Z_]" >&2
+        echo "Error: name must be [0-9a-zA-Z_]" >&2
         return 1
-    fi
-
-    if [ -d "$SKULL_PROJ_ROOT/src/modules/$module_name" ]; then
-        echo "Warn: Found the module [$module_name] has already exist, please" \
-            " make sure its a valid module" >&2
     fi
 
     return 0
