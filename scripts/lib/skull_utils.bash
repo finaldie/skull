@@ -246,3 +246,60 @@ function _run_service_action()
 
     _run_lang_action $service_lang $action $@
 }
+
+function _utils_srv_api_copy()
+{
+    local service=$1
+    local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
+    local srv_api_files=`ls $srv_idl_folder | grep ".proto"`
+
+    local srv_api_cnt=`echo $srv_api_files | wc -w`
+    if [ $srv_api_cnt -eq 0 ]; then
+        return 0
+    fi
+
+    # copy the api proto files to topdir/idls/service
+    local new_api_files=""
+    for api_file in "$srv_api_files"; do
+        echo "srv api file: $api_file"
+        local api_filename=`basename $api_file`
+        local new_api_filename=skull-$service-$api_filename
+
+        cp $api_filename $SKULL_SERVICE_IDL_FOLDER/$new_api_filename
+
+        new_api_files+=$new_api_filename
+        new_api_files+=" "
+    done
+
+    echo "$new_api_files"
+}
+
+# generate service idls (apis)
+function skull_utils_srv_api_gen()
+{
+    local service_list=`ls $SKULL_PROJ_ROOT/src/services`
+    local api_list=""
+
+    # copy all service api protos to idls/service and get api list
+    for service in "$service_list"; do
+        local apis=$(_utils_srv_api_copy $service)
+
+        api_list+=$apis
+        api_list+=" "
+    done
+
+    # check api cnt
+    local api_cnt=`echo $api_list | wc -w`
+    if [ $api_cnt -eq 0 ]; then
+        return 0
+    fi
+
+    # convert api protos to target language source files
+    local langs=$(_get_language_list)
+
+    for lang in "$langs"; do
+        _run_lang_action $lang $SKULL_LANG_SERVICE_API_GEN $api_list
+    done
+
+    return 0
+}

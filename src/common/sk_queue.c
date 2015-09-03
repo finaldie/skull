@@ -306,7 +306,7 @@ sk_queue_t* sk_queue_create(sk_queue_mode_t mode, size_t elem_sz,
         return NULL;
     }
 
-    SK_ASSERT_MSG(elem_sz * max_slots / max_slots != elem_sz,
+    SK_ASSERT_MSG(elem_sz * max_slots / max_slots == elem_sz,
                   "sk_queue: error! no enough space for creating the queue\n");
 
     sk_queue_t* queue = calloc(1, sizeof(*queue));

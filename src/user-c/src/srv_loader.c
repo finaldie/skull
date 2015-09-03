@@ -79,7 +79,6 @@ int _srv_close (sk_service_t* service)
     skull_config_destroy(srv_data->config);
 
     free(srv_data);
-    free(opt);
     return dlclose(handler);
 }
 

@@ -6,7 +6,7 @@
 function action_common()
 {
     # parse the command args
-    local args=`getopt -a -o h -l metrics-gen,metrics-dump,idl-gen,help \
+    local args=`getopt -a -o h -l metrics-gen,metrics-dump,idl-gen,srv-idl-gen,help \
         -n "skull_action_common.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -30,6 +30,10 @@ function action_common()
                 shift
                 _action_idl_gen
                 ;;
+            --srv-idl-gen)
+                shift
+                _action_srv_idl_gen
+                ;;
             -h|--help)
                 shift
                 action_common_usage >&2
@@ -52,6 +56,7 @@ function action_common_usage()
     echo "  skull common --metrics-gen"
     echo "  skull common --metrics-dump"
     echo "  skull common --idl-gen"
+    echo "  skull common --srv-idl-gen"
     echo "  skull common -h|--help"
 }
 
@@ -78,4 +83,9 @@ function _action_idl_gen()
     for language in $langs; do
         action_${language}_gen_idl $skull_config
     done
+}
+
+function _action_srv_idl_gen()
+{
+    skull_utils_srv_api_gen
 }

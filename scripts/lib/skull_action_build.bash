@@ -15,8 +15,16 @@ function action_build()
     (
         cd $SKULL_PROJ_ROOT
 
+        echo "generate metrics..."
         action_common --metrics-gen
+
+        echo "generate transcation idls..."
         action_common --idl-gen
+
+        echo "generate service apis..."
+        action_common --srv-idl-gen
+
+        echo "build modules/services..."
         make $@
     )
 }

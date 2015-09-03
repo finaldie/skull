@@ -8,6 +8,7 @@
 #  - `action_$lang_gen_idl`
 #  - `action_$lang_service_valid`
 #  - `action_$lang_service_add`
+#  - `action_$lang_service_api_gen`
 #
 # NOTES2: before running any methods in file, skull will change the current
 # folder to the top of the project `SKULL_PROJECT_ROOT`, so it's no need to
@@ -54,7 +55,7 @@ function action_c_module_add()
     cp $LANGUAGE_PATH/share/gitignore-module $module_path/.gitignore
 
     # copy makefile templates
-    cp $LANGUAGE_PATH/share/Makefile.tpl $module_path/Makefile
+    cp $LANGUAGE_PATH/share/Makefile.mod.tpl $module_path/Makefile
     cp $LANGUAGE_PATH/share/Makefile.inc.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.inc
     cp $LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.targets
 
@@ -156,7 +157,7 @@ function action_c_gen_idl()
 
     # 2. generate user api source code
     local config=$1
-    $LANGUAGE_PATH/bin/skull-idl-gen.py -c $config \
+    $LANGUAGE_PATH/bin/skull-idl-gen.py -m txn -c $config \
         -h $COMMON_FILE_LOCATION/src/skull_txn_sharedata.h \
         -s $COMMON_FILE_LOCATION/src/skull_txn_sharedata.c
 
@@ -198,13 +199,41 @@ function action_c_service_add()
     cp $LANGUAGE_PATH/share/gitignore-service $srv_path/.gitignore
 
     # copy makefile templates
-    cp $LANGUAGE_PATH/share/Makefile.tpl         $srv_path/Makefile
+    cp $LANGUAGE_PATH/share/Makefile.svc.tpl     $srv_path/Makefile
     cp $LANGUAGE_PATH/share/Makefile.inc.tpl     $SKULL_MAKEFILE_FOLDER/Makefile.c.inc
     cp $LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_MAKEFILE_FOLDER/Makefile.c.targets
 
     # generate a static config code for user
     local srv_config=$srv_path/config/config.yaml
     action_c_gen_config $srv_config
+
+    return 0
+}
+
+function action_c_service_api_gen()
+{
+    local api_list=$1
+
+    # 1. generate protobuf-c source code for workflows
+    (
+        cd $SKULL_SERVICE_IDL_FOLDER
+
+        for idl in "$api_list"; do
+            protoc-c --c_out=$COMMON_FILE_LOCATION/src $idl
+        done
+    )
+
+    # 2. generate idls
+    local api_name_list=""
+    for api_file in "$api_list"; do
+        api_name_list+=`basename $api_file`
+        api_name_list+="|"
+    done
+
+    $LANGUAGE_PATH/bin/skull-idl-gen.py -m service \
+        -h $COMMON_FILE_LOCATION/src/skull_srv_api_proto.h \
+        -s $COMMON_FILE_LOCATION/src/skull_srv_api_proto.c \
+        -l $api_name_list
 
     return 0
 }
