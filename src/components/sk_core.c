@@ -388,7 +388,7 @@ void sk_core_start(sk_core_t* core)
             exit(ret);
         }
     }
-    SK_LOG_INFO(core->logger, "skull engine start");
+    SK_LOG_INFO(core->logger, "skull engine is ready");
 
     // 4. start triggers
     flist_iter iter = flist_new_iter(core->triggers);
