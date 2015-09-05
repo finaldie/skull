@@ -12,7 +12,7 @@ function action_service()
     # parse the command args
     local args=`getopt -a \
         -o ash \
-        -l add,show,help,conf-gen,conf-cat,conf-edit,conf-check \
+        -l add,show,help,conf-gen,conf-cat,conf-edit,conf-check,idl-list,idl-cat \
         -n "skull_action_service.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -59,6 +59,16 @@ function action_service()
                 _action_service_config_check
                 exit 0
                 ;;
+            --idl-list)
+                shift
+                _action_service_idl_list
+                exit 0
+                ;;
+            --idl-cat)
+                shift 2
+                _action_service_idl_cat $@
+                exit 0
+                ;;
             --)
                 shift; break
                 exit 0
@@ -84,7 +94,6 @@ function action_service_usage()
     echo "  skull service --conf-edit"
     echo "  skull service --conf-check"
 
-    # TODO
     echo "  skull service --idl-list"
     echo "  skull service --idl-cat"
     echo "  skull service --idl-edit"
@@ -184,7 +193,7 @@ function _action_service_config_edit()
 {
     local service=$(_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a module" >&2
+        echo "Error: not in a service" >&2
         exit 1
     fi
 
@@ -203,4 +212,35 @@ function _action_service_config_check()
 {
     echo "Error: Unimplemented!" >&2
     exit 1
+}
+
+function _action_service_idl_list()
+{
+    local service=$(_current_service)
+    if [ -z "$service" ]; then
+        echo "Error: not in a service" >&2
+        exit 1
+    fi
+
+    local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
+    ls $srv_idl_folder | grep ".proto"
+}
+
+function _action_service_idl_cat()
+{
+    local service=$(_current_service)
+    if [ -z "$service" ]; then
+        echo "Error: not in a service" >&2
+        exit 1
+    fi
+
+    local idl_name=$1
+    local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
+    local srv_idl=$srv_idl_folder/$idl_name
+
+    if [ ! -f "$srv_idl" ]; then
+        exit 0
+    fi
+
+    cat $srv_idl
 }
