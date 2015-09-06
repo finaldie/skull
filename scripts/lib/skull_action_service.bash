@@ -12,7 +12,7 @@ function action_service()
     # parse the command args
     local args=`getopt -a \
         -o ash \
-        -l add,show,help,conf-gen,conf-cat,conf-edit,conf-check,idl-list,idl-cat \
+        -l add,show,help,conf-gen,conf-cat,conf-edit,conf-check,idl-list,idl-add,idl-cat,idl-edit,idl-check,idl-gen \
         -n "skull_action_service.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -64,9 +64,29 @@ function action_service()
                 _action_service_idl_list
                 exit 0
                 ;;
+            --idl-add)
+                shift 2
+                _action_service_idl_add $@
+                exit 0
+                ;;
             --idl-cat)
                 shift 2
                 _action_service_idl_cat $@
+                exit 0
+                ;;
+            --idl-edit)
+                shift 2
+                _action_service_idl_edit $@
+                exit 0
+                ;;
+            --idl-check)
+                shift 2
+                _action_service_idl_check
+                exit 0
+                ;;
+            --idl-gen)
+                shift 2
+                _action_service_idl_gen
                 exit 0
                 ;;
             --)
@@ -95,6 +115,7 @@ function action_service_usage()
     echo "  skull service --conf-check"
 
     echo "  skull service --idl-list"
+    echo "  skull service --idl-add"
     echo "  skull service --idl-cat"
     echo "  skull service --idl-edit"
     echo "  skull service --idl-gen"
@@ -234,6 +255,11 @@ function _action_service_idl_cat()
         exit 1
     fi
 
+    if [ $# = 0 ]; then
+        echo "Error: require idl name" >&2
+        exit 1
+    fi
+
     local idl_name=$1
     local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
     local srv_idl=$srv_idl_folder/$idl_name
@@ -243,4 +269,65 @@ function _action_service_idl_cat()
     fi
 
     cat $srv_idl
+}
+
+function _action_service_idl_edit()
+{
+    local service=$(_current_service)
+    if [ -z "$service" ]; then
+        echo "Error: not in a service" >&2
+        exit 1
+    fi
+
+    if [ $# = 0 ]; then
+        echo "Error: require idl name" >&2
+        exit 1
+    fi
+
+    local idl_name=$1
+    local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
+    local srv_idl=$srv_idl_folder/$idl_name
+
+    vim $srv_idl
+}
+
+function _action_service_idl_check()
+{
+    echo "Error: Unimplemented!" >&2
+    exit 1
+}
+
+function _action_service_idl_gen()
+{
+    skull_utils_srv_api_gen
+}
+
+function _action_service_idl_add()
+{
+    local service=$(_current_service)
+    if [ -z "$service" ]; then
+        echo "Error: not in a service" >&2
+        exit 1
+    fi
+
+    if [ $# = 0 ]; then
+        echo "Error: require idl name" >&2
+        exit 1
+    fi
+
+    local idl_name=$1
+    local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
+    local template=$SKULL_ROOT/share/skull/template.proto
+    local tpl_suffix="proto"
+
+    local idl_req_name=${service}_${idl_name}_req
+    local idl_resp_name=${service}_${idl_name}_resp
+    local srv_idl_req=$srv_idl_folder/$idl_req_name.$tpl_suffix
+    local srv_idl_resp=$srv_idl_folder/$idl_resp_name.$tpl_suffix
+
+    sed "s/TEMPLATE/$idl_req_name/g" $template > $srv_idl_req
+    sed "s/TEMPLATE/$idl_resp_name/g" $template > $srv_idl_resp
+
+    echo "$idl_req_name added"
+    echo "$idl_resp_name added"
 }
