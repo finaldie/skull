@@ -96,6 +96,29 @@ function _compare_file()
     fi
 }
 
+# 'remove' action is very dangerous, so this function is wrap the 'rm' and
+#  do it when everything is correct
+function _safe_rm()
+{
+    if [ $# = 0 ]; then
+        return 0
+    fi
+
+    local removed_target=($@)
+
+    for target in ${removed_target[*]}; do
+        local absolute_path=`readlink -f $target`
+
+        # check the path is part of SKULL_PROJ_ROOT
+        echo "$absolute_path" | grep "$target"
+        if [ $? -eq 1 ]; then
+            echo "$absolute_path cannot be deleted" >&2
+        else
+            rm -f $absolute_path
+        fi
+    done
+}
+
 # return current module name if user indeed inside a module folder
 function _current_module()
 {
@@ -259,19 +282,11 @@ function _utils_srv_api_copy()
     fi
 
     # copy the api proto files to topdir/idls/service
-    local new_api_files=""
-    for api_file in "$srv_api_files"; do
-        echo "srv api file: $api_file"
-        local api_filename=`basename $api_file`
-        local new_api_filename=skull-$service-$api_filename
+    ls -1 $srv_idl_folder | grep .proto | while read api_file; do
+        cp $srv_idl_folder/$api_file $SKULL_SERVICE_IDL_FOLDER
 
-        cp $api_filename $SKULL_SERVICE_IDL_FOLDER/$new_api_filename
-
-        new_api_files+=$new_api_filename
-        new_api_files+=" "
+        echo "$api_file"
     done
-
-    echo "$new_api_files"
 }
 
 # generate service idls (apis)

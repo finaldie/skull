@@ -20,7 +20,7 @@ const char* _srv_name (const char* short_name, char* fullname, size_t sz)
 {
     memset(fullname, 0, sz);
 
-    // The full name format: lib/libskull-modules-%s.so
+    // The full name format: lib/libskull-services-%s.so
     snprintf(fullname, sz, "lib/" SKULL_SRV_PREFIX_NAME "%s.so", short_name);
     return fullname;
 }
@@ -30,7 +30,7 @@ const char* _srv_conf_name (const char* short_name, char* confname, size_t sz)
 {
     memset(confname, 0, sz);
 
-    // The full name format: lib/libskull-modules-%s.so
+    // The full name format: etc/skull-services-%s.yaml
     snprintf(confname, sz, "etc/" SKULL_SRV_CONF_PREFIX_NAME "%s.yaml",
              short_name);
     return confname;
@@ -49,7 +49,7 @@ int _srv_open (const char* filename, sk_service_opt_t* opt/*out*/)
         return 1;
     }
 
-    // 2. create module and its private data
+    // 2. create service and its private data
     skull_c_srvdata* md = calloc(1, sizeof(*md));
     md->handler = handler;
 

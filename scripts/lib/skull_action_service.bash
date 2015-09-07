@@ -320,13 +320,16 @@ function _action_service_idl_add()
     local template=$SKULL_ROOT/share/skull/template.proto
     local tpl_suffix="proto"
 
-    local idl_req_name=${service}_${idl_name}_req
-    local idl_resp_name=${service}_${idl_name}_resp
+    local idl_req_name=${service}-${idl_name}_req
+    local idl_resp_name=${service}-${idl_name}_resp
     local srv_idl_req=$srv_idl_folder/$idl_req_name.$tpl_suffix
     local srv_idl_resp=$srv_idl_folder/$idl_resp_name.$tpl_suffix
 
-    sed "s/TEMPLATE/$idl_req_name/g" $template > $srv_idl_req
-    sed "s/TEMPLATE/$idl_resp_name/g" $template > $srv_idl_resp
+    # Generate request proto
+    sed "s/TPL_PKG_NAME/$service/g; s/TPL_MSG_NAME/${idl_name}_req/g" $template > $srv_idl_req
+
+    # Generate response proto
+    sed "s/TPL_PKG_NAME/$service/g; s/TPL_MSG_NAME/${idl_name}_resp/g" $template > $srv_idl_resp
 
     echo "$idl_req_name added"
     echo "$idl_resp_name added"

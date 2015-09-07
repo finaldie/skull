@@ -1,4 +1,8 @@
+// This is created by framework
+// Do not change the package and message name
 
-message TEMPLATE {
+package TPL_PKG_NAME;
+
+message TPL_MSG_NAME {
 
 }

@@ -227,17 +227,18 @@ def generate_srv_source():
         api_basename = api_file.split(".")
         api_basename = api_basename[0]
 
-        content += "include \"%s.h\"" % api_basename
+        content += "#include \"%s.pb-c.h\"\n" % api_basename
 
     # generate service idl table
+    content += "\n"
     content += "const ProtobufCMessageDescriptor* skull_srv_api_desc_tbl[] = {\n"
 
-    for api_name in api_file_list:
+    for api_file in api_file_list:
         api_basename = api_file.split(".")
         api_basename = api_basename[0]
         api_desc_prefix = str(api_basename).replace("-", "__")
 
-        content += "    %s__descriptor,\n" % api_desc_prefix
+        content += "    &%s__descriptor,\n" % api_desc_prefix
 
     content += "    NULL,\n"
     content += "};\n"
@@ -281,6 +282,7 @@ if __name__ == "__main__":
                 source_name = value
             elif op == "-l":
                 api_file_list = value.split('|')
+                api_file_list = filter(None, api_file_list)
 
         # Now run the process func according the mode
         if mode == "txn":

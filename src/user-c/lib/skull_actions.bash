@@ -212,20 +212,20 @@ function action_c_service_add()
 
 function action_c_service_api_gen()
 {
-    local api_list=$1
+    local api_list=($@)
 
     # 1. generate protobuf-c source code for workflows
     (
         cd $SKULL_SERVICE_IDL_FOLDER
 
-        for idl in "$api_list"; do
+        for idl in ${api_list[*]}; do
             protoc-c --c_out=$COMMON_FILE_LOCATION/src $idl
         done
     )
 
     # 2. generate idls
     local api_name_list=""
-    for api_file in "$api_list"; do
+    for api_file in ${api_list[*]}; do
         api_name_list+=`basename $api_file`
         api_name_list+="|"
     done
