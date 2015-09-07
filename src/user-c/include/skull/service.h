@@ -12,13 +12,15 @@ typedef struct _skull_service_t skull_service_t;
 #define SKULL_DATA_WO 1
 #define SKULL_DATA_RW 2
 
+#define SKULL_SRV_PROTO_MAXLEN 64
+
+// Notes:
+//  - request proto name is 'service.name_req'
+//  - response proto name is 'service.name_resp'
 typedef struct skull_service_async_api_t {
     const char* name;
     int data_access_mode; // read-only, write-only, read-write
     int _reserved;
-
-    const char* req_idl_name;
-    const char* resp_idl_name;
 
     void (*iocall) (skull_service_t*, const void* request, void* response);
 } skull_service_async_api_t;

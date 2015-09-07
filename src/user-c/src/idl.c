@@ -35,3 +35,25 @@ const ProtobufCMessageDescriptor* skull_idl_descriptor(const char* idl_name)
 
     return NULL;
 }
+
+//=============================== Service ======================================
+static const ProtobufCMessageDescriptor** srv_descriptor_tbl = NULL;
+
+void skull_srv_idl_register(const ProtobufCMessageDescriptor** tbl)
+{
+    srv_descriptor_tbl = tbl;
+}
+
+const ProtobufCMessageDescriptor* skull_srv_idl_descriptor(const char* idl_name)
+{
+    for (int i = 0; descriptor_tbl[i] != NULL; i++) {
+        const ProtobufCMessageDescriptor* desc = descriptor_tbl[i];
+
+        if (0 == strcmp(desc->name, idl_name)) {
+            return desc;
+        }
+    }
+
+    return NULL;
+}
+

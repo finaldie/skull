@@ -4,6 +4,7 @@
 #include <skull/api.h>
 #include "skull_metrics.h"
 #include "config.h"
+#include "skull_srv_api_proto.h"
 
 static
 void skull_service_init(skull_service_t* service, skull_config_t* config)
@@ -12,6 +13,9 @@ void skull_service_init(skull_service_t* service, skull_config_t* config)
 
     // Convert skull_config to skull_static_config
     skull_static_config_convert(config);
+
+    // Register service idls
+    skull_srv_idl_register(skull_srv_api_desc_tbl);
 }
 
 static
@@ -41,8 +45,6 @@ static
 skull_service_async_api_t test_get = {
     .name             = "get",
     .data_access_mode = SKULL_DATA_RO,
-    .req_idl_name     = "skull_srv_get_req",
-    .resp_idl_name    = "skull_srv_get_resp",
     .iocall           = skull_service_getdata
 };
 
@@ -50,8 +52,6 @@ static
 skull_service_async_api_t test_set = {
     .name             = "set",
     .data_access_mode = SKULL_DATA_WO,
-    .req_idl_name     = "skull_srv_set_req",
-    .resp_idl_name    = "skull_srv_set_resp",
     .iocall           = skull_service_setdata
 };
 

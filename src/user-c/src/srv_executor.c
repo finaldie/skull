@@ -65,16 +65,24 @@ int  skull_srv_iocall  (sk_service_t* srv, sk_txn_t* txn, void* sdata,
     SK_ASSERT(task_data);
 
     // construct empty response
+    char resp_proto_name[SKULL_SRV_PROTO_MAXLEN];
+    snprintf(resp_proto_name, SKULL_SRV_PROTO_MAXLEN, "%s.%s_resp",
+             sk_service_name(srv), api_name);
+
     const ProtobufCMessageDescriptor* resp_desc =
-        skull_idl_descriptor(api->resp_idl_name);
+        skull_srv_idl_descriptor(resp_proto_name);
 
     ProtobufCMessage* resp_msg = NULL;
     resp_msg = calloc(1, resp_desc->sizeof_message);
     protobuf_c_message_init(resp_desc, resp_msg);
 
     // restore the request
+    char req_proto_name[SKULL_SRV_PROTO_MAXLEN];
+    snprintf(req_proto_name, SKULL_SRV_PROTO_MAXLEN, "%s.%s_req",
+             sk_service_name(srv), api_name);
+
     const ProtobufCMessageDescriptor* req_desc =
-        skull_idl_descriptor(api->req_idl_name);
+        skull_srv_idl_descriptor(req_proto_name);
 
     ProtobufCMessage* req_msg = NULL;
     req_msg = protobuf_c_message_unpack(

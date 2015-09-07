@@ -183,12 +183,16 @@ HEADER_SRV_CONTENT_START ="\
 #ifndef SKULL_SRV_API_PROTO_USER_H\n\
 #define SKULL_SRV_API_PROTO_USER_H\n\
 \n\
+#pragma GCC diagnostic push\n\
+#pragma GCC diagnostic ignored \"-Wpadded\"\n\
+\n\
 #include </usr/include/google/protobuf-c/protobuf-c.h>\n\
 \n\
 "
 
 HEADER_SRV_CONTENT_END = "\
 \n\
+#pragma GCC diagnostic pop\n\
 #endif\n\n\
 "
 
