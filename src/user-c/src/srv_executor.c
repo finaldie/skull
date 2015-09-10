@@ -71,6 +71,7 @@ int  skull_srv_iocall  (sk_service_t* srv, sk_txn_t* txn, void* sdata,
 
     const ProtobufCMessageDescriptor* resp_desc =
         skull_srv_idl_descriptor(resp_proto_name);
+    SK_ASSERT(resp_desc);
 
     ProtobufCMessage* resp_msg = NULL;
     resp_msg = calloc(1, resp_desc->sizeof_message);

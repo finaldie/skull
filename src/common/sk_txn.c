@@ -51,6 +51,7 @@ struct sk_txn_t {
 };
 
 // Internal APIs
+static
 sk_txn_task_t* _sk_txn_task_create(sk_txn_taskdata_t* task_data)
 {
     sk_txn_task_t* task = calloc(1, sizeof(*task));
@@ -64,12 +65,15 @@ sk_txn_task_t* _sk_txn_task_create(sk_txn_taskdata_t* task_data)
     return task;
 }
 
+static
 void _sk_txn_task_destroy(sk_txn_task_t* task)
 {
     if (!task) {
         return;
     }
 
+    // Must release the request data if have, or it will be a mem leak
+    free((void*)task->task_data.request);
     free(task);
 }
 
@@ -100,6 +104,14 @@ void sk_txn_destroy(sk_txn_t* txn)
     sk_entity_dec_task_cnt(txn->entity);
     fmbuf_delete(txn->output);
     free(txn->input);
+
+    // clean up all the tasks
+    fhash_u64_iter task_iter = fhash_u64_iter_new(txn->task_tbl);
+    sk_txn_task_t* task = NULL;
+    while ((task = fhash_u64_next(&task_iter))) {
+        _sk_txn_task_destroy(task);
+    }
+
     fhash_u64_delete(txn->task_tbl);
     free(txn);
 }

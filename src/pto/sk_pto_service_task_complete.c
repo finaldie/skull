@@ -36,8 +36,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_service_task_setcomplete(service);
 
     unsigned long long task_lifetime = sk_txn_task_lifetime(txn, task_id);
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: one task id: %d completed, \
-                 cost %llu usec", task_id, task_lifetime);
+    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: one task id: %d completed, "
+                 "cost %llu usec", (int)task_id, task_lifetime);
 
     // 4. check if all the tasks of the current module for this txn, trigger
     //    a 'workflow_run' protocol to continue

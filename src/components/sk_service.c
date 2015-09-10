@@ -192,20 +192,28 @@ void sk_service_schedule_task(sk_service_t* service,
     sk_sched_send(SK_ENV_SCHED, sk_txn_entity(task->txn), task->txn,
                   SK_PTO_SERVICE_TASK_RUN, &task_run_pto);
 
+    sk_print("service: deliver task(%d) to worker\n", (int)task->task_id);
     SK_LOG_DEBUG(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
-                 task->task_id);
+                 (int)task->task_id);
 }
 
 size_t sk_service_schedule_tasks(sk_service_t* service)
 {
     SK_ASSERT(service);
+    sk_print("service schedule tasks\n");
 
     sk_srv_task_t task;
     sk_srv_status_t pop_status = SK_SRV_STATUS_OK;
     size_t scheduled_task = 0;
 
-    while ((pop_status = _sk_service_pop_task(service, &task)) ==
-           SK_SRV_STATUS_OK) {
+    while (true) {
+        sk_srv_status_t pop_status = _sk_service_pop_task(service, &task);
+        sk_print("pop status: %d\n", pop_status);
+        if (pop_status != SK_SRV_STATUS_OK) {
+            sk_print("pop break\n");
+            break;
+        }
+
         // 1. schedule task to worker
         sk_service_schedule_task(service, &task);
         scheduled_task++;
@@ -234,6 +242,7 @@ size_t sk_service_schedule_tasks(sk_service_t* service)
 
     // handle last exceptions
     _sk_service_handle_exception(service, pop_status);
+    sk_print("service schedule %zu tasks\n", scheduled_task);
 
     return scheduled_task;
 }

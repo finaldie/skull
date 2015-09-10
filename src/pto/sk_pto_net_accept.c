@@ -61,7 +61,7 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
         return;
     }
 
-    // Now, the one user packge has been unpacked succefully
+    // Now, the one user packge has been unpacked successfully
     // 4. set the input data into txn and reset and entity txn pointer
     sk_txn_set_input(txn, data, (size_t)bytes);
     sk_entity_sethalftxn(entity, NULL);

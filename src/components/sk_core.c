@@ -244,6 +244,7 @@ void _sk_service_destroy(sk_core_t* core)
 
         // 2. release service core layer data
         sk_service_unload(service);
+        sk_service_destroy(service);
         SK_LOG_INFO(core->logger, "destroy service %s complete", service_name);
     }
 
@@ -388,7 +389,6 @@ void sk_core_start(sk_core_t* core)
             exit(ret);
         }
     }
-    SK_LOG_INFO(core->logger, "skull engine is ready");
 
     // 4. start triggers
     flist_iter iter = flist_new_iter(core->triggers);
@@ -396,6 +396,9 @@ void sk_core_start(sk_core_t* core)
     while ((trigger = flist_each(&iter))) {
         sk_trigger_run(trigger);
     }
+
+    SK_LOG_INFO(core->logger, "skull engine is ready");
+    sk_print("skull engine is ready\n");
 
     // 5. wait them quit
     for (int i = 0; i < config->threads; i++) {

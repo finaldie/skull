@@ -53,7 +53,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     task.task_id   = task_id;
 
     // 3.2 push task to service
-    int ret = 1;
+    int ret = 0;
     srv_status = sk_service_push_task(service, &task);
     if (srv_status == SK_SRV_STATUS_BUSY) {
         task.io_status = SK_SRV_IO_STATUS_BUSY;
@@ -63,6 +63,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     if (task.io_status == SK_SRV_IO_STATUS_BUSY ||
         task.io_status == SK_SRV_IO_STATUS_INVALID_SRV_NAME) {
         sk_service_schedule_task(service, &task);
+        ret = 1;
         goto io_call_exit;
     }
 

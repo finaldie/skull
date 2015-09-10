@@ -132,6 +132,7 @@ int _sk_queue_push_exlusive(sk_queue_t* queue, const sk_queue_elem_base_t* elem)
 }
 
 // for exlusive queue, it at most can pull one element in one time
+// return how many elements it pulled
 static
 size_t _sk_queue_pull_exlusive(sk_queue_t* queue,
                                sk_queue_elem_base_t* elems, size_t max_slots)
@@ -142,9 +143,11 @@ size_t _sk_queue_pull_exlusive(sk_queue_t* queue,
 
     fmbuf* mq = queue->data.mq;
     int ret = fmbuf_pop(mq, elems, queue->elem_sz);
-    SK_ASSERT(!ret);
-
-    return 0;
+    if (!ret) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 static

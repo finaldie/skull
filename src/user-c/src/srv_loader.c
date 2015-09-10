@@ -62,10 +62,11 @@ int _srv_open (const char* filename, sk_service_opt_t* opt/*out*/)
 
     md->entry = md->reg();
 
+    opt->srv_data = md;
+    opt->mode = SK_SRV_DATA_MODE_EXCLUSIVE;
     opt->init = skull_srv_init;
     opt->release = skull_srv_release;
     opt->io_call = skull_srv_iocall;
-    opt->srv_data = md;
 
     return 0;
 }

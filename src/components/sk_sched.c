@@ -185,16 +185,14 @@ sk_io_bridge_t* _find_affinity_bridge(sk_sched_t* sched, sk_sched_t* target,
             continue;
         }
 
-        if (io_bridge->dst == target) {
-            if (index) {
-                *index = bri_idx;
-            }
-
-            return io_bridge;
+        if (index) {
+            *index = bri_idx;
         }
+
+        return io_bridge;
     }
 
-    // doesn't find any affinity io bridge, possibly, this is a message be sent
+    // doesn't find any affinity io bridge, possibly, this is a message sent
     // from worker to master
     return NULL;
 }
@@ -224,7 +222,11 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
         if (txn && affinity_sched) {
             io_bridge = _find_affinity_bridge(sched, affinity_sched,
                                                        &bridge_index);
-        } else {
+        }
+
+        // Notes: if the io_bridge is NULL, means this is a message delivered
+        // from worker to master, so it needs another round of deliver
+        if (!io_bridge) {
             bridge_index = sched->last_delivery_idx;
             SK_ASSERT(bridge_index < sched->bridge_size);
             io_bridge = sched->bridge_tbl[bridge_index];
@@ -237,7 +239,7 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
             return;
         }
 
-        // 2.2 If there is slot for io bridge, pop the event from src io
+        // 2.2 If there is a slot for io bridge, pop the event from src io
         sk_event_t event;
         nevents = sk_io_pull(src_io, SK_IO_OUTPUT, &event, 1);
         SK_ASSERT(nevents == 1);
