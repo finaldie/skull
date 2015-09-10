@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "flibs/fhash.h"
 #include "flibs/fmbuf.h"
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
@@ -21,6 +22,7 @@ struct sk_service_t {
 
     sk_queue_t* pending_tasks; // This queue is only avaliable in master
     sk_srv_data_t* data;
+    fhash* apis; // key: api name; value: sk_service_api_t
 };
 
 // Internal APIs of service
@@ -88,6 +90,41 @@ void _sk_service_data_create(sk_service_t* service, sk_srv_data_mode_t mode)
                                              0, SK_SRV_MAX_TASK);
 }
 
+static
+fhash* _create_apis(const sk_service_cfg_t* cfg)
+{
+    fhash* api_cfgs = cfg->apis;
+    fhash* apis = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+
+    fhash_str_iter api_iter = fhash_str_iter_new(api_cfgs);
+    sk_srv_api_cfg_t* api_cfg = NULL;
+
+    while ((api_cfg = fhash_str_next(&api_iter))) {
+        const char* api_name = api_iter.key;
+
+        sk_service_api_t* api = calloc(1, sizeof(*api));
+        api->cfg = api_cfg;
+
+        fhash_str_set(apis, api_name, api);
+    }
+    fhash_str_iter_release(&api_iter);
+
+    return apis;
+}
+
+static
+void _destroy_apis(fhash* apis)
+{
+    fhash_str_iter api_iter = fhash_str_iter_new(apis);
+    sk_service_api_t* api = NULL;
+
+    while ((api = fhash_str_next(&api_iter))) {
+        free(api);
+    }
+    fhash_str_iter_release(&api_iter);
+    fhash_str_delete(apis);
+}
+
 // Public APIs of service
 sk_service_t* sk_service_create(const char* service_name,
                                 const sk_service_cfg_t* cfg)
@@ -99,6 +136,9 @@ sk_service_t* sk_service_create(const char* service_name,
     sk_service_t* service = calloc(1, sizeof(*service));
     service->name = service_name;
     service->cfg  = cfg;
+    service->apis = _create_apis(service->cfg);
+
+    _sk_service_data_create(service, cfg->data_mode);
 
     return service;
 }
@@ -111,14 +151,14 @@ void sk_service_destroy(sk_service_t* service)
 
     sk_queue_destroy(service->pending_tasks);
     sk_srv_data_destroy(service->data);
+    _destroy_apis(service->apis);
+
     free(service);
 }
 
-void sk_service_setopt(sk_service_t* service, sk_service_opt_t opt)
+void sk_service_setopt(sk_service_t* service, const sk_service_opt_t opt)
 {
     service->opt = opt;
-
-    _sk_service_data_create(service, opt.mode);
 }
 
 sk_service_opt_t* sk_service_opt(sk_service_t* service)
@@ -129,6 +169,12 @@ sk_service_opt_t* sk_service_opt(sk_service_t* service)
 void sk_service_settype(sk_service_t* service, sk_service_type_t type)
 {
     service->type = type;
+}
+
+const sk_service_api_t* sk_service_api(sk_service_t* service,
+                                       const char* api_name)
+{
+    return fhash_str_get(service->apis, api_name);
 }
 
 void sk_service_start(sk_service_t* service)
@@ -338,9 +384,8 @@ void sk_service_data_set(sk_service_t* service, const void* data)
 //
 // TODO: check whether it be invoked from user module
 int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
-                      const char* api_name, sk_srv_data_mode_t data_mode,
-                      const void* req, size_t req_sz, sk_txn_module_cb cb,
-                      void* ud)
+                      const char* api_name, const void* req, size_t req_sz,
+                      sk_txn_module_cb cb, void* ud)
 {
     SK_ASSERT(service);
     SK_ASSERT(txn);
@@ -363,7 +408,6 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     // 2. construct iocall protocol
     ServiceIocall iocall_msg = SERVICE_IOCALL__INIT;
     iocall_msg.task_id      = task_id;
-    iocall_msg.data_mode    = data_mode;
     iocall_msg.service_name = (char*) service->name;
     iocall_msg.api_name     = (char*) api_name;
 

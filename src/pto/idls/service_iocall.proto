@@ -1,7 +1,6 @@
 // call the master, and schedule a service task
 message service_iocall {
     required uint64 task_id      = 1;
-    required int32  data_mode    = 2;
-    required string service_name = 3;
-    required string api_name     = 4;
+    required string service_name = 2;
+    required string api_name     = 3;
 }

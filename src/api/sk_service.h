@@ -46,11 +46,6 @@ typedef struct sk_srv_task_t {
 
 typedef struct sk_service_opt_t {
     void* srv_data;
-    sk_srv_data_mode_t mode;
-
-#if __WORDSIZE == 64
-    int _padding;
-#endif
 
     void (*init)    (sk_service_t*, void* srv_data);
     void (*release) (sk_service_t*, void* srv_data);
@@ -59,13 +54,19 @@ typedef struct sk_service_opt_t {
                      const char* api_name, sk_srv_io_status_t ustatus);
 } sk_service_opt_t;
 
+typedef struct sk_service_api_t {
+    sk_srv_api_cfg_t* cfg;
+} sk_service_api_t;
+
 sk_service_t* sk_service_create(const char* service_name,
                                 const sk_service_cfg_t* cfg);
 void sk_service_destroy(sk_service_t*);
 
-void sk_service_setopt(sk_service_t*, sk_service_opt_t opt);
+void sk_service_setopt(sk_service_t*, const sk_service_opt_t opt);
 sk_service_opt_t* sk_service_opt(sk_service_t*);
 void sk_service_settype(sk_service_t*, sk_service_type_t type);
+
+const sk_service_api_t* sk_service_api(sk_service_t*, const char* api_name);
 
 void sk_service_start(sk_service_t*);
 void sk_service_stop(sk_service_t*);
@@ -94,7 +95,7 @@ void sk_service_data_set(sk_service_t*, const void* data);
 
 //  Invoke Service IO call
 int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
-                      sk_srv_data_mode_t, const void* req, size_t req_sz,
+                      const void* req, size_t req_sz,
                       sk_txn_module_cb cb, void* ud);
 
 #endif

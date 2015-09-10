@@ -26,7 +26,6 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // 1. unpack the parameters
     ServiceIocall* iocall_msg = proto_msg;
     uint64_t task_id          = iocall_msg->task_id;
-    int32_t data_access_mode  = iocall_msg->data_mode;
     const char* service_name  = iocall_msg->service_name;
     const char* api_name      = iocall_msg->api_name;
 
@@ -40,12 +39,30 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
         io_status = SK_SRV_IO_STATUS_INVALID_SRV_NAME;
     }
 
+    const sk_service_cfg_t* srv_cfg = sk_service_config(service);
+    const sk_service_api_t* srv_api = sk_service_api(service, api_name);
+    SK_ASSERT(srv_cfg && srv_api);
+
+    const sk_srv_api_cfg_t* api_cfg = srv_api->cfg;
+
     // 3. queue a specific service call
     // 3.1 construct the service task
     sk_srv_task_t task;
     memset(&task, 0, sizeof(task));
 
-    task.base.type = (sk_queue_elem_type_t) data_access_mode;
+    if (srv_cfg->data_mode == SK_SRV_DATA_MODE_EXCLUSIVE) {
+        task.base.type = SK_QUEUE_ELEM_EXCLUSIVE;
+    } else {
+        SK_ASSERT(api_cfg->access_mode == SK_SRV_API_READ ||
+                  api_cfg->access_mode == SK_SRV_API_WRITE);
+
+        if (api_cfg->access_mode == SK_SRV_API_READ) {
+            task.base.type = SK_QUEUE_ELEM_READ;
+        } else {
+            task.base.type = SK_QUEUE_ELEM_WRITE;
+        }
+    }
+
     task.io_status = io_status;
     task.service   = service;
     task.txn       = txn;

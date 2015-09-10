@@ -45,14 +45,12 @@ void skull_service_setdata(skull_service_t* service, const void* request,
 static
 skull_service_async_api_t test_get = {
     .name             = "get",
-    .data_access_mode = SKULL_DATA_RO,
     .iocall           = skull_service_getdata
 };
 
 static
 skull_service_async_api_t test_set = {
     .name             = "set",
-    .data_access_mode = SKULL_DATA_WO,
     .iocall           = skull_service_setdata
 };
 

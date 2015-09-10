@@ -56,7 +56,6 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
     SK_ASSERT(req_sz == packed_sz);
 
     sk_service_iocall(service, txn->txn, api_name,
-                      (sk_srv_data_mode_t)api->data_access_mode,
                       serialized_req, req_sz,
                       (sk_txn_module_cb)cb, txn);
 
