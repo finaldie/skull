@@ -98,6 +98,7 @@ sk_service_t* sk_service_create(const char* service_name,
 
     sk_service_t* service = calloc(1, sizeof(*service));
     service->name = service_name;
+    service->cfg  = cfg;
 
     return service;
 }

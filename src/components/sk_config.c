@@ -35,6 +35,8 @@ sk_service_cfg_t* _service_cfg_item_create()
 {
     sk_service_cfg_t* cfg = calloc(1, sizeof(*cfg));
     cfg->enable = false;
+    cfg->data_mode = SK_SRV_DATA_MODE_EXCLUSIVE;
+    cfg->apis = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
     return cfg;
 }
@@ -46,6 +48,17 @@ void _service_cfg_item_destroy(sk_service_cfg_t* cfg)
         return;
     }
 
+    // destroy api items
+    fhash_str_iter api_iter = fhash_str_iter_new(cfg->apis);
+    sk_srv_api_cfg_t* api_cfg_item = NULL;
+
+    while ((api_cfg_item = fhash_str_next(&api_iter))) {
+        free(api_cfg_item);
+    }
+
+    fhash_str_iter_release(&api_iter);
+
+    fhash_str_delete(cfg->apis);
     free(cfg);
 }
 
@@ -153,8 +166,8 @@ void _load_log_name(sk_cfg_node_t* child, sk_config_t* config)
     if (log_name && strlen(log_name)) {
         strncpy(config->log_name, child->data.value, SK_CONFIG_LOGNAME_LEN - 1);
     } else {
-        sk_print_err("Fatal: empty log name, please configure a non-empty \
-                     log name\n");
+        sk_print_err("Fatal: empty log name, please configure a non-empty "
+                     "log name\n");
         exit(1);
     }
 }
@@ -183,6 +196,144 @@ void _load_log_level(sk_cfg_node_t* child, sk_config_t* config)
 }
 
 static
+void _load_service_data_mode(const sk_cfg_node_t* child, sk_service_cfg_t* cfg)
+{
+    SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
+
+    const char* data_mode = child->data.value;
+
+    if (data_mode) {
+        if (0 == strcmp(data_mode, "exclusive")) {
+            cfg->data_mode = SK_SRV_DATA_MODE_EXCLUSIVE;
+        } else if (0 == strcmp(data_mode, "rw-pr")) {
+            cfg->data_mode = SK_SRV_DATA_MODE_RW_PR;
+        } else if (0 == strcmp(data_mode, "rw-pw")) {
+            cfg->data_mode = SK_SRV_DATA_MODE_RW_PW;
+        } else {
+            sk_print_err("Fatal: unknown service data mode '%s', use "
+                         "exclusive, rw-pr or rw-pw\n", data_mode);
+            exit(1);
+        }
+    } else {
+        sk_print_err("Fatal: empty service data mode, please configure a "
+                     "non-empty data mode\n");
+        exit(1);
+    }
+}
+
+static
+void _load_service_api(const sk_cfg_node_t* node, const char* service_name,
+                       const char* api_name, sk_service_cfg_t* cfg)
+{
+    SK_ASSERT_MSG(node->type == SK_CFG_NODE_MAPPING,
+                  "service %s api item config must be a mapping\n",
+                  service_name);
+
+    // Create a api cfg structure
+    sk_srv_api_cfg_t* api_cfg = calloc(1, sizeof(*api_cfg));
+
+    // Parse and fill api cfg
+    fhash_str_iter iter = fhash_str_iter_new(node->data.mapping);
+    sk_cfg_node_t* child = NULL;
+
+    while ((child = fhash_str_next(&iter))) {
+        const char* key = iter.key;
+        bool mode_exist = false;
+
+        if (0 == strcmp(key, "mode")) {
+            mode_exist = true;
+            const char* value = sk_config_getstring(child);
+
+            if (0 == strcmp(value, "read")) {
+                api_cfg->access_mode = SK_SRV_API_READ;
+            } else if (0 == strcmp(value, "write")) {
+                api_cfg->access_mode = SK_SRV_API_WRITE;
+            } else if (0 == strcmp(value, "read-write")) {
+                api_cfg->access_mode = SK_SRV_API_READ_WRITE;
+            } else {
+                sk_print_err("Fatal: unknown service '%s' api '%s' access mode "
+                             "'%s', use read, write or read-write\n",
+                             service_name, api_name, value);
+                exit(1);
+            }
+        } else {
+            sk_print_err("Fatal: unknown service '%s' api '%s' cfg field "
+                         "'%s'\n", service_name, api_name, key);
+            exit(1);
+        }
+
+        if (!mode_exist) {
+            sk_print_err("Fatal: service '%s' api '%s' cfg missing mode "
+                         "field\n", service_name, api_name);
+            exit(1);
+        }
+    }
+
+    fhash_str_iter_release(&iter);
+
+    // Add api cfg item to apis table
+    fhash_str_set(cfg->apis, api_name, api_cfg);
+}
+
+static
+void _load_service_apis(const sk_cfg_node_t* node, const char* service_name,
+                        sk_service_cfg_t* cfg)
+{
+    SK_ASSERT_MSG(node->type == SK_CFG_NODE_MAPPING,
+                  "service api item config must be a mapping\n");
+
+    fhash_str_iter iter = fhash_str_iter_new(node->data.mapping);
+    sk_cfg_node_t* child = NULL;
+
+    while ((child = fhash_str_next(&iter))) {
+        const char* api_name = iter.key;
+        _load_service_api(child, service_name, api_name, cfg);
+    }
+
+    fhash_str_iter_release(&iter);
+}
+
+static
+bool _validate_service_cfg(const char* service_name,
+                           const sk_service_cfg_t* service_cfg)
+{
+    fhash_str_iter api_iter = fhash_str_iter_new(service_cfg->apis);
+    const sk_srv_api_cfg_t* api_cfg = NULL;
+
+    while ((api_cfg = fhash_str_next(&api_iter))) {
+        const char* api_name = api_iter.key;
+        sk_print("validating api config: %s\n", api_name);
+
+        if (api_cfg->access_mode == SK_SRV_API_READ ||
+            api_cfg->access_mode == SK_SRV_API_WRITE) {
+            if (service_cfg->data_mode == SK_SRV_DATA_MODE_RW_PR ||
+                service_cfg->data_mode == SK_SRV_DATA_MODE_RW_PW) {
+                fprintf(stderr, "api access mode is invalid for the service "
+                    "data mode, service: %s, api: %s, access mode: %d, "
+                    "data mode: %d\n",
+                    service_name, api_name, api_cfg->access_mode,
+                    service_cfg->data_mode);
+
+                return false;
+            }
+        } else {
+            if (service_cfg->data_mode == SK_SRV_DATA_MODE_EXCLUSIVE) {
+                fprintf(stderr, "api access mode is invalid for the service "
+                    "data mode, service: %s, api: %s, access mode: %d, "
+                    "data mode: %d\n",
+                    service_name, api_name, api_cfg->access_mode,
+                    service_cfg->data_mode);
+
+                return false;
+            }
+        }
+    }
+    fhash_str_iter_release(&api_iter);
+
+    return true;
+}
+
+static
 void _load_service(const char* service_name, sk_cfg_node_t* node,
                    sk_config_t* config)
 {
@@ -192,16 +343,37 @@ void _load_service(const char* service_name, sk_cfg_node_t* node,
     sk_service_cfg_t* service_cfg = _service_cfg_item_create();
     fhash_str_iter iter = fhash_str_iter_new(node->data.mapping);
     sk_cfg_node_t* child = NULL;
+    bool data_mode_exist = false;
 
     while ((child = fhash_str_next(&iter))) {
         const char* key = iter.key;
 
         if (0 == strcmp(key, "enable")) {
             service_cfg->enable = sk_config_getint(child);
+        } else if (0 == strcmp(key, "data_mode")) {
+            data_mode_exist = true;
+            _load_service_data_mode(child, service_cfg);
+        } else if (0 == strcmp(key, "apis")) {
+            _load_service_apis(child, service_name, service_cfg);
         }
     }
 
     fhash_str_iter_release(&iter);
+
+    // check required fields
+    if (!data_mode_exist) {
+        sk_print_err("Fatal: service (%s) cfg missing data_mode field\n",
+                     service_name);
+        exit(1);
+    }
+
+    // validate the whole service config
+    if (!_validate_service_cfg(service_name, service_cfg)) {
+        sk_print_err("Fatal: service (%s) cfg is incorrect\n",
+                     service_name);
+        exit(1);
+    }
+
     fhash_str_set(config->services, service_name, service_cfg);
 }
 

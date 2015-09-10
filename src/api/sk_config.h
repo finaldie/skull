@@ -9,6 +9,7 @@
 #include "flibs/fhash.h"
 #include "api/sk_types.h"
 #include "api/sk_module.h"
+#include "api/sk_service_data.h"
 
 #define SK_CONFIG_LOCATION_LEN    1024
 #define SK_CONFIG_LOGNAME_LEN	  1024
@@ -23,8 +24,25 @@ typedef struct sk_workflow_cfg_t {
     flist* modules;       // module name list
 } sk_workflow_cfg_t;
 
+typedef enum sk_srv_api_access_mode_t {
+    SK_SRV_API_READ       = 0,
+    SK_SRV_API_WRITE      = 1,
+    SK_SRV_API_READ_WRITE = 2
+} sk_srv_api_access_mode_t;
+
+typedef struct sk_srv_api_cfg_t {
+    sk_srv_api_access_mode_t access_mode;
+} sk_srv_api_cfg_t;
+
 typedef struct sk_service_cfg_t {
     bool enable;
+
+    // padding 3 bytes
+    char  __padding1;
+    short __padding2;
+
+    sk_srv_data_mode_t data_mode;
+    fhash* apis; // key: api name; value: api_cfg_t
 } sk_service_cfg_t;
 
 typedef struct sk_config_t {
