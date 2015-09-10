@@ -6,7 +6,6 @@
 #include "flibs/ftime.h"
 #include "flibs/fhash.h"
 
-#include "api/sk_workflow.h"
 #include "api/sk_sched.h"
 #include "api/sk_entity.h"
 #include "api/sk_utils.h"
@@ -42,10 +41,10 @@ struct sk_txn_t {
     int             running_tasks;
     int             complete_tasks;
 
-    unsigned long long start_time;
+    unsigned long long  start_time;
 
-    int             is_unpacked;
     sk_txn_state_t  state;
+    sk_txn_pos_t    position;
 
     void*           udata;
 };
@@ -88,7 +87,8 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
     txn->task_tbl = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     txn->latest_taskid = 0;
     txn->start_time = ftime_gettime();
-    txn->state = SK_TXN_IN_CORE;
+    txn->state = SK_TXN_INIT;
+    txn->position = SK_TXN_POS_CORE;
 
     // update the entity ref
     sk_entity_inc_task_cnt(entity);
@@ -306,4 +306,14 @@ void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
 sk_txn_state_t sk_txn_state(sk_txn_t* txn)
 {
     return txn->state;
+}
+
+void sk_txn_setpos(sk_txn_t* txn, sk_txn_pos_t pos)
+{
+    txn->position = pos;
+}
+
+sk_txn_pos_t sk_txn_pos(sk_txn_t* txn)
+{
+    return txn->position;
 }

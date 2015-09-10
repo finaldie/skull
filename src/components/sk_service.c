@@ -346,8 +346,8 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     SK_ASSERT(api_name);
 
     // 1. checking, the service call must initialize from a module
-    sk_txn_state_t txn_state = sk_txn_state(txn);
-    SK_ASSERT_MSG(txn_state == SK_TXN_IN_MODULE, "Fatal: A service call must \
+    sk_txn_pos_t txn_pos = sk_txn_pos(txn);
+    SK_ASSERT_MSG(txn_pos == SK_TXN_POS_MODULE, "Fatal: A service call must \
                   invoke from a module, service_name: %s, api_name: %s\n",
                   service->name, api_name);
 

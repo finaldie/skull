@@ -21,6 +21,7 @@ void skull_service_init(skull_service_t* service, skull_config_t* config)
 static
 void skull_service_release(skull_service_t* service)
 {
+    skull_static_config_destroy();
     printf("skull service release\n");
 }
 

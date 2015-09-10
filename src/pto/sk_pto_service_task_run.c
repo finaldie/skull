@@ -44,7 +44,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     //        'task_complete' message, or the user module will be hanged
 
     sk_logger_setcookie("service.%s", service_name);
-    sk_txn_setstate(txn, SK_TXN_IN_SERVICE);
+    sk_txn_setpos(txn, SK_TXN_POS_SERVICE);
 
     srv_status = sk_service_run_iocall(service, txn, task_id,
                                        api_name, io_status);
@@ -55,7 +55,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     }
 
     sk_logger_setcookie(SK_CORE_LOG_COOKIE);
-    sk_txn_setstate(txn, SK_TXN_IN_CORE);
+    sk_txn_setpos(txn, SK_TXN_POS_CORE);
 
     // 4. mark the txn task complete
     sk_txn_task_status_t txn_status = srv_status == SK_SRV_STATUS_OK

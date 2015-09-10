@@ -9,10 +9,19 @@ struct sk_workflow_t;
 struct sk_entity_t;
 struct sk_module_t;
 
+typedef enum sk_txn_pos_t {
+    SK_TXN_POS_CORE    = 0,
+    SK_TXN_POS_MODULE  = 1,
+    SK_TXN_POS_SERVICE = 2
+} sk_txn_pos_t;
+
 typedef enum sk_txn_state_t {
-    SK_TXN_IN_CORE = 0,
-    SK_TXN_IN_MODULE = 1,
-    SK_TXN_IN_SERVICE = 2
+    SK_TXN_INIT      = 0,
+    SK_TXN_UNPACKED  = 1,
+    SK_TXN_RUNNING   = 2,
+    SK_TXN_PENDING   = 3,
+    SK_TXN_COMPLETED = 4,
+    SK_TXN_PACKED    = 5
 } sk_txn_state_t;
 
 typedef struct sk_txn_t sk_txn_t;
@@ -49,8 +58,11 @@ void* sk_txn_udata(sk_txn_t* txn);
 
 bool sk_txn_module_complete(sk_txn_t* txn);
 
-void sk_txn_setstate(sk_txn_t*, sk_txn_state_t state);
-sk_txn_state_t sk_txn_state(sk_txn_t*);
+void sk_txn_setpos(sk_txn_t*, sk_txn_pos_t pos);
+sk_txn_pos_t sk_txn_pos(sk_txn_t*);
+
+void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state);
+sk_txn_state_t sk_txn_state(sk_txn_t* txn);
 
 /**
  * Async io task APIs
