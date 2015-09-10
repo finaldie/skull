@@ -83,12 +83,12 @@ static
 size_t _sk_queue_pull(fmbuf* mq, int type, size_t elem_sz,
                       sk_queue_elem_base_t* elems, size_t max_slots)
 {
-    char* tmp_elem[elem_sz];
+    char tmp_elem[elem_sz];
     sk_queue_elem_base_t* elem = NULL;
     size_t pulled_cnt = 0;
 
     while (pulled_cnt < max_slots) {
-        elem = fmbuf_rawget(mq, &tmp_elem, elem_sz);
+        elem = fmbuf_rawget(mq, tmp_elem, elem_sz);
 
         if (!elem) {
             break;

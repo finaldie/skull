@@ -93,15 +93,17 @@ size_t sk_io_free(sk_io_t* io, sk_io_type_t type)
     return fmbuf_free(mq) / SK_EVENT_SZ;
 }
 
-sk_event_t* sk_io_rawget(sk_io_t* io, sk_io_type_t type)
+sk_event_t* sk_io_rawget(sk_io_t* io, sk_io_type_t type, sk_event_t* events,
+                         size_t nevents)
 {
+    SK_ASSERT(events && nevents);
+
     fmbuf* mq = io->mq[type];
     if (fmbuf_used(mq) == 0) {
         return NULL;
     }
 
-    sk_event_t tmp;
-    sk_event_t* event = fmbuf_rawget(mq, &tmp, SK_EVENT_SZ);
+    sk_event_t* event = fmbuf_rawget(mq, events, SK_EVENT_SZ * nevents);
     SK_ASSERT(event);
     return event;
 }

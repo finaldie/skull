@@ -152,10 +152,8 @@ void sk_txn_output_append(sk_txn_t* txn, const void* data, size_t sz)
 
 const void* sk_txn_output(sk_txn_t* txn, size_t* sz)
 {
-    char tmp;
-
     *sz = fmbuf_used(txn->output);
-    return fmbuf_rawget(txn->output, &tmp, 1);
+    return fmbuf_head(txn->output);
 }
 
 struct sk_workflow_t* sk_txn_workflow(sk_txn_t* txn)

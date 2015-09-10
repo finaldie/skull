@@ -210,7 +210,8 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
             break;
         }
 
-        sk_event_t* raw_event = sk_io_rawget(src_io, SK_IO_OUTPUT);
+        sk_event_t tmp;
+        sk_event_t* raw_event = sk_io_rawget(src_io, SK_IO_OUTPUT, &tmp, 1);
         SK_ASSERT(raw_event);
 
         // 2. get the affinity or round-robin io bridge
