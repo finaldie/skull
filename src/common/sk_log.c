@@ -26,10 +26,10 @@ void _skull_log_notification_cb(flog_event_t event)
         sk_print_err("Fatal: skull write log which was truncated!\n");
         break;
     case FLOG_EVENT_BUFFER_FULL:
-        sk_print_err("Fatal: skull logger buffer full!\n");
+        sk_print_err("Fatal: skull logger buffer is full!\n");
         break;
     case FLOG_EVENT_USER_BUFFER_RELEASED:
-        sk_print("Notice: skull logger quit gracefully\n");
+        sk_print("Info: skull logger quit gracefully\n");
         break;
     default:
         sk_print_err("Fatal: unknow skull log event %d\n", event);

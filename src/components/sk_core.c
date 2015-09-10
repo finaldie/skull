@@ -152,6 +152,8 @@ void _sk_module_init(sk_core_t* core)
 
     while ((module = fhash_str_next(&iter))) {
         sk_print("module [%s] init...\n", module->name);
+        SK_LOG_INFO(core->logger, "module [%s] init...", module->name);
+
         sk_logger_setcookie("module.%s", module->name);
         module->init(module->md);
         sk_logger_setcookie(SK_CORE_LOG_COOKIE);
@@ -217,6 +219,7 @@ void _sk_service_init(sk_core_t* core)
 
     while ((service = fhash_str_next(&srv_iter))) {
         const char* service_name = sk_service_name(service);
+        sk_print("init service %s\n", service_name);
         SK_LOG_INFO(core->logger, "init service %s", service_name);
 
         sk_logger_setcookie("service.%s", service_name);
@@ -355,6 +358,8 @@ void sk_core_init(sk_core_t* core)
 
 void sk_core_start(sk_core_t* core)
 {
+    sk_print("skull engine starting...\n");
+
     // 1. module init
     _sk_module_init(core);
 
@@ -362,8 +367,6 @@ void sk_core_start(sk_core_t* core)
     _sk_service_init(core);
 
     // 3. start engines
-    sk_print("skull engine starting...\n");
-
     // 3.1 start master engine
     sk_engine_t* master = core->master;
     //  This *master_env* will be deleted when thread exit
