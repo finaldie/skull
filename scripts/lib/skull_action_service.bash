@@ -12,7 +12,7 @@ function action_service()
     # parse the command args
     local args=`getopt -a \
         -o ash \
-        -l add,show,help,conf-gen,conf-cat,conf-edit,conf-check,api-list,api-add,api-cat,api-edit,api-check,api-gen \
+        -l add,list,help,conf-gen,conf-cat,conf-edit,conf-check,api-list,api-add,api-cat,api-edit,api-check,api-gen \
         -n "skull_action_service.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -29,7 +29,7 @@ function action_service()
                 _action_service_add
                 exit 0
                 ;;
-            -s|--show)
+            -l|--list)
                 shift
                 action_service_show
                 exit 0
@@ -66,7 +66,7 @@ function action_service()
                 ;;
             --api-add)
                 shift 2
-                _action_service_api_add $@
+                _action_service_api_add
                 exit 0
                 ;;
             --api-cat)
@@ -107,7 +107,7 @@ function action_service_usage()
 {
     echo "usage: "
     echo "  skull service -a|--add"
-    echo "  skull service -s|--show"
+    echo "  skull service -l|--list"
     echo "  skull service -h|--help"
     echo "  skull service --conf-gen"
     echo "  skull service --conf-cat"
@@ -127,11 +127,26 @@ function action_service_show()
     $SKULL_ROOT/bin/skull-config-utils.py -m show_service -c $SKULL_CONFIG_FILE
 }
 
+function __validate_data_mode()
+{
+    local data_mode=$1
+    local valid_data_modes=('exclusive' 'rw-pr' 'rw-pw')
+
+    for mode in ${valid_data_modes[*]}; do
+        if [ "$mode" = "$data_mode" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 function _action_service_add()
 {
     # 1. input the module name
     local service=""
     local language=""
+    local data_mode=""
     local langs=$(_get_language_list)
     local lang_names=`echo ${langs[*]} | sed 's/ /|/g'`
     local total_services=`action_service_show | tail -1 | awk '{print $2}'`
@@ -140,7 +155,7 @@ function _action_service_add()
     while true; do
         read -p "service name? " service
 
-        if $(_check_name $service); then
+        if $(_check_name "$service"); then
             break;
         fi
     done
@@ -154,11 +169,22 @@ function _action_service_add()
 
     # NOTES: currently, we only support C language
     while true; do
-        read -p "which language the service belongs to?($lang_names) " language
+        read -p "which language the service belongs to? ($lang_names) " language
 
         # verify the language valid or not
-        if $(_check_language $langs $language); then
+        if $(_check_language $langs "$language"); then
             break;
+        fi
+    done
+
+    while true; do
+        read -p "data mode? (exclusive | rw-pr | rw-pw) " data_mode
+
+        if $(__validate_data_mode "$data_mode"); then
+            break;
+        else
+            echo "Fatal: Unknown service data mode: $data_mode, use" \
+                "exclusive, rw-pr or rw-pw" >&2
         fi
     done
 
@@ -167,7 +193,7 @@ function _action_service_add()
 
     # 5. Add module into main config
     $SKULL_ROOT/bin/skull-config-utils.py -m add_service -c $SKULL_CONFIG_FILE \
-        -N $service -b true
+        -N $service -b true -d $data_mode
 
     # 6. add common folder
     _run_lang_action $language $SKULL_LANG_COMMON_CREATE
@@ -256,7 +282,7 @@ function _action_service_api_cat()
     fi
 
     if [ $# = 0 ]; then
-        echo "Error: require idl name" >&2
+        echo "Error: require api name" >&2
         exit 1
     fi
 
@@ -280,7 +306,7 @@ function _action_service_api_edit()
     fi
 
     if [ $# = 0 ]; then
-        echo "Error: require idl name" >&2
+        echo "Error: require api name" >&2
         exit 1
     fi
 
@@ -302,6 +328,20 @@ function _action_service_api_gen()
     skull_utils_srv_api_gen
 }
 
+function __validate_api_access_mode()
+{
+    local access_mode=$1
+    local valid_access_modes=('read' 'write' 'read-write')
+
+    for mode in ${valid_access_modes[*]}; do
+        if [ "$mode" = "$access_mode" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 function _action_service_api_add()
 {
     local service=$(_current_service)
@@ -310,12 +350,27 @@ function _action_service_api_add()
         exit 1
     fi
 
-    if [ $# = 0 ]; then
-        echo "Error: require idl name" >&2
-        exit 1
-    fi
+    local idl_name=""
+    while true; do
+        read -p "service api name: " idl_name
 
-    local idl_name=$1
+        if $(_check_name "$idl_name"); then
+            break;
+        fi
+    done
+
+    local access_mode=""
+    while true; do
+        read -p "service api access_mode: (read|write|read-write) " access_mode
+
+        if $(__validate_api_access_mode "$access_mode"); then
+            break;
+        else
+            echo "Error: Unknown service api access mode: $access_mode, use" \
+                "read, write or read-write" >&2
+        fi
+    done
+
     local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
     local template=$SKULL_ROOT/share/skull/template.proto
     local tpl_suffix="proto"
@@ -331,6 +386,12 @@ function _action_service_api_add()
     # Generate response proto
     sed "s/TPL_PKG_NAME/$service/g; s/TPL_MSG_NAME/${idl_name}_resp/g" $template > $srv_idl_resp
 
+    # Update skull config
+    $SKULL_ROOT/bin/skull-config-utils.py -m add_service_api \
+        -c $SKULL_CONFIG_FILE \
+        -N $service -a $idl_name -d $access_mode
+
     echo "$idl_req_name added"
     echo "$idl_resp_name added"
+    echo "service api $idl_name added successfully"
 }

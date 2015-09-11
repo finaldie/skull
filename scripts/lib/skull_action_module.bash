@@ -96,7 +96,7 @@ function _action_module_add()
     while true; do
         read -p "module name? " module
 
-        if $(_check_name $module); then
+        if $(_check_name "$module"); then
             break;
         fi
     done
@@ -121,10 +121,10 @@ function _action_module_add()
 
     # NOTES: currently, we only support C language
     while true; do
-        read -p "which language the module belongs to?($lang_names) " language
+        read -p "which language the module belongs to? ($lang_names) " language
 
         # verify the language valid or not
-        if $(_check_language $langs $language); then
+        if $(_check_language $langs "$language"); then
             break;
         fi
     done

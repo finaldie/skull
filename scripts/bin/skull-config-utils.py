@@ -109,8 +109,7 @@ def process_add_workflow():
 
     except Exception, e:
         print "Fatal: process_add_workflow: " + str(e)
-        usage()
-        sys.exit(1)
+        raise
 
 def process_add_module():
     global yaml_obj
@@ -136,8 +135,7 @@ def process_add_module():
 
     except Exception, e:
         print "Fatal: process_add_module: " + str(e)
-        usage()
-        sys.exit(1)
+        raise
 
 ################################## Service Related #############################
 def process_show_service():
@@ -150,12 +148,22 @@ def process_show_service():
         return
 
     for name in services:
-        print "service [%s]:" % name
-
         service_item = services[name]
-        print " - enable: %s" % service_item['enable']
 
-        # increase the workflow count
+        print "service [%s]:" % name
+        print " - enable: %s" % service_item['enable']
+        print " - data_mode: %s" % service_item['data_mode']
+        print " - apis:"
+
+        service_apis = service_item['apis']
+        if service_apis is None:
+            continue
+
+        for api_name in service_apis:
+            api = service_apis[api_name]
+            print "     - %s: mode: %s" % (api_name, api['mode'])
+
+        # increase the service count
         services_cnt += 1
         print "\n",
 
@@ -166,15 +174,18 @@ def process_add_service():
     global config_name
 
     try:
-        opts, args = getopt.getopt(sys.argv[5:], 'N:b:')
+        opts, args = getopt.getopt(sys.argv[5:], 'N:b:d:')
         service_name = ""
         service_enable = True
+        service_data_mode = ""
 
         for op, value in opts:
             if op == "-N":
                 service_name = value
             elif op == "-b":
                 service_enable = value
+            elif op == "-d":
+                service_data_mode = value
 
         # If service dict do not exist, create it
         if yaml_obj['services'] is None:
@@ -182,14 +193,60 @@ def process_add_service():
 
         # Now add a service item into services dict
         services = yaml_obj['services']
-        services[service_name] = {'enable' : service_enable}
+        services[service_name] = {
+            'enable' : service_enable,
+            'data_mode': service_data_mode,
+            'apis': {}
+        }
 
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
     except Exception, e:
         print "Fatal: process_add_service: " + str(e)
-        usage()
-        sys.exit(1)
+        raise
+
+def process_add_service_api():
+    global yaml_obj
+    global config_name
+
+    try:
+        opts, args = getopt.getopt(sys.argv[5:], 'N:a:d:')
+        service_name = ""
+        api_name = ""
+        api_access_mode = ""
+
+        for op, value in opts:
+            if op == "-N":
+                service_name = value
+            elif op == "-a":
+                api_name = value
+            elif op == "-d":
+                api_access_mode = value
+
+        if yaml_obj['services'] is None:
+            yaml_obj['services'] = {}
+
+        # Now add a service api into service dict
+        services = yaml_obj['services']
+
+        service = services[service_name]
+        if service is None:
+            print "Fatal: service %s section is empty" % service_name
+            raise
+
+        if service['apis'] is None:
+            service['apis'] = {}
+
+        apis = service['apis']
+        apis[api_name] = {
+            'mode': api_access_mode
+        }
+
+        yaml.dump(yaml_obj, file(config_name, 'w'))
+
+    except Exception as e:
+        print "Fatal: process_add_service_api: " + str(e)
+        raise
 
 ################################################################################
 def usage():
@@ -198,7 +255,8 @@ def usage():
     print "  skull-config-utils.py -m add_workflow -c $yaml_file -C $concurrent -i $idl_name -p $port -g $is_gen_idl -P $idl_path"
     print "  skull-config-utils.py -m add_module -c $yaml_file -M $module_name -i $workflow_index"
     print "  skull-config-utils.py -m show_service -c $yaml_file"
-    print "  skull-config-utils.py -m add_service -c $yaml_file -N $service_name -b $enable"
+    print "  skull-config-utils.py -m add_service -c $yaml_file -N $service_name -b $enable -d $data_mode"
+    print "  skull-config-utils.py -m add_service_api -c $yaml_file -N $service_name -a $api_name -d $access_mode"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -228,10 +286,12 @@ if __name__ == "__main__":
             process_add_service()
         elif action == "show_service":
             process_show_service()
+        elif action == "add_service_api":
+            process_add_service_api()
         else:
             print "Fatal: Unknown action: %s" % action
 
     except Exception, e:
         print "Fatal: " + str(e)
         usage()
-        sys.exit(1)
+        raise

@@ -69,7 +69,7 @@ function _action_workflow_add()
 
     # set the concurrent
     read -p "Whether allow concurrent? (y/n)" yn_concurrent
-    if [ ! $yn_concurrent = "y" ]; then
+    if [ ! "$yn_concurrent" = "y" ]; then
         concurrent=0
     fi
 
@@ -92,14 +92,17 @@ function _action_workflow_add()
 
     # set the port
     read -p "Need listen on a port? (y/n)" yn_port
-    if [ $yn_port = "y" ]; then
-        read -p "Input the port you want(1025-65535): " port
+    if [ "$yn_port" = "y" ]; then
+        read -p "Input the port you want (1025-65535): " port
     fi
 
     # add workflow into skull-config.yaml
     $SKULL_ROOT/bin/skull-config-utils.py -m add_workflow \
         -c $skull_conf -C $concurrent -i $idl -p $port \
         -g $is_gen_idl -P $idl_path
+
+    echo "workflow added successfully"
+    echo "note: run 'skull module --add' to create a new module for it"
 }
 
 function action_workflow_show()

@@ -200,7 +200,7 @@ function _check_name()
         return 1
     fi
 
-    local ret=`echo "$name" | grep -P "[^\w]" | wc -l`
+    local ret=`echo "$name" | grep "[^0-9a-zA-Z_]" | wc -l`
     if [ "$ret" = "1" ]; then
         echo "Error: name must be [0-9a-zA-Z_]" >&2
         return 1
