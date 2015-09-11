@@ -12,7 +12,7 @@ function action_service()
     # parse the command args
     local args=`getopt -a \
         -o ash \
-        -l add,show,help,conf-gen,conf-cat,conf-edit,conf-check,idl-list,idl-add,idl-cat,idl-edit,idl-check,idl-gen \
+        -l add,show,help,conf-gen,conf-cat,conf-edit,conf-check,api-list,api-add,api-cat,api-edit,api-check,api-gen \
         -n "skull_action_service.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -59,34 +59,34 @@ function action_service()
                 _action_service_config_check
                 exit 0
                 ;;
-            --idl-list)
+            --api-list)
                 shift
-                _action_service_idl_list
+                _action_service_api_list
                 exit 0
                 ;;
-            --idl-add)
+            --api-add)
                 shift 2
-                _action_service_idl_add $@
+                _action_service_api_add $@
                 exit 0
                 ;;
-            --idl-cat)
+            --api-cat)
                 shift 2
-                _action_service_idl_cat $@
+                _action_service_api_cat $@
                 exit 0
                 ;;
-            --idl-edit)
+            --api-edit)
                 shift 2
-                _action_service_idl_edit $@
+                _action_service_api_edit $@
                 exit 0
                 ;;
-            --idl-check)
+            --api-check)
                 shift 2
-                _action_service_idl_check
+                _action_service_api_check
                 exit 0
                 ;;
-            --idl-gen)
+            --api-gen)
                 shift 2
-                _action_service_idl_gen
+                _action_service_api_gen
                 exit 0
                 ;;
             --)
@@ -114,17 +114,17 @@ function action_service_usage()
     echo "  skull service --conf-edit"
     echo "  skull service --conf-check"
 
-    echo "  skull service --idl-list"
-    echo "  skull service --idl-add"
-    echo "  skull service --idl-cat"
-    echo "  skull service --idl-edit"
-    echo "  skull service --idl-gen"
-    echo "  skull service --idl-check"
+    echo "  skull service --api-list"
+    echo "  skull service --api-add"
+    echo "  skull service --api-cat"
+    echo "  skull service --api-edit"
+    echo "  skull service --api-gen"
+    echo "  skull service --api-check"
 }
 
 function action_service_show()
 {
-    $SKULL_ROOT/bin/skull-workflow.py -m show_service -c $SKULL_CONFIG_FILE
+    $SKULL_ROOT/bin/skull-config-utils.py -m show_service -c $SKULL_CONFIG_FILE
 }
 
 function _action_service_add()
@@ -166,7 +166,7 @@ function _action_service_add()
     _run_lang_action $language $SKULL_LANG_SERVICE_ADD $service
 
     # 5. Add module into main config
-    $SKULL_ROOT/bin/skull-workflow.py -m add_service -c $SKULL_CONFIG_FILE \
+    $SKULL_ROOT/bin/skull-config-utils.py -m add_service -c $SKULL_CONFIG_FILE \
         -N $service -b true
 
     # 6. add common folder
@@ -235,7 +235,7 @@ function _action_service_config_check()
     exit 1
 }
 
-function _action_service_idl_list()
+function _action_service_api_list()
 {
     local service=$(_current_service)
     if [ -z "$service" ]; then
@@ -247,7 +247,7 @@ function _action_service_idl_list()
     ls $srv_idl_folder | grep ".proto"
 }
 
-function _action_service_idl_cat()
+function _action_service_api_cat()
 {
     local service=$(_current_service)
     if [ -z "$service" ]; then
@@ -271,7 +271,7 @@ function _action_service_idl_cat()
     cat $srv_idl
 }
 
-function _action_service_idl_edit()
+function _action_service_api_edit()
 {
     local service=$(_current_service)
     if [ -z "$service" ]; then
@@ -291,18 +291,18 @@ function _action_service_idl_edit()
     vim $srv_idl
 }
 
-function _action_service_idl_check()
+function _action_service_api_check()
 {
     echo "Error: Unimplemented!" >&2
     exit 1
 }
 
-function _action_service_idl_gen()
+function _action_service_api_gen()
 {
     skull_utils_srv_api_gen
 }
 
-function _action_service_idl_add()
+function _action_service_api_add()
 {
     local service=$(_current_service)
     if [ -z "$service" ]; then

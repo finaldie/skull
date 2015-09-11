@@ -20,7 +20,7 @@ def load_yaml_config():
     yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
-def process_show():
+def process_show_workflow():
     workflows = yaml_obj['workflows']
     workflow_cnt = 0
 
@@ -153,7 +153,7 @@ def process_show_service():
         print "service [%s]:" % name
 
         service_item = services[name]
-        print " - enable: %d" % service_item['enable']
+        print " - enable: %s" % service_item['enable']
 
         # increase the workflow count
         services_cnt += 1
@@ -194,11 +194,11 @@ def process_add_service():
 ################################################################################
 def usage():
     print "usage:"
-    print "  skull-workflow.py -m show -c $yaml_file"
-    print "  skull-workflow.py -m add_workflow -c $yaml_file -C $concurrent -i $idl_name -p $port -g $is_gen_idl -P $idl_path"
-    print "  skull-workflow.py -m add_module -c $yaml_file -M $module_name -i $workflow_index"
-    print "  skull-workflow.py -m show_service -c $yaml_file"
-    print "  skull-workflow.py -m add_service -c $yaml_file -N $service_name -b $enable"
+    print "  skull-config-utils.py -m show_workflow -c $yaml_file"
+    print "  skull-config-utils.py -m add_workflow -c $yaml_file -C $concurrent -i $idl_name -p $port -g $is_gen_idl -P $idl_path"
+    print "  skull-config-utils.py -m add_module -c $yaml_file -M $module_name -i $workflow_index"
+    print "  skull-config-utils.py -m show_service -c $yaml_file"
+    print "  skull-config-utils.py -m add_service -c $yaml_file -N $service_name -b $enable"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -206,7 +206,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        work_mode = None
+        action = None
         opts, args = getopt.getopt(sys.argv[1:5], 'c:m:')
 
         for op, value in opts:
@@ -215,21 +215,21 @@ if __name__ == "__main__":
                 config_path = os.path.dirname(config_name)
                 load_yaml_config()
             elif op == "-m":
-                work_mode = value
+                action = value
 
         # Now run the process func according the mode
-        if work_mode == "show":
-            process_show()
-        elif work_mode == "add_workflow":
+        if action == "show_workflow":
+            process_show_workflow()
+        elif action == "add_workflow":
             process_add_workflow()
-        elif work_mode == "add_module":
+        elif action == "add_module":
             process_add_module()
-        elif work_mode == "add_service":
+        elif action == "add_service":
             process_add_service()
-        elif work_mode == "show_service":
+        elif action == "show_service":
             process_show_service()
         else:
-            print "Fatal: Unknown work_mode: %s" % work_mode
+            print "Fatal: Unknown action: %s" % action
 
     except Exception, e:
         print "Fatal: " + str(e)
