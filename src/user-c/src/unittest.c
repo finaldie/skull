@@ -215,6 +215,11 @@ const char* sk_service_name(const sk_service_t* service)
     return service->name;
 }
 
+sk_service_opt_t* sk_service_opt(sk_service_t* service)
+{
+    return &service->opt;
+}
+
 void sk_service_setopt(sk_service_t* service, sk_service_opt_t opt)
 {
     service->opt = opt;

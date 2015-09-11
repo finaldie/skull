@@ -151,6 +151,7 @@ UT_OBJS = \
     user-c/src/txn.o \
     user-c/src/config.o \
     user-c/src/srv_loader.o \
+    user-c/src/srv_executor.o \
     common/sk_utils.o \
     common/sk_loader.o \
     common/sk_txn.o \
