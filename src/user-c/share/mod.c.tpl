@@ -5,6 +5,7 @@
 #include "skull/api.h"
 #include "skull_metrics.h"
 #include "skull_txn_sharedata.h"
+#include "skull_srv_api_proto.h"
 #include "config.h"
 
 void* module_init(skull_config_t* config)

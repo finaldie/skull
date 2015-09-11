@@ -209,6 +209,14 @@ def generate_srv_header():
     content = ""
     content += HEADER_SRV_CONTENT_START
 
+    # generate the 'include' section
+    for api_file in api_file_list:
+        api_basename = api_file.split(".")
+        api_basename = api_basename[0]
+
+        content += "#include \"%s.pb-c.h\"\n" % api_basename
+
+    content += "\n"
     content += "extern const ProtobufCMessageDescriptor* skull_srv_api_desc_tbl[];\n"
 
     content += HEADER_SRV_CONTENT_END
@@ -225,13 +233,6 @@ def generate_srv_source():
 
     # generate header
     content += SOURCE_SRV_CONTENT_START % os.path.basename(header_name)
-
-    # generate the 'include' section
-    for api_file in api_file_list:
-        api_basename = api_file.split(".")
-        api_basename = api_basename[0]
-
-        content += "#include \"%s.pb-c.h\"\n" % api_basename
 
     # generate service idl table
     content += "\n"

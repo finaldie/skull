@@ -326,6 +326,8 @@ function _action_service_api_check()
 function _action_service_api_gen()
 {
     skull_utils_srv_api_gen
+
+    echo "service api generated, run 'skull build' to re-compile the project"
 }
 
 function __validate_api_access_mode()
