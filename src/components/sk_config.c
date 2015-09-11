@@ -306,6 +306,19 @@ bool _validate_service_cfg(const char* service_name,
 
         if (api_cfg->access_mode == SK_SRV_API_READ ||
             api_cfg->access_mode == SK_SRV_API_WRITE) {
+            if (service_cfg->data_mode == SK_SRV_DATA_MODE_EXCLUSIVE) {
+                fprintf(stderr, "api access mode is invalid for the service "
+                    "data mode, service: %s, api: %s, access mode: %d, "
+                    "data mode: %d\n",
+                    service_name, api_name, api_cfg->access_mode,
+                    service_cfg->data_mode);
+
+                fprintf(stderr, "notes: when the data mode is exclusive, "
+                        "the api access mode must be read-write\n");
+
+                return false;
+            }
+        } else {
             if (service_cfg->data_mode == SK_SRV_DATA_MODE_RW_PR ||
                 service_cfg->data_mode == SK_SRV_DATA_MODE_RW_PW) {
                 fprintf(stderr, "api access mode is invalid for the service "
@@ -314,15 +327,8 @@ bool _validate_service_cfg(const char* service_name,
                     service_name, api_name, api_cfg->access_mode,
                     service_cfg->data_mode);
 
-                return false;
-            }
-        } else {
-            if (service_cfg->data_mode == SK_SRV_DATA_MODE_EXCLUSIVE) {
-                fprintf(stderr, "api access mode is invalid for the service "
-                    "data mode, service: %s, api: %s, access mode: %d, "
-                    "data mode: %d\n",
-                    service_name, api_name, api_cfg->access_mode,
-                    service_cfg->data_mode);
+                fprintf(stderr, "notes: when the data mode is 'rw-xx', "
+                        "the api access mode must be 'read' or 'write'");
 
                 return false;
             }
@@ -369,7 +375,7 @@ void _load_service(const char* service_name, sk_cfg_node_t* node,
 
     // validate the whole service config
     if (!_validate_service_cfg(service_name, service_cfg)) {
-        sk_print_err("Fatal: service (%s) cfg is incorrect\n",
+        sk_print_err("Fatal: service (%s) config is incorrect\n",
                      service_name);
         exit(1);
     }
