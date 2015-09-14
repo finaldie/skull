@@ -16,6 +16,10 @@ static
 skull_service_async_api_t* _find_api(skull_service_async_api_t** apis,
                                      const char* api_name)
 {
+    if (!apis) {
+        return NULL;
+    }
+
     for (int i = 0; apis[i] != NULL; i++) {
         skull_service_async_api_t* api = apis[i];
 

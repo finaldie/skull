@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <google/protobuf-c/protobuf-c.h>
+
+#include "skull/service.h"
+
 // Basic assersion macros
 #define SKULL_CUNIT_ASSERT(expression) \
     do { \
@@ -30,6 +34,10 @@ skull_utenv_t* skull_utenv_create(const char* module_so_location,
 void skull_utenv_destroy(skull_utenv_t*);
 int  skull_utenv_run(skull_utenv_t*, bool run_unpack, bool run_pack);
 
+int skull_utenv_service_add(skull_utenv_t* env, const char* name,
+                            skull_service_async_api_t** apis,
+                            const ProtobufCMessageDescriptor** tbl);
+
 // When user call `skull_utenv_sharedata`, then must call the *release api to
 // free the share data memory
 // return a data which based on `ProtobufCMessage`
@@ -39,7 +47,9 @@ void* skull_utenv_sharedata(skull_utenv_t*);
 // Note: the data arg must a structure which base on `ProtobufCMessage`
 void  skull_utenv_sharedata_release(void* data);
 
-// Reset the idl data for a utenv
+// Serialize the Protobuf message to buffered data, then reset the 'idl data'
+//  field for a utenv
+//
 // Note: the data arg must a structure which base on `ProtobufCMessage`
 // Note: If the data is NULL, it will clear the old idl data
 void  skull_utenv_sharedata_reset(skull_utenv_t*, const void* data);
