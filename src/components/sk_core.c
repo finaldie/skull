@@ -358,6 +358,7 @@ void sk_core_init(sk_core_t* core)
 
 void sk_core_start(sk_core_t* core)
 {
+    SK_LOG_INFO(core->logger, "skull engine starting...");
     sk_print("skull engine starting...\n");
 
     // 1. module init
@@ -368,6 +369,9 @@ void sk_core_start(sk_core_t* core)
 
     // 3. start engines
     // 3.1 start master engine
+    SK_LOG_INFO(core->logger, "starting master...");
+    sk_print("starting master...\n");
+
     sk_engine_t* master = core->master;
     //  This *master_env* will be deleted when thread exit
     sk_thread_env_t* master_env = sk_thread_env_create(core, master,
@@ -379,6 +383,9 @@ void sk_core_start(sk_core_t* core)
     }
 
     // 3.2 start worker engines
+    SK_LOG_INFO(core->logger, "starting workers...");
+    sk_print("starting workers...\n");
+
     sk_config_t* config = core->config;
 
     for (int i = 0; i < config->threads; i++) {
@@ -394,6 +401,9 @@ void sk_core_start(sk_core_t* core)
     }
 
     // 4. start triggers
+    SK_LOG_INFO(core->logger, "starting triggers...");
+    sk_print("starting triggers...\n");
+
     flist_iter iter = flist_new_iter(core->triggers);
     sk_trigger_t* trigger = NULL;
     while ((trigger = flist_each(&iter))) {

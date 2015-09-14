@@ -31,9 +31,6 @@ void skull_srv_release (sk_service_t* srv, void* data)
     entry->release(&skull_service);
 }
 
-typedef void (*skull_srv_call) (skull_service_t*, const void* request,
-                    void* response);
-
 /**
  * Invoke the real user service api function
  */

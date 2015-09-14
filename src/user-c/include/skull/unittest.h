@@ -28,7 +28,7 @@
 // every skull_utenv_t can hold a module and multiple services
 typedef struct skull_utenv_t skull_utenv_t;
 
-skull_utenv_t* skull_utenv_create(const char* module_so_location,
+skull_utenv_t* skull_utenv_create(const char* module_name,
                                   const char* idl_name,
                                   const char* config);
 void skull_utenv_destroy(skull_utenv_t*);
@@ -47,11 +47,11 @@ void* skull_utenv_sharedata(skull_utenv_t*);
 // Note: the data arg must a structure which base on `ProtobufCMessage`
 void  skull_utenv_sharedata_release(void* data);
 
-// Serialize the Protobuf message to buffered data, then reset the 'idl data'
+// Serialize the Protobuf message to buffered data, then reset the 'shared data'
 //  field for a utenv
 //
 // Note: the data arg must a structure which base on `ProtobufCMessage`
-// Note: If the data is NULL, it will clear the old idl data
+// Note: If the data is NULL, it will clear the old 'shared data'
 void  skull_utenv_sharedata_reset(skull_utenv_t*, const void* data);
 
 #endif
