@@ -467,22 +467,22 @@ void sk_core_destroy(sk_core_t* core)
     // 6. destroy config
     sk_config_destroy(core->config);
 
-    // 7. destroy loggers
-    sk_logger_destroy(core->logger);
-    sk_log_tpl_destroy(core->info_log_tpl);
-    sk_log_tpl_destroy(core->warn_log_tpl);
-    sk_log_tpl_destroy(core->error_log_tpl);
-    sk_log_tpl_destroy(core->fatal_log_tpl);
-
-    // 8. destroy workflows
+    // 7. destroy workflows
     sk_workflow_t* workflow = NULL;
     while ((workflow = flist_pop(core->workflows))) {
         sk_workflow_destroy(workflow);
     }
     flist_delete(core->workflows);
 
-    // 9. destroy working dir string
+    // 8. destroy working dir string
     free((void*)core->working_dir);
+
+    // 9. destroy loggers
+    sk_logger_destroy(core->logger);
+    sk_log_tpl_destroy(core->info_log_tpl);
+    sk_log_tpl_destroy(core->warn_log_tpl);
+    sk_log_tpl_destroy(core->error_log_tpl);
+    sk_log_tpl_destroy(core->fatal_log_tpl);
 }
 
 // Utils APIs
