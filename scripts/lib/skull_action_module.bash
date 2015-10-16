@@ -104,7 +104,7 @@ function _action_module_add()
     # 3. check whether this is a existing module
     if [ -d "$SKULL_PROJ_ROOT/src/modules/$module" ]; then
         echo "Warn: Found the module [$module] has already exist, please" \
-            " make sure its a valid module" >&2
+             "make sure its a valid module" >&2
     fi
 
     # 4. add it into a specific workflow

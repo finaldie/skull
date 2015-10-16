@@ -129,7 +129,10 @@ def process_add_module():
 
         # Now add these workflow_x to yaml obj and dump it
         workflow_frame = yaml_obj['workflows'][workflow_idx]
-        workflow_frame['modules'].append(module_name)
+
+        # Check whether the module has exist in module list
+        if module_name not in workflow_frame['modules']:
+            workflow_frame['modules'].append(module_name)
 
         yaml.dump(yaml_obj, file(config_name, 'w'))
 

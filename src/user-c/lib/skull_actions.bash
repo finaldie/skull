@@ -39,7 +39,7 @@ function action_c_module_add()
 
     if [ -d "$module_path" ]; then
         echo "Notice: the module [$module] has already exist"
-        return 1
+        return 0
     fi
 
     # add module folder and files
