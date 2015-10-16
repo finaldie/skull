@@ -29,7 +29,7 @@ TEST_SRCS = \
 SUPPRESION :=
 
 # valgrind command
-VALGRIND := valgrind --tool=memcheck --leak-check=full \
+VALGRIND := valgrind --tool=memcheck --leak-check=full -v \
     --gen-suppressions=all --error-exitcode=1
 
 # Include the basic Makefile targets
