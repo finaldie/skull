@@ -37,7 +37,7 @@ typedef struct mock_task_t {
     skull_module_cb cb;
 } mock_task_t;
 
-struct skull_utenv_t {
+struct skullut_module_t {
     sk_module_t*    module;
     fhash*          services;
 
@@ -67,11 +67,11 @@ _find_api(skull_service_async_api_t** apis, const char* api_name)
     return api;
 }
 
-skull_utenv_t* skull_utenv_create(const char* module_name,
+skullut_module_t* skull_utenv_create(const char* module_name,
                                   const char* idl_name,
                                   const char* conf_name)
 {
-    skull_utenv_t* env = calloc(1, sizeof(*env));
+    skullut_module_t* env = calloc(1, sizeof(*env));
     env->module = sk_module_load(module_name, conf_name);
 
     env->workflow_cfg = calloc(1, sizeof(sk_workflow_cfg_t));
@@ -95,7 +95,7 @@ skull_utenv_t* skull_utenv_create(const char* module_name,
     return env;
 }
 
-void skull_utenv_destroy(skull_utenv_t* env)
+void skullut_module_destroy(skullut_module_t* env)
 {
     if (!env) {
         return;
@@ -128,7 +128,7 @@ void skull_utenv_destroy(skull_utenv_t* env)
     free(env);
 }
 
-int skull_utenv_service_add(skull_utenv_t* env, const char* name,
+int skullut_module_mocksrv_add(skullut_module_t* env, const char* name,
                             skull_service_async_api_t** apis,
                             const ProtobufCMessageDescriptor** tbl)
 {
@@ -145,7 +145,7 @@ int skull_utenv_service_add(skull_utenv_t* env, const char* name,
     return 0;
 }
 
-int skull_utenv_run(skull_utenv_t* env)
+int skullut_module_run(skullut_module_t* env)
 {
     int ret = env->module->run(env->module->md, env->txn);
 
@@ -194,7 +194,7 @@ int skull_utenv_run(skull_utenv_t* env)
     return ret;
 }
 
-void* skull_utenv_sharedata(skull_utenv_t* env)
+void* skullut_module_data(skullut_module_t* env)
 {
     const ProtobufCMessageDescriptor* desc =
         skull_idl_descriptor(env->workflow_cfg->idl_name);
@@ -221,7 +221,7 @@ void  skull_utenv_sharedata_release(void* data)
     protobuf_c_message_free_unpacked(data, NULL);
 }
 
-void  skull_utenv_sharedata_reset(skull_utenv_t* env, const void* msg)
+void  skullut_module_data_reset(skullut_module_t* env, const void* msg)
 {
     sk_txn_t* txn = env->txn;
     skull_idl_data_t* idl_data = sk_txn_udata(txn);
@@ -310,7 +310,7 @@ skull_service_async_call (skull_txn_t* txn,
 
     sk_txn_t* sk_txn = txn->txn;
     sk_entity_t* entity = sk_txn_entity(sk_txn);
-    skull_utenv_t* env = (skull_utenv_t*)sk_entity_halftxn(entity);
+    skullut_module_t* env = (skullut_module_t*)sk_entity_halftxn(entity);
 
     mock_service_t* service = fhash_str_get(env->services, service_name);
     if (!service) {

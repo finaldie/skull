@@ -26,33 +26,33 @@
 }
 
 // every skull_utenv_t can hold a module and multiple services
-typedef struct skull_utenv_t skull_utenv_t;
+typedef struct skullut_module_t skullut_module_t;
 
-skull_utenv_t* skull_utenv_create(const char* module_name,
-                                  const char* idl_name,
-                                  const char* config);
-void skull_utenv_destroy(skull_utenv_t*);
-int  skull_utenv_run(skull_utenv_t*);
+skullut_module_t* skullut_module_create(const char* module_name,
+                                        const char* idl_name,
+                                        const char* config);
+void skullut_module_destroy(skullut_module_t*);
+int  skullut_module_run(skullut_module_t*);
 
-int skull_utenv_service_add(skull_utenv_t* env, const char* name,
+int skullut_module_mocksrv_add(skullut_module_t* env, const char* name,
                             skull_service_async_api_t** apis,
                             const ProtobufCMessageDescriptor** tbl);
 
 // When user call `skull_utenv_sharedata`, then must call the *release api to
 // free the share data memory
 // return a data which based on `ProtobufCMessage`
-void* skull_utenv_sharedata(skull_utenv_t*);
+void* skullut_module_data(skullut_module_t*);
 
 // Release the memory allocated by the `skull_utenv_sharedata`
 // Note: the data arg must a structure which base on `ProtobufCMessage`
-void  skull_utenv_sharedata_release(void* data);
+void  skullut_module_data_release(void* data);
 
 // Serialize the Protobuf message to buffered data, then reset the 'shared data'
 //  field for a utenv
 //
 // Note: the data arg must a structure which base on `ProtobufCMessage`
 // Note: If the data is NULL, it will clear the old 'shared data'
-void  skull_utenv_sharedata_reset(skull_utenv_t*, const void* data);
+void  skullut_module_data_reset(skullut_module_t*, const void* data);
 
 #endif
 
