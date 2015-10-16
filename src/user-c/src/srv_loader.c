@@ -50,7 +50,7 @@ int _srv_open (const char* filename, sk_service_opt_t* opt/*out*/)
     }
 
     // 2. create service and its private data
-    skull_c_srvdata* md = calloc(1, sizeof(*md));
+    skull_c_srvdata_t* md = calloc(1, sizeof(*md));
     md->handler = handler;
 
     // 3. load service register func
@@ -74,7 +74,7 @@ static
 int _srv_close (sk_service_t* service)
 {
     sk_service_opt_t* opt = sk_service_opt(service);
-    skull_c_srvdata* srv_data = opt->srv_data;
+    skull_c_srvdata_t* srv_data = opt->srv_data;
     void* handler = srv_data->handler;
     skull_config_destroy(srv_data->config);
 
@@ -91,7 +91,7 @@ int _srv_load_config (sk_service_t* service, const char* filename)
     }
 
     sk_service_opt_t* opt = sk_service_opt(service);
-    skull_c_srvdata* srv_data = opt->srv_data;
+    skull_c_srvdata_t* srv_data = opt->srv_data;
     srv_data->config = skull_config_create(filename);
     return 0;
 }

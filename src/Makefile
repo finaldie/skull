@@ -148,11 +148,14 @@ UT_OBJS = \
     user-c/src/unittest.o \
     user-c/src/module_executor.o \
     user-c/src/loader.o \
+    user-c/src/srv_loader.o \
+    user-c/src/srv_executor.o \
     user-c/src/idl.o \
     user-c/src/txn.o \
     user-c/src/config.o \
     common/sk_utils.o \
     common/sk_loader.o \
+    common/sk_srv_loader.o \
     common/sk_txn.o \
     common/sk_workflow.o \
     common/sk_config_loader.o \

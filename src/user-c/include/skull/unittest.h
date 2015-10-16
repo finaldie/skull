@@ -54,5 +54,16 @@ void  skullut_module_data_release(void* data);
 // Note: If the data is NULL, it will clear the old 'shared data'
 void  skullut_module_data_reset(skullut_module_t*, const void* data);
 
+// *****************************************************************************
+typedef struct skullut_service_t skullut_service_t;
+typedef void (*skullut_service_api_validator)(const void* req,
+                                              const void* resp, void* ud);
+
+skullut_service_t* skullut_service_create(const char* name, const char* config);
+void skullut_service_destroy(skullut_service_t*);
+void skullut_service_run(skullut_service_t* ut_service, const char* api,
+                        const void* req_msg, skullut_service_api_validator,
+                        void* ud);
+
 #endif
 

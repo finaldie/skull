@@ -194,7 +194,7 @@ function action_c_service_add()
 
     cp $LANGUAGE_PATH/share/service.c         $srv_path/src/service.c
     cp $LANGUAGE_PATH/etc/config.yaml         $srv_path/config/config.yaml
-    cp $LANGUAGE_PATH/share/test_common.c.tpl $srv_path/tests/test_service.c
+    cp $LANGUAGE_PATH/share/test_service.c    $srv_path/tests/test_service.c
     cp $LANGUAGE_PATH/etc/test_config.yaml    $srv_path/tests/test_config.yaml
     cp $LANGUAGE_PATH/share/gitignore-service $srv_path/.gitignore
 

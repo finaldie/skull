@@ -9,7 +9,7 @@
 
 void skull_srv_init (sk_service_t* srv, void* data)
 {
-    skull_c_srvdata* srv_data = data;
+    skull_c_srvdata_t* srv_data = data;
     skull_service_entry_t* entry = srv_data->entry;
 
     skull_service_t skull_service = {
@@ -21,7 +21,7 @@ void skull_srv_init (sk_service_t* srv, void* data)
 
 void skull_srv_release (sk_service_t* srv, void* data)
 {
-    skull_c_srvdata* srv_data = data;
+    skull_c_srvdata_t* srv_data = data;
     skull_service_entry_t* entry = srv_data->entry;
 
     skull_service_t skull_service = {
@@ -39,7 +39,7 @@ int  skull_srv_iocall  (sk_service_t* srv, sk_txn_t* txn, void* sdata,
                         sk_srv_io_status_t ustatus)
 {
     // find the api func
-    skull_c_srvdata* srv_data = sdata;
+    skull_c_srvdata_t* srv_data = sdata;
     skull_service_entry_t* entry = srv_data->entry;
 
     skull_service_t skull_service = {

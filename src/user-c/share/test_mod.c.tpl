@@ -6,7 +6,7 @@
 #include "skull_srv_api_proto.h"
 
 /**
- * Basic Unit Test Rules for skull project:
+ * Basic Unit Test Rules for skull module:
  * 1. Test the transcation share data
  * 2. Test the important algorithm
  * 3. DO NOT Test the log content, since it's inconstant and FT may covered it

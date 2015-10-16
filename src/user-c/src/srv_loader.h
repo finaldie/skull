@@ -4,7 +4,7 @@
 #include <skull/config.h>
 #include <skull/service.h>
 
-typedef struct skull_c_srvdata {
+typedef struct skull_c_srvdata_t {
     // dll handler
     void* handler;
 
@@ -16,10 +16,7 @@ typedef struct skull_c_srvdata {
 
     // user layer register api
     skull_service_entry_t* (*reg) ();
-} skull_c_srvdata;
-
-skull_c_srvdata* skull_srvdata_get(const char* service_name);
-int skull_srvdata_set(const char* service_name, const skull_c_srvdata*);
+} skull_c_srvdata_t;
 
 #endif
 

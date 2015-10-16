@@ -44,7 +44,7 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
 
     // find the exact async api
     sk_service_opt_t* opt = sk_service_opt(service);
-    skull_c_srvdata* srv_data = opt->srv_data;
+    skull_c_srvdata_t* srv_data = opt->srv_data;
     skull_service_entry_t* entry = srv_data->entry;
     skull_service_async_api_t** async_apis = entry->async;
     skull_service_async_api_t* api = _find_api(async_apis, api_name);
