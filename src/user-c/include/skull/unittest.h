@@ -32,7 +32,7 @@ skull_utenv_t* skull_utenv_create(const char* module_name,
                                   const char* idl_name,
                                   const char* config);
 void skull_utenv_destroy(skull_utenv_t*);
-int  skull_utenv_run(skull_utenv_t*, bool run_unpack, bool run_pack);
+int  skull_utenv_run(skull_utenv_t*);
 
 int skull_utenv_service_add(skull_utenv_t* env, const char* name,
                             skull_service_async_api_t** apis,

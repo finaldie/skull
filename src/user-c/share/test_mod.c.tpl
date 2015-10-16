@@ -36,7 +36,7 @@ void test_example()
 
     // 3. execute this env, and assert the expectation results
     // 3.1 assert the module return code is 0
-    int ret = skull_utenv_run(env, 0, 0);
+    int ret = skull_utenv_run(env);
     SKULL_CUNIT_ASSERT(ret == 0);
 
     // 3.2 assert the txn share data is "hello"

@@ -145,7 +145,7 @@ int skull_utenv_service_add(skull_utenv_t* env, const char* name,
     return 0;
 }
 
-int skull_utenv_run(skull_utenv_t* env, bool run_unapck, bool run_pack)
+int skull_utenv_run(skull_utenv_t* env)
 {
     int ret = env->module->run(env->module->md, env->txn);
 
@@ -153,7 +153,7 @@ int skull_utenv_run(skull_utenv_t* env, bool run_unapck, bool run_pack)
         return ret;
     }
 
-    // process all tasks
+    // process all service tasks
     mock_task_t* task = NULL;
     while ((task = flist_pop(env->tasks))) {
         // 1. prepare a response
