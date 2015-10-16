@@ -1,3 +1,15 @@
+* 2015-10-20 0.5.4
+  * Core
+    * **New:** Add 'Service' Concept
+    * **Fix:** Fix some memleak and crash issues
+    * **Enhancement:** Refine some core apis
+  * Scripts:
+    * **New:** Add commands for service
+    * **Enhancement:** Made more user friendly for workflow and module commands
+  * User API
+    * **New:** Add apis for service
+    * **Fix:** Fix some memleak and crash issues
+    * **Enhancement:** Refine some user apis
 * 2015-03-02 0.5.3
   * User API
     * **Enhancement:** Refine the 'module_pack' arg list -<br>
