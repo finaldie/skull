@@ -68,7 +68,7 @@ function _action_workflow_add()
     local yn_port=true
 
     # set the concurrent
-    read -p "Whether allow concurrent? (y/n)" yn_concurrent
+    read -p "Whether allow concurrent? (y/n) " yn_concurrent
     if [ ! "$yn_concurrent" = "y" ]; then
         concurrent=0
     fi
@@ -91,7 +91,7 @@ function _action_workflow_add()
     fi
 
     # set the port
-    read -p "Need listen on a port? (y/n)" yn_port
+    read -p "Need listen on a port? (y/n) " yn_port
     if [ "$yn_port" = "y" ]; then
         read -p "Input the port you want (1025-65535): " port
     fi
