@@ -106,8 +106,11 @@ void skullut_module_destroy(skullut_module_t* env)
     sk_module_unload(env->module);
 
     skull_idl_data_t* idl_data = sk_txn_udata(env->txn);
-    free(idl_data->data);
-    free(idl_data);
+    if (idl_data) {
+        free(idl_data->data);
+        free(idl_data);
+    }
+
     sk_txn_destroy(env->txn);
 
     sk_entity_destroy(env->entity);
@@ -251,8 +254,6 @@ void  skullut_module_data_reset(skullut_module_t* env, const void* msg)
         idl_data->data_sz = packed_sz;
     }
 }
-
-// Mock API for skull_txn (no needed, link the txn.o)
 
 // Mock API for skull_log
 //  Redirect the logger to stdout
