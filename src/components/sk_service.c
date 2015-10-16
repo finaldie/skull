@@ -381,8 +381,6 @@ void sk_service_data_set(sk_service_t* service, const void* data)
 
 // User call this api to invoke a service call, it will wrap a iocall
 // protocol, and send to master
-//
-// TODO: check whether it be invoked from user module
 int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
                       const char* api_name, const void* req, size_t req_sz,
                       sk_txn_module_cb cb, void* ud)

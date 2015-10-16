@@ -76,23 +76,21 @@ function _compare_file()
     local file1=$1
     local file2=$2
 
-    if [ ! -f $file1 ]; then
+    if [ ! -f "$file1" ]; then
         return 1
     fi
 
-    if [ -f $file1 ] && [ ! -f $file2 ]; then
+    if [ ! -f "$file2" ]; then
         return 1
     fi
 
-    if [ -f $file1 ] && [ -f $file2 ]; then
-        local md5_file1=`md5sum $file1 | awk '{print $1}'`
-        local md5_file2=`md5sum $file2 | awk '{print $2}'`
+    local md5_file1=`md5sum "$file1" | awk '{print $1}'`
+    local md5_file2=`md5sum "$file2" | awk '{print $2}'`
 
-        if [ $md5_file1 == $md5_file2 ]; then
-            return 0
-        else
-            return 1
-        fi
+    if [ $md5_file1 == $md5_file2 ]; then
+        return 0
+    else
+        return 1
     fi
 }
 

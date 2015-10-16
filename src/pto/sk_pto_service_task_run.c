@@ -8,6 +8,7 @@
 #include "api/sk_service.h"
 #include "api/sk_log.h"
 #include "api/sk_env.h"
+#include "api/sk_metrics.h"
 
 #include "api/sk_pto.h"
 
@@ -71,7 +72,9 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_sched_send(SK_ENV_SCHED, entity, txn,
                   SK_PTO_SERVICE_TASK_COMPLETE, &task_complete_msg);
 
-    // TODO: add metrics
+    // 6. update metrics
+    sk_metrics_worker.srv_iocall_execute.inc(1);
+    sk_metrics_global.srv_iocall_execute.inc(1);
 
     return ret;
 }

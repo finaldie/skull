@@ -109,12 +109,23 @@ function action_c_common_create()
 function action_c_gen_metrics()
 {
     local config=$1
+    local tmpdir=/tmp
+    local tmp_header_file=$tmpdir/skull_metrics.h
+    local tmp_source_file=$tmpdir/skull_metrics.c
+    local header_file=$COMMON_FILE_LOCATION/src/skull_metrics.h
+    local source_file=$COMMON_FILE_LOCATION/src/skull_metrics.c
 
-    # TODO: compare the md5 of the new metrics and old metrics' files, do not to
-    # replace them if they are same, it will reduce the compiling time
     $LANGUAGE_PATH/bin/skull-metrics-gen.py -c $config \
-        -h $COMMON_FILE_LOCATION/src/skull_metrics.h \
-        -s $COMMON_FILE_LOCATION/src/skull_metrics.c
+        -h $tmp_header_file \
+        -s $tmp_source_file
+
+    if ! $(_compare_file $tmp_header_file $header_file); then
+        cp $tmp_header_file $header_file
+    fi
+
+    if ! $(_compare_file $tmp_source_file $source_file); then
+        cp $tmp_source_file $source_file
+    fi
 }
 
 function action_c_gen_config()

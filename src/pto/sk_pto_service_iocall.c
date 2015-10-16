@@ -7,6 +7,7 @@
 #include "api/sk_service.h"
 #include "api/sk_log.h"
 #include "api/sk_env.h"
+#include "api/sk_metrics.h"
 
 #include "api/sk_pto.h"
 
@@ -90,7 +91,9 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     SK_LOG_DEBUG(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
                  "scheduled %zu tasks", service_name, scheduled_task);
 
-    // TODO: add metrics
+    // 5. update metrics
+    sk_metrics_worker.srv_iocall.inc(1);
+    sk_metrics_global.srv_iocall.inc(1);
 
 io_call_exit:
     return ret;

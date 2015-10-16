@@ -80,7 +80,6 @@ void _unpack_data(fev_state* fev, fev_buff* evbuff, sk_entity_t* entity)
 
 // EventLoop trigger this callback
 // read buffer and create a sk_event
-// TODO: sk_event should use protobuf to store the data
 static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
