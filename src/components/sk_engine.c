@@ -15,6 +15,7 @@ sk_engine_t* sk_engine_create()
     engine->entity_mgr = sk_entity_mgr_create(65535);
     engine->sched = sk_sched_create(engine->evlp, engine->entity_mgr);
     engine->mon = sk_mon_create();
+    engine->timer_svc = sk_timersvc_create(engine->evlp);
 
     return engine;
 }
@@ -27,6 +28,7 @@ void sk_engine_destroy(sk_engine_t* engine)
 
     sk_sched_destroy(engine->sched);
     sk_entity_mgr_destroy(engine->entity_mgr);
+    sk_timersvc_destroy(engine->timer_svc);
     sk_eventloop_destroy(engine->evlp);
     sk_mon_destroy(engine->mon);
     free(engine);
