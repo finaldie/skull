@@ -10,5 +10,7 @@ typedef struct skull_idl_data_t {
 
 const ProtobufCMessageDescriptor* skull_idl_descriptor(const char* idl_name);
 
+const ProtobufCMessageDescriptor* skull_srv_idl_descriptor(const char* idl_name);
+
 #endif
 

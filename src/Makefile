@@ -5,10 +5,10 @@ STD = -std=c99
 WARN = -Wall
 EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter
 EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
-EXTRA += -Wconversion -fPIC
-OTHER = -pipe -g -ggdb3
+EXTRA += -Wconversion
+OTHER = -pipe -g -ggdb3 -fPIC
 SHARED = -shared
-LDFLAGS += -Wl,-E
+LDFLAGS += -rdynamic -Wl,-E
 MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE
 INC = \
     -I. \
@@ -64,6 +64,7 @@ SKULL_UTLIB_C = libskull-unittest-c.so
 # Objs
 COMMON_OBJS = \
     common/sk_loader.o \
+    common/sk_srv_loader.o \
     common/sk_utils.o \
     common/sk_io.o \
     common/sk_eventloop.o \
@@ -75,7 +76,9 @@ COMMON_OBJS = \
     common/sk_log.o \
     common/sk_log_tpl.o \
     common/sk_mon.o \
-    common/sk_metrics.o
+    common/sk_metrics.o \
+    common/sk_queue.o \
+    common/sk_service_data.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
@@ -91,18 +94,24 @@ COMPONENTS_OBJS = \
     components/sk_core.o \
     components/sk_entity_mgr.o \
     components/sk_config.o \
-    components/sk_engine.o
+    components/sk_engine.o \
+    components/sk_service.o
 
 PTO_OBJS = \
     pto/sk_pto.o \
     pto/sk_pto_net_accept.o \
     pto/sk_pto_net_destroy.o \
-    pto/sk_pto_workflow_run.o
+    pto/sk_pto_workflow_run.o \
+    pto/sk_pto_service_iocall.o \
+    pto/sk_pto_service_task_run.o \
+    pto/sk_pto_service_task_complete.o
 
 PTO_IDLS_OBJS = \
     pto/idls/net_accept.pb-c.o \
     pto/idls/net_destroy.pb-c.o \
-    pto/idls/workflow_run.pb-c.o
+    pto/idls/workflow_run.pb-c.o \
+    pto/idls/service_iocall.pb-c.o \
+    pto/idls/service_task.pb-c.o
 
 USER_C_OBJS = \
     user-c/src/logger_private.o \
@@ -111,7 +120,10 @@ USER_C_OBJS = \
     user-c/src/txn.o \
     user-c/src/idl.o \
     user-c/src/config.o \
-    user-c/src/module_executor.o
+    user-c/src/module_executor.o \
+    user-c/src/srv_loader.o \
+    user-c/src/srv_executor.o \
+    user-c/src/service.o
 
 SKULL_MAIN_OBJ = main.o
 
@@ -128,21 +140,30 @@ SKULL_OBJS = \
 PROTO_IDLS = \
     net_accept.proto \
     net_destroy.proto \
-    workflow_run.proto
+    workflow_run.proto \
+    service_iocall.proto \
+    service_task.proto
 
 UT_OBJS = \
     user-c/src/unittest.o \
     user-c/src/module_executor.o \
     user-c/src/loader.o \
+    user-c/src/srv_loader.o \
+    user-c/src/srv_executor.o \
     user-c/src/idl.o \
     user-c/src/txn.o \
     user-c/src/config.o \
     common/sk_utils.o \
     common/sk_loader.o \
+    common/sk_srv_loader.o \
     common/sk_txn.o \
     common/sk_workflow.o \
     common/sk_config_loader.o \
-    entities/sk_entity.o
+    common/sk_queue.o \
+    common/sk_service_data.o \
+    entities/sk_entity.o \
+    pto/idls/service_iocall.pb-c.o \
+    pto/idls/service_task.pb-c.o
 
 # target rules
 all: $(SKULL_ENGINE) $(SKULL_UTLIB_C)

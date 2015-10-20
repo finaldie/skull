@@ -15,6 +15,7 @@ function print_usage()
     echo " \_ skull workflow"
     echo " \_ skull module"
     echo " \_ skull common"
+    echo " \_ skull service"
     echo " \_ skull build"
     echo " \_ skull deploy"
     echo " \_ skull start"
@@ -51,6 +52,7 @@ function prepare()
     . $SKULL_ROOT/lib/skull/skull_action_workflow.bash
     . $SKULL_ROOT/lib/skull/skull_action_module.bash
     . $SKULL_ROOT/lib/skull/skull_action_common.bash
+    . $SKULL_ROOT/lib/skull/skull_action_service.bash
     . $SKULL_ROOT/lib/skull/skull_action_build.bash
     . $SKULL_ROOT/lib/skull/skull_action_deploy.bash
     . $SKULL_ROOT/lib/skull/skull_action_start.bash
@@ -96,7 +98,7 @@ case "$1" in
 
         action_$entry $@
         ;;
-    (workflow|module|common|build|deploy|start)
+    (workflow|module|common|service|build|deploy|start)
         prepare true
         entry=$1
         shift

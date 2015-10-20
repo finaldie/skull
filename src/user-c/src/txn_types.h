@@ -7,7 +7,6 @@
 
 struct _skull_txn_t {
     sk_txn_t* txn;
-    skull_config_t* config;
 
     // protobuf message related data
     ProtobufCMessage* idl;

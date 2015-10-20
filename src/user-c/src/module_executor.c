@@ -50,7 +50,7 @@ int    skull_module_run    (void* md, sk_txn_t* txn)
 
     // 3. serialize the user layer structure back to the binary data
     size_t new_msg_sz = protobuf_c_message_get_packed_size(msg);
-    void *new_msg_data = calloc(1, new_msg_sz);
+    void*  new_msg_data = calloc(1, new_msg_sz);
     size_t packed_sz = protobuf_c_message_pack(msg, new_msg_data);
     SK_ASSERT(new_msg_sz == packed_sz);
 

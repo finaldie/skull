@@ -13,7 +13,7 @@ skull_start() {
 }
 
 skull_start_memcheck() {
-    valgrind --tool=memcheck --leak-check=full \
+    valgrind --tool=memcheck --leak-check=full -v \
         skull-engine -c $skull_config
 }
 

@@ -26,8 +26,8 @@ void sk_engine_destroy(sk_engine_t* engine)
     }
 
     sk_sched_destroy(engine->sched);
-    sk_eventloop_destroy(engine->evlp);
     sk_entity_mgr_destroy(engine->entity_mgr);
+    sk_eventloop_destroy(engine->evlp);
     sk_mon_destroy(engine->mon);
     free(engine);
 }

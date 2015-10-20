@@ -29,6 +29,12 @@ void sk_io_push(sk_io_t* io, sk_io_type_t type, sk_event_t* events,
 size_t sk_io_pull(sk_io_t* io, sk_io_type_t type, sk_event_t* events,
                   size_t nevents);
 
+/**
+ * Raw get some event data without pop it out, so by this way, user can get
+ * some data and decide whether pop it
+ */
+sk_event_t* sk_io_rawget(sk_io_t*, sk_io_type_t, sk_event_t*, size_t nevents);
+
 size_t sk_io_used(sk_io_t* io, sk_io_type_t type);
 size_t sk_io_free(sk_io_t* io, sk_io_type_t type);
 

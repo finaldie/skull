@@ -1,0 +1,18 @@
+// service task, which is running in a worker thread
+message service_task_run {
+    required uint64 task_id = 1 [default = 0];
+    required string service_name = 2;
+
+    required string api_name = 3;
+    // 0: OK
+    // 1: invalid service name
+    // 2: service busy
+    required uint32 io_status = 4;
+    required bytes  request = 5;
+}
+
+// notify master the task is complete, and master will update the status
+message service_task_complete {
+    required uint64 task_id = 1 [default = 0];
+    required string service_name = 2;
+}

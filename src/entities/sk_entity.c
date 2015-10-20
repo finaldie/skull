@@ -59,7 +59,10 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
 {
-    entity->opt = opt;
+    entity->opt.read = opt.read ? opt.read : default_entity_opt.read;
+    entity->opt.write = opt.write ? opt.write : default_entity_opt.write;
+    entity->opt.destroy = opt.destroy ? opt.destroy : default_entity_opt.destroy;
+
     entity->ud = ud;
 }
 

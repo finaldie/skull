@@ -11,6 +11,7 @@ extern "C" {
 #include <skull/txndata.h>
 #include <skull/config.h>
 #include <skull/idl.h>
+#include <skull/service.h>
 
 #ifdef __cplusplus
 }

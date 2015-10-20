@@ -8,6 +8,7 @@
 #include "api/sk_log.h"
 #include "api/sk_log_tpl.h"
 #include "api/sk_mon.h"
+#include "api/sk_service.h"
 #include "api/sk_engine.h"
 #include "api/sk_trigger.h"
 
@@ -40,6 +41,7 @@ typedef struct sk_core_t {
     flist*           workflows;      // element type: sk_workflow_t
     flist*           triggers;       // emement type: sk_trigger_t
     fhash*           unique_modules; // key: module name; value: sk_module_t
+    fhash*           services;       // key: service name; value: sk_service_t
     const char*      working_dir;
 } sk_core_t;
 
@@ -47,6 +49,9 @@ void sk_core_init(sk_core_t* core);
 void sk_core_start(sk_core_t* core);
 void sk_core_stop(sk_core_t* core);
 void sk_core_destroy(sk_core_t* core);
+
+// utils
+sk_service_t* sk_core_get_service(sk_core_t*, const char* service_name);
 
 #endif
 

@@ -59,6 +59,26 @@ have fun :)
 
 ```
 
+## How to Create a Service
+The following is the example of adding a service **s1**, and then add a api **get** for it.
+```bash
+bash $> skull service -add
+service name? s1
+which language the service belongs to? (c) c
+data mode? (exclusive | rw-pr | rw-pw) exclusive
+notice: the common/c folder has already exist, ignore it
+service [s1] added successfully
+bash $> cd src/services/s1
+bash $> skull service --api-add
+service api name: get
+service api access_mode: (read|write|read-write) read-write
+s1-get_req added
+s1-get_resp added
+service api get added successfully
+```
+After that, you can use service apis which defined in `skull/service.h` from a module to communicate a service :)
+
+
 ## Exsiting Modules
 Module Name | Descrption
 ------------|-----------
