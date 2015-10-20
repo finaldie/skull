@@ -12,5 +12,9 @@
 
 #define SK_LOG_TPL_NAME_MAX_LEN 1024
 
+// loaders
+#define SK_MODULE_NAME_MAX_LEN  1024
+#define SK_SERVICE_NAME_MAX_LEN 1024
+
 #endif
 

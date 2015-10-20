@@ -7,6 +7,13 @@
 #include "api/sk_utils.h"
 #include "api/sk_entity_mgr.h"
 
+static
+int _mark_dead(sk_entity_mgr_t* mgr, sk_entity_t* entity, void* ud)
+{
+    sk_entity_mgr_del(mgr, entity);
+    return 0;
+}
+
 // Entity Manager
 struct sk_entity_mgr_t {
     fhash* entity_mgr;
@@ -23,8 +30,12 @@ sk_entity_mgr_t* sk_entity_mgr_create(uint32_t idx_sz)
 
 void sk_entity_mgr_destroy(sk_entity_mgr_t* mgr)
 {
-    fhash_u64_delete(mgr->entity_mgr);
+    // Mark all activity entity to inactive, then clean up
+    sk_entity_mgr_foreach(mgr, _mark_dead, NULL);
+    sk_entity_mgr_clean_dead(mgr);
     flist_delete(mgr->inactive_entities);
+
+    fhash_u64_delete(mgr->entity_mgr);
     free(mgr);
 }
 

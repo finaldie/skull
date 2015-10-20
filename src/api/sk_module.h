@@ -23,6 +23,7 @@ typedef struct sk_module_t {
     size_t (*unpack) (void* md, struct sk_txn_t* txn,
                       const void* data, size_t data_len);
     void   (*pack)   (void* md, struct sk_txn_t* txn);
+    void   (*release)(void* md);
 } sk_module_t;
 
 #endif

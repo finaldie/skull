@@ -275,3 +275,17 @@ int sk_config_getint(sk_cfg_node_t* node)
 
     return (int)value;
 }
+
+double sk_config_getdouble(sk_cfg_node_t* node)
+{
+    double value = strtod(node->data.value, NULL);
+    SK_ASSERT_MSG(errno != ERANGE,
+                  "load config errno: %f, %s\n", errno, strerror(errno));
+
+    return value;
+}
+
+const char* sk_config_getstring(sk_cfg_node_t* node)
+{
+    return node->data.value;
+}

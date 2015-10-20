@@ -1,0 +1,5 @@
+# generated config wrapper files
+src/services/**/src/config.*
+
+# module lib folder
+src/services/**/lib/*

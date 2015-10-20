@@ -4,7 +4,7 @@
 # NOTES: This is included by the main script `skull`
 
 # Add module need 2 steps:
-# 1. Add the module folder structure into project according to its module language
+# 1. Add the module folder structure into project according to its language
 # 2. Change the main config
 function action_module()
 {
@@ -82,30 +82,6 @@ function action_module_usage()
     echo "  skull module --conf-check"
 }
 
-# module name must be in [0-9a-zA-Z_]
-function _check_module_name()
-{
-    local module_name=$1
-
-    if [ -z "$module_name" ]; then
-        echo "Error: module name must not be empty" >&2
-        return 1
-    fi
-
-    local ret=`echo $module_name | grep -P "[^\w]" | wc -l`
-    if [ "$ret" = "1" ]; then
-        echo "Error: module name must be [0-9a-zA-Z_]" >&2
-        return 1
-    fi
-
-    if [ -d "$SKULL_PROJ_ROOT/src/modules/$module_name" ]; then
-        echo "Warn: Found the module [$module_name] has already exist, please" \
-            " make sure its a valid module" >&2
-    fi
-
-    return 0
-}
-
 function _action_module_add()
 {
     # 1. input the module name
@@ -120,11 +96,18 @@ function _action_module_add()
     while true; do
         read -p "module name? " module
 
-        if $(_check_module_name $module); then
+        if $(_check_name "$module"); then
             break;
         fi
     done
 
+    # 3. check whether this is a existing module
+    if [ -d "$SKULL_PROJ_ROOT/src/modules/$module" ]; then
+        echo "Warn: Found the module [$module] has already exist, please" \
+             "make sure its a valid module" >&2
+    fi
+
+    # 4. add it into a specific workflow
     while true; do
         read -p "which workflow you want add it to? " workflow_idx
 
@@ -138,21 +121,20 @@ function _action_module_add()
 
     # NOTES: currently, we only support C language
     while true; do
-        read -p "which language the module belongs to?($lang_names) " language
+        read -p "which language the module belongs to? ($lang_names) " language
 
         # verify the language valid or not
-        if $(_check_language $langs $language); then
+        if $(_check_language $langs "$language"); then
             break;
         fi
     done
 
     # 3. Add basic folder structure if the target module does not exist
-    if [ ! -d "$SKULL_PROJ_ROOT/src/modules/$module" ]; then
-        action_${language}_module_add $module
-    fi
+    action_${language}_module_add $module
 
     # 4. Add module into main config
-    $SKULL_ROOT/bin/skull-workflow.py -m add_module -c $skull_conf -M $module -i $workflow_idx
+    $SKULL_ROOT/bin/skull-config-utils.py -m add_module -c $skull_conf \
+        -M $module -i $workflow_idx
 
     # 5. add common folder
     action_${language}_common_create

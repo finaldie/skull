@@ -15,8 +15,16 @@ function action_build()
     (
         cd $SKULL_PROJ_ROOT
 
+        echo "generate metrics..."
         action_common --metrics-gen
+
+        echo "generate transcation idls..."
         action_common --idl-gen
+
+        echo "generate service apis..."
+        action_common --srv-idl-gen
+
+        echo "build modules/services..."
         make $@
     )
 }
@@ -24,6 +32,16 @@ function action_build()
 function action_build_usage()
 {
     echo "usage:"
-    echo "  skull build"
-    echo "  skull build clean"
+    echo "  skull build [arg(s)...]"
+    echo ""
+    echo "args:"
+    echo "  - check"
+    echo "  - valgrind-check"
+    echo "  - clean"
+    echo ""
+    echo "example:"
+    echo "  skull buld"
+    echo "  skull buld CC=clang"
+    echo "  skull buld check"
+    echo "  skull buld valgrind-check"
 }

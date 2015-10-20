@@ -26,10 +26,10 @@ void _skull_log_notification_cb(flog_event_t event)
         sk_print_err("Fatal: skull write log which was truncated!\n");
         break;
     case FLOG_EVENT_BUFFER_FULL:
-        sk_print_err("Fatal: skull logger buffer full!\n");
+        sk_print_err("Fatal: skull logger buffer is full!\n");
         break;
     case FLOG_EVENT_USER_BUFFER_RELEASED:
-        sk_print("Notice: skull logger quit gracefully\n");
+        sk_print("Info: skull logger quit gracefully\n");
         break;
     default:
         sk_print_err("Fatal: unknow skull log event %d\n", event);
@@ -47,13 +47,13 @@ sk_logger_t* sk_logger_create(const char* workdir,
     // notes: we add more 5 bytes space for the string of fullname "/log/"
     size_t full_name_sz = workdir_len + log_name_len + 5 + 1;
 
-    // 1. construct the full log name and then create logger
+    // 1. construct the full log name and then create async logger
     // NOTES: the log file will be put at log/xxx
     char full_log_name[full_name_sz];
     snprintf(full_log_name, full_name_sz, "%s/log/%s",
              workdir, log_name);
 
-    flog_file_t* logger = flog_create(full_log_name);
+    flog_file_t* logger = flog_create(full_log_name, FLOG_ASYNC_MODE);
     SK_ASSERT_MSG(logger, "logger create failure");
 
     // 2. set log level
@@ -68,14 +68,11 @@ sk_logger_t* sk_logger_create(const char* workdir,
     // 5. set log buffer size(per-thread): 200MB
     flog_set_buffer_size(1024lu * 1024 * 200);
 
-    // 6. set log mode: async mode
-    flog_set_mode(FLOG_ASYNC_MODE);
-
-    // 7. set up the notification callback, we can handle it if there are some
+    // 6. set up the notification callback, we can handle it if there are some
     // abnormal things happened
     flog_register_event_callback(_skull_log_notification_cb);
 
-    // 8. set up the cookie
+    // 7. set up the cookie
     // NOTES: in skull engine, the cookie will be the skull.core, otherwise
     //   the cookie will be the module name or other name
     flog_set_cookie(SK_CORE_LOG_COOKIE);
