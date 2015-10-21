@@ -1,0 +1,6 @@
+
+message timer_triggered {
+    optional bytes timer_obj = 1;
+    optional bytes timer_cb = 2;
+    optional bytes ud = 3;
+}
