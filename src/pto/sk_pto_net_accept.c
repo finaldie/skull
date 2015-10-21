@@ -88,7 +88,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
     int concurrent = workflow->cfg->concurrent;
 
     // check whether allow concurrent
-    if (!concurrent && sk_entity_task_cnt(entity) > 0) {
+    if (!concurrent && sk_entity_taskcnt(entity) > 0) {
         sk_print("entity already have running tasks\n");
         return;
     }

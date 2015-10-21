@@ -118,19 +118,19 @@ sk_entity_status_t sk_entity_status(sk_entity_t* entity)
 }
 
 // increase the query count
-void sk_entity_inc_task_cnt(sk_entity_t* entity)
+void sk_entity_taskcnt_inc(sk_entity_t* entity)
 {
     entity->task_cnt++;
 }
 
 // decrease the query count
-void sk_entity_dec_task_cnt(sk_entity_t* entity)
+void sk_entity_taskcnt_dec(sk_entity_t* entity)
 {
     entity->task_cnt--;
 }
 
 // get task cnt
-int sk_entity_task_cnt(sk_entity_t* entity)
+int sk_entity_taskcnt(sk_entity_t* entity)
 {
     return entity->task_cnt;
 }

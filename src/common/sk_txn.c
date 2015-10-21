@@ -91,7 +91,7 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
     txn->position = SK_TXN_POS_CORE;
 
     // update the entity ref
-    sk_entity_inc_task_cnt(entity);
+    sk_entity_taskcnt_inc(entity);
     return txn;
 }
 
@@ -101,7 +101,7 @@ void sk_txn_destroy(sk_txn_t* txn)
         return;
     }
 
-    sk_entity_dec_task_cnt(txn->entity);
+    sk_entity_taskcnt_dec(txn->entity);
     fmbuf_delete(txn->output);
     free(txn->input);
 
