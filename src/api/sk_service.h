@@ -98,5 +98,23 @@ int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
                       const void* req, size_t req_sz,
                       sk_txn_module_cb cb, void* ud);
 
+typedef void (*sk_service_job) (sk_service_t*, void* ud, int valid);
+
+/**
+ * Create a periodic job
+ *
+ * @param delayed   delay N milliseconds to start the job
+ * @param interval  interval (milliseconds) of next time the job be triggered
+ * @param job       periodic job function
+ * @param ud        user data
+ *
+ * @return 0: successful; 1: failed
+ */
+int sk_service_periodic_job_create(sk_service_t*,
+                                   uint32_t delayed,
+                                   uint32_t interval,
+                                   sk_service_job job,
+                                   void* ud);
+
 #endif
 

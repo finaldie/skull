@@ -107,7 +107,6 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
 void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
 {
     if (!timer) return;
-    if (1 == timer->valid) return;
 
     SK_ASSERT(svc);
     SK_ASSERT(svc == timer->owner);

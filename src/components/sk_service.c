@@ -7,6 +7,7 @@
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_pto.h"
+#include "api/sk_timer_service.h"
 #include "api/sk_service.h"
 
 #define SK_SRV_TASK_SZ    (sizeof(sk_srv_task_t))
@@ -24,6 +25,17 @@ struct sk_service_t {
     sk_srv_data_t* data;
     fhash* apis; // key: api name; value: sk_service_api_t
 };
+
+typedef struct sk_service_jobdata_t {
+    sk_service_t*  service;
+    sk_service_job job;
+    void*          ud;
+    uint32_t       interval;
+
+#if __WORDSIZE == 64
+    int            _padding;
+#endif
+} sk_service_jobdata_t;
 
 // Internal APIs of service
 static
@@ -414,5 +426,60 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 
     sk_sched_send(SK_ENV_SCHED, sk_txn_entity(txn), txn,
                   SK_PTO_SERVICE_IOCALL, &iocall_msg);
+    return 0;
+}
+
+static
+void _sk_service_job_triggered(int valid, void* ud)
+{
+    // 1. Run the service job
+    sk_service_jobdata_t* jobdata = ud;
+    sk_service_t* svc      = jobdata->service;
+    void*         udata    = jobdata->ud;
+    uint32_t      interval = jobdata->interval;
+
+    jobdata->job(svc, udata, valid);
+
+    // 2. Clean up
+    free(jobdata);
+
+    // 3. If the interval is not zero, create a new timer for it
+    if (!interval) {
+        sk_print("interval is 0, skip to create next timer\n");
+        return;
+    }
+
+    if (!valid) {
+        sk_print("timer is invalid");
+        return;
+    }
+}
+
+int sk_service_periodic_job_create(sk_service_t* service,
+                                   uint32_t delayed,
+                                   uint32_t interval,
+                                   sk_service_job job,
+                                   void* ud)
+{
+    SK_ASSERT(service);
+    SK_ASSERT(job);
+
+    sk_service_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
+    jobdata->service  = service;
+    jobdata->job      = job;
+    jobdata->ud       = ud;
+    jobdata->interval = interval;
+
+    // TODO: currently this job will be deliver to master engine, next step it
+    //  should be delivered to background engine
+    sk_engine_t* engine = SK_ENV_CORE->master;
+    sk_timersvc_t* timersvc = engine->timer_svc;
+
+    sk_entity_t* timer_entity = sk_entity_create(NULL);
+    sk_timer_t* timer = sk_timersvc_timer_create(timersvc, timer_entity,
+                                                 delayed,
+                                                 _sk_service_job_triggered,
+                                                 jobdata);
+    SK_ASSERT(timer);
     return 0;
 }

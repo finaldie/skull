@@ -10,18 +10,17 @@
 #include "api/sk_pto.h"
 #include "api/sk_timer_service.h"
 
+static
 int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
           void* proto_msg)
 {
     TimerTriggered* timer_pto = proto_msg;
     sk_timer_t* timer = (sk_timer_t*) timer_pto->timer_obj.data;
+    sk_timersvc_t* timersvc = sk_timer_svc(timer);
 
     if (!sk_timer_valid(timer)) {
         sk_print("timer is not valid, destroy it\n");
-
-        sk_timersvc_t* timersvc = sk_timer_svc(timer);
-        sk_timersvc_timer_destroy(timersvc, timer);
-        return 0;
+        goto cleanup;
     }
 
     sk_print("timer triggered\n");
@@ -31,6 +30,9 @@ int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
         (sk_timer_triggered) (uintptr_t) timer_pto->timer_cb.data;
 
     timer_cb(ud);
+
+cleanup:
+    sk_timersvc_timer_destroy(timersvc, timer);
     return 0;
 }
 
