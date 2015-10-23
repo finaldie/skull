@@ -27,7 +27,6 @@ typedef struct sk_workflow_cfg_t {
 typedef enum sk_srv_api_access_mode_t {
     SK_SRV_API_READ       = 0,
     SK_SRV_API_WRITE      = 1,
-    SK_SRV_API_READ_WRITE = 2
 } sk_srv_api_access_mode_t;
 
 typedef struct sk_srv_api_cfg_t {

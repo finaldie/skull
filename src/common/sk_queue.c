@@ -24,7 +24,7 @@ struct sk_queue_t {
     size_t max_slots;
 
     union {
-        fmbuf* mq; // exclusive or rw (prefer write)
+        fmbuf* mq;  // exclusive or rw (prefer write)
 
         struct rw { // rw (prefer read)
             fmbuf* rmq;
@@ -323,10 +323,10 @@ sk_queue_t* sk_queue_create(sk_queue_mode_t mode, size_t elem_sz,
         queue->opt = _sk_queue_opt_exlusive;
         break;
     case SK_QUEUE_RW_PR:
-        queue->opt = _sk_queue_opt_rw_pw;
+        queue->opt = _sk_queue_opt_rw_pr;
         break;
     case SK_QUEUE_RW_PW:
-        queue->opt = _sk_queue_opt_rw_pr;
+        queue->opt = _sk_queue_opt_rw_pw;
         break;
     default:
         SK_ASSERT(0);
@@ -409,9 +409,7 @@ bool sk_queue_empty(sk_queue_t* queue)
     switch (queue->mode) {
     case SK_QUEUE_EXCLUSIVE:
     case SK_QUEUE_RW_PW:
-    {
         return fmbuf_used(queue->data.mq) == 0;
-    }
     case SK_QUEUE_RW_PR:
         return (fmbuf_used(queue->data.rw.rmq) == 0) &&
                (fmbuf_used(queue->data.rw.wmq) == 0);

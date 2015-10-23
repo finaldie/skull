@@ -51,17 +51,13 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_srv_task_t task;
     memset(&task, 0, sizeof(task));
 
-    if (srv_cfg->data_mode == SK_SRV_DATA_MODE_EXCLUSIVE) {
-        task.base.type = SK_QUEUE_ELEM_EXCLUSIVE;
-    } else {
-        SK_ASSERT(api_cfg->access_mode == SK_SRV_API_READ ||
-                  api_cfg->access_mode == SK_SRV_API_WRITE);
+    SK_ASSERT(api_cfg->access_mode == SK_SRV_API_READ ||
+              api_cfg->access_mode == SK_SRV_API_WRITE);
 
-        if (api_cfg->access_mode == SK_SRV_API_READ) {
-            task.base.type = SK_QUEUE_ELEM_READ;
-        } else {
-            task.base.type = SK_QUEUE_ELEM_WRITE;
-        }
+    if (api_cfg->access_mode == SK_SRV_API_READ) {
+        task.base.type = SK_QUEUE_ELEM_READ;
+    } else {
+        task.base.type = SK_QUEUE_ELEM_WRITE;
     }
 
     task.io_status = io_status;

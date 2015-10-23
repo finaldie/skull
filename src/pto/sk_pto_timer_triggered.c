@@ -17,21 +17,16 @@ int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     TimerTriggered* timer_pto = proto_msg;
     sk_timer_t* timer = (sk_timer_t*) timer_pto->timer_obj.data;
     sk_timersvc_t* timersvc = sk_timer_svc(timer);
-
-    if (!sk_timer_valid(timer)) {
-        sk_print("timer is not valid, destroy it\n");
-        goto cleanup;
-    }
+    int timer_valid = sk_timer_valid(timer);
 
     sk_print("timer triggered\n");
-
     void* ud = timer_pto->ud.data;
     sk_timer_triggered timer_cb =
         (sk_timer_triggered) (uintptr_t) timer_pto->timer_cb.data;
 
-    timer_cb(ud);
+    // run timer callback
+    timer_cb(timer_valid, ud);
 
-cleanup:
     sk_timersvc_timer_destroy(timersvc, timer);
     return 0;
 }

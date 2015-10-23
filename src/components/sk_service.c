@@ -85,9 +85,6 @@ void _sk_service_data_create(sk_service_t* service, sk_srv_data_mode_t mode)
 
     sk_queue_mode_t queue_mode = 0;
     switch (mode) {
-    case SK_SRV_DATA_MODE_EXCLUSIVE:
-        queue_mode = SK_QUEUE_EXCLUSIVE;
-        break;
     case SK_SRV_DATA_MODE_RW_PR:
         queue_mode = SK_QUEUE_RW_PR;
         break;
@@ -281,9 +278,6 @@ size_t sk_service_schedule_tasks(sk_service_t* service)
         sk_queue_state_t new_state = 0;
 
         switch (task.base.type) {
-        case SK_QUEUE_ELEM_EXCLUSIVE:
-            new_state = SK_QUEUE_STATE_LOCK;
-            break;
         case SK_QUEUE_ELEM_READ:
             new_state = SK_QUEUE_STATE_READ;
             break;
