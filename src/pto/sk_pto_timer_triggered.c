@@ -25,7 +25,7 @@ int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
         (sk_timer_triggered) (uintptr_t) timer_pto->timer_cb.data;
 
     // run timer callback
-    timer_cb(timer_valid, ud);
+    timer_cb(entity, timer_valid, ud);
 
     sk_timersvc_timer_destroy(timersvc, timer);
     return 0;

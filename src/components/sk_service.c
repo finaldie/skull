@@ -49,7 +49,7 @@ sk_srv_status_t _sk_service_pop_task(sk_service_t* service, sk_srv_task_t* task)
         return SK_SRV_STATUS_IDLE;
     }
 
-    // the service is idle, just pop
+    // The service is ready to pop, just pop task(s)
     size_t pulled_cnt = sk_queue_pull(pending_queue, SK_QUEUE_ELEM(task), 1);
 
     if (pulled_cnt > 0) {
@@ -132,6 +132,121 @@ void _destroy_apis(fhash* apis)
     }
     fhash_str_iter_release(&api_iter);
     fhash_str_delete(apis);
+}
+
+static
+void _schedule_api_task(sk_service_t* service,
+                              const sk_srv_task_t* task)
+{
+    // construct protocol
+    uint64_t  task_id = task->data.api.task_id;
+    sk_txn_t* txn     = task->data.api.txn;
+
+    ServiceTaskRun task_run_pto = SERVICE_TASK_RUN__INIT;
+    task_run_pto.task_id      = task_id;
+    task_run_pto.service_name = (char*) sk_service_name(service);
+    task_run_pto.api_name     = (char*) task->data.api.name;
+    task_run_pto.io_status    = (uint32_t) task->io_status;
+
+    // deliver the protocol
+    sk_sched_send(SK_ENV_SCHED, sk_txn_entity(txn), txn,
+                  SK_PTO_SERVICE_TASK_RUN, &task_run_pto);
+
+    sk_print("service: deliver task(%d) to worker\n", (int) task_id);
+    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
+                 (int) task_id);
+}
+
+static
+void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
+{
+    // TODO: should schedule to background io worker, currently just run at
+    // master thread
+    sk_service_job job = task->data.timer.job;
+    void* ud = task->data.timer.ud;
+    int valid = task->data.timer.valid;
+
+    job(service, ud, valid);
+}
+
+static
+int _sk_service_timerjob_create(sk_service_t* service,
+                                sk_entity_t* entity,
+                                sk_timer_triggered timer_cb,
+                                uint32_t delayed,
+                                uint32_t interval,
+                                sk_service_job job,
+                                void* ud)
+{
+    SK_ASSERT(service);
+    SK_ASSERT(timer_cb);
+    SK_ASSERT(job);
+
+    sk_service_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
+    jobdata->service  = service;
+    jobdata->job      = job;
+    jobdata->ud       = ud;
+    jobdata->interval = interval;
+
+    // TODO: currently this job will be deliver to master engine, next step it
+    //  should be delivered to background engine
+    sk_engine_t* engine = SK_ENV_CORE->master;
+    sk_timersvc_t* timersvc = engine->timer_svc;
+
+    sk_entity_t* timer_entity = entity ? entity : sk_entity_create(NULL);
+    sk_timer_t* timer = sk_timersvc_timer_create(timersvc, timer_entity,
+                                                 delayed,
+                                                 timer_cb,
+                                                 jobdata);
+    SK_ASSERT(timer);
+    return 0;
+}
+
+// This function must run at master thread due to all the service management are
+// all run at master
+static
+void _sk_service_job_triggered(sk_entity_t* entity, int valid, void* ud)
+{
+    // 1. Rush a service task
+    sk_service_jobdata_t* jobdata = ud;
+    sk_service_t*  svc      = jobdata->service;
+    sk_service_job job      = jobdata->job;
+    void*          udata    = jobdata->ud;
+    uint32_t       interval = jobdata->interval;
+
+    sk_srv_task_t task;
+    memset(&task, 0, sizeof(task));
+
+    task.base.type = SK_QUEUE_ELEM_WRITE;
+    task.type      = SK_SRV_TASK_TIMER;
+    task.io_status = SK_SRV_IO_STATUS_OK;
+    task.data.timer.service = svc;
+    task.data.timer.job     = job;
+    task.data.timer.ud      = udata;
+    task.data.timer.valid   = valid;
+
+    // push to service task queue
+    sk_srv_status_t ret = sk_service_push_task(svc, &task);
+    SK_ASSERT(ret == SK_SRV_STATUS_OK);
+
+    // 2. Clean up
+    free(jobdata);
+
+    // 3. If the interval is not zero, create a new timer for it
+    if (!interval) {
+        sk_print("interval is 0, skip to create next timer\n");
+        return;
+    }
+
+    if (!valid) {
+        sk_print("timer is invalid");
+        return;
+    }
+
+    int ret_code = _sk_service_timerjob_create(svc, entity,
+                                _sk_service_job_triggered, interval, interval,
+                                job, udata);
+    SK_ASSERT(ret_code == 0);
 }
 
 // Public APIs of service
@@ -237,20 +352,16 @@ void sk_service_schedule_task(sk_service_t* service,
 {
     service->running_task_cnt++;
 
-    // construct protocol
-    ServiceTaskRun task_run_pto = SERVICE_TASK_RUN__INIT;
-    task_run_pto.task_id      = task->task_id;
-    task_run_pto.service_name = (char*) sk_service_name(service);
-    task_run_pto.api_name     = (char*) task->api_name;
-    task_run_pto.io_status    = (uint32_t) task->io_status;
-
-    // deliver the protocol
-    sk_sched_send(SK_ENV_SCHED, sk_txn_entity(task->txn), task->txn,
-                  SK_PTO_SERVICE_TASK_RUN, &task_run_pto);
-
-    sk_print("service: deliver task(%d) to worker\n", (int)task->task_id);
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
-                 (int)task->task_id);
+    switch (task->type) {
+    case SK_SRV_TASK_API_QUERY:
+        _schedule_api_task(service, task);
+        break;
+    case SK_SRV_TASK_TIMER:
+        _schedule_timer_task(service, task);
+        break;
+    default:
+        SK_ASSERT(0);
+    }
 }
 
 size_t sk_service_schedule_tasks(sk_service_t* service)
@@ -275,13 +386,19 @@ size_t sk_service_schedule_tasks(sk_service_t* service)
         scheduled_task++;
 
         // 2. update the state of task queue
-        sk_queue_state_t new_state = 0;
+        sk_queue_state_t new_state  = 0;
+        sk_queue_state_t curr_state = sk_queue_state(service->pending_tasks);
 
         switch (task.base.type) {
         case SK_QUEUE_ELEM_READ:
+            SK_ASSERT(curr_state == SK_QUEUE_STATE_IDLE ||
+                      curr_state == SK_QUEUE_STATE_READ);
+
             new_state = SK_QUEUE_STATE_READ;
             break;
         case SK_QUEUE_ELEM_WRITE:
+            SK_ASSERT(curr_state == SK_QUEUE_STATE_IDLE);
+
             new_state = SK_QUEUE_STATE_WRITE;
             break;
         default:
@@ -341,7 +458,6 @@ void* sk_service_data(sk_service_t* service)
     sk_queue_state_t state = sk_queue_state(service->pending_tasks);
 
     switch (state) {
-    case SK_QUEUE_STATE_LOCK:
     case SK_QUEUE_STATE_WRITE:
         return sk_srv_data_get(service->data);
     case SK_QUEUE_STATE_IDLE:
@@ -351,6 +467,7 @@ void* sk_service_data(sk_service_t* service)
                      service->name);
         SK_ASSERT(0);
         return NULL;
+    case SK_QUEUE_STATE_LOCK:
     default:
         SK_ASSERT(0);
     }
@@ -371,7 +488,6 @@ void sk_service_data_set(sk_service_t* service, const void* data)
     sk_queue_state_t state = sk_queue_state(service->pending_tasks);
 
     switch (state) {
-    case SK_QUEUE_STATE_LOCK:
     case SK_QUEUE_STATE_WRITE:
         sk_srv_data_set(service->data, data);
     case SK_QUEUE_STATE_IDLE:
@@ -380,6 +496,7 @@ void sk_service_data_set(sk_service_t* service, const void* data)
                      idle or reading data, please correct your logic",
                      service->name);
         SK_ASSERT(0);
+    case SK_QUEUE_STATE_LOCK:
     default:
         SK_ASSERT(0);
     }
@@ -423,32 +540,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     return 0;
 }
 
-static
-void _sk_service_job_triggered(int valid, void* ud)
-{
-    // 1. Run the service job
-    sk_service_jobdata_t* jobdata = ud;
-    sk_service_t* svc      = jobdata->service;
-    void*         udata    = jobdata->ud;
-    uint32_t      interval = jobdata->interval;
-
-    jobdata->job(svc, udata, valid);
-
-    // 2. Clean up
-    free(jobdata);
-
-    // 3. If the interval is not zero, create a new timer for it
-    if (!interval) {
-        sk_print("interval is 0, skip to create next timer\n");
-        return;
-    }
-
-    if (!valid) {
-        sk_print("timer is invalid");
-        return;
-    }
-}
-
+// TODO: Currently, this api only can be ran at main thread
 int sk_service_periodic_job_create(sk_service_t* service,
                                    uint32_t delayed,
                                    uint32_t interval,
@@ -458,22 +550,11 @@ int sk_service_periodic_job_create(sk_service_t* service,
     SK_ASSERT(service);
     SK_ASSERT(job);
 
-    sk_service_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
-    jobdata->service  = service;
-    jobdata->job      = job;
-    jobdata->ud       = ud;
-    jobdata->interval = interval;
-
-    // TODO: currently this job will be deliver to master engine, next step it
-    //  should be delivered to background engine
-    sk_engine_t* engine = SK_ENV_CORE->master;
-    sk_timersvc_t* timersvc = engine->timer_svc;
-
     sk_entity_t* timer_entity = sk_entity_create(NULL);
-    sk_timer_t* timer = sk_timersvc_timer_create(timersvc, timer_entity,
-                                                 delayed,
-                                                 _sk_service_job_triggered,
-                                                 jobdata);
-    SK_ASSERT(timer);
+    int ret = _sk_service_timerjob_create(service, timer_entity,
+                            _sk_service_job_triggered, delayed, interval,
+                            job, ud);
+
+    SK_ASSERT(ret == 0);
     return 0;
 }

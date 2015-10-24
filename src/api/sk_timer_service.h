@@ -6,7 +6,7 @@
 
 typedef struct sk_timersvc_t sk_timersvc_t;
 typedef struct sk_timer_t sk_timer_t;
-typedef void   (*sk_timer_triggered) (int valid, void* ud);
+typedef void   (*sk_timer_triggered) (sk_entity_t*, int valid, void* ud);
 
 int sk_timer_valid(sk_timer_t*);
 void sk_timer_cancel(sk_timer_t*);
