@@ -36,19 +36,29 @@ void sk_engine_destroy(sk_engine_t* engine)
 
 void* _sk_engine_thread(void* arg)
 {
+    // 1. Set thread_env if exist
     sk_thread_env_t* thread_env = arg;
-    sk_thread_env_set(thread_env);
+    if (thread_env) {
+        sk_thread_env_set(thread_env);
+    }
+
+    // 2. Set logger cookie
     sk_logger_setcookie(SK_CORE_LOG_COOKIE);
 
-    // Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros
+    // 3. Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros
     sk_sched_t* sched = SK_ENV_SCHED;
     sk_sched_start(sched);
     return NULL;
 }
 
-int sk_engine_start(sk_engine_t* engine, void* env)
+int sk_engine_start(sk_engine_t* engine, void* env, int new_thread)
 {
-    return pthread_create(&engine->io_thread, NULL, _sk_engine_thread, env);
+    if (new_thread) {
+        return pthread_create(&engine->io_thread, NULL, _sk_engine_thread, env);
+    } else {
+        _sk_engine_thread(env);
+        return 0;
+    }
 }
 
 void sk_engine_stop(sk_engine_t* engine)

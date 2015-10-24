@@ -28,7 +28,7 @@ void _sk_setup_engines(sk_core_t* core)
 {
     sk_config_t* config = core->config;
 
-    // create main scheduler
+    // create master scheduler
     core->master = sk_engine_create();
 
     // create worker schedulers
@@ -266,10 +266,10 @@ void _sk_init_log(sk_core_t* core)
     core->logger = sk_logger_create(working_dir, log_name, log_level);
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
 
-    // create a thread env for the main thread, this is necessary since during
+    // create a thread env for the master thread, this is necessary since during
     // the phase of loading modules, user may log something, if the thread_env
     // does not exist, the logs will be dropped
-    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "main", 0);
+    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "master", 0);
     sk_thread_env_set(env);
 
     SK_LOG_INFO(core->logger, "skull logger initialization successfully");
@@ -346,7 +346,7 @@ void sk_core_init(sk_core_t* core)
     // 6. init global monitor
     _sk_init_moniter(core);
 
-    // 7. init schedulers
+    // 7. init engines
     _sk_setup_engines(core);
 
     // 8. load workflows and related triggers
@@ -361,28 +361,19 @@ void sk_core_start(sk_core_t* core)
     SK_LOG_INFO(core->logger, "skull engine starting...");
     sk_print("skull engine starting...\n");
 
-    // 1. module init
+    // 1. Complete the master_env
+    //   notes: This *master_env* will be deleted when thread exit
+    sk_engine_t*     master     = core->master;
+    sk_thread_env_t* master_env = sk_thread_env();
+    master_env->engine = master;
+
+    // 2. module init
     _sk_module_init(core);
 
-    // 2. service init
+    // 3. service init
     _sk_service_init(core);
 
-    // 3. start engines
-    // 3.1 start master engine
-    SK_LOG_INFO(core->logger, "starting master...");
-    sk_print("starting master...\n");
-
-    sk_engine_t* master = core->master;
-    //  This *master_env* will be deleted when thread exit
-    sk_thread_env_t* master_env = sk_thread_env_create(core, master,
-                                                       "master", 0);
-    int ret = sk_engine_start(master, master_env);
-    if (ret) {
-        sk_print("create master io thread failed, errno: %d\n", errno);
-        exit(ret);
-    }
-
-    // 3.2 start worker engines
+    // 4. start worker engines
     SK_LOG_INFO(core->logger, "starting workers...");
     sk_print("starting workers...\n");
 
@@ -393,14 +384,14 @@ void sk_core_start(sk_core_t* core)
         // this *worker_thread_env* will be deleted when thread exit
         sk_thread_env_t* worker_env = sk_thread_env_create(core, worker,
                                                            "worker", i);
-        int ret = sk_engine_start(worker, worker_env);
+        int ret = sk_engine_start(worker, worker_env, 1);
         if (ret) {
-            sk_print("create worker io thread failed, errno: %d\n", errno);
+            sk_print("Start worker io thread failed, errno: %d\n", errno);
             exit(ret);
         }
     }
 
-    // 4. start triggers
+    // 5. start triggers
     SK_LOG_INFO(core->logger, "starting triggers...");
     sk_print("starting triggers...\n");
 
@@ -410,14 +401,21 @@ void sk_core_start(sk_core_t* core)
         sk_trigger_run(trigger);
     }
 
+
+    // 6. start master engine
     SK_LOG_INFO(core->logger, "skull engine is ready");
     sk_print("skull engine is ready\n");
 
-    // 5. wait them quit
+    int ret = sk_engine_start(master, master_env, 0);
+    if (ret) {
+        sk_print("Start master io thread failed, errno: %d\n", errno);
+        exit(ret);
+    }
+
+    // 7. wait them quit
     for (int i = 0; i < config->threads; i++) {
         sk_engine_wait(core->workers[i]);
     }
-    sk_engine_wait(master);
 }
 
 void sk_core_stop(sk_core_t* core)
