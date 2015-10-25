@@ -106,7 +106,8 @@ PTO_OBJS = \
     pto/sk_pto_service_iocall.o \
     pto/sk_pto_service_task_run.o \
     pto/sk_pto_service_task_complete.o \
-    pto/sk_pto_timer_triggered.o
+    pto/sk_pto_timer_triggered.o \
+    pto/sk_pto_timer_emit.o
 
 PTO_IDLS_OBJS = \
     pto/idls/net_accept.pb-c.o \
@@ -114,7 +115,8 @@ PTO_IDLS_OBJS = \
     pto/idls/workflow_run.pb-c.o \
     pto/idls/service_iocall.pb-c.o \
     pto/idls/service_task.pb-c.o \
-    pto/idls/timer_triggered.pb-c.o
+    pto/idls/timer_triggered.pb-c.o \
+    pto/idls/timer_emit.pb-c.o
 
 USER_C_OBJS = \
     user-c/src/logger_private.o \
@@ -146,7 +148,8 @@ PROTO_IDLS = \
     workflow_run.proto \
     service_iocall.proto \
     service_task.proto \
-    timer_triggered.proto
+    timer_triggered.proto \
+    timer_emit.proto
 
 UT_OBJS = \
     user-c/src/unittest.o \

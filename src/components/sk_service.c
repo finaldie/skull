@@ -26,17 +26,6 @@ struct sk_service_t {
     fhash* apis; // key: api name; value: sk_service_api_t
 };
 
-typedef struct sk_service_jobdata_t {
-    sk_service_t*  service;
-    sk_service_job job;
-    void*          ud;
-    uint32_t       interval;
-
-#if __WORDSIZE == 64
-    int            _padding;
-#endif
-} sk_service_jobdata_t;
-
 // Internal APIs of service
 static
 sk_srv_status_t _sk_service_pop_task(sk_service_t* service, sk_srv_task_t* task)
@@ -166,87 +155,16 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
     void* ud = task->data.timer.ud;
     int valid = task->data.timer.valid;
 
+    // 1. Run timer job
     job(service, ud, valid);
-}
 
-static
-int _sk_service_timerjob_create(sk_service_t* service,
-                                sk_entity_t* entity,
-                                sk_timer_triggered timer_cb,
-                                uint32_t delayed,
-                                uint32_t interval,
-                                sk_service_job job,
-                                void* ud)
-{
-    SK_ASSERT(service);
-    SK_ASSERT(timer_cb);
-    SK_ASSERT(job);
+    // 2. mark task complete
+    sk_service_task_setcomplete(service);
 
-    sk_service_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
-    jobdata->service  = service;
-    jobdata->job      = job;
-    jobdata->ud       = ud;
-    jobdata->interval = interval;
+    // 4. Re-schedule tasks
+    sk_service_schedule_tasks(service);
 
-    // TODO: currently this job will be deliver to master engine, next step it
-    //  should be delivered to background engine
-    sk_engine_t* engine = SK_ENV_CORE->master;
-    sk_timersvc_t* timersvc = engine->timer_svc;
-
-    sk_entity_t* timer_entity = entity ? entity : sk_entity_create(NULL);
-    sk_timer_t* timer = sk_timersvc_timer_create(timersvc, timer_entity,
-                                                 delayed,
-                                                 timer_cb,
-                                                 jobdata);
-    SK_ASSERT(timer);
-    return 0;
-}
-
-// This function must run at master thread due to all the service management are
-// all run at master
-static
-void _sk_service_job_triggered(sk_entity_t* entity, int valid, void* ud)
-{
-    // 1. Rush a service task
-    sk_service_jobdata_t* jobdata = ud;
-    sk_service_t*  svc      = jobdata->service;
-    sk_service_job job      = jobdata->job;
-    void*          udata    = jobdata->ud;
-    uint32_t       interval = jobdata->interval;
-
-    sk_srv_task_t task;
-    memset(&task, 0, sizeof(task));
-
-    task.base.type = SK_QUEUE_ELEM_WRITE;
-    task.type      = SK_SRV_TASK_TIMER;
-    task.io_status = SK_SRV_IO_STATUS_OK;
-    task.data.timer.service = svc;
-    task.data.timer.job     = job;
-    task.data.timer.ud      = udata;
-    task.data.timer.valid   = valid;
-
-    // push to service task queue
-    sk_srv_status_t ret = sk_service_push_task(svc, &task);
-    SK_ASSERT(ret == SK_SRV_STATUS_OK);
-
-    // 2. Clean up
-    free(jobdata);
-
-    // 3. If the interval is not zero, create a new timer for it
-    if (!interval) {
-        sk_print("interval is 0, skip to create next timer\n");
-        return;
-    }
-
-    if (!valid) {
-        sk_print("timer is invalid");
-        return;
-    }
-
-    int ret_code = _sk_service_timerjob_create(svc, entity,
-                                _sk_service_job_triggered, interval, interval,
-                                job, udata);
-    SK_ASSERT(ret_code == 0);
+    // 5. TODO: update metrics
 }
 
 // Public APIs of service
@@ -528,9 +446,9 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 
     // 2. construct iocall protocol
     ServiceIocall iocall_msg = SERVICE_IOCALL__INIT;
-    iocall_msg.task_id      = task_id;
-    iocall_msg.service_name = (char*) service->name;
-    iocall_msg.api_name     = (char*) api_name;
+    iocall_msg.task_id       = task_id;
+    iocall_msg.service_name  = (char*) service->name;
+    iocall_msg.api_name      = (char*) api_name;
 
     // 3. set the txn sched affinity
     sk_txn_sched_set(txn, SK_ENV_SCHED);
@@ -540,7 +458,6 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     return 0;
 }
 
-// TODO: Currently, this api only can be ran at main thread
 int sk_service_periodic_job_create(sk_service_t* service,
                                    uint32_t delayed,
                                    uint32_t interval,
@@ -551,10 +468,26 @@ int sk_service_periodic_job_create(sk_service_t* service,
     SK_ASSERT(job);
 
     sk_entity_t* timer_entity = sk_entity_create(NULL);
-    int ret = _sk_service_timerjob_create(service, timer_entity,
-                            _sk_service_job_triggered, delayed, interval,
-                            job, ud);
 
-    SK_ASSERT(ret == 0);
+    TimerEmit timer_msg = TIMER_EMIT__INIT;
+    timer_msg.delayed   = delayed;
+    timer_msg.interval  = interval;
+    timer_msg.svc       = (uint64_t) (uintptr_t) service;
+    timer_msg.job.len   = sizeof (job);
+    timer_msg.job.data  = (uint8_t*) &job;
+    timer_msg.udata     = (uint64_t) (uintptr_t) ud;
+
+    // During the initialization period, all the logic be ran in master thread,
+    // otherwise it be ran in worker thread, so the strategy is:
+    //  1) In master, we *push* event to master scheduler directly
+    //  2) In worker, we *send* event to master scheduler
+    if (SK_ENV_ENGINE == SK_ENV_CORE->master) {
+        sk_sched_push(SK_ENV_SCHED, timer_entity, NULL,
+                      SK_PTO_TIMER_EMIT, &timer_msg);
+    } else {
+        sk_sched_send(SK_ENV_SCHED, timer_entity, NULL,
+                      SK_PTO_TIMER_EMIT, &timer_msg);
+    }
+
     return 0;
 }

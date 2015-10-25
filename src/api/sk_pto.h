@@ -71,6 +71,11 @@ extern sk_proto_t sk_pto_srv_task_complete;
 #define SK_PTO_TIMER_TRIGGERED 6
 extern sk_proto_t sk_pto_timer_triggered;
 
+// Protocol 8, timer emit
+#include "pto/idls/timer_emit.pb-c.h"
+#define SK_PTO_TIMER_EMIT 7
+extern sk_proto_t sk_pto_timer_emit;
+
 // global protocol table
 extern sk_proto_t* sk_pto_tbl[];
 
