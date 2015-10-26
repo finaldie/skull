@@ -461,11 +461,11 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     return 0;
 }
 
-int sk_service_periodic_job_create(sk_service_t* service,
-                                   uint32_t delayed,
-                                   uint32_t interval,
-                                   sk_service_job job,
-                                   void* ud)
+int sk_service_job_create(sk_service_t* service,
+                          uint32_t delayed,
+                          uint32_t interval,
+                          sk_service_job job,
+                          void* ud)
 {
     SK_ASSERT(service);
     SK_ASSERT(job);

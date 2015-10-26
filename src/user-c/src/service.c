@@ -126,6 +126,6 @@ int skull_service_cronjob_create(skull_service_t* service, uint32_t delayed,
     jobdata->job      = job;
     jobdata->interval = interval;
 
-    return sk_service_periodic_job_create(sk_svc, delayed, interval,
-                                          _cronjob_cb, jobdata);
+    return sk_service_job_create(sk_svc, delayed, interval,
+                                 _cronjob_cb, jobdata);
 }
