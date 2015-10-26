@@ -1,3 +1,13 @@
+* 2015-11-15 0.5.5
+  * Core
+    * **New:** Add 'Timer Service'
+    * **Fix:** Fix 'service' data api bugs
+    * **Enhancement:** Refine few internal api names
+  * Scripts
+    * **Enhancement:** Remove 'read-write' data mode
+  * User API
+    * **New:** 'Timer Service' user apis
+    * **Enhancement:** Mock Service data apis
 * 2015-10-20 0.5.4
   * Core
     * **New:** Add 'Service' Concept
