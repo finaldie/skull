@@ -64,16 +64,17 @@ uint32_t sk_timersvc_timeralive_cnt(sk_timersvc_t* svc)
 static
 void _timer_triggered(fev_state* state, void* arg)
 {
+    SK_ASSERT(arg);
+    sk_print("tmsvc: timer triggered\n");
+
     sk_timer_t* timer = arg;
     timer->triggered = 1;
 
     TimerTriggered timer_pto = TIMER_TRIGGERED__INIT;
-    timer_pto.timer_obj.len  = sizeof (timer);
-    timer_pto.timer_obj.data = (uint8_t*) timer;
-    timer_pto.timer_cb.len   = sizeof ((uintptr_t) timer->trigger);
-    timer_pto.timer_cb.data  = (uint8_t*) (uintptr_t) timer->trigger;
-    timer_pto.ud.len         = sizeof (timer->ud);
-    timer_pto.ud.data        = (uint8_t*) timer->ud;
+    timer_pto.timer_obj      = (uint64_t) (uintptr_t) timer;
+    timer_pto.timer_cb.len   = sizeof (timer->trigger);
+    timer_pto.timer_cb.data  = (uint8_t*) &timer->trigger;
+    timer_pto.ud             = (uint64_t) (uintptr_t) timer->ud;
 
     sk_sched_push(SK_ENV_SCHED, timer->entity, NULL, SK_PTO_TIMER_TRIGGERED,
                   &timer_pto);
@@ -90,13 +91,15 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
     SK_ASSERT(trigger);
 
     sk_timer_t* timer = calloc(1, sizeof(*timer));
-    timer->owner = svc;
+    sk_print("tmsvc: create timer %p\n", (void*)timer);
+    timer->owner  = svc;
     timer->entity = entity;
-    timer->timer = fev_tmsvc_add_timer(svc->timer_service, expiration,
-                                       _timer_triggered, timer);
+    timer->timer  = fev_tmsvc_add_timer(svc->timer_service, expiration,
+                                        _timer_triggered, timer);
+    sk_print("fev_timer %p\n", (void*) timer->timer);
     timer->trigger = trigger;
-    timer->ud = ud;
-    timer->valid = 1;
+    timer->ud      = ud;
+    timer->valid   = 1;
 
     svc->timer_alive++;
 
@@ -111,9 +114,11 @@ void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
     SK_ASSERT(svc);
     SK_ASSERT(svc == timer->owner);
 
-    fev_tmsvc_del_timer(timer->timer);
-    free(timer);
+    if (!timer->triggered) {
+        fev_tmsvc_del_timer(timer->timer);
+    }
 
+    free(timer);
     svc->timer_alive--;
 }
 

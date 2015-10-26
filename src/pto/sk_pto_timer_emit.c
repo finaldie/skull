@@ -36,6 +36,7 @@ int _timerjob_create(sk_service_t* service,
     SK_ASSERT(timer_cb);
     SK_ASSERT(job);
 
+    sk_print("create timer job\n");
     timer_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->service  = service;
     jobdata->job      = job;
@@ -55,6 +56,7 @@ static
 void _timer_triggered(sk_entity_t* entity, int valid, void* ud)
 {
     // 1. Rush a service task
+    sk_print("timer triggered\n");
     timer_jobdata_t* jobdata = ud;
     sk_service_t*  svc      = jobdata->service;
     sk_service_job job      = jobdata->job;
@@ -73,8 +75,12 @@ void _timer_triggered(sk_entity_t* entity, int valid, void* ud)
     task.data.timer.valid   = valid;
 
     // push to service task queue
+    sk_print("push task to service queue\n");
     sk_srv_status_t ret = sk_service_push_task(svc, &task);
     SK_ASSERT(ret == SK_SRV_STATUS_OK);
+
+    size_t cnt = sk_service_schedule_tasks(svc);
+    printf("service %zu tasks\n", cnt);
 
     // 2. Clean up jobdata
     free(jobdata);
@@ -86,10 +92,11 @@ void _timer_triggered(sk_entity_t* entity, int valid, void* ud)
     }
 
     if (!valid) {
-        sk_print("timer is invalid, skip to create next one");
+        sk_print("timer is invalid, skip to create next one\n");
         return;
     }
 
+    sk_print("create another timer job\n");
     int ret_code = _timerjob_create(svc, entity, _timer_triggered, interval,
                                     interval, job, udata);
     SK_ASSERT(ret_code == 0);
@@ -107,6 +114,7 @@ int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     void*          udata    = (void*) (uintptr_t) timer_emit_msg->udata;
     sk_service_job ujob     = * (sk_service_job*) timer_emit_msg->job.data;
 
+    sk_print("Create a timer\n");
     int ret = _timerjob_create(svc, entity, _timer_triggered,
                                delayed, interval, ujob, udata);
     SK_ASSERT(!ret);

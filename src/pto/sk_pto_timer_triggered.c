@@ -15,16 +15,16 @@ int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
           void* proto_msg)
 {
     TimerTriggered* timer_pto = proto_msg;
-    sk_timer_t* timer = (sk_timer_t*) timer_pto->timer_obj.data;
+    sk_timer_t* timer = (sk_timer_t*) (uintptr_t) timer_pto->timer_obj;
     sk_timersvc_t* timersvc = sk_timer_svc(timer);
     int timer_valid = sk_timer_valid(timer);
 
-    sk_print("timer triggered\n");
-    void* ud = timer_pto->ud.data;
+    void* ud = (void*) (uintptr_t) timer_pto->ud;
     sk_timer_triggered timer_cb =
-        (sk_timer_triggered) (uintptr_t) timer_pto->timer_cb.data;
+        * (sk_timer_triggered*) timer_pto->timer_cb.data;
 
     // run timer callback
+    sk_print("timer triggered proto: valid: %d\n", timer_valid);
     timer_cb(entity, timer_valid, ud);
 
     sk_timersvc_timer_destroy(timersvc, timer);

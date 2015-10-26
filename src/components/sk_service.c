@@ -156,6 +156,7 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
     int valid = task->data.timer.valid;
 
     // 1. Run timer job
+    sk_print("schedule timer task: valid: %d\n", valid);
     job(service, ud, valid);
 
     // 2. mark task complete
@@ -299,11 +300,7 @@ size_t sk_service_schedule_tasks(sk_service_t* service)
             break;
         }
 
-        // 1. schedule task to worker
-        sk_service_schedule_task(service, &task);
-        scheduled_task++;
-
-        // 2. update the state of task queue
+        // 1. update the state of task queue
         sk_queue_state_t new_state  = 0;
         sk_queue_state_t curr_state = sk_queue_state(service->pending_tasks);
 
@@ -323,9 +320,14 @@ size_t sk_service_schedule_tasks(sk_service_t* service)
             SK_ASSERT(0);
         }
 
+        sk_print("service queue: old state: %d, new state: %d\n", curr_state, new_state);
         sk_queue_setstate(service->pending_tasks, new_state);
 
         _sk_service_handle_exception(service, pop_status);
+
+        // 2. schedule task to worker
+        sk_service_schedule_task(service, &task);
+        scheduled_task++;
     }
 
     // handle last exceptions
@@ -408,6 +410,7 @@ void sk_service_data_set(sk_service_t* service, const void* data)
     switch (state) {
     case SK_QUEUE_STATE_WRITE:
         sk_srv_data_set(service->data, data);
+        break;
     case SK_QUEUE_STATE_IDLE:
     case SK_QUEUE_STATE_READ:
         SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot set data when \
@@ -466,6 +469,7 @@ int sk_service_periodic_job_create(sk_service_t* service,
 {
     SK_ASSERT(service);
     SK_ASSERT(job);
+    sk_print("create a service periodic job\n");
 
     sk_entity_t* timer_entity = sk_entity_create(NULL);
 
