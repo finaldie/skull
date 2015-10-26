@@ -449,8 +449,8 @@ void  skull_service_data_set (skull_service_t* service, const void* data)
     sk_srv_data_set(fake_service->data, data);
 }
 
-int skull_service_cronjob_create(skull_service_t* service, uint32_t delayed,
-                                 uint32_t interval, skull_cronjob job)
+int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
+                                 uint32_t interval, skull_timer_t job)
 {
     // Won't create anything
     return 0;

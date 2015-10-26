@@ -53,10 +53,10 @@ skull_service_async_call (skull_txn_t*,
                           const void* request,
                           skull_module_cb cb);
 
-typedef void (*skull_cronjob) (skull_service_t*);
+typedef void (*skull_timer_t) (skull_service_t*);
 
-int skull_service_cronjob_create(skull_service_t*, uint32_t delayed,
-                                 uint32_t interval, skull_cronjob);
+int skull_service_timer_create(skull_service_t*, uint32_t delayed,
+                               uint32_t interval, skull_timer_t);
 
 #endif
 

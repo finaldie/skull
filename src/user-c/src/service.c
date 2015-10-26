@@ -88,21 +88,21 @@ const void* skull_service_data_const (skull_service_t* service)
     return sk_service_data_const(sk_srv);
 }
 
-typedef struct cronjob_data_t {
-    skull_cronjob job;
+typedef struct timer_data_t {
+    skull_timer_t job;
     uint32_t      interval;
 
 #if __WORDSIZE == 64
     int _padding;
 #endif
-} cronjob_data_t;
+} timer_data_t;
 
 static
 void _cronjob_cb (sk_service_t* sk_svc, void* ud, int valid)
 {
     sk_print("skull service: cronjob cb, valid: %d\n", valid);
 
-    cronjob_data_t* jobdata = ud;
+    timer_data_t* jobdata = ud;
 
     if (valid) {
         skull_service_t service = {
@@ -117,12 +117,12 @@ void _cronjob_cb (sk_service_t* sk_svc, void* ud, int valid)
     }
 }
 
-int skull_service_cronjob_create(skull_service_t* service, uint32_t delayed,
-                                 uint32_t interval, skull_cronjob job)
+int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
+                                 uint32_t interval, skull_timer_t job)
 {
     sk_service_t* sk_svc = service->service;
 
-    cronjob_data_t* jobdata = calloc(1, sizeof(*jobdata));
+    timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->job      = job;
     jobdata->interval = interval;
 
