@@ -120,6 +120,12 @@ void sk_io_bridge_destroy(sk_io_bridge_t* io_bridge)
         return;
     }
 
+    // clean up the events data in io bridge
+    sk_event_t event;
+    while (!fmbuf_pop(io_bridge->mq, &event, SK_EVENT_SZ)) {
+        free(event.data);
+    }
+
     fmbuf_delete(io_bridge->mq);
     close(io_bridge->evfd);
     free(io_bridge);
@@ -226,7 +232,7 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
         }
 
         // Notes: if the io_bridge is NULL, means this is a message delivered
-        // from worker to master, so it needs another round of deliver
+        // from worker to master, so it needs another round of delivery
         if (!io_bridge) {
             bridge_index = sched->last_delivery_idx;
             SK_ASSERT(bridge_index < sched->bridge_size);
@@ -404,6 +410,21 @@ int _emit_event(sk_sched_t* sched, sk_io_type_t io_type, sk_entity_t* entity,
     return 0;
 }
 
+static
+void _cleanup_skio_events(sk_io_t* io)
+{
+    sk_event_t event;
+    while (sk_io_pull(io, SK_IO_INPUT, &event, 1)) {
+        free(event.data);
+    }
+
+    while (sk_io_pull(io, SK_IO_OUTPUT, &event, 1)) {
+        free(event.data);
+    }
+}
+
+
+
 // APIs
 sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr)
 {
@@ -425,13 +446,17 @@ sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr)
 
 void sk_sched_destroy(sk_sched_t* sched)
 {
-    // destroy io bridge
+    // 1. destroy io bridge
     for (uint32_t bri_idx = 0; bri_idx < sched->bridge_size; bri_idx++) {
         sk_io_bridge_destroy(sched->bridge_tbl[bri_idx]);
     }
 
-    // destroy io
+    // 2. destroy io
     for (int i = 0; i < SK_PTO_PRI_SZ; i++) {
+        // 2.1 clean up the events data first
+        _cleanup_skio_events(sched->io_tbl[i]);
+
+        // 2.2 destroy the sk_io
         sk_io_destroy(sched->io_tbl[i]);
     }
 
