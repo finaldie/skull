@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "flibs/fev_timer_service.h"
+#include "flibs/fhash.h"
 
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
@@ -18,6 +19,8 @@ struct sk_timersvc_t {
 #if __WORDSIZE == 64
     int      _padding;
 #endif
+
+    fhash*   timers;
 };
 
 struct sk_timer_t {
@@ -26,7 +29,7 @@ struct sk_timer_t {
     ftimer_node*       timer;
 
     sk_timer_triggered trigger;
-    void*              ud;
+    sk_obj_t*          ud;
 
     uint32_t valid     :1;
     uint32_t triggered :1;
@@ -43,8 +46,10 @@ sk_timersvc_t* sk_timersvc_create(void* evlp)
     svc->timer_service = fev_create_timer_service(
                             evlp, TIMER_CHECK_INTERVAL,
                             FEV_TMSVC_SINGLE_LINKED);
+    svc->timers = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
 
     SK_ASSERT(svc->timer_service);
+    SK_ASSERT(svc->timers);
     return svc;
 }
 
@@ -52,6 +57,20 @@ void sk_timersvc_destroy(sk_timersvc_t* svc)
 {
     if (!svc) return;
 
+    // 1. destroy un-triggered sk_timers
+    fhash_u64_iter iter = fhash_u64_iter_new(svc->timers);
+    sk_timer_t* timer = NULL;
+
+    while ((timer = fhash_u64_next(&iter))) {
+        sk_print("destroy un-triggered timer\n");
+        sk_obj_destroy(timer->ud);
+        free(timer);
+    }
+
+    fhash_u64_iter_release(&iter);
+    fhash_u64_delete(svc->timers);
+
+    // 2. destroy timer service
     fev_delete_timer_service(svc->timer_service);
     free(svc);
 }
@@ -84,7 +103,7 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
                                      sk_entity_t* entity,
                                      uint32_t expiration, // unit: millisecond
                                      sk_timer_triggered trigger,
-                                     void* ud)
+                                     sk_obj_t* ud)
 {
     SK_ASSERT(svc);
     SK_ASSERT(entity);
@@ -104,6 +123,10 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
     svc->timer_alive++;
 
     SK_ASSERT(timer->timer);
+
+    // Add it into timer holder
+    fhash_u64_set(svc->timers, (uint64_t) (uintptr_t) timer, timer);
+
     return timer;
 }
 
@@ -118,6 +141,7 @@ void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
         fev_tmsvc_del_timer(timer->timer);
     }
 
+    fhash_u64_del(svc->timers, (uint64_t) (uintptr_t) timer);
     free(timer);
     svc->timer_alive--;
 }

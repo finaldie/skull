@@ -5,6 +5,7 @@
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_sched.h"
+#include "api/sk_object.h"
 #include "api/sk_entity.h"
 #include "api/sk_txn.h"
 #include "api/sk_pto.h"
@@ -14,13 +15,21 @@
 typedef struct timer_jobdata_t {
     sk_service_t*  service;
     sk_service_job job;
-    void*          ud;
+    sk_obj_t*      ud;
     uint32_t       interval;
 
 #if __WORDSIZE == 64
     int            _padding;
 #endif
 } timer_jobdata_t;
+
+static
+void _timer_jobdata_destroy(sk_ud_t ud)
+{
+    sk_print("destroy timer jobdata\n");
+    timer_jobdata_t* jobdata = ud.ud;
+    free(jobdata);
+}
 
 static
 int _timerjob_create(sk_service_t* service,
@@ -36,6 +45,7 @@ int _timerjob_create(sk_service_t* service,
     SK_ASSERT(timer_cb);
     SK_ASSERT(job);
 
+    // Create sk_timer job callback data
     sk_print("create timer job\n");
     timer_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->service  = service;
@@ -43,9 +53,19 @@ int _timerjob_create(sk_service_t* service,
     jobdata->ud       = ud;
     jobdata->interval = interval;
 
+    sk_ud_t cb_data;
+    cb_data.ud = jobdata;
+
+    sk_obj_opt_t opt;
+    opt.preset  = NULL;
+    opt.destroy = _timer_jobdata_destroy;
+
+    sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
+
+    // Create sk_timer with callback data
     sk_timersvc_t* timersvc = SK_ENV_TMSVC;
     sk_timer_t* timer = sk_timersvc_timer_create(timersvc, entity, delayed,
-                                                 timer_cb, jobdata);
+                                                 timer_cb, param_obj);
     SK_ASSERT(timer);
     return 0;
 }
@@ -53,15 +73,15 @@ int _timerjob_create(sk_service_t* service,
 // This function must be run at master thread due to all the service management
 // are all run at master
 static
-void _timer_triggered(sk_entity_t* entity, int valid, void* ud)
+void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
     // 1. Rush a service task
     sk_print("timer triggered\n");
-    timer_jobdata_t* jobdata = ud;
-    sk_service_t*  svc      = jobdata->service;
-    sk_service_job job      = jobdata->job;
-    void*          udata    = jobdata->ud;
-    uint32_t       interval = jobdata->interval;
+    timer_jobdata_t* jobdata  = sk_obj_get(ud).ud;
+    sk_service_t*    svc      = jobdata->service;
+    sk_service_job   job      = jobdata->job;
+    void*            udata    = jobdata->ud;
+    uint32_t         interval = jobdata->interval;
 
     sk_srv_task_t task;
     memset(&task, 0, sizeof(task));
@@ -83,7 +103,7 @@ void _timer_triggered(sk_entity_t* entity, int valid, void* ud)
     printf("service %zu tasks\n", cnt);
 
     // 2. Clean up jobdata
-    free(jobdata);
+    sk_obj_destroy(ud);
 
     // 3. If the interval is not zero, create a new timer for it
     if (!interval) {

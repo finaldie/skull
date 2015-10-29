@@ -7,9 +7,10 @@ struct sk_obj_t {
     sk_ud_t      ud;
 };
 
-sk_obj_t* sk_obj_create(sk_obj_opt_t opt)
+sk_obj_t* sk_obj_create(sk_obj_opt_t opt, sk_ud_t ud)
 {
     sk_obj_t* obj = calloc(1, sizeof(*obj));
+    obj->ud  = ud;
     obj->opt = opt;
 
     return obj;

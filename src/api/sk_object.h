@@ -14,7 +14,7 @@ typedef struct sk_obj_opt_t {
 
 typedef struct sk_obj_t sk_obj_t;
 
-sk_obj_t* sk_obj_create  (sk_obj_opt_t opt);
+sk_obj_t* sk_obj_create  (sk_obj_opt_t opt, sk_ud_t ud);
 void      sk_obj_destroy (sk_obj_t*);
 sk_ud_t   sk_obj_get     (sk_obj_t*);
 void      sk_obj_set     (sk_obj_t*, sk_ud_t ud);
