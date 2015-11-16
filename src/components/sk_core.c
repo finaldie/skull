@@ -11,6 +11,7 @@
 #include "api/sk_pto.h"
 #include "api/sk_config.h"
 #include "api/sk_module.h"
+#include "api/sk_service.h"
 #include "api/sk_workflow.h"
 #include "api/sk_trigger.h"
 #include "api/sk_loader.h"
@@ -27,7 +28,7 @@ void _sk_setup_engines(sk_core_t* core)
 {
     sk_config_t* config = core->config;
 
-    // create main scheduler
+    // create master scheduler
     core->master = sk_engine_create();
 
     // create worker schedulers
@@ -37,7 +38,13 @@ void _sk_setup_engines(sk_core_t* core)
         core->workers[i] = sk_engine_create();
         SK_LOG_INFO(core->logger, "worker scheduler [%d] init successfully", i);
 
+        // create both-way links
+        //  - create a link from master to worker
         sk_engine_link(core->master, core->workers[i]);
+
+        //  - create a link from worker to master
+        sk_engine_link(core->workers[i], core->master);
+
         SK_LOG_INFO(core->logger, "io bridge [%d] init successfully", i);
     }
 
@@ -45,7 +52,7 @@ void _sk_setup_engines(sk_core_t* core)
 }
 
 static
-void _sk_setup_workflow(sk_core_t* core)
+void _sk_setup_workflows(sk_core_t* core)
 {
     sk_config_t* config = core->config;
     core->workflows = flist_create();
@@ -81,15 +88,16 @@ void _sk_setup_workflow(sk_core_t* core)
             }
 
             // 2.
-            sk_module_t* module = sk_module_load(module_name);
+            sk_module_t* module = sk_module_load(module_name, NULL);
             if (module) {
                 sk_print("load module [%s] successful\n", module_name);
                 SK_LOG_INFO(core->logger, "load module [%s] successful",
                           module_name);
             } else {
                 sk_print("load module [%s] failed\n", module_name);
-                SK_LOG_INFO(core->logger, "load module [%s] failed",
-                          module_name);
+                SK_LOG_ERROR(core->logger, "load module [%s] failed",
+                             module_name);
+                exit(1);
             }
 
             // 3.
@@ -144,12 +152,107 @@ void _sk_module_init(sk_core_t* core)
 
     while ((module = fhash_str_next(&iter))) {
         sk_print("module [%s] init...\n", module->name);
+        SK_LOG_INFO(core->logger, "module [%s] init...", module->name);
+
         sk_logger_setcookie("module.%s", module->name);
         module->init(module->md);
         sk_logger_setcookie(SK_CORE_LOG_COOKIE);
     }
 
     fhash_str_iter_release(&iter);
+}
+
+static
+void _sk_module_destroy(sk_core_t* core)
+{
+    fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+    sk_module_t* module = NULL;
+
+    while ((module = fhash_str_next(&iter))) {
+        // 1. release module user layer data
+        sk_logger_setcookie("module.%s", module->name);
+        module->release(module->md);
+        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+
+        // 2. release module core layer data
+        sk_module_unload(module);
+    }
+
+    fhash_str_iter_release(&iter);
+    fhash_str_delete(core->unique_modules);
+}
+
+static
+void _sk_setup_services(sk_core_t* core)
+{
+    sk_config_t* config = core->config;
+    core->services = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    fhash_str_iter srv_cfg_iter = fhash_str_iter_new(config->services);
+    sk_service_cfg_t* srv_cfg_item = NULL;
+
+    while ((srv_cfg_item = fhash_str_next(&srv_cfg_iter))) {
+        const char* service_name = srv_cfg_iter.key;
+        SK_LOG_INFO(core->logger, "setup service %s", service_name);
+
+        // create and load a service
+        sk_service_t* service = sk_service_create(service_name, srv_cfg_item);
+        int ret = sk_service_load(service, NULL);
+        if (ret) {
+            SK_LOG_ERROR(core->logger, "setup service %s failed", service_name);
+            exit(1);
+        }
+
+        // store service into core->service hash table
+        fhash_str_set(core->services, service_name, service);
+
+        SK_LOG_INFO(core->logger, "setup service %s successful", service_name);
+    }
+
+    fhash_str_iter_release(&srv_cfg_iter);
+}
+
+static
+void _sk_service_init(sk_core_t* core)
+{
+    fhash_str_iter srv_iter = fhash_str_iter_new(core->services);
+    sk_service_t* service = NULL;
+
+    while ((service = fhash_str_next(&srv_iter))) {
+        const char* service_name = sk_service_name(service);
+        sk_print("init service %s\n", service_name);
+        SK_LOG_INFO(core->logger, "init service %s", service_name);
+
+        sk_logger_setcookie("service.%s", service_name);
+        sk_service_start(service);
+        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+    }
+
+    fhash_str_iter_release(&srv_iter);
+}
+
+static
+void _sk_service_destroy(sk_core_t* core)
+{
+    fhash_str_iter srv_iter = fhash_str_iter_new(core->services);
+    sk_service_t* service = NULL;
+
+    while ((service = fhash_str_next(&srv_iter))) {
+        const char* service_name = sk_service_name(service);
+        SK_LOG_INFO(core->logger, "destroy service %s", service_name);
+
+        // 1. release service user layer data
+        sk_logger_setcookie("service.%s", service_name);
+        sk_service_stop(service);
+        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+
+        // 2. release service core layer data
+        sk_service_unload(service);
+        sk_service_destroy(service);
+        SK_LOG_INFO(core->logger, "destroy service %s complete", service_name);
+    }
+
+    fhash_str_iter_release(&srv_iter);
+    fhash_str_delete(core->services);
 }
 
 static
@@ -163,10 +266,10 @@ void _sk_init_log(sk_core_t* core)
     core->logger = sk_logger_create(working_dir, log_name, log_level);
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
 
-    // create a thread env for the main thread, this is necessary since during
+    // create a thread env for the master thread, this is necessary since during
     // the phase of loading modules, user may log something, if the thread_env
     // does not exist, the logs will be dropped
-    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "main", 0);
+    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "master", 0);
     sk_thread_env_set(env);
 
     SK_LOG_INFO(core->logger, "skull logger initialization successfully");
@@ -243,60 +346,76 @@ void sk_core_init(sk_core_t* core)
     // 6. init global monitor
     _sk_init_moniter(core);
 
-    // 7. init schedulers
+    // 7. init engines
     _sk_setup_engines(core);
 
     // 8. load workflows and related triggers
-    _sk_setup_workflow(core);
+    _sk_setup_workflows(core);
+
+    // 9. load services
+    _sk_setup_services(core);
 }
 
 void sk_core_start(sk_core_t* core)
 {
-    // 1. module init
+    SK_LOG_INFO(core->logger, "skull engine starting...");
+    sk_print("skull engine starting...\n");
+
+    // 1. Complete the master_env
+    //   notes: This *master_env* will be deleted when thread exit
+    sk_engine_t*     master     = core->master;
+    sk_thread_env_t* master_env = sk_thread_env();
+    master_env->engine = master;
+
+    // 2. module init
     _sk_module_init(core);
+
+    // 3. service init
+    _sk_service_init(core);
+
+    // 4. start worker engines
+    SK_LOG_INFO(core->logger, "starting workers...");
+    sk_print("starting workers...\n");
 
     sk_config_t* config = core->config;
 
-    // 2. start engines
-    sk_print("skull engine starting...\n");
-
-    // 2.1 start master engine
-    sk_engine_t* master = core->master;
-    // this *main_thread_env* will be deleted when thread exit
-    sk_thread_env_t* master_env = sk_thread_env_create(core, master,
-                                                       "master", 0);
-    int ret = sk_engine_start(master, master_env);
-    if (ret) {
-        sk_print("create master io thread failed, errno: %d\n", errno);
-        exit(ret);
-    }
-
-    // 2.2 start worker engines
     for (int i = 0; i < config->threads; i++) {
         sk_engine_t* worker = core->workers[i];
         // this *worker_thread_env* will be deleted when thread exit
         sk_thread_env_t* worker_env = sk_thread_env_create(core, worker,
                                                            "worker", i);
-        int ret = sk_engine_start(worker, worker_env);
+        int ret = sk_engine_start(worker, worker_env, 1);
         if (ret) {
-            sk_print("create worker io thread failed, errno: %d\n", errno);
+            sk_print("Start worker io thread failed, errno: %d\n", errno);
             exit(ret);
         }
     }
-    SK_LOG_INFO(core->logger, "skull engine start");
 
-    // 3. start triggers
+    // 5. start triggers
+    SK_LOG_INFO(core->logger, "starting triggers...");
+    sk_print("starting triggers...\n");
+
     flist_iter iter = flist_new_iter(core->triggers);
     sk_trigger_t* trigger = NULL;
     while ((trigger = flist_each(&iter))) {
         sk_trigger_run(trigger);
     }
 
-    // 4. wait them quit
+
+    // 6. start master engine
+    SK_LOG_INFO(core->logger, "skull engine is ready");
+    sk_print("skull engine is ready\n");
+
+    int ret = sk_engine_start(master, master_env, 0);
+    if (ret) {
+        sk_print("Start master io thread failed, errno: %d\n", errno);
+        exit(ret);
+    }
+
+    // 7. wait them quit
     for (int i = 0; i < config->threads; i++) {
         sk_engine_wait(core->workers[i]);
     }
-    sk_engine_wait(master);
 }
 
 void sk_core_stop(sk_core_t* core)
@@ -333,22 +452,18 @@ void sk_core_destroy(sk_core_t* core)
     }
     free(core->workers);
 
-    // 3. destroy unique module list
-    fhash_str_delete(core->unique_modules);
+    // 3. destroy modules
+    _sk_module_destroy(core);
 
-    // 4. destroy moniters
+    // 4. destroy services
+    _sk_service_destroy(core);
+
+    // 5. destroy moniters
     sk_mon_destroy(core->mon);
     sk_mon_destroy(core->umon);
 
-    // 5. destroy config
+    // 6. destroy config
     sk_config_destroy(core->config);
-
-    // 6. destroy loggers
-    sk_logger_destroy(core->logger);
-    sk_log_tpl_destroy(core->info_log_tpl);
-    sk_log_tpl_destroy(core->warn_log_tpl);
-    sk_log_tpl_destroy(core->error_log_tpl);
-    sk_log_tpl_destroy(core->fatal_log_tpl);
 
     // 7. destroy workflows
     sk_workflow_t* workflow = NULL;
@@ -359,4 +474,20 @@ void sk_core_destroy(sk_core_t* core)
 
     // 8. destroy working dir string
     free((void*)core->working_dir);
+
+    // 9. destroy loggers
+    sk_logger_destroy(core->logger);
+    sk_log_tpl_destroy(core->info_log_tpl);
+    sk_log_tpl_destroy(core->warn_log_tpl);
+    sk_log_tpl_destroy(core->error_log_tpl);
+    sk_log_tpl_destroy(core->fatal_log_tpl);
+}
+
+// Utils APIs
+sk_service_t* sk_core_get_service(sk_core_t* core, const char* service_name)
+{
+    SK_ASSERT(core);
+    SK_ASSERT(service_name);
+
+    return fhash_str_get(core->services, service_name);
 }

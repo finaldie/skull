@@ -11,6 +11,8 @@ function _skull_create()
     # build the basic workspace folder structure
     mkdir -p $workspace
     mkdir -p $workspace/.skull/makefiles
+    mkdir -p $workspace/idls/workflow
+    mkdir -p $workspace/idls/service
     mkdir -p $workspace/src/modules
     mkdir -p $workspace/src/common
     mkdir -p $workspace/scripts
@@ -23,6 +25,8 @@ function _skull_create()
     cp $SKULL_ROOT/share/skull/ChangeLog.md.tpl $workspace/ChangeLog.md
     cp $SKULL_ROOT/share/skull/README.md.tpl $workspace/README.md
     cp -r $SKULL_ROOT/share/skull/bin/* $workspace/bin
+    cp $SKULL_ROOT/share/skull/gitignore $workspace/.gitignore
+    cp $SKULL_ROOT/share/skull/ycm_extra_conf.py $workspace/.ycm_extra_conf.py
 
     # copy all the configurations except ChangeLog.md
     local copy_list=`find $SKULL_ROOT/etc/skull/* -name "*" | grep -v "ChangeLog.md"`

@@ -15,40 +15,104 @@ source_name = ""
 
 # static
 HEADER_NO_CFG_ITEM = "\
-    char _nothing[24];\n\
-    skull_cfg_itype_t _nothing_type;\n\n\
+    char* _nothing;\n\
 "
 
 SOURCE_NO_CFG_ITEM = "\
-    ._nothing = \"there is no config item\",\n\
-    ._nothing_type = SKULL_CFG_ITYPE_STRING,\n\
+    new_config->_nothing = \"there is no config item\";\n\
 "
 
 HEADER_CONTENT_START = "\
-#ifndef SKULL_CONFIG_C_H\n\
-#define SKULL_CONFIG_C_H\n\
+#ifndef SKULL_STATIC_CONFIG_H\n\
+#define SKULL_STATIC_CONFIG_H\n\
 \n\
 #include <skull/config.h>\n\
 \n\
 #pragma pack(4)\n\
-typedef struct skull_config_t {\
+typedef struct skull_static_config_t {\
 \n"
 
 HEADER_CONTENT_END = "\
-} skull_config_t;\n\
+} skull_static_config_t;\n\
 #pragma pack(4)\n\
 \n\
-extern const skull_config_t skull_config;\n\
+// return the const static pointer to the static config obj\n\
+const skull_static_config_t* skull_static_config();\n\
+\n\
+/**\n\
+ * Convert raw skull config obj to static config obj and\n\
+ * it will free the old static config obj if exist\n\
+ *\n\
+ * @note This is not a thread-safe api, it only can be called\n\
+ *             multiple times in UT environment\n\
+ * @return none, but if skull_config_getxxx api failed, it will\n\
+ *               print message to stderr and exit with '1'.\n\
+ */\n\
+void skull_static_config_convert(const skull_config_t* config);\n\
+\n\
+void skull_static_config_destroy();\n\
 \n\
 #endif\n\n"
 
 SOURCE_CONTENT_START = "\
+#include <stdlib.h>\n\
 #include \"config.h\"\n\
 \n\
-const skull_config_t skull_config = {\n\
 "
 
-SOURCE_CONTENT_END = "};"
+SOURCE_CONTENT_STATIC_CONFIG = "\
+static skull_static_config_t* g_static_config = NULL;\n\
+\n\
+// Internal APIs\n\
+static\n\
+skull_static_config_t* _skull_static_config_create()\n\
+{\n\
+    return calloc(1, sizeof(skull_static_config_t));\n\
+}\n\
+\n\
+static\n\
+void _skull_static_config_destroy(skull_static_config_t* config)\n\
+{\n\
+    if (!config) {\n\
+        return;\n\
+    }\n\
+\n\
+    free(config);\n\
+}\n\
+\n\
+static\n\
+void _skull_static_config_reset(skull_static_config_t* config)\n\
+{\n\
+   skull_static_config_t* old = g_static_config;\n\
+   g_static_config = config;\n\
+   _skull_static_config_destroy(old);\n\
+}\n\
+\n\
+// Public APIs\n\
+const skull_static_config_t* skull_static_config()\n\
+{\n\
+    return g_static_config;\n\
+}\n\
+\n\
+void skull_static_config_destroy()\n\
+{\n\
+    _skull_static_config_destroy(g_static_config);\n\
+}\n\
+"
+
+SOURCE_CONTENT_CONVERTOR_START = "\
+void skull_static_config_convert(const skull_config_t* config)\n\
+{\n\
+    skull_static_config_t* new_config = _skull_static_config_create();\n\
+"
+
+SOURCE_CONTENT_CONVERTOR_END = "\
+\n\
+    _skull_static_config_reset(new_config);\n\
+}\n\
+"
+
+SOURCE_CONTENT_END = ""
 
 def load_yaml_config():
     global yaml_obj
@@ -67,12 +131,10 @@ def _generate_header_item(name, value):
     elif type(value) is float:
         content += "    double %s;\n" % name
     elif type(value) is str:
-        content += "    char %s[%d];\n" % (name, len(value) + 1)
+        content += "    char* %s;\n" % name
     else:
         print "unsupported name: %s, type: %s" % (name, type(value))
 
-    # assemble config item type
-    content += "    skull_cfg_itype_t %s_type;\n\n" % name
     return content
 
 def generate_header():
@@ -98,19 +160,16 @@ def generate_header():
     header_file.write(content)
     header_file.close()
 
-def _generate_source_item(name, value):
+def _generate_convertor_source_item(name, value):
     content = ""
 
     # assemble config item
     if type(value) is int:
-        content += "    .%s = %d,\n" % (name, value)
-        content += "    .%s_type = %s,\n\n" % (name, "SKULL_CFG_ITYPE_INT")
+        content += "    new_config->%s = skull_config_getint(config, \"%s\", 0);\n" % (name, name)
     elif type(value) is float:
-        content += "    .%s = %f,\n" % (name, value)
-        content += "    .%s_type = %s,\n\n" % (name, "SKULL_CFG_ITYPE_DOUBLE")
+        content += "    new_config->%s = skull_config_getdouble(config, \"%s\", 0.0f);\n" % (name, name)
     elif type(value) is str:
-        content += "    .%s = \"%s\",\n" % (name, value)
-        content += "    .%s_type = %s,\n\n" % (name, "SKULL_CFG_ITYPE_STRING")
+        content += "    new_config->%s = (char*)skull_config_getstring(config, \"%s\");\n" % (name, name)
     else:
         print "unsupported name: %s, type: %s" % (name, type(value))
 
@@ -122,16 +181,19 @@ def generate_source():
 
     # generate header
     content += SOURCE_CONTENT_START
+    content += SOURCE_CONTENT_STATIC_CONFIG
 
-    # generate the config body
+    # generate the convertor logic
+    content += SOURCE_CONTENT_CONVERTOR_START
     if yaml_obj is not None:
         for name in yaml_obj:
             value = yaml_obj[name]
-            content += _generate_source_item(name, value)
+            content += _generate_convertor_source_item(name, value)
     else:
         # add a reserved item to avoid compile error
         content += SOURCE_NO_CFG_ITEM
 
+    content += SOURCE_CONTENT_CONVERTOR_END
     # generate tailer
     content += SOURCE_CONTENT_END
 

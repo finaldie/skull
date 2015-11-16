@@ -11,11 +11,20 @@
 typedef struct sk_event_t {
     uint32_t pto_id;
     int      _reserved;
-    size_t   sz;            // data size
 
-    void*    entity;        // entity object
-    void*    txn;           // transcation data
-    void*    data;          // protobuf data
+    // data size
+    size_t   sz;
+
+    // entity object, some major protos use it, a field for it here because it
+    // would improve the performance
+    void*    entity;
+
+    // transcation data, some major protos use it, a field for it here because
+    // it would improve the performance
+    void*    txn;
+
+    // protobuf data
+    void*    data;
 } sk_event_t;
 
 #endif

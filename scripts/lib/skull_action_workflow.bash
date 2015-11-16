@@ -59,7 +59,7 @@ function action_workflow_usage()
 function _action_workflow_add()
 {
     # prepare add workflow
-    local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
+    local skull_conf=$SKULL_CONFIG_FILE
     local concurrent=1
     local idl=""
     local port=1234
@@ -68,8 +68,8 @@ function _action_workflow_add()
     local yn_port=true
 
     # set the concurrent
-    read -p "Whether allow concurrent? (y/n)" yn_concurrent
-    if [ ! $yn_concurrent = "y" ]; then
+    read -p "Whether allow concurrent? (y/n) " yn_concurrent
+    if [ ! "$yn_concurrent" = "y" ]; then
         concurrent=0
     fi
 
@@ -84,19 +84,30 @@ function _action_workflow_add()
         fi
     done
 
-    # set the port
-    read -p "Need listen on a port? (y/n)" yn_port
-    if [ $yn_port = "y" ]; then
-        read -p "Input the port you want(1025-65535): " port
+    local idl_path=$SKULL_WORKFLOW_IDL_FOLDER
+    local is_gen_idl="True"
+    if [ -f $SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto ]; then
+        is_gen_idl="False"
     fi
 
-    $SKULL_ROOT/bin/skull-workflow.py -m add_workflow -c $skull_conf \
-        -C $concurrent -i $idl -p $port
+    # set the port
+    read -p "Need listen on a port? (y/n) " yn_port
+    if [ "$yn_port" = "y" ]; then
+        read -p "Input the port you want (1025-65535): " port
+    fi
+
+    # add workflow into skull-config.yaml
+    $SKULL_ROOT/bin/skull-config-utils.py -m add_workflow \
+        -c $skull_conf -C $concurrent -i $idl -p $port \
+        -g $is_gen_idl -P $idl_path
+
+    echo "workflow added successfully"
+    echo "note: run 'skull module --add' to create a new module for it"
 }
 
 function action_workflow_show()
 {
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
 
-    $SKULL_ROOT/bin/skull-workflow.py -m show -c $skull_conf
+    $SKULL_ROOT/bin/skull-config-utils.py -m show_workflow -c $skull_conf
 }

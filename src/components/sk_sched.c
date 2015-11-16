@@ -17,6 +17,7 @@
 #include "api/sk_entity_mgr.h"
 #include "api/sk_env.h"
 #include "api/sk_metrics.h"
+#include "api/sk_txn.h"
 #include "api/sk_sched.h"
 
 #define SK_SCHED_PULL_NUM   65536
@@ -30,7 +31,7 @@ typedef struct sk_io_bridge_t {
     int      evfd;
 
 #if __WORDSIZE == 64
-    int        padding;
+    int      _padding;
 #endif
 } sk_io_bridge_t;
 
@@ -44,8 +45,13 @@ struct sk_sched_t {
     flist*           workflows;
 
     uint32_t   bridge_size;
+    uint32_t   last_delivery_idx;
     uint32_t   running:1;
     uint32_t   _reserved:31;
+
+#if __WORDSIZE == 64
+    int        _padding;
+#endif
 
     // sk_event read buffer
     sk_event_t events_buffer[1];
@@ -128,26 +134,15 @@ void sk_io_bridge_destroy(sk_io_bridge_t* io_bridge)
 //
 // return how many events be delivered
 static
-size_t sk_io_bridge_deliver(sk_io_bridge_t* io_bridge, sk_io_t* src_io)
+int sk_io_bridge_deliver(sk_io_bridge_t* io_bridge, sk_event_t* event)
 {
-    // calculate how many events can be transferred
-    size_t event_cnt = sk_io_used(src_io, SK_IO_OUTPUT);
-    if (event_cnt == 0) {
-        return 0;
-    }
-    size_t free_slots = fmbuf_free(io_bridge->mq) / SK_EVENT_SZ;
-    if (free_slots == 0) {
-        return 0;
-    }
+    SK_ASSERT(io_bridge);
+    SK_ASSERT(event);
 
     // copy events from src_io to io bridge's mq
-    sk_event_t event;
-    size_t nevents = sk_io_pull(src_io, SK_IO_OUTPUT, &event, 1);
-    SK_ASSERT(nevents == 1);
-
-    int ret = fmbuf_push(io_bridge->mq, &event, SK_EVENT_SZ);
+    int ret = fmbuf_push(io_bridge->mq, event, SK_EVENT_SZ);
     SK_ASSERT(!ret);
-    return nevents;
+    return 1;
 }
 
 static
@@ -176,20 +171,110 @@ void _io_bridget_notify(sk_io_bridge_t* io_bridge, uint64_t cnt)
     eventfd_write(io_bridge->evfd, cnt);
 }
 
-void _deliver_msg(sk_sched_t* sched)
+static
+sk_io_bridge_t* _find_affinity_bridge(sk_sched_t* sched, sk_sched_t* target,
+                                      uint32_t* index)
 {
-    uint64_t delivery[SK_SCHED_MAX_IO_BRIDGE] = {0};
+    SK_ASSERT(sched);
+    SK_ASSERT(target);
 
-    for (int i = SK_PTO_PRI_MAX; i >= SK_PTO_PRI_MIN; i--) {
-        sk_io_t* io = sched->io_tbl[i];
+    for (uint32_t bri_idx = 0; bri_idx < sched->bridge_size; bri_idx++) {
+        sk_io_bridge_t* io_bridge = sched->bridge_tbl[bri_idx];
 
-        for (uint32_t bri_idx = 0; bri_idx < sched->bridge_size; bri_idx++) {
-            sk_io_bridge_t* io_bridge = sched->bridge_tbl[bri_idx];
-            delivery[bri_idx] += (uint64_t)sk_io_bridge_deliver(io_bridge, io);
+        if (io_bridge->dst != target) {
+            continue;
         }
+
+        if (index) {
+            *index = bri_idx;
+        }
+
+        return io_bridge;
     }
 
-    // notify dst eventloop the data is ready
+    // doesn't find any affinity io bridge, possibly, this is a message sent
+    // from worker to master
+    return NULL;
+}
+
+static
+void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
+                     uint64_t* delivery)
+{
+    size_t nevents = 0;
+
+    do {
+        // 1. check & pull one event
+        nevents = sk_io_used(src_io, SK_IO_OUTPUT);
+        if (nevents == 0) {
+            break;
+        }
+
+        sk_event_t tmp;
+        sk_event_t* raw_event = sk_io_rawget(src_io, SK_IO_OUTPUT, &tmp, 1);
+        SK_ASSERT(raw_event);
+
+        // 2. get the affinity or round-robin io bridge
+        sk_io_bridge_t* io_bridge = NULL;
+        sk_txn_t* txn = raw_event->txn;
+        sk_sched_t* affinity_sched = txn ? sk_txn_sched(txn) : NULL;
+
+        uint32_t bridge_index = 0;
+        if (txn && affinity_sched) {
+            io_bridge = _find_affinity_bridge(sched, affinity_sched,
+                                                       &bridge_index);
+        }
+
+        // Notes: if the io_bridge is NULL, means this is a message delivered
+        // from worker to master, so it needs another round of deliver
+        if (!io_bridge) {
+            bridge_index = sched->last_delivery_idx;
+            SK_ASSERT(bridge_index < sched->bridge_size);
+            io_bridge = sched->bridge_tbl[bridge_index];
+        }
+
+        // 2.1 calculate how many events can be transferred
+        size_t free_slots = fmbuf_free(io_bridge->mq) / SK_EVENT_SZ;
+        if (free_slots == 0) {
+            sk_print("no slot in the io bridge");
+            return;
+        }
+
+        // 2.2 If there is a slot for io bridge, pop the event from src io
+        sk_event_t event;
+        nevents = sk_io_pull(src_io, SK_IO_OUTPUT, &event, 1);
+        SK_ASSERT(nevents == 1);
+
+        // 3. deliver event
+        // 3.1 deliver to affnity io bridge if it exist
+        // 3.2 round-robin deliver to the all io bridges if it doesn't exist
+        if (io_bridge) {
+            // 2.1
+            delivery[bridge_index] +=
+                (uint64_t) sk_io_bridge_deliver(io_bridge, &event);
+        } else {
+            // 2.2
+            delivery[bridge_index] +=
+                (uint64_t) sk_io_bridge_deliver(io_bridge, &event);
+
+            // update the index
+            sched->last_delivery_idx = (bridge_index + 1) % sched->bridge_size;
+        }
+    } while (nevents > 0);
+}
+
+void _deliver_msg(sk_sched_t* sched)
+{
+    uint64_t delivery[sched->bridge_size];
+    memset(delivery, 0, sizeof(delivery));
+
+    // 1. deliver the events from higest priority to the lowest
+    for (int i = SK_PTO_PRI_MAX; i >= SK_PTO_PRI_MIN; i--) {
+        sk_io_t* io = sched->io_tbl[i];
+        _deliver_one_io(sched, io, delivery);
+    }
+
+    // 2. notify dst eventloop the data is ready
     for (uint32_t bri_idx = 0; bri_idx < sched->bridge_size; bri_idx++) {
         sk_io_bridge_t* io_bridge = sched->bridge_tbl[bri_idx];
         _io_bridget_notify(io_bridge, delivery[bri_idx]);
@@ -226,7 +311,8 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
                                                       event->data);
 
     sk_txn_t* txn = event->txn;
-    // TODO: should check the return value, and do something
+    // TODO: should check the return value, if non-zero should cancel the
+    // workflow
     pto->run(sched, entity, txn, msg);
 
     protobuf_c_message_free_unpacked(msg, NULL);
@@ -259,7 +345,7 @@ int _pull_and_run(sk_sched_t* sched, sk_io_t* sk_io)
 static
 int _process_events_once(sk_sched_t* sched)
 {
-    // execuate all io bridge
+    // execute all io bridges
     // NOTE: deliver the msg from highest priority mq to lowest priority mq
     _deliver_msg(sched);
 
@@ -373,7 +459,7 @@ void sk_sched_stop(sk_sched_t* sched)
 
 int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst)
 {
-    // register a sk_io which only used for delivery message in both side
+    // register a sk_io which is only used for delivery message in dst side
     if (src->bridge_size == SK_SCHED_MAX_IO_BRIDGE) {
         return 1;
     }

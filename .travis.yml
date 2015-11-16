@@ -16,10 +16,11 @@ before_script: true
 
 script:
     - make -j4 dep
-    - make -j4 && make clean
-    - make debug=true -j4 && make clean
+    - make -j4
+    - make clean
+    - make debug=true -j4
 
-after_success: make install
+after_success: sudo make install
 
 after_script: true
 

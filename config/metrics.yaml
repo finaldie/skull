@@ -11,6 +11,12 @@ global:
             desc: The total connection amount
         uptime:
             desc: System uptime, every second +1
+        srv_iocall:
+            desc: How many service iocalls be invoked
+        srv_iocall_complete:
+            desc: How many service iocalls be completed
+        srv_iocall_execute:
+            desc: How many service iocalls be executed
 
 worker:
     mode: thread
@@ -25,5 +31,10 @@ worker:
             desc: "The sum of the latency for each transcation in the thread (unit: micro-second)"
         connection:
             desc: The total count of the entities in the thread
-
+        srv_iocall:
+            desc: How many service iocalls be invoked
+        srv_iocall_complete:
+            desc: How many service iocalls be completed
+        srv_iocall_execute:
+            desc: How many service iocalls be executed
 

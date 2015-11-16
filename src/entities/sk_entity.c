@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "api/sk_entity.h"
 #include "api/sk_workflow.h"
@@ -9,7 +10,7 @@
 struct sk_entity_t {
     struct sk_entity_mgr_t* owner;
     sk_workflow_t*          workflow;
-    sk_txn_t*               txn;      // used for storing the inactive txn
+    sk_txn_t*               half_txn; // store the incompleted txn
     sk_entity_opt_t         opt;
 
     sk_entity_status_t status;
@@ -17,18 +18,51 @@ struct sk_entity_t {
     void* ud;
 };
 
+// default opts
+static
+ssize_t _default_read(sk_entity_t* entity, void* buf, size_t buf_len, void* ud)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+static
+ssize_t _default_write(sk_entity_t* entity, const void* buf, size_t buf_len,
+                       void* ud)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+static
+void _default_destroy(sk_entity_t* entity, void* ud)
+{
+    return;
+}
+
+sk_entity_opt_t default_entity_opt = {
+    .read = _default_read,
+    .write = _default_write,
+    .destroy = _default_destroy
+};
+
+// APIs
 sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
 {
     sk_entity_t* entity = calloc(1, sizeof(*entity));
     entity->owner = NULL;
     entity->workflow = workflow;
+    entity->opt = default_entity_opt;
     entity->status = SK_ENTITY_ACTIVE;
     return entity;
 }
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
 {
-    entity->opt = opt;
+    entity->opt.read = opt.read ? opt.read : default_entity_opt.read;
+    entity->opt.write = opt.write ? opt.write : default_entity_opt.write;
+    entity->opt.destroy = opt.destroy ? opt.destroy : default_entity_opt.destroy;
+
     entity->ud = ud;
 }
 
@@ -53,9 +87,9 @@ void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr)
     entity->owner = mgr;
 }
 
-void sk_entity_settxn(sk_entity_t* entity, sk_txn_t* txn)
+void sk_entity_sethalftxn(sk_entity_t* entity, sk_txn_t* half_txn)
 {
-    entity->txn = txn;
+    entity->half_txn = half_txn;
 }
 
 void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status)
@@ -73,9 +107,9 @@ sk_workflow_t* sk_entity_workflow(sk_entity_t* entity)
     return entity->workflow;
 }
 
-sk_txn_t* sk_entity_txn(sk_entity_t* entity)
+sk_txn_t* sk_entity_halftxn(sk_entity_t* entity)
 {
-    return entity->txn;
+    return entity->half_txn;
 }
 
 sk_entity_status_t sk_entity_status(sk_entity_t* entity)
@@ -84,19 +118,19 @@ sk_entity_status_t sk_entity_status(sk_entity_t* entity)
 }
 
 // increase the query count
-void sk_entity_inc_task_cnt(sk_entity_t* entity)
+void sk_entity_taskcnt_inc(sk_entity_t* entity)
 {
     entity->task_cnt++;
 }
 
 // decrease the query count
-void sk_entity_dec_task_cnt(sk_entity_t* entity)
+void sk_entity_taskcnt_dec(sk_entity_t* entity)
 {
     entity->task_cnt--;
 }
 
 // get task cnt
-int sk_entity_task_cnt(sk_entity_t* entity)
+int sk_entity_taskcnt(sk_entity_t* entity)
 {
     return entity->task_cnt;
 }

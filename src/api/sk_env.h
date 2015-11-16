@@ -3,16 +3,18 @@
 
 #include "api/sk_core.h"
 
-// per-thread data and macros, most of time, normally you only need to use these macros
+// per-thread data and macros, most of time, you only need to use these macros
 #define SK_ENV            (sk_thread_env())
 #define SK_ENV_CORE       (sk_thread_env()->core)
 
 #define SK_ENV_WORKFLOWS  (sk_thread_env()->core->workflows)
 #define SK_ENV_LOGGER     (sk_thread_env()->core->logger)
+#define SK_ENV_ENGINE     (sk_thread_env()->engine)
 #define SK_ENV_SCHED      (sk_thread_env()->engine->sched)
 #define SK_ENV_ENTITY_MGR (sk_thread_env()->engine->entity_mgr)
 #define SK_ENV_EVENTLOOP  (sk_thread_env()->engine->evlp)
 #define SK_ENV_MON        (sk_thread_env()->engine->mon)
+#define SK_ENV_TMSVC      (sk_thread_env()->engine->timer_svc)
 
 #define SK_ENV_NAME_LEN 20
 

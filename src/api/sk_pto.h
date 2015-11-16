@@ -52,6 +52,30 @@ extern sk_proto_t sk_pto_workflow_run;
 #define SK_PTO_NET_DESTROY   2
 extern sk_proto_t sk_pto_net_destroy;
 
+// Protocol 4, service io call
+#include "pto/idls/service_iocall.pb-c.h"
+#define SK_PTO_SERVICE_IOCALL 3
+extern sk_proto_t sk_pto_srv_iocall;
+
+// Protocol 5, run a service task
+#include "pto/idls/service_task.pb-c.h"
+#define SK_PTO_SERVICE_TASK_RUN 4
+extern sk_proto_t sk_pto_srv_task_run;
+
+// Protocol 6, service task complete notification
+#define SK_PTO_SERVICE_TASK_COMPLETE 5
+extern sk_proto_t sk_pto_srv_task_complete;
+
+// Protocol 7, timer protocol
+#include "pto/idls/timer_triggered.pb-c.h"
+#define SK_PTO_TIMER_TRIGGERED 6
+extern sk_proto_t sk_pto_timer_triggered;
+
+// Protocol 8, timer emit
+#include "pto/idls/timer_emit.pb-c.h"
+#define SK_PTO_TIMER_EMIT 7
+extern sk_proto_t sk_pto_timer_emit;
+
 // global protocol table
 extern sk_proto_t* sk_pto_tbl[];
 

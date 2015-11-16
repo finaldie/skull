@@ -5,7 +5,7 @@ set -e
 ##################################### Utils ####################################
 usage() {
     echo "usage:"
-    echo "  skull-start.sh -c config [--memcheck]"
+    echo "  skull-start.sh -c config [--memcheck|--gdb|--strace]"
 }
 
 skull_start() {
@@ -13,8 +13,18 @@ skull_start() {
 }
 
 skull_start_memcheck() {
-    valgrind --tool=memcheck --leak-check=full \
+    valgrind --tool=memcheck --leak-check=full -v \
         skull-engine -c $skull_config
+}
+
+skull_start_gdb() {
+    echo "After gdb started, type 'run -c $skull_config'"
+    echo ""
+    gdb skull-engine
+}
+
+skull_start_strace() {
+    strace -f skull-engine -c $skull_config
 }
 ################################## End of Utils ################################
 
@@ -27,10 +37,12 @@ fi
 # 1. Parse the parameters
 skull_config=""
 memcheck=false
+run_by_gdb=false
+run_by_strace=false
 
 args=`getopt -a \
         -o c:h \
-        -l memcheck,help \
+        -l memcheck,gdb,strace,help \
         -n "skull-start.sh" -- "$@"`
 if [ $? != 0 ]; then
     echo "Error: Invalid parameters" >&2
@@ -50,6 +62,14 @@ while true; do
         --memcheck)
             shift
             memcheck=true
+            ;;
+        --gdb)
+            shift
+            run_by_gdb=true
+            ;;
+        --strace)
+            shift
+            run_by_strace=true
             ;;
         -h|--help)
             shift
@@ -83,6 +103,10 @@ export LD_LIBRARY_PATH=$skull_rundir/lib
 # 5. Start skull
 if $memcheck; then
     skull_start_memcheck
+elif $run_by_gdb; then
+    skull_start_gdb
+elif $run_by_strace; then
+    skull_start_strace
 else
     skull_start
 fi

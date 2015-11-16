@@ -5,5 +5,7 @@
 
 void skull_idl_register(const ProtobufCMessageDescriptor** tbl);
 
+void skull_srv_idl_register(const ProtobufCMessageDescriptor** tbl);
+
 #endif
 
