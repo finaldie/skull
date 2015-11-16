@@ -24,7 +24,7 @@ struct sk_queue_t {
     size_t max_slots;
 
     union {
-        fmbuf* mq; // exclusive or rw (prefer write)
+        fmbuf* mq;  // exclusive or rw (prefer write)
 
         struct rw { // rw (prefer read)
             fmbuf* rmq;
@@ -276,21 +276,27 @@ size_t _sk_queue_pull_rw_pr(sk_queue_t* queue,
     fmbuf* wmq = queue->data.rw.wmq;
     size_t pulled_cnt = 0;
 
-    // 1. always try to pull the write queue first
-    if (fmbuf_used(wmq) > 0) {
-        pulled_cnt = _sk_queue_pull(wmq, SK_QUEUE_ELEM_WRITE, queue->elem_sz,
-                                    elems, 1);
+    if (queue->state == SK_QUEUE_STATE_IDLE) {
+        pulled_cnt = _sk_queue_pull(rmq, SK_QUEUE_ELEM_READ, queue->elem_sz,
+                          elems, max_slots);
 
         if (pulled_cnt > 0) {
-            SK_ASSERT(pulled_cnt == 1);
-            return 1;
+            return pulled_cnt;
         }
+
+        return _sk_queue_pull(wmq, SK_QUEUE_ELEM_WRITE, queue->elem_sz,
+                              elems, 1);
+
+    } else if (queue->state == SK_QUEUE_STATE_READ) {
+        return _sk_queue_pull(rmq, SK_QUEUE_ELEM_READ, queue->elem_sz, elems,
+                              max_slots);
+    } else if (queue->state == SK_QUEUE_STATE_WRITE) {
+        return 0;
+    } else {
+        SK_ASSERT(0);
     }
 
-    // 2. Thre is no write element be pulled, try to pull read elements
-    SK_ASSERT(pulled_cnt == 0);
-    return _sk_queue_pull(rmq, SK_QUEUE_ELEM_READ, queue->elem_sz,
-                          elems, max_slots);
+    return 0;
 }
 
 static
@@ -323,10 +329,10 @@ sk_queue_t* sk_queue_create(sk_queue_mode_t mode, size_t elem_sz,
         queue->opt = _sk_queue_opt_exlusive;
         break;
     case SK_QUEUE_RW_PR:
-        queue->opt = _sk_queue_opt_rw_pw;
+        queue->opt = _sk_queue_opt_rw_pr;
         break;
     case SK_QUEUE_RW_PW:
-        queue->opt = _sk_queue_opt_rw_pr;
+        queue->opt = _sk_queue_opt_rw_pw;
         break;
     default:
         SK_ASSERT(0);
@@ -396,6 +402,7 @@ void sk_queue_setstate(sk_queue_t* queue, sk_queue_state_t state)
             SK_ASSERT(0);
         }
 
+        queue->state = state;
         break;
     default:
         SK_ASSERT(0);
@@ -409,9 +416,7 @@ bool sk_queue_empty(sk_queue_t* queue)
     switch (queue->mode) {
     case SK_QUEUE_EXCLUSIVE:
     case SK_QUEUE_RW_PW:
-    {
         return fmbuf_used(queue->data.mq) == 0;
-    }
     case SK_QUEUE_RW_PR:
         return (fmbuf_used(queue->data.rw.rmq) == 0) &&
                (fmbuf_used(queue->data.rw.wmq) == 0);

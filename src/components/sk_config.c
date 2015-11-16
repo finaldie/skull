@@ -5,6 +5,7 @@
 #include "flibs/flog.h"
 
 #include "api/sk_utils.h"
+#include "api/sk_env.h"
 #include "api/sk_config_loader.h"
 #include "api/sk_config.h"
 
@@ -35,7 +36,7 @@ sk_service_cfg_t* _service_cfg_item_create()
 {
     sk_service_cfg_t* cfg = calloc(1, sizeof(*cfg));
     cfg->enable = false;
-    cfg->data_mode = SK_SRV_DATA_MODE_EXCLUSIVE;
+    cfg->data_mode = SK_SRV_DATA_MODE_RW_PR;
     cfg->apis = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
     return cfg;
@@ -203,15 +204,13 @@ void _load_service_data_mode(const sk_cfg_node_t* child, sk_service_cfg_t* cfg)
     const char* data_mode = child->data.value;
 
     if (data_mode) {
-        if (0 == strcmp(data_mode, "exclusive")) {
-            cfg->data_mode = SK_SRV_DATA_MODE_EXCLUSIVE;
-        } else if (0 == strcmp(data_mode, "rw-pr")) {
+        if (0 == strcmp(data_mode, "rw-pr")) {
             cfg->data_mode = SK_SRV_DATA_MODE_RW_PR;
         } else if (0 == strcmp(data_mode, "rw-pw")) {
             cfg->data_mode = SK_SRV_DATA_MODE_RW_PW;
         } else {
             sk_print_err("Fatal: unknown service data mode '%s', use "
-                         "exclusive, rw-pr or rw-pw\n", data_mode);
+                         "rw-pr or rw-pw\n", data_mode);
             exit(1);
         }
     } else {
@@ -248,11 +247,9 @@ void _load_service_api(const sk_cfg_node_t* node, const char* service_name,
                 api_cfg->access_mode = SK_SRV_API_READ;
             } else if (0 == strcmp(value, "write")) {
                 api_cfg->access_mode = SK_SRV_API_WRITE;
-            } else if (0 == strcmp(value, "read-write")) {
-                api_cfg->access_mode = SK_SRV_API_READ_WRITE;
             } else {
                 sk_print_err("Fatal: unknown service '%s' api '%s' access mode "
-                             "'%s', use read, write or read-write\n",
+                             "'%s', use read or write\n",
                              service_name, api_name, value);
                 exit(1);
             }
@@ -301,38 +298,8 @@ bool _validate_service_cfg(const char* service_name,
     const sk_srv_api_cfg_t* api_cfg = NULL;
 
     while ((api_cfg = fhash_str_next(&api_iter))) {
-        const char* api_name = api_iter.key;
-        sk_print("validating api config: %s\n", api_name);
-
-        if (api_cfg->access_mode == SK_SRV_API_READ ||
-            api_cfg->access_mode == SK_SRV_API_WRITE) {
-            if (service_cfg->data_mode == SK_SRV_DATA_MODE_EXCLUSIVE) {
-                fprintf(stderr, "api access mode is invalid for the service "
-                    "data mode, service: %s, api: %s, access mode: %d, "
-                    "data mode: %d\n",
-                    service_name, api_name, api_cfg->access_mode,
-                    service_cfg->data_mode);
-
-                fprintf(stderr, "notes: when the data mode is exclusive, "
-                        "the api access mode must be read-write\n");
-
-                return false;
-            }
-        } else {
-            if (service_cfg->data_mode == SK_SRV_DATA_MODE_RW_PR ||
-                service_cfg->data_mode == SK_SRV_DATA_MODE_RW_PW) {
-                fprintf(stderr, "api access mode is invalid for the service "
-                    "data mode, service: %s, api: %s, access mode: %d, "
-                    "data mode: %d\n",
-                    service_name, api_name, api_cfg->access_mode,
-                    service_cfg->data_mode);
-
-                fprintf(stderr, "notes: when the data mode is 'rw-xx', "
-                        "the api access mode must be 'read' or 'write'");
-
-                return false;
-            }
-        }
+        //const char* api_name = api_iter.key;
+        //sk_print("validating api config: %s\n", api_name);
     }
     fhash_str_iter_release(&api_iter);
 

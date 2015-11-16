@@ -72,7 +72,7 @@ void _trigger_sock_destroy(sk_trigger_t* trigger)
 }
 
 sk_trigger_opt_t sk_trigger_sock = {
-    .create = _trigger_sock_create,
-    .run = _trigger_sock_run,
+    .create  = _trigger_sock_create,
+    .run     = _trigger_sock_run,
     .destroy = _trigger_sock_destroy
 };

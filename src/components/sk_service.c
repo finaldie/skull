@@ -7,6 +7,7 @@
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_pto.h"
+#include "api/sk_timer_service.h"
 #include "api/sk_service.h"
 
 #define SK_SRV_TASK_SZ    (sizeof(sk_srv_task_t))
@@ -37,7 +38,7 @@ sk_srv_status_t _sk_service_pop_task(sk_service_t* service, sk_srv_task_t* task)
         return SK_SRV_STATUS_IDLE;
     }
 
-    // the service is idle, just pop
+    // The service is ready to pop, just pop task(s)
     size_t pulled_cnt = sk_queue_pull(pending_queue, SK_QUEUE_ELEM(task), 1);
 
     if (pulled_cnt > 0) {
@@ -73,9 +74,6 @@ void _sk_service_data_create(sk_service_t* service, sk_srv_data_mode_t mode)
 
     sk_queue_mode_t queue_mode = 0;
     switch (mode) {
-    case SK_SRV_DATA_MODE_EXCLUSIVE:
-        queue_mode = SK_QUEUE_EXCLUSIVE;
-        break;
     case SK_SRV_DATA_MODE_RW_PR:
         queue_mode = SK_QUEUE_RW_PR;
         break;
@@ -123,6 +121,51 @@ void _destroy_apis(fhash* apis)
     }
     fhash_str_iter_release(&api_iter);
     fhash_str_delete(apis);
+}
+
+static
+void _schedule_api_task(sk_service_t* service,
+                              const sk_srv_task_t* task)
+{
+    // construct protocol
+    uint64_t  task_id = task->data.api.task_id;
+    sk_txn_t* txn     = task->data.api.txn;
+
+    ServiceTaskRun task_run_pto = SERVICE_TASK_RUN__INIT;
+    task_run_pto.task_id      = task_id;
+    task_run_pto.service_name = (char*) sk_service_name(service);
+    task_run_pto.api_name     = (char*) task->data.api.name;
+    task_run_pto.io_status    = (uint32_t) task->io_status;
+
+    // deliver the protocol
+    sk_sched_send(SK_ENV_SCHED, sk_txn_entity(txn), txn,
+                  SK_PTO_SERVICE_TASK_RUN, &task_run_pto);
+
+    sk_print("service: deliver task(%d) to worker\n", (int) task_id);
+    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
+                 (int) task_id);
+}
+
+static
+void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
+{
+    // TODO: should schedule to background io worker, currently just run at
+    // master thread
+    sk_service_job job = task->data.timer.job;
+    void* ud = task->data.timer.ud;
+    int valid = task->data.timer.valid;
+
+    // 1. Run timer job
+    sk_print("schedule timer task: valid: %d\n", valid);
+    job(service, ud, valid);
+
+    // 2. mark task complete
+    sk_service_task_setcomplete(service);
+
+    // 4. Re-schedule tasks
+    sk_service_schedule_tasks(service);
+
+    // 5. TODO: update metrics
 }
 
 // Public APIs of service
@@ -228,20 +271,16 @@ void sk_service_schedule_task(sk_service_t* service,
 {
     service->running_task_cnt++;
 
-    // construct protocol
-    ServiceTaskRun task_run_pto = SERVICE_TASK_RUN__INIT;
-    task_run_pto.task_id      = task->task_id;
-    task_run_pto.service_name = (char*) sk_service_name(service);
-    task_run_pto.api_name     = (char*) task->api_name;
-    task_run_pto.io_status    = (uint32_t) task->io_status;
-
-    // deliver the protocol
-    sk_sched_send(SK_ENV_SCHED, sk_txn_entity(task->txn), task->txn,
-                  SK_PTO_SERVICE_TASK_RUN, &task_run_pto);
-
-    sk_print("service: deliver task(%d) to worker\n", (int)task->task_id);
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
-                 (int)task->task_id);
+    switch (task->type) {
+    case SK_SRV_TASK_API_QUERY:
+        _schedule_api_task(service, task);
+        break;
+    case SK_SRV_TASK_TIMER:
+        _schedule_timer_task(service, task);
+        break;
+    default:
+        SK_ASSERT(0);
+    }
 }
 
 size_t sk_service_schedule_tasks(sk_service_t* service)
@@ -261,30 +300,34 @@ size_t sk_service_schedule_tasks(sk_service_t* service)
             break;
         }
 
-        // 1. schedule task to worker
-        sk_service_schedule_task(service, &task);
-        scheduled_task++;
-
-        // 2. update the state of task queue
-        sk_queue_state_t new_state = 0;
+        // 1. update the state of task queue
+        sk_queue_state_t new_state  = 0;
+        sk_queue_state_t curr_state = sk_queue_state(service->pending_tasks);
 
         switch (task.base.type) {
-        case SK_QUEUE_ELEM_EXCLUSIVE:
-            new_state = SK_QUEUE_STATE_LOCK;
-            break;
         case SK_QUEUE_ELEM_READ:
+            SK_ASSERT(curr_state == SK_QUEUE_STATE_IDLE ||
+                      curr_state == SK_QUEUE_STATE_READ);
+
             new_state = SK_QUEUE_STATE_READ;
             break;
         case SK_QUEUE_ELEM_WRITE:
+            SK_ASSERT(curr_state == SK_QUEUE_STATE_IDLE);
+
             new_state = SK_QUEUE_STATE_WRITE;
             break;
         default:
             SK_ASSERT(0);
         }
 
+        sk_print("service queue: old state: %d, new state: %d\n", curr_state, new_state);
         sk_queue_setstate(service->pending_tasks, new_state);
 
         _sk_service_handle_exception(service, pop_status);
+
+        // 2. schedule task to worker
+        sk_service_schedule_task(service, &task);
+        scheduled_task++;
     }
 
     // handle last exceptions
@@ -335,7 +378,6 @@ void* sk_service_data(sk_service_t* service)
     sk_queue_state_t state = sk_queue_state(service->pending_tasks);
 
     switch (state) {
-    case SK_QUEUE_STATE_LOCK:
     case SK_QUEUE_STATE_WRITE:
         return sk_srv_data_get(service->data);
     case SK_QUEUE_STATE_IDLE:
@@ -345,6 +387,7 @@ void* sk_service_data(sk_service_t* service)
                      service->name);
         SK_ASSERT(0);
         return NULL;
+    case SK_QUEUE_STATE_LOCK:
     default:
         SK_ASSERT(0);
     }
@@ -365,15 +408,16 @@ void sk_service_data_set(sk_service_t* service, const void* data)
     sk_queue_state_t state = sk_queue_state(service->pending_tasks);
 
     switch (state) {
-    case SK_QUEUE_STATE_LOCK:
     case SK_QUEUE_STATE_WRITE:
         sk_srv_data_set(service->data, data);
+        break;
     case SK_QUEUE_STATE_IDLE:
     case SK_QUEUE_STATE_READ:
         SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot set data when \
                      idle or reading data, please correct your logic",
                      service->name);
         SK_ASSERT(0);
+    case SK_QUEUE_STATE_LOCK:
     default:
         SK_ASSERT(0);
     }
@@ -405,14 +449,49 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 
     // 2. construct iocall protocol
     ServiceIocall iocall_msg = SERVICE_IOCALL__INIT;
-    iocall_msg.task_id      = task_id;
-    iocall_msg.service_name = (char*) service->name;
-    iocall_msg.api_name     = (char*) api_name;
+    iocall_msg.task_id       = task_id;
+    iocall_msg.service_name  = (char*) service->name;
+    iocall_msg.api_name      = (char*) api_name;
 
     // 3. set the txn sched affinity
     sk_txn_sched_set(txn, SK_ENV_SCHED);
 
     sk_sched_send(SK_ENV_SCHED, sk_txn_entity(txn), txn,
                   SK_PTO_SERVICE_IOCALL, &iocall_msg);
+    return 0;
+}
+
+int sk_service_job_create(sk_service_t* service,
+                          uint32_t delayed,
+                          uint32_t interval,
+                          sk_service_job job,
+                          void* ud)
+{
+    SK_ASSERT(service);
+    SK_ASSERT(job);
+    sk_print("create a service periodic job\n");
+
+    sk_entity_t* timer_entity = sk_entity_create(NULL);
+
+    TimerEmit timer_msg = TIMER_EMIT__INIT;
+    timer_msg.delayed   = delayed;
+    timer_msg.interval  = interval;
+    timer_msg.svc       = (uint64_t) (uintptr_t) service;
+    timer_msg.job.len   = sizeof (job);
+    timer_msg.job.data  = (uint8_t*) &job;
+    timer_msg.udata     = (uint64_t) (uintptr_t) ud;
+
+    // During the initialization period, all the logic be ran in master thread,
+    // otherwise it be ran in worker thread, so the strategy is:
+    //  1) In master, we *push* event to master scheduler directly
+    //  2) In worker, we *send* event to master scheduler
+    if (SK_ENV_ENGINE == SK_ENV_CORE->master) {
+        sk_sched_push(SK_ENV_SCHED, timer_entity, NULL,
+                      SK_PTO_TIMER_EMIT, &timer_msg);
+    } else {
+        sk_sched_send(SK_ENV_SCHED, timer_entity, NULL,
+                      SK_PTO_TIMER_EMIT, &timer_msg);
+    }
+
     return 0;
 }

@@ -8,6 +8,8 @@
 
 typedef struct sk_service_t sk_service_t;
 
+typedef void (*sk_service_job) (sk_service_t*, void* ud, int valid);
+
 typedef enum sk_service_type_t {
     SK_C_SERVICE_TYPE = 0
 } sk_service_type_t;
@@ -34,14 +36,39 @@ typedef enum sk_srv_io_status_t {
     SK_SRV_IO_STATUS_MAX // DO NOT USE IT
 } sk_srv_io_status_t;
 
+typedef enum sk_srv_task_type_t {
+    SK_SRV_TASK_API_QUERY = 0,
+    SK_SRV_TASK_TIMER = 1
+} sk_srv_task_type_t;
+
 typedef struct sk_srv_task_t {
     sk_queue_elem_base_t base;  // This must be placed at the front
-    sk_srv_io_status_t   io_status;
+    sk_srv_task_type_t   type;
 
-    sk_service_t* service;
-    sk_txn_t*     txn;
-    const char*   api_name;
-    uint64_t      task_id;
+    sk_srv_io_status_t   io_status;
+#if __WORDSIZE == 64
+    int _padding;
+#endif
+
+    union {
+        struct api {
+            sk_service_t*  service;
+            sk_txn_t*      txn;
+            const char*    name;
+            uint64_t       task_id;
+        } api;
+
+        struct timer {
+            sk_service_t*  service;
+            sk_service_job job;
+            void*          ud;
+            int            valid;
+
+#if __WORDSIZE == 64
+            int            _padding;
+#endif
+        } timer;
+    } data;
 } sk_srv_task_t;
 
 typedef struct sk_service_opt_t {
@@ -97,6 +124,22 @@ void sk_service_data_set(sk_service_t*, const void* data);
 int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
                       const void* req, size_t req_sz,
                       sk_txn_module_cb cb, void* ud);
+
+/**
+ * Create a service job
+ *
+ * @param delayed   delay N milliseconds to start the job
+ * @param interval  interval (milliseconds) of next time the job be triggered
+ * @param job       job function
+ * @param ud        user data
+ *
+ * @return 0: successful; 1: failed
+ */
+int sk_service_job_create(sk_service_t*,
+                          uint32_t delayed,
+                          uint32_t interval,
+                          sk_service_job job,
+                          void* ud);
 
 #endif
 

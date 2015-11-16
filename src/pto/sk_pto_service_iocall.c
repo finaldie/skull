@@ -51,24 +51,21 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_srv_task_t task;
     memset(&task, 0, sizeof(task));
 
-    if (srv_cfg->data_mode == SK_SRV_DATA_MODE_EXCLUSIVE) {
-        task.base.type = SK_QUEUE_ELEM_EXCLUSIVE;
-    } else {
-        SK_ASSERT(api_cfg->access_mode == SK_SRV_API_READ ||
-                  api_cfg->access_mode == SK_SRV_API_WRITE);
+    SK_ASSERT(api_cfg->access_mode == SK_SRV_API_READ ||
+              api_cfg->access_mode == SK_SRV_API_WRITE);
 
-        if (api_cfg->access_mode == SK_SRV_API_READ) {
-            task.base.type = SK_QUEUE_ELEM_READ;
-        } else {
-            task.base.type = SK_QUEUE_ELEM_WRITE;
-        }
+    if (api_cfg->access_mode == SK_SRV_API_READ) {
+        task.base.type = SK_QUEUE_ELEM_READ;
+    } else {
+        task.base.type = SK_QUEUE_ELEM_WRITE;
     }
 
+    task.type      = SK_SRV_TASK_API_QUERY;
     task.io_status = io_status;
-    task.service   = service;
-    task.txn       = txn;
-    task.api_name  = api_name;
-    task.task_id   = task_id;
+    task.data.api.service = service;
+    task.data.api.txn     = txn;
+    task.data.api.name    = api_name;
+    task.data.api.task_id = task_id;
 
     // 3.2 push task to service
     int ret = 0;

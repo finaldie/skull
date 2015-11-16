@@ -365,6 +365,7 @@ skullut_service_t* skullut_service_create(const char* name, const char* config)
     // 1. create a fake service
     fake_service_t* fake_service = calloc(1, sizeof(*fake_service));
     fake_service->name = name;
+    fake_service->data = sk_srv_data_create(SK_SRV_DATA_MODE_RW_PR);
 
     // 2. load a service
     int ret = sk_service_load((sk_service_t*)fake_service, config);
@@ -385,6 +386,8 @@ void skullut_service_destroy(skullut_service_t* ut_service)
     fake_service->opt.release((sk_service_t*)fake_service,
                               fake_service->opt.srv_data);
     sk_service_unload((sk_service_t*)fake_service);
+
+    sk_srv_data_destroy(fake_service->data);
     free(fake_service);
     free(ut_service);
 }
@@ -426,6 +429,31 @@ void skullut_service_run(skullut_service_t* ut_service, const char* api_name,
 
     // 5. clean up
     protobuf_c_message_free_unpacked(resp_msg, NULL);
+}
+
+void* skull_service_data (skull_service_t* service)
+{
+    fake_service_t* fake_service = (fake_service_t*)service->service;
+    return sk_srv_data_get(fake_service->data);
+}
+
+const void* skull_service_data_const (skull_service_t* service)
+{
+    fake_service_t* fake_service = (fake_service_t*)service->service;
+    return sk_srv_data_getconst(fake_service->data);
+}
+
+void  skull_service_data_set (skull_service_t* service, const void* data)
+{
+    fake_service_t* fake_service = (fake_service_t*)service->service;
+    sk_srv_data_set(fake_service->data, data);
+}
+
+int skull_service_cronjob_create(skull_service_t* service, uint32_t delayed,
+                                 uint32_t interval, skull_cronjob job)
+{
+    // Won't create anything
+    return 0;
 }
 
 // Mock API for sk_service

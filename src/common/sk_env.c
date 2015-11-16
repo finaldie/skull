@@ -9,7 +9,7 @@ static pthread_key_t sk_env_key;
 static
 void _sk_thread_exit(void* data)
 {
-    sk_print("thread exit\n");
+    sk_print("thread exit: %s\n", ((sk_thread_env_t*)data)->name);
     free(data);
 }
 

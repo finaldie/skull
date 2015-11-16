@@ -1,6 +1,7 @@
 #ifndef SKULL_C_SERVICE_H
 #define SKULL_C_SERVICE_H
 
+#include <stdint.h>
 #include <skull/txn.h>
 #include <skull/config.h>
 
@@ -51,6 +52,11 @@ skull_service_async_call (skull_txn_t*,
                           const char* api_name,
                           const void* request,
                           skull_module_cb cb);
+
+typedef void (*skull_cronjob) (skull_service_t*);
+
+int skull_service_cronjob_create(skull_service_t*, uint32_t delayed,
+                                 uint32_t interval, skull_cronjob);
 
 #endif
 

@@ -311,7 +311,8 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
                                                       event->data);
 
     sk_txn_t* txn = event->txn;
-    // TODO: should check the return value, and do something
+    // TODO: should check the return value, if non-zero should cancel the
+    // workflow
     pto->run(sched, entity, txn, msg);
 
     protobuf_c_message_free_unpacked(msg, NULL);

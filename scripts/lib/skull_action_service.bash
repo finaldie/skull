@@ -130,7 +130,7 @@ function action_service_show()
 function __validate_data_mode()
 {
     local data_mode=$1
-    local valid_data_modes=('exclusive' 'rw-pr' 'rw-pw')
+    local valid_data_modes=('rw-pr' 'rw-pw')
 
     for mode in ${valid_data_modes[*]}; do
         if [ "$mode" = "$data_mode" ]; then
@@ -178,13 +178,13 @@ function _action_service_add()
     done
 
     while true; do
-        read -p "data mode? (exclusive | rw-pr | rw-pw) " data_mode
+        read -p "data mode? (rw-pr | rw-pw) " data_mode
 
         if $(__validate_data_mode "$data_mode"); then
             break;
         else
             echo "Fatal: Unknown service data mode: $data_mode, use" \
-                "exclusive, rw-pr or rw-pw" >&2
+                "rw-pr or rw-pw" >&2
         fi
     done
 
@@ -333,7 +333,7 @@ function _action_service_api_gen()
 function __validate_api_access_mode()
 {
     local access_mode=$1
-    local valid_access_modes=('read' 'write' 'read-write')
+    local valid_access_modes=('read' 'write')
 
     for mode in ${valid_access_modes[*]}; do
         if [ "$mode" = "$access_mode" ]; then
@@ -363,13 +363,13 @@ function _action_service_api_add()
 
     local access_mode=""
     while true; do
-        read -p "service api access_mode: (read|write|read-write) " access_mode
+        read -p "service api access_mode: (read|write) " access_mode
 
         if $(__validate_api_access_mode "$access_mode"); then
             break;
         else
             echo "Error: Unknown service api access mode: $access_mode, use" \
-                "read, write or read-write" >&2
+                "read or write" >&2
         fi
     done
 

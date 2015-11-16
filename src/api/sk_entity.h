@@ -14,6 +14,7 @@ typedef enum sk_entity_status_t {
 struct sk_entity_mgr_t;
 struct sk_workflow_t;
 struct sk_txn_t;
+
 typedef struct sk_entity_t sk_entity_t;
 
 typedef struct sk_entity_opt_t {
@@ -39,14 +40,9 @@ void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr);
 void sk_entity_sethalftxn(sk_entity_t* entity, struct sk_txn_t* txn);
 void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status);
 
-// increase the query count
-void sk_entity_inc_task_cnt(sk_entity_t* entity);
-
-// decrease the query count
-void sk_entity_dec_task_cnt(sk_entity_t* entity);
-
-// get task cnt
-int sk_entity_task_cnt(sk_entity_t* entity);
+void sk_entity_taskcnt_inc(sk_entity_t* entity);
+void sk_entity_taskcnt_dec(sk_entity_t* entity);
+int sk_entity_taskcnt(sk_entity_t* entity);
 
 // create network entity from a base entity
 void sk_net_entity_create(sk_entity_t* entity, void* ud);
