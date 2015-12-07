@@ -90,5 +90,6 @@ void sk_entity_mgr_clean_dead(sk_entity_mgr_t* mgr)
                                                     (uint64_t)entity);
         SK_ASSERT(deleted_entity == entity);
         sk_entity_destroy(entity);
+        sk_print("clean up dead entity\n");
     }
 }

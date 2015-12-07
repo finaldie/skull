@@ -143,6 +143,7 @@ void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
 
     fhash_u64_del(svc->timers, (uint64_t) (uintptr_t) timer);
     sk_obj_destroy(timer->ud);
+    sk_entity_mark(timer->entity, SK_ENTITY_INACTIVE);
 
     free(timer);
     svc->timer_alive--;
