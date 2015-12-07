@@ -53,10 +53,11 @@ skull_service_async_call (skull_txn_t*,
                           const void* request,
                           skull_module_cb cb);
 
-typedef void (*skull_timer_t) (skull_service_t*);
+typedef void (*skull_timer_t) (skull_service_t*, void* ud);
+typedef void (*skull_timer_destroy_t) (void* ud);
 
 int skull_service_timer_create(skull_service_t*, uint32_t delayed,
-                               skull_timer_t);
+                               skull_timer_t, void* ud, skull_timer_destroy_t);
 
 #endif
 
