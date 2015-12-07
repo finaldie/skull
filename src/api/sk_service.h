@@ -4,11 +4,12 @@
 #include "api/sk_config.h"
 #include "api/sk_txn.h"
 #include "api/sk_queue.h"
+#include "api/sk_object.h"
 #include "api/sk_service_data.h"
 
 typedef struct sk_service_t sk_service_t;
 
-typedef void (*sk_service_job) (sk_service_t*, void* ud, int valid);
+typedef void (*sk_service_job) (sk_service_t*, sk_obj_t* ud, int valid);
 
 typedef enum sk_service_type_t {
     SK_C_SERVICE_TYPE = 0
@@ -137,7 +138,7 @@ int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
 int sk_service_job_create(sk_service_t*,
                           uint32_t delayed,
                           sk_service_job job,
-                          void* ud);
+                          sk_obj_t* ud);
 
 #endif
 

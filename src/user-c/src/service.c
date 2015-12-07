@@ -5,6 +5,7 @@
 #include "api/sk_env.h"
 #include "api/sk_pto.h"
 #include "api/sk_utils.h"
+#include "api/sk_object.h"
 
 #include "skull/txn.h"
 #include "txn_types.h"
@@ -90,18 +91,20 @@ const void* skull_service_data_const (skull_service_t* service)
 
 typedef struct timer_data_t {
     skull_timer_t job;
-    uint32_t      interval;
-
-#if __WORDSIZE == 64
-    int _padding;
-#endif
 } timer_data_t;
 
 static
-void _timer_cb (sk_service_t* sk_svc, void* ud, int valid)
+void _timer_data_destroy(sk_ud_t ud)
+{
+    timer_data_t* data = ud.ud;
+    free(data);
+}
+
+static
+void _timer_cb (sk_service_t* sk_svc, sk_obj_t* ud, int valid)
 {
     sk_print("skull service: timer cb, valid: %d\n", valid);
-    timer_data_t* jobdata = ud;
+    timer_data_t* jobdata = sk_obj_get(ud).ud;
 
     if (valid) {
         skull_service_t service = {
@@ -112,8 +115,6 @@ void _timer_cb (sk_service_t* sk_svc, void* ud, int valid)
     } else {
         sk_print("skull serivce: timer is not valid, ignore it\n");
     }
-
-    free(ud);
 }
 
 int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
@@ -122,7 +123,12 @@ int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
     sk_service_t* sk_svc = service->service;
 
     timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
-    jobdata->job      = job;
+    jobdata->job = job;
 
-    return sk_service_job_create(sk_svc, delayed, _timer_cb, jobdata);
+    sk_ud_t cb_data  = {.ud = jobdata};
+    sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_data_destroy};
+
+    sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
+
+    return sk_service_job_create(sk_svc, delayed, _timer_cb, param_obj);
 }

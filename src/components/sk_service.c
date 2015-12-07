@@ -464,7 +464,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 int sk_service_job_create(sk_service_t* service,
                           uint32_t delayed,
                           sk_service_job job,
-                          void* ud)
+                          sk_obj_t* ud)
 {
     SK_ASSERT(service);
     SK_ASSERT(job);

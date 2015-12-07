@@ -23,6 +23,8 @@ void _timer_jobdata_destroy(sk_ud_t ud)
 {
     sk_print("destroy timer jobdata\n");
     timer_jobdata_t* jobdata = ud.ud;
+
+    sk_obj_destroy(jobdata->ud);
     free(jobdata);
 }
 
@@ -32,7 +34,7 @@ int _timerjob_create(sk_service_t* service,
                      sk_timer_triggered timer_cb,
                      uint32_t delayed,
                      sk_service_job job,
-                     void* ud)
+                     sk_obj_t* ud)
 {
     SK_ASSERT(service);
     SK_ASSERT(entity);
@@ -46,12 +48,8 @@ int _timerjob_create(sk_service_t* service,
     jobdata->job      = job;
     jobdata->ud       = ud;
 
-    sk_ud_t cb_data;
-    cb_data.ud = jobdata;
-
-    sk_obj_opt_t opt;
-    opt.preset  = NULL;
-    opt.destroy = _timer_jobdata_destroy;
+    sk_ud_t cb_data  = {.ud = jobdata};
+    sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_jobdata_destroy};
 
     sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
 
@@ -73,7 +71,7 @@ void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     timer_jobdata_t* jobdata  = sk_obj_get(ud).ud;
     sk_service_t*    svc      = jobdata->service;
     sk_service_job   job      = jobdata->job;
-    void*            udata    = jobdata->ud;
+    sk_obj_t*        udata    = jobdata->ud;
 
     sk_srv_task_t task;
     memset(&task, 0, sizeof(task));
@@ -103,7 +101,7 @@ int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     TimerEmit* timer_emit_msg = proto_msg;
     sk_service_t*  svc      = (sk_service_t*) (uintptr_t) timer_emit_msg->svc;
     uint32_t       delayed  = timer_emit_msg->delayed;
-    void*          udata    = (void*) (uintptr_t) timer_emit_msg->udata;
+    sk_obj_t*      udata    = (void*) (uintptr_t) timer_emit_msg->udata;
     sk_service_job ujob     = * (sk_service_job*) timer_emit_msg->job.data;
 
     sk_print("Create a timer\n");
