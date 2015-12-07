@@ -1,3 +1,8 @@
+* 2015-12-07 0.6.1
+  * Core
+    * **Fix:** Fix service timer memleak issue
+  * User API
+    * **Enhancement:** Service timer support user parameter
 * 2015-11-15 0.5.5
   * Core
     * **New:** Add 'Timer Service'
