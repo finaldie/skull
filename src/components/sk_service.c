@@ -463,7 +463,6 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 
 int sk_service_job_create(sk_service_t* service,
                           uint32_t delayed,
-                          uint32_t interval,
                           sk_service_job job,
                           void* ud)
 {
@@ -475,7 +474,6 @@ int sk_service_job_create(sk_service_t* service,
 
     TimerEmit timer_msg = TIMER_EMIT__INIT;
     timer_msg.delayed   = delayed;
-    timer_msg.interval  = interval;
     timer_msg.svc       = (uint64_t) (uintptr_t) service;
     timer_msg.job.len   = sizeof (job);
     timer_msg.job.data  = (uint8_t*) &job;

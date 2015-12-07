@@ -450,7 +450,7 @@ void  skull_service_data_set (skull_service_t* service, const void* data)
 }
 
 int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
-                                 uint32_t interval, skull_timer_t job)
+                               skull_timer_t job)
 {
     // Won't create anything
     return 0;

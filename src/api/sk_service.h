@@ -129,7 +129,6 @@ int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
  * Create a service job
  *
  * @param delayed   delay N milliseconds to start the job
- * @param interval  interval (milliseconds) of next time the job be triggered
  * @param job       job function
  * @param ud        user data
  *
@@ -137,7 +136,6 @@ int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
  */
 int sk_service_job_create(sk_service_t*,
                           uint32_t delayed,
-                          uint32_t interval,
                           sk_service_job job,
                           void* ud);
 

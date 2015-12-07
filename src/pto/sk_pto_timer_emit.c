@@ -16,11 +16,6 @@ typedef struct timer_jobdata_t {
     sk_service_t*  service;
     sk_service_job job;
     sk_obj_t*      ud;
-    uint32_t       interval;
-
-#if __WORDSIZE == 64
-    int            _padding;
-#endif
 } timer_jobdata_t;
 
 static
@@ -36,7 +31,6 @@ int _timerjob_create(sk_service_t* service,
                      sk_entity_t* entity,
                      sk_timer_triggered timer_cb,
                      uint32_t delayed,
-                     uint32_t interval,
                      sk_service_job job,
                      void* ud)
 {
@@ -51,7 +45,6 @@ int _timerjob_create(sk_service_t* service,
     jobdata->service  = service;
     jobdata->job      = job;
     jobdata->ud       = ud;
-    jobdata->interval = interval;
 
     sk_ud_t cb_data;
     cb_data.ud = jobdata;
@@ -81,7 +74,6 @@ void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     sk_service_t*    svc      = jobdata->service;
     sk_service_job   job      = jobdata->job;
     void*            udata    = jobdata->ud;
-    uint32_t         interval = jobdata->interval;
 
     sk_srv_task_t task;
     memset(&task, 0, sizeof(task));
@@ -101,25 +93,6 @@ void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 
     size_t cnt = sk_service_schedule_tasks(svc);
     printf("service %zu tasks\n", cnt);
-
-    // 2. Clean up jobdata
-    sk_obj_destroy(ud);
-
-    // 3. If the interval is not zero, create a new timer for it
-    if (!interval) {
-        sk_print("interval is 0, skip to create next timer\n");
-        return;
-    }
-
-    if (!valid) {
-        sk_print("timer is invalid, skip to create next one\n");
-        return;
-    }
-
-    sk_print("create another timer job\n");
-    int ret_code = _timerjob_create(svc, entity, _timer_triggered, interval,
-                                    interval, job, udata);
-    SK_ASSERT(ret_code == 0);
 }
 
 // This proto is ran in master thread
@@ -130,13 +103,12 @@ int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     TimerEmit* timer_emit_msg = proto_msg;
     sk_service_t*  svc      = (sk_service_t*) (uintptr_t) timer_emit_msg->svc;
     uint32_t       delayed  = timer_emit_msg->delayed;
-    uint32_t       interval = timer_emit_msg->interval;
     void*          udata    = (void*) (uintptr_t) timer_emit_msg->udata;
     sk_service_job ujob     = * (sk_service_job*) timer_emit_msg->job.data;
 
     sk_print("Create a timer\n");
     int ret = _timerjob_create(svc, entity, _timer_triggered,
-                               delayed, interval, ujob, udata);
+                               delayed, ujob, udata);
     SK_ASSERT(!ret);
     return 0;
 }

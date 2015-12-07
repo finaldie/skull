@@ -98,10 +98,9 @@ typedef struct timer_data_t {
 } timer_data_t;
 
 static
-void _cronjob_cb (sk_service_t* sk_svc, void* ud, int valid)
+void _timer_cb (sk_service_t* sk_svc, void* ud, int valid)
 {
-    sk_print("skull service: cronjob cb, valid: %d\n", valid);
-
+    sk_print("skull service: timer cb, valid: %d\n", valid);
     timer_data_t* jobdata = ud;
 
     if (valid) {
@@ -110,22 +109,20 @@ void _cronjob_cb (sk_service_t* sk_svc, void* ud, int valid)
         };
 
         jobdata->job(&service);
+    } else {
+        sk_print("skull serivce: timer is not valid, ignore it\n");
     }
 
-    if (!jobdata->interval) {
-        free(jobdata);
-    }
+    free(ud);
 }
 
 int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
-                                 uint32_t interval, skull_timer_t job)
+                               skull_timer_t job)
 {
     sk_service_t* sk_svc = service->service;
 
     timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->job      = job;
-    jobdata->interval = interval;
 
-    return sk_service_job_create(sk_svc, delayed, interval,
-                                 _cronjob_cb, jobdata);
+    return sk_service_job_create(sk_svc, delayed, _timer_cb, jobdata);
 }

@@ -56,7 +56,7 @@ skull_service_async_call (skull_txn_t*,
 typedef void (*skull_timer_t) (skull_service_t*);
 
 int skull_service_timer_create(skull_service_t*, uint32_t delayed,
-                               uint32_t interval, skull_timer_t);
+                               skull_timer_t);
 
 #endif
 
