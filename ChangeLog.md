@@ -1,3 +1,8 @@
+* 2015-12-08 0.6.2
+  * Core
+    * **Fix:** Fix timer entity memleak
+  * Scripts
+    * **Enhancement:** Show workflow/modules/services directly when no parameter
 * 2015-12-07 0.6.1
   * Core
     * **Fix:** Fix service timer memleak issue
