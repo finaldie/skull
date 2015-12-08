@@ -90,7 +90,11 @@ function action_service()
                 exit 0
                 ;;
             --)
-                shift; break
+                shift;
+                if [ $# = 0 ]; then
+                    action_service_show
+                fi
+                break;
                 exit 0
                 ;;
             *)
@@ -101,6 +105,13 @@ function action_service()
                 ;;
         esac
     done
+
+    if [ $# = 0 ]; then
+        exit 0;
+    fi
+
+    local service_name="$1"
+    _action_service_path "$service_name"
 }
 
 function action_service_usage()
@@ -139,6 +150,18 @@ function __validate_data_mode()
     done
 
     return 1
+}
+
+function _action_service_path()
+{
+    if [ $# = 0 ]; then
+        echo "Error: empty service name" >&2
+        exit 1
+    fi
+
+    local service_name="$1"
+    local service_location="$SKULL_PROJ_ROOT/src/services/$service_name"
+    echo "service location: $service_location"
 }
 
 function _action_service_add()

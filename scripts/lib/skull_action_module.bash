@@ -80,7 +80,7 @@ function action_module()
     fi
 
     # There is module name exist, show the module path to user
-    local module_name=$1
+    local module_name="$1"
     _action_module_path "$module_name"
 }
 
