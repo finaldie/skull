@@ -84,22 +84,31 @@ function _action_workflow_add()
         fi
     done
 
-    local idl_path=$SKULL_WORKFLOW_IDL_FOLDER
-    local is_gen_idl="True"
-    if [ -f $SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto ]; then
-        is_gen_idl="False"
-    fi
-
     # set the port
     read -p "Need listen on a port? (y/n) " yn_port
+
     if [ "$yn_port" = "y" ]; then
-        read -p "Input the port you want (1025-65535): " port
+        while true; do
+            read -p "Input the port you want (1025-65535): " port
+
+            if ! $(_is_number $port); then
+                echo "Error: please input a digital for the port" >&2
+            else
+                break
+            fi
+        done
     fi
 
     # add workflow into skull-config.yaml
     $SKULL_ROOT/bin/skull-config-utils.py -m add_workflow \
-        -c $skull_conf -C $concurrent -i $idl -p $port \
-        -g $is_gen_idl -P $idl_path
+        -c $skull_conf -C $concurrent -i $idl -p $port
+
+    # generate the workflow txn idl file if it's not exist
+    local idl_path=$SKULL_WORKFLOW_IDL_FOLDER
+    if [ ! -f $SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto ]; then
+        $SKULL_ROOT/bin/skull-config-utils.py -m generate_workflow_idl \
+            -c $skull_conf -n $idl -p $idl_path
+    fi
 
     echo "workflow added successfully"
     echo "note: run 'skull module --add' to create a new module for it"

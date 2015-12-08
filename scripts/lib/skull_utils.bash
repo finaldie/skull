@@ -68,6 +68,18 @@ function _check_language()
     return 1
 }
 
+function _is_number()
+{
+    local value="$1"
+    local re="^[0-9]+$"
+
+    if [[ $value =~ $re ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # return:
 #  - 0 if the two files are the same
 #  - 1 if the two files are not the same

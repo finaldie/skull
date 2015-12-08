@@ -61,13 +61,11 @@ def process_add_workflow():
 
     try:
         # 1. update the skull config
-        opts, args = getopt.getopt(sys.argv[5:], 'C:i:p:g:P:')
+        opts, args = getopt.getopt(sys.argv[5:], 'C:i:p:')
 
         workflow_concurrent = 1
         workflow_port = 1234
         workflow_idl = ""
-        is_generate_idl = True
-        idl_path = ""
 
         for op, value in opts:
             if op == "-C":
@@ -76,40 +74,58 @@ def process_add_workflow():
                 workflow_idl = value
             elif op == "-p":
                 workflow_port = int(value)
-            elif op == "-g":
-                is_generate_idl = bool(value)
-            elif op == "-P":
-                idl_path = value
 
-        ## 1.1 Now add these workflow_x to yaml obj and dump it
+        # 2. Now add these workflow_x to yaml obj and dump it
         workflow_frame = _create_workflow()
         workflow_frame['concurrent'] = workflow_concurrent
         workflow_frame['idl'] = workflow_idl
         workflow_frame['port'] = workflow_port
 
-        ## 1.2 create if the workflows list do not exist
+        # 3. create if the workflows list do not exist
         if yaml_obj['workflows'] is None:
             yaml_obj['workflows'] = []
 
-        ## 1.3 update the skull-config.yaml
+        # 4. update the skull-config.yaml
         yaml_obj['workflows'].append(workflow_frame)
         yaml.dump(yaml_obj, file(config_name, 'w'))
-
-        # 2. generate the protobuf file into config
-        if is_generate_idl:
-            proto_file_name = "%s/%s.proto" % (idl_path, workflow_idl)
-            proto_file = file(proto_file_name, 'w')
-            content = "package skull;\n\n"
-            content += "message %s {\n" % workflow_idl
-            content += "    required bytes data = 1;\n"
-            content += "}\n"
-
-            proto_file.write(content)
-            proto_file.close()
-
     except Exception, e:
         print "Fatal: process_add_workflow: " + str(e)
         raise
+
+def process_gen_workflow_idl():
+    workflows = yaml_obj['workflows']
+
+    if workflows is None:
+        print "no workflow"
+        print "note: run 'skull workflow --add' to create a new workflow"
+        return
+
+    idl_name = ""
+    idl_path = ""
+
+    opts, args = getopt.getopt(sys.argv[5:], 'n:p:')
+    for op, value in opts:
+        if op == "-n":
+            idl_name = value
+        elif op == "-p":
+            idl_path = value
+
+    for workflow in workflows:
+        workflow_idl_name = workflow['idl']
+
+        if idl_name != workflow_idl_name:
+            continue
+
+        proto_file_name = "%s/%s.proto" % (idl_path, idl_name)
+        proto_file = file(proto_file_name, 'w')
+        content = "package skull;\n\n"
+        content += "message %s {\n" % idl_name
+        content += "    required bytes data = 1;\n"
+        content += "}\n"
+
+        proto_file.write(content)
+        proto_file.close()
+        break
 
 def process_add_module():
     global yaml_obj
@@ -255,11 +271,12 @@ def process_add_service_api():
 def usage():
     print "usage:"
     print "  skull-config-utils.py -m show_workflow -c $yaml_file"
-    print "  skull-config-utils.py -m add_workflow -c $yaml_file -C $concurrent -i $idl_name -p $port -g $is_gen_idl -P $idl_path"
+    print "  skull-config-utils.py -m add_workflow -c $yaml_file -C $concurrent -i $idl_name -p $port"
     print "  skull-config-utils.py -m add_module -c $yaml_file -M $module_name -i $workflow_index"
     print "  skull-config-utils.py -m show_service -c $yaml_file"
     print "  skull-config-utils.py -m add_service -c $yaml_file -N $service_name -b $enable -d $data_mode"
     print "  skull-config-utils.py -m add_service_api -c $yaml_file -N $service_name -a $api_name -d $access_mode"
+    print "  skull-config-utils.py -m generate_workflow_idl -c $yaml_file -n $idl_name -p $idl_path"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -291,6 +308,8 @@ if __name__ == "__main__":
             process_show_service()
         elif action == "add_service_api":
             process_add_service_api()
+        elif action == "generate_workflow_idl":
+            process_gen_workflow_idl()
         else:
             print "Fatal: Unknown action: %s" % action
 
