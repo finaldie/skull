@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#set -x
+
 ########################## Global Environment Variables ########################
 # detected skull project root folder
 SKULL_PROJ_ROOT=

@@ -166,6 +166,11 @@ function _module_language()
     echo ""
 }
 
+function _module_list()
+{
+    ls $SKULL_PROJ_ROOT/src/modules;
+}
+
 # param action_name
 # param language_name
 # return the output of the corresponding output of that action

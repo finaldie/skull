@@ -34,7 +34,7 @@ function action_module()
                 ;;
             -h|--help)
                 shift
-                action_module_usage >&2
+                action_module_usage
                 exit 0
                 ;;
             --conf-gen)
@@ -58,8 +58,12 @@ function action_module()
                 exit 0
                 ;;
             --)
-                shift; break
-                exit 0
+                shift;
+                # if there is no parameter left, show the modules directly
+                if [ $# = 0 ]; then
+                    _action_module_list
+                fi
+                break;
                 ;;
             *)
                 echo "Error: Invalid parameters $1" >&2
@@ -69,6 +73,15 @@ function action_module()
                 ;;
         esac
     done
+
+    # If there is no normal parameter, check whether there is module name here
+    if [ $# = 0 ]; then
+        exit 0;
+    fi
+
+    # There is module name exist, show the module path to user
+    local module_name=$1
+    _action_module_path "$module_name"
 }
 
 function action_module_usage()
@@ -80,6 +93,23 @@ function action_module_usage()
     echo "  skull module --conf-cat"
     echo "  skull module --conf-edit"
     echo "  skull module --conf-check"
+}
+
+function _action_module_list()
+{
+    _module_list
+}
+
+function _action_module_path()
+{
+    if [ $# = 0 ]; then
+        echo "Error: empty module name" >&2
+        exit 1
+    fi
+
+    local module_name="$1"
+    local module_location="$SKULL_PROJ_ROOT/src/modules/$module_name"
+    echo "module location: $module_location"
 }
 
 function _action_module_add()
