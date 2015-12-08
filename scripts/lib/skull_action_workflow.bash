@@ -31,11 +31,13 @@ function action_workflow()
                 ;;
             -h|--help)
                 shift
-                action_workflow_usage >&2
+                action_workflow_usage
                 exit 0
                 ;;
             --)
-                shift; break
+                shift;
+                action_workflow_show
+                break;
                 exit 0
                 ;;
             *)
