@@ -1,3 +1,8 @@
+* 2015-12-10 0.6.3
+  * Scripts
+    * **New:** Add skull-service-import which easy to import a new service
+    * **New:** Add skull-config command
+    * **Enhancement:** Refine skull-config-utils.py
 * 2015-12-08 0.6.2
   * Core
     * **Fix:** Fix timer entity memleak
