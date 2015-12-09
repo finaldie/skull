@@ -118,7 +118,6 @@ function _action_workflow_add()
 
 function action_workflow_show()
 {
-    local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
-
-    $SKULL_ROOT/bin/skull-config-utils.py -m workflow -c $skull_conf -a show
+    $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
+        -c $SKULL_CONFIG_FILE -a show
 }
