@@ -65,18 +65,21 @@ The following is the example of adding a service **s1**, and then add a api **ge
 bash $> skull service -add
 service name? s1
 which language the service belongs to? (c) c
-data mode? (exclusive | rw-pr | rw-pw) exclusive
+data mode? (rw-pr | rw-pw) rw-pr
 notice: the common/c folder has already exist, ignore it
 service [s1] added successfully
 bash $> cd src/services/s1
 bash $> skull service --api-add
 service api name: get
-service api access_mode: (read|write|read-write) read-write
+service api access_mode: (read|write) read
 s1-get_req added
 s1-get_resp added
 service api get added successfully
 ```
 After that, you can use service apis which defined in `skull/service.h` from a module to communicate a service :)
+
+## Share your Service and Import from Others
+Service is designed for sharing, each service is built for one single purpose or solve specific problem, share to others and help people to build the project easier than ever.
 
 
 ## Exsiting Modules
