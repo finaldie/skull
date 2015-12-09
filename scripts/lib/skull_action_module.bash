@@ -109,8 +109,8 @@ function _action_module_path()
     fi
 
     local module_name="$1"
-    local module_location="$SKULL_PROJ_ROOT/src/modules/$module_name"
-    echo "module location: $module_location"
+    local module_path="$SKULL_PROJ_ROOT/src/modules/$module_name"
+    echo "module path: $module_path"
 }
 
 function _action_module_add()
