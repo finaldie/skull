@@ -6,6 +6,9 @@
 # Add module need 2 steps:
 # 1. Add the module folder structure into project according to its language
 # 2. Change the main config
+
+#set -x
+
 function action_module()
 {
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
@@ -163,8 +166,8 @@ function _action_module_add()
     action_${language}_module_add $module
 
     # 4. Add module into main config
-    $SKULL_ROOT/bin/skull-config-utils.py -m add_module -c $skull_conf \
-        -M $module -i $workflow_idx
+    $SKULL_ROOT/bin/skull-config-utils.py -m module -c $skull_conf \
+        -a add -M $module -i $workflow_idx
 
     # 5. add common folder
     action_${language}_common_create

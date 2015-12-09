@@ -17,7 +17,36 @@ def _load_yaml_config(config_name):
     yml_obj = yaml.load(yaml_file)
     return yml_obj
 
-def process_show_workflow():
+def _create_workflow():
+    return {
+    'concurrent' : 1,
+    'idl': "",
+    'port' : 1234,
+    'modules' : []
+    }
+
+################################# Workflow Actions #############################
+def process_workflow_actions():
+    try:
+        opts, args = getopt.getopt(sys.argv[5:7], 'a:')
+
+        action = ""
+        for op, value in opts:
+            if op == "-a":
+                action = value
+
+        if action == "add":
+            _process_add_workflow()
+        elif action == "show":
+            _process_show_workflow()
+        elif action == "gen_idl":
+            _process_gen_workflow_idl()
+
+    except Exception, e:
+        print "Fatal: process_add_workflow: " + str(e)
+        raise
+
+def _process_show_workflow():
     workflows = yaml_obj['workflows']
     workflow_cnt = 0
 
@@ -44,21 +73,12 @@ def process_show_workflow():
 
     print "total %d workflows" % (workflow_cnt)
 
-def _create_workflow():
-    return {
-    'concurrent' : 1,
-    'idl': "",
-    'port' : 1234,
-    'modules' : []
-    }
-
-def process_add_workflow():
+def _process_add_workflow():
     global yaml_obj
     global config_name
 
     try:
-        # 1. update the skull config
-        opts, args = getopt.getopt(sys.argv[5:], 'C:i:p:')
+        opts, args = getopt.getopt(sys.argv[7:], 'C:i:p:')
 
         workflow_concurrent = 1
         workflow_port = 1234
@@ -72,24 +92,25 @@ def process_add_workflow():
             elif op == "-p":
                 workflow_port = int(value)
 
-        # 2. Now add these workflow_x to yaml obj and dump it
+        # 1. Now add these workflow_x to yaml obj and dump it
         workflow_frame = _create_workflow()
         workflow_frame['concurrent'] = workflow_concurrent
         workflow_frame['idl'] = workflow_idl
         workflow_frame['port'] = workflow_port
 
-        # 3. create if the workflows list do not exist
+        # 2. create if the workflows list do not exist
         if yaml_obj['workflows'] is None:
             yaml_obj['workflows'] = []
 
-        # 4. update the skull-config.yaml
+        # 3. update the skull-config.yaml
         yaml_obj['workflows'].append(workflow_frame)
         yaml.dump(yaml_obj, file(config_name, 'w'))
+
     except Exception, e:
-        print "Fatal: process_add_workflow: " + str(e)
+        print "Fatal: _process_add_workflow: " + str(e)
         raise
 
-def process_gen_workflow_idl():
+def _process_gen_workflow_idl():
     workflows = yaml_obj['workflows']
 
     if workflows is None:
@@ -100,7 +121,7 @@ def process_gen_workflow_idl():
     idl_name = ""
     idl_path = ""
 
-    opts, args = getopt.getopt(sys.argv[5:], 'n:p:')
+    opts, args = getopt.getopt(sys.argv[7:], 'n:p:')
     for op, value in opts:
         if op == "-n":
             idl_name = value
@@ -124,12 +145,29 @@ def process_gen_workflow_idl():
         proto_file.close()
         break
 
-def process_add_module():
+################################# Module Actions ###############################
+def process_module_actions():
+    try:
+        opts, args = getopt.getopt(sys.argv[5:7], 'a:')
+
+        action = ""
+        for op, value in opts:
+            if op == "-a":
+                action = value
+
+        if action == "add":
+            _process_add_module()
+
+    except Exception, e:
+        print "Fatal: process_module_actions: " + str(e)
+        raise
+
+def _process_add_module():
     global yaml_obj
     global config_name
 
     try:
-        opts, args = getopt.getopt(sys.argv[5:], 'M:i:')
+        opts, args = getopt.getopt(sys.argv[7:], 'M:i:')
 
         workflow_idx = 0
         module_name = ""
@@ -149,11 +187,13 @@ def process_add_module():
 
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
+        print "add module done"
+
     except Exception, e:
-        print "Fatal: process_add_module: " + str(e)
+        print "Fatal: _process_add_module: " + str(e)
         raise
 
-################################## Service Related #############################
+################################## Service Actions #############################
 def process_service_actions():
     try:
         opts, args = getopt.getopt(sys.argv[5:7], 'a:')
@@ -372,11 +412,11 @@ def _process_import_service():
 ################################################################################
 def usage():
     print "usage:"
-    print "  skull-config-utils.py -m show_workflow -c $yaml_file"
-    print "  skull-config-utils.py -m add_workflow -c $yaml_file -C $concurrent -i $idl_name -p $port"
-    print "  skull-config-utils.py -m generate_workflow_idl -c $yaml_file -n $idl_name -p $idl_path"
+    print "  skull-config-utils.py -m workflow -c $yaml_file -a show"
+    print "  skull-config-utils.py -m workflow -c $yaml_file -a add -C $concurrent -i $idl_name -p $port"
+    print "  skull-config-utils.py -m workflow -c $yaml_file -a gen_idl -n $idl_name -p $idl_path"
 
-    print "  skull-config-utils.py -m add_module -c $yaml_file -M $module_name -i $workflow_index"
+    print "  skull-config-utils.py -m module -c $yaml_file -a add -M $module_name -i $workflow_index"
 
     print "  skull-config-utils.py -m service -c $yaml_file -a show"
     print "  skull-config-utils.py -m service -c $yaml_file -a exist -s $service_name"
@@ -400,14 +440,10 @@ if __name__ == "__main__":
                 action = value
 
         # Now run the process func according the mode
-        if action == "show_workflow":
-            process_show_workflow()
-        elif action == "add_workflow":
-            process_add_workflow()
-        elif action == "add_module":
-            process_add_module()
-        elif action == "generate_workflow_idl":
-            process_gen_workflow_idl()
+        if action == "workflow":
+            process_workflow_actions()
+        elif action == "module":
+            process_module_actions()
         elif action == "service":
             process_service_actions()
         else:

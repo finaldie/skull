@@ -102,14 +102,14 @@ function _action_workflow_add()
     fi
 
     # add workflow into skull-config.yaml
-    $SKULL_ROOT/bin/skull-config-utils.py -m add_workflow \
-        -c $skull_conf -C $concurrent -i $idl -p $port
+    $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
+        -c $skull_conf -a add -C $concurrent -i $idl -p $port
 
     # generate the workflow txn idl file if it's not exist
     local idl_path=$SKULL_WORKFLOW_IDL_FOLDER
     if [ ! -f $SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto ]; then
-        $SKULL_ROOT/bin/skull-config-utils.py -m generate_workflow_idl \
-            -c $skull_conf -n $idl -p $idl_path
+        $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
+            -c $skull_conf -a gen_idl -n $idl -p $idl_path
     fi
 
     echo "workflow added successfully"
@@ -120,5 +120,5 @@ function action_workflow_show()
 {
     local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
 
-    $SKULL_ROOT/bin/skull-config-utils.py -m show_workflow -c $skull_conf
+    $SKULL_ROOT/bin/skull-config-utils.py -m workflow -c $skull_conf -a show
 }
