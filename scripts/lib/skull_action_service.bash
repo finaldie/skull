@@ -1,5 +1,5 @@
 # This is the utility functions for skull action module:
-# example: skull module --add
+# example: skull service --add
 #
 # NOTES: This is included by the main script `skull`
 
@@ -7,12 +7,14 @@
 # 1. Add the service folder structure into project according to its language
 # 2. Change the main config
 
+#set -x
+
 function action_service()
 {
     # parse the command args
     local args=`getopt -a \
         -o ash \
-        -l add,list,help,conf-gen,conf-cat,conf-edit,conf-check,api-list,api-add,api-cat,api-edit,api-check,api-gen \
+        -l add,list,help,conf-gen,conf-cat,conf-edit,conf-check,api-list,api-add,api-cat,api-edit,api-check,api-gen,import \
         -n "skull_action_service.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -89,6 +91,11 @@ function action_service()
                 _action_service_api_gen
                 exit 0
                 ;;
+            --import)
+                shift 2
+                _action_service_import $@
+                exit 0
+                ;;
             --)
                 shift;
                 if [ $# = 0 ]; then
@@ -131,11 +138,13 @@ function action_service_usage()
     echo "  skull service --api-edit"
     echo "  skull service --api-gen"
     echo "  skull service --api-check"
+
+    echo "  skull service --import"
 }
 
 function action_service_show()
 {
-    $SKULL_ROOT/bin/skull-config-utils.py -m show_service -c $SKULL_CONFIG_FILE
+    $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE -a show
 }
 
 function __validate_data_mode()
@@ -160,8 +169,8 @@ function _action_service_path()
     fi
 
     local service_name="$1"
-    local service_location="$SKULL_PROJ_ROOT/src/services/$service_name"
-    echo "service location: $service_location"
+    local service_path="$SKULL_PROJ_ROOT/src/services/$service_name"
+    echo "service path: $service_path"
 }
 
 function _action_service_add()
@@ -184,7 +193,8 @@ function _action_service_add()
     done
 
     # 3. check whether this is a existing service
-    if [ -d "$SKULL_PROJ_ROOT/src/services/$service" ]; then
+    local service_path="$SKULL_PROJ_ROOT/src/services/$service"
+    if [ -d "$service_path" ]; then
         echo "Warn: Found the service [$service] has already exist, please" \
             "make sure its a valid service" >&2
         return 1
@@ -214,9 +224,10 @@ function _action_service_add()
     # 4. Add basic folder structure if the target module does not exist
     _run_lang_action $language $SKULL_LANG_SERVICE_ADD $service
 
-    # 5. Add module into main config
-    $SKULL_ROOT/bin/skull-config-utils.py -m add_service -c $SKULL_CONFIG_FILE \
-        -N $service -b true -d $data_mode
+    # 5. Add service into main config
+    local service_local_yml="$service_path/.skull-service.yml"
+    $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
+        -a add -s $service -b true -d $data_mode -i "$service_local_yml"
 
     # 6. add common folder
     _run_lang_action $language $SKULL_LANG_COMMON_CREATE
@@ -396,7 +407,8 @@ function _action_service_api_add()
         fi
     done
 
-    local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
+    local service_path="$SKULL_PROJ_ROOT/src/services/$service"
+    local srv_idl_folder=$service_path/idl
     local template=$SKULL_ROOT/share/skull/template.proto
     local tpl_suffix="proto"
 
@@ -412,11 +424,56 @@ function _action_service_api_add()
     sed "s/TPL_PKG_NAME/$service/g; s/TPL_MSG_NAME/${idl_name}_resp/g" $template > $srv_idl_resp
 
     # Update skull config
-    $SKULL_ROOT/bin/skull-config-utils.py -m add_service_api \
-        -c $SKULL_CONFIG_FILE \
-        -N $service -a $idl_name -d $access_mode
+    local service_local_yml=$service_path/.skull-service.yml
+    $SKULL_ROOT/bin/skull-config-utils.py -m service \
+        -c $SKULL_CONFIG_FILE -a add_api \
+        -s $service -n $idl_name -d $access_mode -i $service_local_yml
 
     echo "$idl_req_name added"
     echo "$idl_resp_name added"
     echo "service api $idl_name added successfully"
+}
+
+function _action_service_import()
+{
+    if [ $# = 0 ]; then
+        echo "Error: please input a service which you want to import" >&2
+        exit 1
+    fi
+
+    local service="$1"
+    local service_path="$SKULL_PROJ_ROOT/src/services/$service"
+
+    # 1. Whether the service folder exist
+    if [ ! -d "$service_path" ]; then
+        echo "Error: service '$service' doesn't exist" >&2
+        exit 1
+    fi
+
+    # 2. Check whehter it's in skull.config
+    $SKULL_ROOT/bin/skull-config-utils.py -m service \
+        -c $SKULL_CONFIG_FILE -a exist -s $service
+
+    if [ $? -eq 0 ]; then
+        echo "Info: service '$service' has already imported"
+        exit 0
+    fi
+
+    # 3. load service/.info to import it into skull-config
+    local service_local_yml="$service_path/.skull-service.yml"
+
+    if [ ! -f "$service_local_yml" ]; then
+        echo "Error: no '.skull-service.yml' file in service $service, abort to import service" >&2
+        exit 1;
+    fi
+
+    $SKULL_ROOT/bin/skull-config-utils.py -m service \
+        -c $SKULL_CONFIG_FILE -a import -s $service -i "$service_local_yml"
+    if [ $? = 0 ]; then
+        echo "Import service successfully"
+        exit 0
+    else
+        echo "Error: import service failed" >&2
+        exit 1
+    fi
 }

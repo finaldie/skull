@@ -11,14 +11,11 @@ import yaml
 
 yaml_obj = None
 config_name = ""
-config_path = ""
 
-def load_yaml_config():
-    global yaml_obj
-    global config_name
-
+def _load_yaml_config(config_name):
     yaml_file = file(config_name, 'r')
-    yaml_obj = yaml.load(yaml_file)
+    yml_obj = yaml.load(yaml_file)
+    return yml_obj
 
 def process_show_workflow():
     workflows = yaml_obj['workflows']
@@ -157,7 +154,33 @@ def process_add_module():
         raise
 
 ################################## Service Related #############################
-def process_show_service():
+def process_service_actions():
+    try:
+        opts, args = getopt.getopt(sys.argv[5:7], 'a:')
+
+        action = ""
+        service_name = ""
+
+        for op, value in opts:
+            if op == "-a":
+                action = value
+
+        if action == "exist":
+            _process_service_exist()
+        elif action == "add":
+            _process_add_service()
+        elif action == "show":
+            _process_show_service()
+        elif action == "add_api":
+            _process_add_service_api()
+        elif action == "import":
+            _process_import_service()
+
+    except Exception, e:
+        print "Fatal: process_service_actions: " + str(e)
+        raise
+
+def _process_show_service():
     services = yaml_obj['services']
     services_cnt = 0
 
@@ -180,7 +203,7 @@ def process_show_service():
 
         for api_name in service_apis:
             api = service_apis[api_name]
-            print "     - %s: mode: %s" % (api_name, api['mode'])
+            print "     - %s -> mode: %s" % (api_name, api['mode'])
 
         # increase the service count
         services_cnt += 1
@@ -188,23 +211,45 @@ def process_show_service():
 
     print "total %d services" % (services_cnt)
 
-def process_add_service():
+def _process_service_exist():
+    services = yaml_obj['services']
+
+    if services is None:
+        sys.exit(1)
+
+    service_name = ""
+    opts, args = getopt.getopt(sys.argv[7:], 's:')
+
+    for op, value in opts:
+        if op == "-s":
+            servie_name = value
+
+    service = services.get(service_name)
+    if service is None:
+        sys.exit(1)
+    else:
+        sys.exit(0)
+
+def _process_add_service():
     global yaml_obj
     global config_name
 
     try:
-        opts, args = getopt.getopt(sys.argv[5:], 'N:b:d:')
+        opts, args = getopt.getopt(sys.argv[7:], 's:b:d:i:')
         service_name = ""
         service_enable = True
         service_data_mode = ""
+        service_yml_config = ""
 
         for op, value in opts:
-            if op == "-N":
+            if op == "-s":
                 service_name = value
             elif op == "-b":
                 service_enable = value
             elif op == "-d":
                 service_data_mode = value
+            elif op == "-i":
+                service_yml_config = value
 
         # If service dict do not exist, create it
         if yaml_obj['services'] is None:
@@ -212,35 +257,45 @@ def process_add_service():
 
         # Now add a service item into services dict
         services = yaml_obj['services']
-        services[service_name] = {
+        service_obj = {
             'enable' : service_enable,
             'data_mode': service_data_mode,
             'apis': {}
         }
 
+        services[service_name] = service_obj;
+
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
+        # update service local yml config
+        service_yml_obj = {}
+        service_yml_obj['service'] = service_obj
+        yaml.dump(service_yml_obj, file(service_yml_config, 'w'))
+
     except Exception, e:
-        print "Fatal: process_add_service: " + str(e)
+        print "Fatal: _process_add_service: " + str(e)
         raise
 
-def process_add_service_api():
+def _process_add_service_api():
     global yaml_obj
     global config_name
 
     try:
-        opts, args = getopt.getopt(sys.argv[5:], 'N:a:d:')
+        opts, args = getopt.getopt(sys.argv[7:], 's:n:d:i:')
         service_name = ""
         api_name = ""
         api_access_mode = ""
+        service_yml_config = ""
 
         for op, value in opts:
-            if op == "-N":
+            if op == "-s":
                 service_name = value
-            elif op == "-a":
+            elif op == "-n":
                 api_name = value
             elif op == "-d":
                 api_access_mode = value
+            elif op == "-i":
+                service_yml_config = value
 
         if yaml_obj['services'] is None:
             yaml_obj['services'] = {}
@@ -263,8 +318,55 @@ def process_add_service_api():
 
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
+        # Update service local yml config
+        service_yml_obj = _load_yaml_config(service_yml_config)
+        if service_yml_obj is None:
+            service_yml_obj = {}
+
+        if service_yml_obj['service'] is None:
+            service_yml_obj['service'] = {}
+
+        service_yml_obj['service'] = service
+        yaml.dump(service_yml_obj, file(service_yml_config, 'w'))
+
     except Exception as e:
-        print "Fatal: process_add_service_api: " + str(e)
+        print "Fatal: _process_add_service_api: " + str(e)
+        raise
+
+def _process_import_service():
+    global yaml_obj
+    global config_name
+
+    try:
+        opts, args = getopt.getopt(sys.argv[7:], 's:i:')
+        service_name = ""
+        service_yml_config = ""
+
+        for op, value in opts:
+            if op == "-s":
+                service_name = value
+            elif op == "-i":
+                service_yml_config = value
+
+        service_yml_obj = _load_yaml_config(service_yml_config)
+        service_obj = service_yml_obj['service']
+
+        if service_obj == None:
+            print "Error: no service defined in %s" % service_yml_config
+            sys.exit(1)
+
+        # If service dict do not exist, create it
+        if yaml_obj['services'] is None:
+            yaml_obj['services'] = {}
+
+        # Now add a service item into services dict
+        services = yaml_obj['services']
+        services[service_name] = service_obj
+
+        yaml.dump(yaml_obj, file(config_name, 'w'))
+
+    except Exception as e:
+        print "Fatal: _process_add_service_api: " + str(e)
         raise
 
 ################################################################################
@@ -272,11 +374,14 @@ def usage():
     print "usage:"
     print "  skull-config-utils.py -m show_workflow -c $yaml_file"
     print "  skull-config-utils.py -m add_workflow -c $yaml_file -C $concurrent -i $idl_name -p $port"
-    print "  skull-config-utils.py -m add_module -c $yaml_file -M $module_name -i $workflow_index"
-    print "  skull-config-utils.py -m show_service -c $yaml_file"
-    print "  skull-config-utils.py -m add_service -c $yaml_file -N $service_name -b $enable -d $data_mode"
-    print "  skull-config-utils.py -m add_service_api -c $yaml_file -N $service_name -a $api_name -d $access_mode"
     print "  skull-config-utils.py -m generate_workflow_idl -c $yaml_file -n $idl_name -p $idl_path"
+
+    print "  skull-config-utils.py -m add_module -c $yaml_file -M $module_name -i $workflow_index"
+
+    print "  skull-config-utils.py -m service -c $yaml_file -a show"
+    print "  skull-config-utils.py -m service -c $yaml_file -a exist -s $service_name"
+    print "  skull-config-utils.py -m service -c $yaml_file -a add -s $service_name -b $enabled -d $data_mode"
+    print "  skull-config-utils.py -m service -c $yaml_file -a add_api -s $service_name -n $api_name -d $access_mode"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -290,8 +395,7 @@ if __name__ == "__main__":
         for op, value in opts:
             if op == "-c":
                 config_name = value
-                config_path = os.path.dirname(config_name)
-                load_yaml_config()
+                yaml_obj = _load_yaml_config(config_name)
             elif op == "-m":
                 action = value
 
@@ -302,14 +406,10 @@ if __name__ == "__main__":
             process_add_workflow()
         elif action == "add_module":
             process_add_module()
-        elif action == "add_service":
-            process_add_service()
-        elif action == "show_service":
-            process_show_service()
-        elif action == "add_service_api":
-            process_add_service_api()
         elif action == "generate_workflow_idl":
             process_gen_workflow_idl()
+        elif action == "service":
+            process_service_actions()
         else:
             print "Fatal: Unknown action: %s" % action
 

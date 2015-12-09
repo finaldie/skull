@@ -5,7 +5,7 @@
 # NOTES: This is included by the main script `skull`
 
 # For build actions, we will do it as much as careful
-set -e
+#set -e
 
 function action_build()
 {
