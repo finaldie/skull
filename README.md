@@ -79,7 +79,7 @@ service api get added successfully
 After that, you can use service apis which defined in `skull/service.h` from a module to communicate a service :)
 
 ## Share your Service and Import from Others
-Service is designed for sharing, each service is built for one single purpose or solve specific problem, share to others which help people to build the project easier than ever; import from others, which 
+Service is designed for sharing, each service is built for one single purpose or solve specific problem, share to others which help people to build the project easier than ever.
 
 
 ## Exsiting Modules
