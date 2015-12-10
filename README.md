@@ -9,7 +9,7 @@ Fast to start-up, easy to maintain, high productivity serving framework.
 Use Ubuntu14.04 as an example.
 
 ### Install dependencies
-```
+```console
 apt-get install valgrind libyaml-dev python-yaml libprotobuf-c0 libprotobuf-c0-dev protobuf-c-compiler
 
 git clone git@github.com:finaldie/skull.git
@@ -19,12 +19,12 @@ make dep
 ```
 
 ### Build
-```
+```console
 make -j4
 ```
 
 ### Install Skull and its related Scripts
-```
+```console
 make install
 ```
 
@@ -33,7 +33,7 @@ After you installed skull into your system, you can run the following steps to
 create your skull project.
 
 ### Create a skull project
-```
+```shell
 skull create project
 cd project
 skull workflow -add # then input $concurrent, $idl_name, $port
@@ -46,7 +46,7 @@ skull start
 **notes:** By default, the new module with a example code which is used for echo-back message
 
 ### Play with skull
-```
+```console
 telnet localhost 7758
 Trying ::1...
 Trying 127.0.0.1...
@@ -61,7 +61,7 @@ have fun :)
 
 ## How to Create a Service
 The following is the example of adding a service **s1**, and then add a api **get** for it.
-```bash
+```console
 bash $> skull service -add
 service name? s1
 which language the service belongs to? (c) c
@@ -79,7 +79,7 @@ service api get added successfully
 After that, you can use service apis which defined in `skull/service.h` from a module to communicate a service :)
 
 ## Share your Service and Import from Others
-Service is designed for sharing, each service is built for one single purpose or solve specific problem, share to others and help people to build the project easier than ever.
+Service is designed for sharing, each service is built for one single purpose or solve specific problem, share to others which help people to build the project easier than ever; import from others, which 
 
 
 ## Exsiting Modules
