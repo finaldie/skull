@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "api/sk_utils.h"
+#include "api/sk_metrics.h"
 #include "api/sk_env.h"
 #include "api/sk_sched.h"
 #include "api/sk_object.h"
@@ -58,6 +59,11 @@ int _timerjob_create(sk_service_t* service,
     sk_timer_t* timer = sk_timersvc_timer_create(timersvc, entity, delayed,
                                                  timer_cb, param_obj);
     SK_ASSERT(timer);
+
+    // Record metrics
+    sk_metrics_global.srv_timer_emit.inc(1);
+    sk_metrics_worker.srv_timer_emit.inc(1);
+
     return 0;
 }
 

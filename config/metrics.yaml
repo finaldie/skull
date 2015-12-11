@@ -17,6 +17,10 @@ global:
             desc: How many service iocalls be completed
         srv_iocall_execute:
             desc: How many service iocalls be executed
+        srv_timer_emit:
+            desc: How many timers be emitted
+        srv_timer_complete:
+            desc: How many timers be completed
 
 worker:
     mode: thread
@@ -37,4 +41,8 @@ worker:
             desc: How many service iocalls be completed
         srv_iocall_execute:
             desc: How many service iocalls be executed
+        srv_timer_emit:
+            desc: How many timers be emitted
+        srv_timer_complete:
+            desc: How many timers be completed
 

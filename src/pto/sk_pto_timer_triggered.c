@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "api/sk_utils.h"
+#include "api/sk_metrics.h"
 #include "api/sk_env.h"
 #include "api/sk_sched.h"
 #include "api/sk_object.h"
@@ -29,6 +30,11 @@ int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     timer_cb(entity, timer_valid, ud);
 
     sk_timersvc_timer_destroy(timersvc, timer);
+
+    // Recored metrics
+    sk_metrics_global.srv_timer_complete.inc(1);
+    sk_metrics_worker.srv_timer_complete.inc(1);
+
     return 0;
 }
 
