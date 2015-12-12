@@ -84,12 +84,15 @@ COMMON_OBJS = \
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
-    entities/sk_net_entity.o
+    entities/sk_net_entity.o \
+    entities/sk_entity_stdin.o \
+    entities/sk_entity_util.o
 
 TRIGGER_OBJS = \
     triggers/sk_trigger.o \
     triggers/sk_trigger_immedia.o \
-    triggers/sk_trigger_sock.o
+    triggers/sk_trigger_sock.o \
+    triggers/sk_trigger_stdin.o
 
 COMPONENTS_OBJS = \
     components/sk_sched.o \
@@ -102,22 +105,24 @@ COMPONENTS_OBJS = \
 PTO_OBJS = \
     pto/sk_pto.o \
     pto/sk_pto_net_accept.o \
-    pto/sk_pto_net_destroy.o \
+    pto/sk_pto_entity_destroy.o \
     pto/sk_pto_workflow_run.o \
     pto/sk_pto_service_iocall.o \
     pto/sk_pto_service_task_run.o \
     pto/sk_pto_service_task_complete.o \
     pto/sk_pto_timer_triggered.o \
-    pto/sk_pto_timer_emit.o
+    pto/sk_pto_timer_emit.o \
+    pto/sk_pto_stdin_start.o
 
 PTO_IDLS_OBJS = \
     pto/idls/net_accept.pb-c.o \
-    pto/idls/net_destroy.pb-c.o \
+    pto/idls/entity_destroy.pb-c.o \
     pto/idls/workflow_run.pb-c.o \
     pto/idls/service_iocall.pb-c.o \
     pto/idls/service_task.pb-c.o \
     pto/idls/timer_triggered.pb-c.o \
-    pto/idls/timer_emit.pb-c.o
+    pto/idls/timer_emit.pb-c.o \
+    pto/idls/stdin_start.pb-c.o
 
 USER_C_OBJS = \
     user-c/src/logger_private.o \
@@ -145,12 +150,13 @@ SKULL_OBJS = \
 
 PROTO_IDLS = \
     net_accept.proto \
-    net_destroy.proto \
+    entity_destroy.proto \
     workflow_run.proto \
     service_iocall.proto \
     service_task.proto \
     timer_triggered.proto \
-    timer_emit.proto
+    timer_emit.proto \
+    stdin_start.proto
 
 UT_OBJS = \
     user-c/src/unittest.o \

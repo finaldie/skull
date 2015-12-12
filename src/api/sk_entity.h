@@ -46,6 +46,7 @@ int  sk_entity_taskcnt(sk_entity_t* entity);
 
 // create network entity from a base entity
 void sk_net_entity_create(sk_entity_t* entity, void* ud);
+void sk_entity_stdin_create(sk_entity_t* entity, void* ud);
 
 #endif
 

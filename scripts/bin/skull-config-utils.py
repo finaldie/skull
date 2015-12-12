@@ -21,7 +21,8 @@ def _create_workflow():
     return {
     'concurrent' : 1,
     'idl': "",
-    'port' : 1234,
+    'stdin': 0,
+    'port' : -1,
     'modules' : []
     }
 
@@ -63,6 +64,9 @@ def _process_show_workflow():
         if workflow.get("port"):
             print " - port: %s" % workflow['port']
 
+        if workflow.get("stdin"):
+            print " - stdin: %d" % workflow['stdin']
+
         print " - modules:"
         for module in workflow['modules']:
             print "  - %s" % module
@@ -78,11 +82,12 @@ def _process_add_workflow():
     global config_name
 
     try:
-        opts, args = getopt.getopt(sys.argv[7:], 'C:i:p:')
+        opts, args = getopt.getopt(sys.argv[7:], 'C:i:p:I:')
 
         workflow_concurrent = 1
-        workflow_port = 1234
         workflow_idl = ""
+        workflow_port = -1
+        workflow_stdin = 0
 
         for op, value in opts:
             if op == "-C":
@@ -91,12 +96,19 @@ def _process_add_workflow():
                 workflow_idl = value
             elif op == "-p":
                 workflow_port = int(value)
+            elif op == "-I":
+                workflow_stdin = int(value)
 
         # 1. Now add these workflow_x to yaml obj and dump it
         workflow_frame = _create_workflow()
         workflow_frame['concurrent'] = workflow_concurrent
         workflow_frame['idl'] = workflow_idl
-        workflow_frame['port'] = workflow_port
+
+        # 1.1 Add trigger
+        if workflow_stdin == 1:
+            workflow_frame['stdin'] = 1
+        elif workflow_port > 0:
+            workflow_frame['port'] = workflow_port
 
         # 2. create if the workflows list do not exist
         if yaml_obj['workflows'] is None:

@@ -13,8 +13,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     return 0;
 }
 
-sk_proto_t sk_pto_net_destroy = {
+sk_proto_t sk_pto_entity_destroy = {
     .priority = SK_PTO_PRI_9,
-    .descriptor = &net_destroy__descriptor,
+    .descriptor = &entity_destroy__descriptor,
     .run = _run
 };

@@ -35,7 +35,7 @@ void _trigger_immedia_destroy(sk_trigger_t* trigger)
 }
 
 sk_trigger_opt_t sk_trigger_immedia = {
-    .create = _trigger_immedia_create,
-    .run = _trigger_immedia_run,
+    .create  = _trigger_immedia_create,
+    .run     = _trigger_immedia_run,
     .destroy = _trigger_immedia_destroy
 };

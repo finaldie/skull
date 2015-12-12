@@ -9,11 +9,11 @@ usage() {
 }
 
 skull_start() {
-    skull-engine -c $skull_config
+    exec skull-engine -c $skull_config
 }
 
 skull_start_memcheck() {
-    valgrind --tool=memcheck --leak-check=full -v \
+    exec valgrind --tool=memcheck --leak-check=full -v \
         skull-engine -c $skull_config
 }
 
@@ -24,7 +24,7 @@ skull_start_gdb() {
 }
 
 skull_start_strace() {
-    strace -f skull-engine -c $skull_config
+    exec strace -f skull-engine -c $skull_config
 }
 ################################## End of Utils ################################
 

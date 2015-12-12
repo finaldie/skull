@@ -48,9 +48,9 @@ extern sk_proto_t sk_pto_net_accept;
 extern sk_proto_t sk_pto_workflow_run;
 
 // Protocol 3, net process
-#include "pto/idls/net_destroy.pb-c.h"
-#define SK_PTO_NET_DESTROY   2
-extern sk_proto_t sk_pto_net_destroy;
+#include "pto/idls/entity_destroy.pb-c.h"
+#define SK_PTO_ENTITY_DESTROY   2
+extern sk_proto_t sk_pto_entity_destroy;
 
 // Protocol 4, service io call
 #include "pto/idls/service_iocall.pb-c.h"
@@ -76,6 +76,12 @@ extern sk_proto_t sk_pto_timer_triggered;
 #define SK_PTO_TIMER_EMIT 7
 extern sk_proto_t sk_pto_timer_emit;
 
+// Protocol 9, stdin strigger creation
+#include "pto/idls/stdin_start.pb-c.h"
+#define SK_PTO_STDIN_START 8
+extern sk_proto_t sk_pto_stdin_start;
+
+/******************************************************************************/
 // global protocol table
 extern sk_proto_t* sk_pto_tbl[];
 

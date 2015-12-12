@@ -124,8 +124,10 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
     SK_ASSERT_MSG(node->type == SK_CFG_NODE_ARRAY,
                   "workflow config must be a sequence\n");
 
+    int enabled_stdin = 0;
     sk_cfg_node_t* child = NULL;
     flist_iter iter = flist_new_iter(node->data.array);
+
     while ((child = flist_each(&iter))) {
         SK_ASSERT_MSG(child->type == SK_CFG_NODE_MAPPING,
                       "workflow sequence item must be a mapping\n");
@@ -142,13 +144,25 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
             } else if (0 == strcmp(key, "idl")) {
                 workflow->idl_name = strdup(child->data.value);
             } else if (0 == strcmp(key, "concurrent")) {
-                workflow->concurrent = sk_config_getint(child);
+                workflow->concurrent = (uint32_t) sk_config_getint(child) & 0x1;
             } else if (0 == strcmp(key, "port")) {
                 int port = sk_config_getint(child);
+                if (port <= 0) {
+                    sk_print("port (%d) is <= 0, skip it\n", port);
+                    continue;
+                }
+
                 SK_ASSERT_MSG(port > 0 && port <= 65535, "port[%d] should be "
                               "in (0, 65535]\n", port);
 
                 workflow->port = port;
+            } else if (0 == strcmp(key, "stdin")) {
+                workflow->enable_stdin =
+                    (uint32_t) sk_config_getint(child) & 0x1;
+
+                SK_ASSERT_MSG(enabled_stdin == 0,
+                              "Only one workflow can enable stdin\n");
+                enabled_stdin = 1;
             }
         }
         fhash_str_iter_release(&item_iter);
@@ -353,8 +367,10 @@ void _load_service(const char* service_name, sk_cfg_node_t* node,
 static
 void _load_services(sk_cfg_node_t* node, sk_config_t* config)
 {
-    SK_ASSERT_MSG(node->type == SK_CFG_NODE_MAPPING,
-                  "service config must be a mapping\n");
+    if (node->type != SK_CFG_NODE_MAPPING) {
+        sk_print_err("service config must be a mapping, skip it\n");
+        return;
+    }
 
     sk_cfg_node_t* child = NULL;
     fhash_str_iter iter = fhash_str_iter_new(node->data.mapping);

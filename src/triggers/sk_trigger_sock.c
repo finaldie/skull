@@ -23,10 +23,10 @@ typedef struct sk_trigger_sock_data_t {
 static
 void _sk_accept(fev_state* fev, int fd, void* ud)
 {
-    sk_trigger_t* trigger = ud;
-    sk_engine_t* engine = trigger->engine;
+    sk_trigger_t*  trigger  = ud;
+    sk_engine_t*   engine   = trigger->engine;
     sk_workflow_t* workflow = trigger->workflow;
-    sk_sched_t* sched = engine->sched;
+    sk_sched_t*    sched    = engine->sched;
 
     sk_entity_t* entity = sk_entity_create(workflow);
     sk_print("create a new entity(%d)\n", fd);
@@ -53,9 +53,9 @@ static
 void _trigger_sock_run(sk_trigger_t* trigger)
 {
     sk_trigger_sock_data_t* data = trigger->data;
-    sk_engine_t* engine = trigger->engine;
-    fev_state* fev = engine->evlp;
-    int listen_fd = data->listen_fd;
+    sk_engine_t* engine    = trigger->engine;
+    fev_state*   fev       = engine->evlp;
+    int          listen_fd = data->listen_fd;
 
     data->listener = fev_add_listener_byfd(fev, listen_fd, _sk_accept, trigger);
     SK_ASSERT(data->listener);

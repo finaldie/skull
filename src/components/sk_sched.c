@@ -173,6 +173,11 @@ sk_io_t* _get_io(sk_sched_t* sched, int priority)
 static inline
 void _io_bridget_notify(sk_io_bridge_t* io_bridge, uint64_t cnt)
 {
+    if (cnt == 0) {
+        return;
+    }
+
+    sk_print("delivery cnt: %d\n", (int) cnt);
     // notify dst eventloop the data is ready
     eventfd_write(io_bridge->evfd, cnt);
 }
@@ -250,16 +255,17 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
         sk_event_t event;
         nevents = sk_io_pull(src_io, SK_IO_OUTPUT, &event, 1);
         SK_ASSERT(nevents == 1);
+        sk_print("prepare to deliver event, pto id: %lu\n", nevents);
 
         // 3. deliver event
         // 3.1 deliver to affnity io bridge if it exist
         // 3.2 round-robin deliver to the all io bridges if it doesn't exist
         if (io_bridge) {
-            // 2.1
+            // 3.1
             delivery[bridge_index] +=
                 (uint64_t) sk_io_bridge_deliver(io_bridge, &event);
         } else {
-            // 2.2
+            // 3.2
             delivery[bridge_index] +=
                 (uint64_t) sk_io_bridge_deliver(io_bridge, &event);
 

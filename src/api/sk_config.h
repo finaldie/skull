@@ -17,7 +17,10 @@
 #define SK_CONFIG_NO_PORT         -1
 
 typedef struct sk_workflow_cfg_t {
-    int concurrent;
+    uint32_t concurrent   :1;
+    uint32_t enable_stdin :1;
+    uint32_t _reserved    :30;
+
     int port;
 
     const char* idl_name; // workflow idl name

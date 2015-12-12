@@ -60,22 +60,24 @@ function action_workflow_usage()
 
 function _action_workflow_add()
 {
-    # prepare add workflow
+    # 1. prepare add workflow
     local skull_conf=$SKULL_CONFIG_FILE
     local concurrent=1
+    local enable_stdin=0
     local idl=""
-    local port=1234
+    local port=-1
 
     local yn_concurrent=true
+    local yn_stdin=true
     local yn_port=true
 
-    # set the concurrent
+    # 2. set the concurrent
     read -p "Whether allow concurrent? (y/n) " yn_concurrent
     if [ ! "$yn_concurrent" = "y" ]; then
         concurrent=0
     fi
 
-    # set idl
+    # 3. set idl
     while true; do
         read -p "input the idl name: " idl
 
@@ -86,26 +88,34 @@ function _action_workflow_add()
         fi
     done
 
-    # set the port
-    read -p "Need listen on a port? (y/n) " yn_port
+    # 4. set trigger
+    ## 4.1 set the stdin
+    read -p "Data source: stdin? (y/n) " yn_stdin
 
-    if [ "$yn_port" = "y" ]; then
-        while true; do
-            read -p "Input the port you want (1025-65535): " port
+    if [ "$yn_stdin" = "y" ]; then
+        enable_stdin=1
+    else
+        ## 4.2 set the port
+        read -p "Data source: Network? (y/n) " yn_port
 
-            if ! $(_is_number $port); then
-                echo "Error: please input a digital for the port" >&2
-            else
-                break
-            fi
-        done
+        if [ "$yn_port" = "y" ]; then
+            while true; do
+                read -p "Input the port you want (1025-65535): " port
+
+                if ! $(_is_number $port); then
+                    echo "Error: please input a digital for the port" >&2
+                else
+                    break
+                fi
+            done
+        fi
     fi
 
-    # add workflow into skull-config.yaml
+    # 5. add workflow into skull-config.yaml
     $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
-        -c $skull_conf -a add -C $concurrent -i $idl -p $port
+        -c $skull_conf -a add -C $concurrent -i $idl -p $port -I $enable_stdin
 
-    # generate the workflow txn idl file if it's not exist
+    # 6. generate the workflow txn idl file if it's not exist
     local idl_path=$SKULL_WORKFLOW_IDL_FOLDER
     if [ ! -f $SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto ]; then
         $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
