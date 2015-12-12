@@ -1,10 +1,13 @@
 #include <stdlib.h>
+#include <errno.h>
 
 #include "flibs/fev_buff.h"
+#include "flibs/fnet.h"
 
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_pto.h"
+#include "api/sk_log.h"
 #include "api/sk_entity.h"
 #include "api/sk_entity_util.h"
 #include "api/sk_sched.h"
@@ -42,6 +45,15 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_print("stdin start event req\n");
     SK_ASSERT(!txn);
     SK_ASSERT(entity);
+
+    int ret = fnet_set_nonblocking(STDIN_FILENO);
+    if (ret < 0) {
+        sk_print("setup stdin to nonblocking failed, errno: %d\n", errno);
+        SK_LOG_ERROR(SK_ENV_LOGGER,
+            "setup stdin to nonblocking failed, errno: %d", errno);
+
+        return 1;
+    }
 
     fev_state* fev = SK_ENV_EVENTLOOP;
     fev_buff* evbuff = fevbuff_new(fev, STDIN_FILENO, _read_cb, _error, entity);
