@@ -6,17 +6,17 @@
 #include "api/sk_utils.h"
 #include "api/sk_entity.h"
 
-sk_entity_opt_t sk_net_entity_opt;
+sk_entity_opt_t sk_entity_net_opt;
 
 typedef struct sk_net_data_t {
     fev_buff* evbuff;
 } sk_net_data_t;
 
-void sk_net_entity_create(sk_entity_t* entity, void* evbuff)
+void sk_entity_net_create(sk_entity_t* entity, void* evbuff)
 {
     sk_net_data_t* net_data = calloc(1, sizeof(*net_data));
     net_data->evbuff = evbuff;
-    sk_entity_setopt(entity, sk_net_entity_opt, net_data);
+    sk_entity_setopt(entity, sk_entity_net_opt, net_data);
 }
 
 static
@@ -47,7 +47,7 @@ void _net_destroy(sk_entity_t* entity, void* ud)
     free(net_data);
 }
 
-sk_entity_opt_t sk_net_entity_opt = {
+sk_entity_opt_t sk_entity_net_opt = {
     .read    = _net_read,
     .write   = _net_write,
     .destroy = _net_destroy

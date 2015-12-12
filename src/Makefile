@@ -84,7 +84,7 @@ COMMON_OBJS = \
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
-    entities/sk_net_entity.o \
+    entities/sk_entity_net.o \
     entities/sk_entity_stdin.o \
     entities/sk_entity_util.o
 

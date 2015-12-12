@@ -5,6 +5,12 @@
 #include <unistd.h>
 #include <stdint.h>
 
+typedef enum sk_entity_type_t {
+    SK_ENTITY_NONE = 0,
+    SK_ENTITY_NET  = 1,
+    SK_ENTITY_STD  = 2
+} sk_entity_type_t;
+
 typedef enum sk_entity_status_t {
     SK_ENTITY_ACTIVE = 0, // read to do the task
     SK_ENTITY_INACTIVE,   // ready to be deleted
@@ -30,6 +36,7 @@ void sk_entity_destroy(sk_entity_t* entity);
 ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len);
 ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len);
 
+sk_entity_type_t sk_entity_type(sk_entity_t* entity);
 sk_entity_status_t sk_entity_status(sk_entity_t* entity);
 struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity);
 struct sk_workflow_t* sk_entity_workflow(sk_entity_t* entity);
@@ -45,7 +52,7 @@ void sk_entity_taskcnt_dec(sk_entity_t* entity);
 int  sk_entity_taskcnt(sk_entity_t* entity);
 
 // create network entity from a base entity
-void sk_net_entity_create(sk_entity_t* entity, void* ud);
+void sk_entity_net_create(sk_entity_t* entity, void* ud);
 void sk_entity_stdin_create(sk_entity_t* entity, void* ud);
 
 #endif

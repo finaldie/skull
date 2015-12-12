@@ -41,8 +41,8 @@ void _default_destroy(sk_entity_t* entity, void* ud)
 }
 
 sk_entity_opt_t default_entity_opt = {
-    .read = _default_read,
-    .write = _default_write,
+    .read    = _default_read,
+    .write   = _default_write,
     .destroy = _default_destroy
 };
 
@@ -50,16 +50,16 @@ sk_entity_opt_t default_entity_opt = {
 sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
 {
     sk_entity_t* entity = calloc(1, sizeof(*entity));
-    entity->owner = NULL;
+    entity->owner    = NULL;
     entity->workflow = workflow;
-    entity->opt = default_entity_opt;
-    entity->status = SK_ENTITY_ACTIVE;
+    entity->opt      = default_entity_opt;
+    entity->status   = SK_ENTITY_ACTIVE;
     return entity;
 }
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
 {
-    entity->opt.read = opt.read ? opt.read : default_entity_opt.read;
+    entity->opt.read  = opt.read  ? opt.read  : default_entity_opt.read;
     entity->opt.write = opt.write ? opt.write : default_entity_opt.write;
     entity->opt.destroy = opt.destroy ? opt.destroy : default_entity_opt.destroy;
 
@@ -133,4 +133,18 @@ void sk_entity_taskcnt_dec(sk_entity_t* entity)
 int sk_entity_taskcnt(sk_entity_t* entity)
 {
     return entity->task_cnt;
+}
+
+extern sk_entity_opt_t sk_entity_stdin_opt;
+extern sk_entity_opt_t sk_entity_net_opt;
+
+sk_entity_type_t sk_entity_type(sk_entity_t* entity)
+{
+    if (entity->opt.read == sk_entity_net_opt.read) {
+        return SK_ENTITY_NET;
+    } else if (entity->opt.read == sk_entity_stdin_opt.read) {
+        return SK_ENTITY_STD;
+    } else {
+        return SK_ENTITY_NONE;
+    }
 }
