@@ -1,18 +1,29 @@
 #ifndef SK_MON_H
 #define SK_MON_H
 
-typedef struct sk_mon_t sk_mon_t;
+#include <time.h>
 
+typedef struct sk_mon_t sk_mon_t;
+typedef struct sk_mon_snapshot_t sk_mon_snapshot_t;
+
+/*********************************sk mon APIs**********************************/
 sk_mon_t* sk_mon_create();
 void sk_mon_destroy(sk_mon_t*);
 
 void sk_mon_inc(sk_mon_t*, const char* name, double value);
 double sk_mon_get(sk_mon_t*, const char* name);
 
-void sk_mon_reset(sk_mon_t*);
+sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t*);
+sk_mon_snapshot_t* sk_mon_snapshot_latest(sk_mon_t*);
+void sk_mon_reset_and_snapshot(sk_mon_t*);
+
+/*******************************Snapshot APIs**********************************/
+void sk_mon_snapshot_destroy(sk_mon_snapshot_t*);
+time_t sk_mon_snapshot_starttime(sk_mon_snapshot_t*);
+time_t sk_mon_snapshot_endtime(sk_mon_snapshot_t*);
 
 typedef void (*sk_mon_cb)(const char* name, double value, void* ud);
-void sk_mon_foreach(sk_mon_t*, sk_mon_cb cb, void* ud);
+void sk_mon_snapshot_foreach(sk_mon_snapshot_t*, sk_mon_cb cb, void* ud);
 
 #endif
 
