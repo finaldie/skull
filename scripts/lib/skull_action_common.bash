@@ -66,7 +66,10 @@ function _action_metrics_gen()
     local langs=$(_get_language_list)
 
     for language in $langs; do
-        action_${language}_gen_metrics $metrics_config
+        if [ -d "$SKULL_PROJ_ROOT/src/common/$language" ]; then
+            echo " - generating $language metrcis..."
+            action_${language}_gen_metrics $metrics_config
+        fi
     done
 }
 

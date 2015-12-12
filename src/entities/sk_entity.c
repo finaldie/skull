@@ -76,14 +76,15 @@ void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
 
 void sk_entity_destroy(sk_entity_t* entity)
 {
-    entity->opt.destroy(entity, entity->ud);
-    free(entity);
-
     // Update metrcis
     sk_metrics_global.entity_destroy.inc(1);
     if (SK_ENTITY_NET == sk_entity_type(entity)) {
         sk_metrics_global.connection_destroy.inc(1);
     }
+
+    // Release resources
+    entity->opt.destroy(entity, entity->ud);
+    free(entity);
 }
 
 ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len)

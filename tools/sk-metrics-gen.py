@@ -77,7 +77,7 @@ double _sk_%s_%s_get()\n\
 {\n\
     sk_mon_t* mon = SK_ENV_MON;\n\
     char name[256] = {0};\n\
-    snprintf(name, 256, \"skull.core.t.%s.%s,%%s%%d\",\n\
+    snprintf(name, 256, \"skull.core.t.%s.%s.%%s%%d\",\n\
              SK_ENV->name, SK_ENV->idx);\n\
     return sk_mon_get(mon, name);\n\
 }\n\n"

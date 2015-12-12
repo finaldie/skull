@@ -298,6 +298,41 @@ void skull_metric_foreach(skull_metric_each metric_cb, void* ud)
     // No implementation, note: test metrics in FT
 }
 
+void sk_mon_inc(sk_mon_t* sk_mon, const char* name, double value)
+{
+    // No implementation, note: test metrics in FT
+}
+
+double sk_mon_get(sk_mon_t* sk_mon, const char* name)
+{
+    // No implementation, note: test metrics in FT
+    return 0.0f;
+}
+
+// Fake core
+static sk_core_t _fake_core = {
+    .mon = NULL
+};
+
+// Fake engine
+static sk_engine_t _fake_engine = {
+    .mon = NULL
+};
+
+// Fake thread_env
+static sk_thread_env_t _fake_env = {
+    .core   = &_fake_core,
+    .engine = &_fake_engine,
+    .name   = "fake_thread",
+    .idx    = 0
+};
+
+// sk env
+sk_thread_env_t* sk_thread_env()
+{
+    return &_fake_env;
+}
+
 // Mock API for running mock service api in module ut
 skull_service_ret_t
 skull_service_async_call (skull_txn_t* txn,
@@ -465,7 +500,6 @@ const char* sk_service_name(const sk_service_t* service)
 
 sk_service_opt_t* sk_service_opt(sk_service_t* service)
 {
-
     return &((fake_service_t*)service)->opt;
 }
 

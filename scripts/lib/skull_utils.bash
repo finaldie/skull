@@ -312,6 +312,10 @@ function skull_utils_srv_api_gen()
 
     # copy all service api protos to idls/service and get api list
     for service in "$service_list"; do
+        if [ -z "$service" ]; then
+            continue
+        fi
+
         local apis=$(_utils_srv_api_copy $service)
 
         api_list+=$apis

@@ -9,24 +9,28 @@
 
 function action_build()
 {
-    # Fork and move to the top level of the project to do the build
+    # Move to the top level of the project to do the build
     # NOTES: since we pass through the user input args to make, so meanwhile
     # all the args will be passed to the main Makefile(e.g. 'CC=clang').
-    (
-        cd $SKULL_PROJ_ROOT
+    cd $SKULL_PROJ_ROOT
 
-        echo "generate metrics..."
-        action_common --metrics-gen
+    # Check whether it is the clean action
+    local clean=false
+    local args=($@)
+    for arg in ${args[*]}; do
+        if [ "$arg" = "clean" ]; then
+            clean=true;
+            break;
+        fi
+    done
 
-        echo "generate transcation idls..."
-        action_common --idl-gen
-
-        echo "generate service apis..."
-        action_common --srv-idl-gen
-
-        echo "build modules/services..."
-        make $@
-    )
+    # Build accoring to the args
+    if $clean; then
+        _action_clean
+    else
+        _action_prepare
+        _action_build
+    fi
 }
 
 function action_build_usage()
@@ -44,4 +48,28 @@ function action_build_usage()
     echo "  skull buld CC=clang"
     echo "  skull buld check"
     echo "  skull buld valgrind-check"
+}
+
+function _action_prepare()
+{
+    echo "generate metrics..."
+    action_common --metrics-gen
+
+    echo "generate transcation idls..."
+    action_common --idl-gen
+
+    echo "generate service apis..."
+    action_common --srv-idl-gen
+}
+
+function _action_build()
+{
+    echo "Building modules/services..."
+    make $@
+}
+
+function _action_clean()
+{
+    echo "Cleaning ..."
+    make $@
 }
