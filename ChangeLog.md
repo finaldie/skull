@@ -1,3 +1,10 @@
+* 2015-12-21 0.6.4
+  * Core
+    * **New:** Support stdin trigger
+    * **New:** Add entity metrics and correct connection metrics
+    * **Enhancement:** Refine timer service apis
+  * Scripts
+    * **Fix:** Fix errors when there is no service exist
 * 2015-12-10 0.6.3
   * Scripts
     * **New:** Add skull-service-import which easy to import a new service
