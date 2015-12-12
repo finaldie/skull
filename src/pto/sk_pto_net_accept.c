@@ -64,7 +64,6 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_entity_net_create(entity, evbuff);
 
     sk_metrics_worker.accept.inc(1);
-    sk_metrics_global.connection.inc(1);
     return 0;
 }
 

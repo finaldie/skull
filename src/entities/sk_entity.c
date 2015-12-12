@@ -5,6 +5,7 @@
 
 #include "api/sk_entity.h"
 #include "api/sk_workflow.h"
+#include "api/sk_metrics.h"
 #include "api/sk_txn.h"
 
 struct sk_entity_t {
@@ -54,6 +55,8 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
     entity->workflow = workflow;
     entity->opt      = default_entity_opt;
     entity->status   = SK_ENTITY_ACTIVE;
+
+    sk_metrics_global.entity_create.inc(1);
     return entity;
 }
 
@@ -64,12 +67,23 @@ void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
     entity->opt.destroy = opt.destroy ? opt.destroy : default_entity_opt.destroy;
 
     entity->ud = ud;
+
+    // Update metrics
+    if (SK_ENTITY_NET == sk_entity_type(entity)) {
+        sk_metrics_global.connection_create.inc(1);
+    }
 }
 
 void sk_entity_destroy(sk_entity_t* entity)
 {
     entity->opt.destroy(entity, entity->ud);
     free(entity);
+
+    // Update metrcis
+    sk_metrics_global.entity_destroy.inc(1);
+    if (SK_ENTITY_NET == sk_entity_type(entity)) {
+        sk_metrics_global.connection_destroy.inc(1);
+    }
 }
 
 ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len)
