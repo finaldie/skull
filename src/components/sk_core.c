@@ -29,13 +29,13 @@ void _sk_setup_engines(sk_core_t* core)
     sk_config_t* config = core->config;
 
     // create master scheduler
-    core->master = sk_engine_create();
+    core->master = sk_engine_create(SK_ENGINE_MASTER);
 
     // create worker schedulers
     core->workers = calloc((size_t)config->threads, sizeof(sk_engine_t*));
 
     for (int i = 0; i < config->threads; i++) {
-        core->workers[i] = sk_engine_create();
+        core->workers[i] = sk_engine_create(SK_ENGINE_WORKER);
         SK_LOG_INFO(core->logger, "worker scheduler [%d] init successfully", i);
 
         // create both-way links

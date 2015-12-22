@@ -136,6 +136,8 @@ void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
         fhash_iter_release(&iter);
     }
     pthread_mutex_unlock(&sk_mon->lock);
+
+    sk_print("snapshot one done\n");
 }
 
 sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t* sk_mon)
@@ -163,6 +165,27 @@ sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t* sk_mon)
 sk_mon_snapshot_t* sk_mon_snapshot_latest(sk_mon_t* sk_mon)
 {
     return sk_mon->latest;
+}
+
+void sk_mon_snapshot_all(sk_core_t* core)
+{
+    // 1. snapshot global metrics
+    sk_mon_reset_and_snapshot(core->mon);
+
+    // 2. snapshot master metrics
+    sk_mon_reset_and_snapshot(core->master->mon);
+
+    // 3. snapshot workers metrics
+    int threads = core->config->threads;
+    for (int i = 0; i < threads; i++) {
+        sk_engine_t* worker = core->workers[i];
+        sk_mon_reset_and_snapshot(worker->mon);
+    }
+
+    // 4. shapshot user metrics
+    sk_mon_reset_and_snapshot(core->umon);
+
+    sk_print("snapshot all done\n");
 }
 
 /**********************************mon snapshot********************************/

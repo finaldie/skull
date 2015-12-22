@@ -3,6 +3,8 @@
 
 #include <time.h>
 
+struct sk_core_t;
+
 typedef struct sk_mon_t sk_mon_t;
 typedef struct sk_mon_snapshot_t sk_mon_snapshot_t;
 
@@ -16,6 +18,8 @@ double sk_mon_get(sk_mon_t*, const char* name);
 sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t*);
 sk_mon_snapshot_t* sk_mon_snapshot_latest(sk_mon_t*);
 void sk_mon_reset_and_snapshot(sk_mon_t*);
+
+void sk_mon_snapshot_all(struct sk_core_t* core);
 
 /*******************************Snapshot APIs**********************************/
 void sk_mon_snapshot_destroy(sk_mon_snapshot_t*);

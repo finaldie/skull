@@ -2,20 +2,82 @@
 #include <errno.h>
 
 #include "api/sk_utils.h"
+#include "api/sk_env.h"
 #include "api/sk_const.h"
+#include "api/sk_metrics.h"
 #include "api/sk_eventloop.h"
 #include "api/sk_env.h"
+#include "api/sk_core.h"
+#include "api/sk_mon.h"
 #include "api/sk_log.h"
 #include "api/sk_engine.h"
 
-sk_engine_t* sk_engine_create()
+#define SK_ENGINE_UPTIME_TIMER_INTERVAL 1000
+#define SK_ENGINE_SNAPSHOT_TIMER_INTERVAL (1000 * 60)
+
+static
+sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
+                                  uint32_t expiration, // unit: millisecond
+                                  sk_timer_triggered timer_cb,
+                                  sk_obj_t* ud);
+
+// Triggered every 60 seconds
+static
+void _snapshot_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
+{
+    // 1. create next timer
+    _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_SNAPSHOT_TIMER_INTERVAL,
+                          _snapshot_timer_triggered, NULL);
+
+    // 2. make a snapshot
+    //sk_core_t* core = SK_ENV_CORE;
+    //sk_mon_snapshot_all(core);
+}
+
+// Triggered every 1 second
+static
+void _uptime_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
+{
+    // 1. create next timer
+    _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_UPTIME_TIMER_INTERVAL,
+                          _uptime_timer_triggered, NULL);
+
+    // 2. update uptime
+    sk_metrics_global.uptime.inc(1);
+}
+
+
+static
+sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
+                                  uint32_t expiration, // unit: millisecond
+                                  sk_timer_triggered timer_cb,
+                                  sk_obj_t* ud)
+{
+    sk_timer_t* metrics_timer = sk_timersvc_timer_create(engine->timer_svc,
+                    sk_entity_create(NULL), expiration, timer_cb, ud);
+
+    SK_ASSERT(metrics_timer);
+    return metrics_timer;
+}
+
+sk_engine_t* sk_engine_create(sk_engine_type_t type)
 {
     sk_engine_t* engine = calloc(1, sizeof(*engine));
+    engine->type       = type;
     engine->evlp       = sk_eventloop_create();
     engine->entity_mgr = sk_entity_mgr_create(65535);
     engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr);
     engine->mon        = sk_mon_create();
     engine->timer_svc  = sk_timersvc_create(engine->evlp);
+
+    // Create a internal timer for metrics update & snapshot
+    if (type == SK_ENGINE_MASTER) {
+        _create_metrics_timer(engine, SK_ENGINE_UPTIME_TIMER_INTERVAL,
+                              _uptime_timer_triggered, NULL);
+
+        _create_metrics_timer(engine, SK_ENGINE_SNAPSHOT_TIMER_INTERVAL,
+                              _snapshot_timer_triggered, NULL);
+    }
 
     return engine;
 }
