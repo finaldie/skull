@@ -93,16 +93,17 @@ void sk_entity_mgr_clean_dead(sk_entity_mgr_t* mgr)
     while (!flist_empty(mgr->inactive_entities)) {
         sk_entity_t* entity = flist_pop(mgr->inactive_entities);
 
+        // 1. Update metrics
+        sk_metrics_worker.entity_destroy.inc(1);
+        if (SK_ENTITY_NET == sk_entity_type(entity)) {
+            sk_metrics_worker.connection_destroy.inc(1);
+        }
+
+        // 2. Destroy entity
         sk_entity_t* deleted_entity = fhash_u64_del(mgr->entity_mgr,
                                                     (uint64_t)entity);
         SK_ASSERT(deleted_entity == entity);
         sk_entity_destroy(entity);
         sk_print("clean up dead entity\n");
-
-        // Update metrics
-        sk_metrics_worker.entity_destroy.inc(1);
-        if (SK_ENTITY_NET == sk_entity_type(entity)) {
-            sk_metrics_worker.connection_destroy.inc(1);
-        }
     }
 }

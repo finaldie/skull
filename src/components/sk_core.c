@@ -446,11 +446,12 @@ void sk_core_destroy(sk_core_t* core)
     flist_delete(core->triggers);
 
     // 2. destroy engines
-    sk_engine_destroy(core->master);
     for (int i = 0; i < core->config->threads; i++) {
         sk_engine_destroy(core->workers[i]);
     }
     free(core->workers);
+
+    sk_engine_destroy(core->master);
 
     // 3. destroy modules
     _sk_module_destroy(core);
