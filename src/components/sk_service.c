@@ -165,8 +165,6 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
 
     // 4. Re-schedule tasks
     sk_service_schedule_tasks(service);
-
-    // 5. TODO: update metrics
 }
 
 // Public APIs of service
