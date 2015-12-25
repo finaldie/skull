@@ -1,3 +1,12 @@
+* 2015-12-28 0.6.5
+  * Core
+    * **New:** Add two internal timers for update metrics
+    * **New:** Add sk_mon_snapshot_xx apis
+    * **New:** Import `AdminModule`, right now the metrics would be exposed by port 7759
+    * **Fix:** Correct timer metrics
+    * **Fix:** Make stdin fd nonblocking
+    * **Fix:** Upgrade `flibs` to 0.8.6, which fixed few memory issues
+    * **Enhancement:** Add a orphan entity manager, a new entity will be there first
 * 2015-12-21 0.6.4
   * Core
     * **New:** Support stdin trigger
