@@ -19,7 +19,8 @@
 typedef struct sk_workflow_cfg_t {
     uint32_t concurrent   :1;
     uint32_t enable_stdin :1;
-    uint32_t _reserved    :30;
+    uint32_t localhost    :1;
+    uint32_t _reserved    :29;
 
     int port;
 

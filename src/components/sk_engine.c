@@ -30,8 +30,8 @@ void _snapshot_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
                           _snapshot_timer_triggered, NULL);
 
     // 2. make a snapshot
-    //sk_core_t* core = SK_ENV_CORE;
-    //sk_mon_snapshot_all(core);
+    sk_core_t* core = SK_ENV_CORE;
+    sk_mon_snapshot_all(core);
 }
 
 // Triggered every 1 second

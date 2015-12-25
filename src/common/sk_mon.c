@@ -116,10 +116,13 @@ void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
         sk_mon_snapshot_destroy(sk_mon->latest);
 
         // 2. Create snapshot
+        time_t now = time(NULL);
         sk_mon->latest =
-            _sk_mon_snapshot_create(sk_mon->start, time(NULL));
+            _sk_mon_snapshot_create(sk_mon->start, now);
 
         // 3. Reset data and fill into snapshot
+        sk_mon->start = now;
+
         fhash_iter iter = fhash_iter_new(sk_mon->mon_tbl);
         void* value = NULL;
 

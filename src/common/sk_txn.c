@@ -90,8 +90,6 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
     txn->state = SK_TXN_INIT;
     txn->position = SK_TXN_POS_CORE;
 
-    // update the entity ref
-    sk_entity_taskcnt_inc(entity);
     return txn;
 }
 
@@ -299,6 +297,13 @@ unsigned long long sk_txn_task_livetime(sk_txn_t* txn, uint64_t task_id)
 void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
 {
     txn->state = state;
+
+    if (state == SK_TXN_UNPACKED) {
+        SK_ASSERT(txn->entity);
+
+        // update the entity ref
+        sk_entity_taskcnt_inc(txn->entity);
+    }
 }
 
 sk_txn_state_t sk_txn_state(sk_txn_t* txn)

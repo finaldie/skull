@@ -43,6 +43,9 @@ typedef struct sk_core_t {
     fhash*           unique_modules; // key: module name; value: sk_module_t
     fhash*           services;       // key: service name; value: sk_service_t
     const char*      working_dir;
+
+    sk_workflow_cfg_t* admin_wf_cfg;
+    sk_workflow_t*     admin_wf;
 } sk_core_t;
 
 void sk_core_init(sk_core_t* core);

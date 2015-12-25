@@ -11,6 +11,7 @@
 #include "api/sk_pto.h"
 #include "api/sk_config.h"
 #include "api/sk_module.h"
+#include "api/sk_admin.h"
 #include "api/sk_service.h"
 #include "api/sk_workflow.h"
 #include "api/sk_trigger.h"
@@ -22,6 +23,34 @@
 #include "api/sk_core.h"
 
 // INTERNAL APIs
+
+static
+void _sk_init_admin(sk_core_t* core)
+{
+    sk_print("Init admin module\n");
+    SK_LOG_INFO(core->logger, "Init admin module");
+
+    core->admin_wf_cfg = sk_admin_workflowcfg_create(7759);
+    core->admin_wf     = sk_workflow_create(core->admin_wf_cfg);
+
+    sk_module_t* admin_module = sk_admin_module();
+    sk_workflow_add_module(core->admin_wf, admin_module);
+
+    sk_trigger_t* trigger = sk_trigger_create(core->master, core->admin_wf,
+                                              core->admin_wf_cfg);
+    int ret = flist_push(core->triggers, trigger);
+    SK_ASSERT(!ret);
+}
+
+static
+void _sk_admin_destroy(sk_core_t* core)
+{
+    sk_print("Destroying admin module\n");
+    SK_LOG_INFO(core->logger, "Destroying admin module");
+
+    sk_workflow_destroy(core->admin_wf);
+    sk_admin_workflowcfg_destroy(core->admin_wf_cfg);
+}
 
 static
 void _sk_setup_engines(sk_core_t* core)
@@ -55,9 +84,10 @@ static
 void _sk_setup_workflows(sk_core_t* core)
 {
     sk_config_t* config = core->config;
-    core->workflows = flist_create();
-    core->triggers = flist_create();
+    core->workflows      = flist_create();
+    core->triggers       = flist_create();
     core->unique_modules = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+
     flist_iter iter = flist_new_iter(config->workflows);
     sk_workflow_cfg_t* workflow_cfg = NULL;
 
@@ -352,7 +382,10 @@ void sk_core_init(sk_core_t* core)
     // 8. load workflows and related triggers
     _sk_setup_workflows(core);
 
-    // 9. load services
+    // 9. init admin
+    _sk_init_admin(core);
+
+    // 10. load services
     _sk_setup_services(core);
 }
 
@@ -473,10 +506,13 @@ void sk_core_destroy(sk_core_t* core)
     }
     flist_delete(core->workflows);
 
-    // 8. destroy working dir string
+    // 8. destroy admin
+    _sk_admin_destroy(core);
+
+    // 9. destroy working dir string
     free((void*)core->working_dir);
 
-    // 9. destroy loggers
+    // 10. destroy loggers
     sk_logger_destroy(core->logger);
     sk_log_tpl_destroy(core->info_log_tpl);
     sk_log_tpl_destroy(core->warn_log_tpl);
