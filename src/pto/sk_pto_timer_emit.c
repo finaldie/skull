@@ -72,7 +72,7 @@ int _timerjob_create(sk_service_t* service,
 static
 void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
-    // 1. Rush a service task
+    // 1. Extract timer parameters
     sk_print("timer triggered\n");
     timer_jobdata_t* jobdata  = sk_obj_get(ud).ud;
     sk_service_t*    svc      = jobdata->service;
@@ -90,13 +90,18 @@ void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     task.data.timer.ud      = udata;
     task.data.timer.valid   = valid;
 
-    // push to service task queue
+    // 2. Push to service task queue
     sk_print("push task to service queue\n");
     sk_srv_status_t ret = sk_service_push_task(svc, &task);
     SK_ASSERT(ret == SK_SRV_STATUS_OK);
 
+    // 3. Reschedule service tasks
     size_t cnt = sk_service_schedule_tasks(svc);
     printf("service %zu tasks\n", cnt);
+
+    // 4. Recored metrics
+    sk_metrics_global.srv_timer_complete.inc(1);
+    sk_metrics_worker.srv_timer_complete.inc(1);
 }
 
 // This proto is ran in master thread

@@ -17,6 +17,10 @@ global:
             desc: How many connections be destroyed
         uptime:
             desc: System uptime, every second +1
+        timer_emit:
+            desc: How many timers be emitted
+        timer_complete:
+            desc: How many timers be completed
         srv_iocall:
             desc: How many service iocalls be invoked
         srv_iocall_complete:
@@ -47,6 +51,10 @@ worker:
             desc: The total count of the connections be hold in this thread
         connection_destroy:
             desc: How many connections be destroyed in this thread
+        timer_emit:
+            desc: How many timers be emitted
+        timer_complete:
+            desc: How many timers be completed
         srv_iocall:
             desc: How many service iocalls be invoked
         srv_iocall_complete:

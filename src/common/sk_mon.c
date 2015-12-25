@@ -65,6 +65,7 @@ void sk_mon_destroy(sk_mon_t* sk_mon)
     }
 
     fhash_delete(sk_mon->mon_tbl);
+    sk_mon_snapshot_destroy(sk_mon->latest);
     int ret = pthread_mutex_destroy(&sk_mon->lock);
     SK_ASSERT(ret == 0);
     free(sk_mon);

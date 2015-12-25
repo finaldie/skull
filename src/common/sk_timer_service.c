@@ -7,6 +7,7 @@
 #include "api/sk_env.h"
 #include "api/sk_sched.h"
 #include "api/sk_pto.h"
+#include "api/sk_metrics.h"
 #include "api/sk_timer_service.h"
 
 #define TIMER_CHECK_INTERVAL 1
@@ -127,6 +128,10 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
     // Add it into timer holder
     fhash_u64_set(svc->timers, (uint64_t) (uintptr_t) timer, timer);
 
+    // update metrics
+    sk_metrics_global.timer_emit.inc(1);
+    sk_metrics_worker.timer_emit.inc(1);
+
     return timer;
 }
 
@@ -147,6 +152,10 @@ void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
 
     free(timer);
     svc->timer_alive--;
+
+    // update metrics
+    sk_metrics_global.timer_complete.inc(1);
+    sk_metrics_worker.timer_complete.inc(1);
 }
 
 int sk_timer_valid(sk_timer_t* timer)
