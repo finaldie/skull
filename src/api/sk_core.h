@@ -11,6 +11,7 @@
 #include "api/sk_service.h"
 #include "api/sk_engine.h"
 #include "api/sk_trigger.h"
+#include "api/sk_entity_mgr.h"
 
 // skull core related structures
 typedef struct sk_cmd_args_t {
@@ -28,6 +29,9 @@ typedef struct sk_core_t {
 
     sk_engine_t*     master;
     sk_engine_t**    workers;
+
+    // orphan entity mgr
+    sk_entity_mgr_t* orphan_entity_mgr;
 
     // logger
     sk_logger_t*     logger;

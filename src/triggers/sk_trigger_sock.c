@@ -8,6 +8,7 @@
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_pto.h"
+#include "api/sk_entity_util.h"
 #include "api/sk_trigger.h"
 
 typedef struct sk_trigger_sock_data_t {
@@ -28,7 +29,7 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
     sk_workflow_t* workflow = trigger->workflow;
     sk_sched_t*    sched    = engine->sched;
 
-    sk_entity_t* entity = sk_entity_create(workflow);
+    sk_entity_t* entity = sk_entity_orphan_create(workflow);
     sk_print("create a new entity(%d)\n", fd);
 
     NetAccept accept_msg = NET_ACCEPT__INIT;

@@ -2,6 +2,7 @@
 
 #include "api/sk_utils.h"
 #include "api/sk_pto.h"
+#include "api/sk_entity_util.h"
 #include "api/sk_trigger.h"
 
 static
@@ -22,7 +23,7 @@ void _trigger_immedia_run(sk_trigger_t* trigger)
         return;
     }
 
-    sk_entity_t* entity = sk_entity_create(workflow);
+    sk_entity_t* entity = sk_entity_orphan_create(workflow);
     sk_txn_t* txn = sk_txn_create(workflow, entity);
 
     sk_sched_send(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);

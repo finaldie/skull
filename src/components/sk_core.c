@@ -351,11 +351,16 @@ void _sk_init_moniter(sk_core_t* core)
     core->umon = sk_mon_create();
 }
 
+static
+void _sk_init_orphan_entity_mgr(sk_core_t* core)
+{
+    core->orphan_entity_mgr = sk_entity_mgr_create(65535);
+}
+
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
-// execution orders, if you quite understand it, do not modify the calling ord-
-// ers.
+// execution orders. Understand it before modify the calling orders.
 void sk_core_init(sk_core_t* core)
 {
     // 1. prepare the thread env
@@ -376,16 +381,19 @@ void sk_core_init(sk_core_t* core)
     // 6. init global monitor
     _sk_init_moniter(core);
 
-    // 7. init engines
+    // 7. init orphan entity mgr
+    _sk_init_orphan_entity_mgr(core);
+
+    // 8. init engines
     _sk_setup_engines(core);
 
-    // 8. load workflows and related triggers
+    // 9. load workflows and related triggers
     _sk_setup_workflows(core);
 
-    // 9. init admin
+    // 10. init admin
     _sk_init_admin(core);
 
-    // 10. load services
+    // 11. load services
     _sk_setup_services(core);
 }
 
@@ -465,6 +473,8 @@ void sk_core_stop(sk_core_t* core)
     }
 }
 
+// NOTES: The destruction order is strict. Understand it before modify the
+//  calling orders.
 void sk_core_destroy(sk_core_t* core)
 {
     if (!core) {
@@ -478,7 +488,10 @@ void sk_core_destroy(sk_core_t* core)
     }
     flist_delete(core->triggers);
 
-    // 2. destroy engines
+    // 2. destroy orphan entity mgr
+    sk_entity_mgr_destroy(core->orphan_entity_mgr);
+
+    // 3. destroy engines
     for (int i = 0; i < core->config->threads; i++) {
         sk_engine_destroy(core->workers[i]);
     }
@@ -486,33 +499,33 @@ void sk_core_destroy(sk_core_t* core)
 
     sk_engine_destroy(core->master);
 
-    // 3. destroy modules
+    // 4. destroy modules
     _sk_module_destroy(core);
 
-    // 4. destroy services
+    // 5. destroy services
     _sk_service_destroy(core);
 
-    // 5. destroy moniters
+    // 6. destroy moniters
     sk_mon_destroy(core->mon);
     sk_mon_destroy(core->umon);
 
-    // 6. destroy config
+    // 7. destroy config
     sk_config_destroy(core->config);
 
-    // 7. destroy workflows
+    // 8. destroy workflows
     sk_workflow_t* workflow = NULL;
     while ((workflow = flist_pop(core->workflows))) {
         sk_workflow_destroy(workflow);
     }
     flist_delete(core->workflows);
 
-    // 8. destroy admin
+    // 9. destroy admin
     _sk_admin_destroy(core);
 
-    // 9. destroy working dir string
+    // 10. destroy working dir string
     free((void*)core->working_dir);
 
-    // 10. destroy loggers
+    // 11. destroy loggers
     sk_logger_destroy(core->logger);
     sk_log_tpl_destroy(core->info_log_tpl);
     sk_log_tpl_destroy(core->warn_log_tpl);

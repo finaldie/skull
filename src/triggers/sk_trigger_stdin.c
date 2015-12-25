@@ -3,6 +3,7 @@
 
 #include "api/sk_utils.h"
 #include "api/sk_pto.h"
+#include "api/sk_entity_util.h"
 #include "api/sk_trigger.h"
 
 static
@@ -15,7 +16,7 @@ void _trigger_stdin_run(sk_trigger_t* trigger)
 {
     sk_engine_t*   engine   = trigger->engine;
     sk_workflow_t* workflow = trigger->workflow;
-    sk_entity_t*   entity   = sk_entity_create(workflow);
+    sk_entity_t*   entity   = sk_entity_orphan_create(workflow);
     sk_sched_t*    sched    = engine->sched;
 
     sk_sched_send(sched, entity, NULL, SK_PTO_STDIN_START, NULL);

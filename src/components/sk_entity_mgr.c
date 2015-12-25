@@ -4,7 +4,9 @@
 
 #include "flibs/fhash.h"
 #include "flibs/flist.h"
+
 #include "api/sk_utils.h"
+#include "api/sk_env.h"
 #include "api/sk_metrics.h"
 #include "api/sk_entity_mgr.h"
 
@@ -70,6 +72,31 @@ sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
     SK_ASSERT(!ret);
 
     return entity;
+}
+
+void sk_entity_mgr_switch(sk_entity_mgr_t* new_owner, sk_entity_t* orphan)
+{
+    // 1. Validate relationship
+    sk_entity_mgr_t* orphan_entity_mgr = SK_ENV_CORE->orphan_entity_mgr;
+    sk_entity_mgr_t* entity_owner = sk_entity_owner(orphan);
+
+    if (new_owner == entity_owner) {
+        sk_print("new owner is the current owner, skip switching\n");
+        return;
+    }
+
+    SK_ASSERT_MSG(entity_owner == orphan_entity_mgr,
+                  "cannot switch entity from non-orphan mgr to others\n");
+
+    // 2. Delete entity from orphan entity mgr
+    sk_entity_t* deleted_entity =
+        fhash_u64_del(entity_owner->entity_mgr, (uint64_t)orphan);
+
+    SK_ASSERT(deleted_entity == orphan);
+
+    // 3. Add entity to new entity mgr
+    fhash_u64_set(new_owner->entity_mgr, (uint64_t)orphan, orphan);
+    sk_entity_setowner(orphan, new_owner);
 }
 
 void sk_entity_mgr_foreach(sk_entity_mgr_t* mgr,
