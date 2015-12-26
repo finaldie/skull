@@ -363,6 +363,8 @@ void _sk_init_orphan_entity_mgr(sk_core_t* core)
 // execution orders. Understand it before modify the calling orders.
 void sk_core_init(sk_core_t* core)
 {
+    core->status = SK_CORE_INIT;
+
     // 1. prepare the thread env
     sk_thread_env_init();
 
@@ -401,6 +403,7 @@ void sk_core_start(sk_core_t* core)
 {
     SK_LOG_INFO(core->logger, "skull engine starting...");
     sk_print("skull engine starting...\n");
+    core->status = SK_CORE_STARTING;
 
     // 1. Complete the master_env
     //   notes: This *master_env* will be deleted when thread exit
@@ -442,8 +445,10 @@ void sk_core_start(sk_core_t* core)
         sk_trigger_run(trigger);
     }
 
+    // 6. update core status
+    core->status = SK_CORE_SERVING;
 
-    // 6. start master engine
+    // 7. start master engine
     SK_LOG_INFO(core->logger, "skull engine is ready");
     sk_print("skull engine is ready\n");
 
@@ -453,7 +458,7 @@ void sk_core_start(sk_core_t* core)
         exit(ret);
     }
 
-    // 7. wait them quit
+    // 8. wait them quit
     for (int i = 0; i < config->threads; i++) {
         sk_engine_wait(core->workers[i]);
     }
@@ -462,7 +467,8 @@ void sk_core_start(sk_core_t* core)
 void sk_core_stop(sk_core_t* core)
 {
     sk_print("skull engine stoping...\n");
-    SK_LOG_INFO(core->logger, "skull engine stop");
+    SK_LOG_INFO(core->logger, "skull engine stopping");
+    core->status = SK_CORE_STOPPING;
 
     if (!core) return;
 
@@ -480,6 +486,10 @@ void sk_core_destroy(sk_core_t* core)
     if (!core) {
         return;
     }
+
+    sk_print("skull engine destroying...\n");
+    SK_LOG_INFO(core->logger, "skull engine destroying...");
+    core->status = SK_CORE_DESTROYING;
 
     // 1. destroy triggers
     sk_trigger_t* trigger = NULL;
@@ -534,10 +544,15 @@ void sk_core_destroy(sk_core_t* core)
 }
 
 // Utils APIs
-sk_service_t* sk_core_get_service(sk_core_t* core, const char* service_name)
+sk_service_t* sk_core_service(sk_core_t* core, const char* service_name)
 {
     SK_ASSERT(core);
     SK_ASSERT(service_name);
 
     return fhash_str_get(core->services, service_name);
+}
+
+sk_core_status_t sk_core_status(sk_core_t* core)
+{
+    return core->status;
 }

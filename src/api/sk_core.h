@@ -13,6 +13,14 @@
 #include "api/sk_trigger.h"
 #include "api/sk_entity_mgr.h"
 
+typedef enum sk_core_status_t {
+    SK_CORE_INIT       = 0,
+    SK_CORE_STARTING   = 1,
+    SK_CORE_SERVING    = 2,
+    SK_CORE_STOPPING   = 3,
+    SK_CORE_DESTROYING = 4
+} sk_core_status_t;
+
 // skull core related structures
 typedef struct sk_cmd_args_t {
     const char* config_location;
@@ -48,8 +56,16 @@ typedef struct sk_core_t {
     fhash*           services;       // key: service name; value: sk_service_t
     const char*      working_dir;
 
+    // admin module and config
     sk_workflow_cfg_t* admin_wf_cfg;
     sk_workflow_t*     admin_wf;
+
+    // skull core status
+    sk_core_status_t status;
+
+#if __WORDSIZE == 64
+    int _padding;
+#endif
 } sk_core_t;
 
 void sk_core_init(sk_core_t* core);
@@ -58,7 +74,8 @@ void sk_core_stop(sk_core_t* core);
 void sk_core_destroy(sk_core_t* core);
 
 // utils
-sk_service_t* sk_core_get_service(sk_core_t*, const char* service_name);
+sk_service_t*    sk_core_service(sk_core_t*, const char* service_name);
+sk_core_status_t sk_core_status(sk_core_t*);
 
 #endif
 

@@ -38,7 +38,7 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
                           skull_module_cb cb)
 {
     sk_core_t* core = SK_ENV_CORE;
-    sk_service_t* service = sk_core_get_service(core, service_name);
+    sk_service_t* service = sk_core_service(core, service_name);
     if (!service) {
         return SKULL_SERVICE_ERROR_SRVNAME;
     }

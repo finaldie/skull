@@ -30,7 +30,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     const char* service_name = task_complete_msg->service_name;
 
     // 2. find the target service
-    sk_service_t* service = sk_core_get_service(SK_ENV_CORE, service_name);
+    sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
     SK_ASSERT(service);
 
     // 3. do some updating job for this service

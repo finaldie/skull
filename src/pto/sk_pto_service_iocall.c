@@ -34,7 +34,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     sk_srv_io_status_t io_status = SK_SRV_IO_STATUS_OK;
 
     // 2. find the target service
-    sk_service_t* service = sk_core_get_service(SK_ENV_CORE, service_name);
+    sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
     if (!service) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "Invalid service name %s", service_name);
         io_status = SK_SRV_IO_STATUS_INVALID_SRV_NAME;

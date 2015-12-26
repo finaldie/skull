@@ -37,7 +37,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     int ret = 0;
 
     // 2. find the target service
-    sk_service_t* service = sk_core_get_service(SK_ENV_CORE, service_name);
+    sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
     SK_ASSERT(service);
 
     // 3. run a specific service call
