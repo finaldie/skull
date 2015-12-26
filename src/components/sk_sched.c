@@ -303,33 +303,31 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     sk_entity_t* entity = event->entity;
     SK_ASSERT(entity);
 
-    // 1. Check entity status, only active entity can be processed
+    // add entity into entity_mgr
     sk_entity_status_t status = sk_entity_status(entity);
     if (status != SK_ENTITY_ACTIVE) {
         sk_print("entity has already inactive or dead\n");
         return 0;
     }
 
-    // 2. Switch entity into entity_mgr if the entity is a orphan entity
-    sk_entity_mgr_switch(sched->entity_mgr, entity);
+    if (NULL == sk_entity_owner(entity)) {
+        sk_entity_mgr_add(sched->entity_mgr, entity);
+    }
 
-    // 3. Decode the message
     ProtobufCMessage* msg = protobuf_c_message_unpack(pto->descriptor,
                                                       NULL,
                                                       event->sz,
                                                       event->data);
 
-    // 4. Run event
     sk_txn_t* txn = event->txn;
     // TODO: should check the return value, if non-zero should cancel the
     // workflow
     pto->run(sched, entity, txn, msg);
 
-    // 5. Clean up the message resources
     protobuf_c_message_free_unpacked(msg, NULL);
     free(event->data);
 
-    // 6. Delete the entity if its status != ACTIVE
+    // delete the entity if its status ~= ACTIVE
     if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
         sk_entity_mgr_del(sched->entity_mgr, entity);
         sk_print("entity status=%d, will be deleted\n",

@@ -60,11 +60,6 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
     return entity;
 }
 
-void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr)
-{
-    entity->owner = mgr;
-}
-
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
 {
     entity->opt.read  = opt.read  ? opt.read  : default_entity_opt.read;
@@ -100,6 +95,11 @@ ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len)
 ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len)
 {
     return entity->opt.write(entity, buf, buf_len, entity->ud);
+}
+
+void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr)
+{
+    entity->owner = mgr;
 }
 
 void sk_entity_sethalftxn(sk_entity_t* entity, sk_txn_t* half_txn)

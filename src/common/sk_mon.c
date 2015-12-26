@@ -133,9 +133,9 @@ void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
                       iter.value, iter.value_sz);
 
             // 3.2 Reset data
-            double new_value = 0;
+            double value = 0;
             fhash_set(sk_mon->mon_tbl, iter.key, iter.key_sz,
-                      &new_value, sizeof(new_value));
+                      &value, sizeof(value));
         }
         fhash_iter_release(&iter);
     }

@@ -10,7 +10,6 @@
 #include "api/sk_core.h"
 #include "api/sk_mon.h"
 #include "api/sk_log.h"
-#include "api/sk_entity_util.h"
 #include "api/sk_engine.h"
 
 #define SK_ENGINE_UPTIME_TIMER_INTERVAL 1000
@@ -55,7 +54,7 @@ sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
                                   sk_obj_t* ud)
 {
     sk_timer_t* metrics_timer = sk_timersvc_timer_create(engine->timer_svc,
-                    sk_entity_orphan_create(NULL), expiration, timer_cb, ud);
+                    sk_entity_create(NULL), expiration, timer_cb, ud);
 
     SK_ASSERT(metrics_timer);
     return metrics_timer;
@@ -70,6 +69,15 @@ sk_engine_t* sk_engine_create(sk_engine_type_t type)
     engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr);
     engine->mon        = sk_mon_create();
     engine->timer_svc  = sk_timersvc_create(engine->evlp);
+
+    // Create a internal timer for metrics update & snapshot
+    if (type == SK_ENGINE_MASTER) {
+        _create_metrics_timer(engine, SK_ENGINE_UPTIME_TIMER_INTERVAL,
+                              _uptime_timer_triggered, NULL);
+
+        _create_metrics_timer(engine, SK_ENGINE_SNAPSHOT_TIMER_INTERVAL,
+                              _snapshot_timer_triggered, NULL);
+    }
 
     return engine;
 }
@@ -96,20 +104,10 @@ void* _sk_engine_thread(void* arg)
         sk_thread_env_set(thread_env);
     }
 
-    // 2. Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros.
-    //    Set logger cookie
+    // 2. Set logger cookie
     sk_logger_setcookie(SK_CORE_LOG_COOKIE);
 
-    // 3. Create a internal timer for metrics update & snapshot
-    if (SK_ENV_ENGINE->type == SK_ENGINE_MASTER) {
-        _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_UPTIME_TIMER_INTERVAL,
-                              _uptime_timer_triggered, NULL);
-
-        _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_SNAPSHOT_TIMER_INTERVAL,
-                              _snapshot_timer_triggered, NULL);
-    }
-
-    // 4. Start the engine
+    // 3. Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros
     sk_sched_t* sched = SK_ENV_SCHED;
     sk_sched_start(sched);
     return NULL;

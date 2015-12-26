@@ -7,7 +7,6 @@
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_pto.h"
-#include "api/sk_entity_util.h"
 #include "api/sk_timer_service.h"
 #include "api/sk_service.h"
 
@@ -469,7 +468,7 @@ int sk_service_job_create(sk_service_t* service,
     SK_ASSERT(job);
     sk_print("create a service periodic job\n");
 
-    sk_entity_t* timer_entity = sk_entity_orphan_create(NULL);
+    sk_entity_t* timer_entity = sk_entity_create(NULL);
 
     TimerEmit timer_msg = TIMER_EMIT__INIT;
     timer_msg.delayed   = delayed;

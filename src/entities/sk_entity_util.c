@@ -5,17 +5,9 @@
 #include "api/sk_txn.h"
 #include "api/sk_sched.h"
 #include "api/sk_pto.h"
+#include "api/sk_workflow.h"
 #include "api/sk_metrics.h"
 #include "api/sk_entity_util.h"
-
-sk_entity_t* sk_entity_orphan_create(sk_workflow_t* workflow)
-{
-    sk_entity_t* orphan = sk_entity_create(workflow);
-    sk_entity_mgr_t* orphan_entity_mgr = SK_ENV_CORE->orphan_entity_mgr;
-
-    sk_entity_mgr_add(orphan_entity_mgr, orphan);
-    return orphan;
-}
 
 void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
                            sk_entity_t* entity)
