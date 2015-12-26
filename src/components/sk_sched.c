@@ -303,31 +303,35 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     sk_entity_t* entity = event->entity;
     SK_ASSERT(entity);
 
-    // add entity into entity_mgr
+    // 1. Check the entity is active
     sk_entity_status_t status = sk_entity_status(entity);
     if (status != SK_ENTITY_ACTIVE) {
         sk_print("entity has already inactive or dead\n");
         return 0;
     }
 
+    // 2. Add entity into entity_mgr
     if (NULL == sk_entity_owner(entity)) {
         sk_entity_mgr_add(sched->entity_mgr, entity);
     }
 
+    // 3. Decode the message
     ProtobufCMessage* msg = protobuf_c_message_unpack(pto->descriptor,
                                                       NULL,
                                                       event->sz,
                                                       event->data);
 
+    // 4. Run event
     sk_txn_t* txn = event->txn;
     // TODO: should check the return value, if non-zero should cancel the
     // workflow
     pto->run(sched, entity, txn, msg);
 
+    // 5. Release message resources
     protobuf_c_message_free_unpacked(msg, NULL);
     free(event->data);
 
-    // delete the entity if its status ~= ACTIVE
+    // 6. Delete the entity if its status ~= ACTIVE
     if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
         sk_entity_mgr_del(sched->entity_mgr, entity);
         sk_print("entity status=%d, will be deleted\n",
@@ -513,20 +517,3 @@ int sk_sched_send(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     return _emit_event(sched, SK_IO_OUTPUT, entity, txn, pto_id, proto_msg);
 }
 
-void sk_sched_set_workflow(sk_sched_t* sched, flist* workflows)
-{
-    sched->workflows = workflows;
-}
-
-sk_workflow_t* sk_sched_workflow(sk_sched_t* sched, int idx)
-{
-    sk_workflow_t* workflow = NULL;
-    int i = 0;
-    flist_iter iter = flist_new_iter(sched->workflows);
-
-    do {
-        workflow = flist_each(&iter);
-    } while (workflow != NULL && i < idx);
-
-    return workflow;
-}

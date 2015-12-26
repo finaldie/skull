@@ -466,7 +466,7 @@ int sk_service_job_create(sk_service_t* service,
 {
     SK_ASSERT(service);
     SK_ASSERT(job);
-    sk_print("create a service periodic job\n");
+    sk_print("create a service timer job\n");
 
     sk_entity_t* timer_entity = sk_entity_create(NULL);
 

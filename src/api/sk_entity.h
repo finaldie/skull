@@ -29,7 +29,6 @@ typedef struct sk_entity_opt_t {
     void    (*destroy) (sk_entity_t*, void* ud);
 } sk_entity_opt_t;
 
-// ENTITY
 sk_entity_t* sk_entity_create(struct sk_workflow_t* workflow);
 void sk_entity_destroy(sk_entity_t* entity);
 
