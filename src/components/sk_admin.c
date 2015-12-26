@@ -13,7 +13,13 @@
 #include "api/sk_mon.h"
 #include "api/sk_admin.h"
 
-#define ADMIN_CMD_HELP "commands help:\n - help\n - show\n"
+#define ADMIN_CMD_HELP_CONTENT \
+    "commands:\n - help\n - metrics\n - last\n - status\n"
+
+#define ADMIN_CMD_HELP          "help"
+#define ADMIN_CMD_METRICS       "metrics"
+#define ADMIN_CMD_LAST_SNAPSHOT "last"
+#define ADMIN_CMD_STATUS        "status"
 
 static sk_module_t _sk_admin_module;
 
@@ -54,7 +60,8 @@ void _process_help(sk_txn_t* txn)
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
 
     // Populate the response
-    fmbuf_push(admin_data->response, ADMIN_CMD_HELP, sizeof(ADMIN_CMD_HELP));
+    fmbuf_push(admin_data->response, ADMIN_CMD_HELP_CONTENT,
+               sizeof(ADMIN_CMD_HELP_CONTENT));
 }
 
 static
@@ -70,7 +77,8 @@ void _mon_cb(const char* name, double value, void* ud)
         sk_print("metrics buffer is too small(128), name: %s, value: %f\n",
                  name, value);
         SK_LOG_WARN(SK_ENV_LOGGER,
-                "metrics buffer is too small(128), name: %s, value: %f", name, value);
+            "metrics buffer is too small(128), name: %s, value: %f",
+            name, value);
         return;
     }
 
@@ -124,7 +132,7 @@ void _fill_first_line(sk_mon_snapshot_t* snapshot,
 }
 
 static
-void _process_show(sk_txn_t* txn)
+void _process_metrics(sk_txn_t* txn)
 {
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
     sk_core_t* core = SK_ENV_CORE;
@@ -153,6 +161,52 @@ void _process_show(sk_txn_t* txn)
     sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot(core->umon);
     _transport_mon_snapshot(user_snapshot, admin_data);
     sk_mon_snapshot_destroy(user_snapshot);
+}
+
+static
+void _process_last_snapshot(sk_txn_t* txn)
+{
+    sk_admin_data_t* admin_data = sk_txn_udata(txn);
+    sk_core_t* core = SK_ENV_CORE;
+
+    // 1. snapshot global metrics
+    sk_mon_snapshot_t* global_snapshot = sk_mon_snapshot_latest(core->mon);
+    if (!global_snapshot) {
+        return;
+    }
+
+    _fill_first_line(global_snapshot, admin_data);
+    _transport_mon_snapshot(global_snapshot, admin_data);
+
+    // 2. snapshot master metrics
+    sk_mon_t* master_mon = core->master->mon;
+    sk_mon_snapshot_t* master_snapshot = sk_mon_snapshot_latest(master_mon);
+    _transport_mon_snapshot(master_snapshot, admin_data);
+
+    // 3. snapshot workers metrics
+    int threads = core->config->threads;
+    for (int i = 0; i < threads; i++) {
+        sk_engine_t* worker = core->workers[i];
+        sk_mon_snapshot_t* worker_snapshot = sk_mon_snapshot_latest(worker->mon);
+        _transport_mon_snapshot(worker_snapshot, admin_data);
+    }
+
+    // 4. shapshot user metrics
+    sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot_latest(core->umon);
+    _transport_mon_snapshot(user_snapshot, admin_data);
+}
+
+static
+void _process_status(sk_txn_t* txn)
+{
+    sk_admin_data_t* admin_data = sk_txn_udata(txn);
+    sk_core_t* core = SK_ENV_CORE;
+
+    sk_core_status_t status = sk_core_status(core);
+    char status_str[3];
+    snprintf(status_str, 3, "%d\n", status);
+
+    fmbuf_push(admin_data->response, status_str, 3);
 }
 
 /********************************* Public APIs ********************************/
@@ -212,10 +266,14 @@ int _admin_run(void* md, sk_txn_t* txn)
     sk_print("receive command: %s\n", command);
     SK_LOG_INFO(SK_ENV_LOGGER, "receive command: %s", command);
 
-    if (0 == strcmp("help", command)) {
+    if (0 == strcasecmp(ADMIN_CMD_HELP, command)) {
         _process_help(txn);
-    } else if (0 == strcmp("show", command)) {
-        _process_show(txn);
+    } else if (0 == strcasecmp(ADMIN_CMD_METRICS, command)) {
+        _process_metrics(txn);
+    } else if (0 == strcasecmp(ADMIN_CMD_LAST_SNAPSHOT, command)) {
+        _process_last_snapshot(txn);
+    } else if (0 == strcasecmp(ADMIN_CMD_STATUS, command)) {
+        _process_status(txn);
     } else {
         _process_help(txn);
     }
