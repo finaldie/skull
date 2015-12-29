@@ -125,13 +125,12 @@ void _destroy_apis(fhash* apis)
 }
 
 static
-void _schedule_api_task(sk_service_t* service,
-                              const sk_srv_task_t* task)
+void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
 {
     // construct protocol
+    sk_sched_t* src     = task->src;
     uint64_t    task_id = task->data.api.task_id;
     sk_txn_t*   txn     = task->data.api.txn;
-    sk_sched_t* src     = sk_txn_sched(txn);
 
     ServiceTaskRun task_run_pto = SERVICE_TASK_RUN__INIT;
     task_run_pto.task_id      = task_id;
@@ -454,10 +453,6 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     iocall_msg.task_id       = task_id;
     iocall_msg.service_name  = (char*) service->name;
     iocall_msg.api_name      = (char*) api_name;
-
-    // TODO: delete it
-    // 4. set the txn sched affinity
-    sk_txn_sched_set(txn, SK_ENV_SCHED);
 
     //5. Send to master engine
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched,

@@ -35,7 +35,6 @@ struct sk_txn_t {
     flist_iter      workflow_idx;
     sk_module_t*    current;
     fhash*          task_tbl;   // key: task_id, value: sk_txn_task_t
-    sk_sched_t*     working_sched; // which sched the txn module executed
 
     uint64_t        latest_taskid;
     int             running_tasks;
@@ -184,23 +183,6 @@ int sk_txn_is_first_module(sk_txn_t* txn)
 int sk_txn_is_last_module(sk_txn_t* txn)
 {
     return txn->current == sk_workflow_last_module(txn->workflow);
-}
-
-struct sk_sched_t* sk_txn_sched(sk_txn_t* txn)
-{
-    return txn->working_sched;
-}
-
-void sk_txn_sched_set(sk_txn_t* txn, sk_sched_t* working_sched)
-{
-    // The txn user module should always be running in the same worker,
-    // so the working_sched should be same as previous one
-    if (txn->working_sched) {
-        SK_ASSERT(txn->working_sched == working_sched);
-        return;
-    } else {
-        txn->working_sched = working_sched;
-    }
 }
 
 unsigned long long sk_txn_alivetime(sk_txn_t* txn)

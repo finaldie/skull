@@ -63,6 +63,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
 
     task.type      = SK_SRV_TASK_API_QUERY;
     task.io_status = io_status;
+    task.src       = src;
     task.data.api.service = service;
     task.data.api.txn     = txn;
     task.data.api.name    = api_name;

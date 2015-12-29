@@ -44,16 +44,20 @@ typedef enum sk_srv_task_type_t {
 } sk_srv_task_type_t;
 
 typedef struct sk_srv_task_t {
+    // Header
     sk_queue_elem_base_t base;  // This must be placed at the front
     sk_srv_task_type_t   type;
 
     sk_srv_io_status_t   io_status;
+
 #if __WORDSIZE == 64
     int _padding;
 #endif
 
+    // Body: source scheduler of service call
     sk_sched_t*          src;
 
+    // Body: Api or Timer call data
     union {
         struct api {
             sk_service_t*  service;
