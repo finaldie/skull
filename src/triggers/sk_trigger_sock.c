@@ -33,7 +33,7 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
 
     NetAccept accept_msg = NET_ACCEPT__INIT;
     accept_msg.fd = fd;
-    sk_sched_send(sched, entity, NULL, SK_PTO_NET_ACCEPT, &accept_msg);
+    sk_sched_send(sched, NULL, entity, NULL, SK_PTO_NET_ACCEPT, &accept_msg, 0);
 }
 
 static

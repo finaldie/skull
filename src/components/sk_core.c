@@ -57,15 +57,16 @@ void _sk_setup_engines(sk_core_t* core)
 {
     sk_config_t* config = core->config;
 
-    // create master scheduler
+    // 1. Create master engine
     core->master = sk_engine_create(SK_ENGINE_MASTER);
+    SK_LOG_INFO(core->logger, "master engine init successfully");
 
-    // create worker schedulers
+    // 2. Create worker engines
     core->workers = calloc((size_t)config->threads, sizeof(sk_engine_t*));
 
     for (int i = 0; i < config->threads; i++) {
         core->workers[i] = sk_engine_create(SK_ENGINE_WORKER);
-        SK_LOG_INFO(core->logger, "worker scheduler [%d] init successfully", i);
+        SK_LOG_INFO(core->logger, "worker engine [%d] init successfully", i);
 
         // create both-way links
         //  - create a link from master to worker
@@ -77,7 +78,7 @@ void _sk_setup_engines(sk_core_t* core)
         SK_LOG_INFO(core->logger, "io bridge [%d] init successfully", i);
     }
 
-    SK_LOG_INFO(core->logger, "skull schedulers init successfully");
+    SK_LOG_INFO(core->logger, "skull engines init successfully");
 }
 
 static
@@ -523,6 +524,9 @@ void sk_core_destroy(sk_core_t* core)
     free((void*)core->working_dir);
 
     // 10. destroy loggers
+    sk_print("skull engine stopped\n");
+    SK_LOG_INFO(core->logger, "skull engine stopped");
+
     sk_logger_destroy(core->logger);
     sk_log_tpl_destroy(core->info_log_tpl);
     sk_log_tpl_destroy(core->warn_log_tpl);

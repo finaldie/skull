@@ -43,12 +43,14 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
     sk_sched_t* sched = SK_ENV_SCHED;
 
     EntityDestroy destroy_msg = ENTITY_DESTROY__INIT;
-    sk_sched_push(sched, entity, NULL, SK_PTO_ENTITY_DESTROY, &destroy_msg);
+    sk_sched_send(sched, sched, entity, NULL,
+                  SK_PTO_ENTITY_DESTROY, &destroy_msg, 0);
 }
 
 // register the new sock fd into eventloop
 static
-int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+int _run(sk_sched_t* sched, sk_sched_t* src,
+         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     sk_print("net accept event req\n");
     SK_ASSERT(!txn);

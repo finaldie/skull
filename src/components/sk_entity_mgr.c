@@ -11,6 +11,7 @@
 static
 int _mark_dead(sk_entity_mgr_t* mgr, sk_entity_t* entity, void* ud)
 {
+    sk_print("mark entity as dead, entity: %p\n", (void*)entity);
     sk_entity_mgr_del(mgr, entity);
     return 0;
 }
@@ -58,6 +59,8 @@ sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
         return NULL;
     }
 
+    SK_ASSERT(sk_entity_owner(entity) == mgr);
+
     if (sk_entity_status(entity) == SK_ENTITY_DEAD) {
         // already dead, it will be destroy totally when the clean_dead be
         // called
@@ -104,6 +107,6 @@ void sk_entity_mgr_clean_dead(sk_entity_mgr_t* mgr)
                                                     (uint64_t)entity);
         SK_ASSERT(deleted_entity == entity);
         sk_entity_destroy(entity);
-        sk_print("clean up dead entity\n");
+        sk_print("clean up dead entity: %p\n", (void*)entity);
     }
 }

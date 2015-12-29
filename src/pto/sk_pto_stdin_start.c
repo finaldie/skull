@@ -36,11 +36,12 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
     sk_entity_t* entity = arg;
 
     sk_sched_t* sched = SK_ENV_SCHED;
-    sk_sched_push(sched, entity, NULL, SK_PTO_ENTITY_DESTROY, NULL);
+    sk_sched_send(sched, sched, entity, NULL, SK_PTO_ENTITY_DESTROY, NULL, 0);
 }
 
 static
-int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+int _run(sk_sched_t* sched, sk_sched_t* src,
+         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     sk_print("stdin start event req\n");
     SK_ASSERT(!txn);

@@ -23,6 +23,8 @@
 
 #define SK_SCHED_MAX_IO_BRIDGE 48
 
+#define SK_SCHED_MAX_ROUTING_HOP 15
+
 // SK_IO_BRIDGE
 typedef struct sk_io_bridge_t {
     sk_sched_t* dst;
@@ -57,6 +59,14 @@ struct sk_sched_t {
 };
 
 // INTERNAL APIs
+static
+void _event_destroy(sk_event_t* event)
+{
+    if (!event) return;
+
+    sk_print("destroy an event\n");
+    free(event->data);
+}
 
 // copy the events from bridge mq
 // NOTES: this copy action will be executed on the dst eventloop thread,
@@ -79,15 +89,16 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
     sk_print("_copy_event: %d\n", (int)event_cnt);
     sk_event_t event;
 
-    // push the event to the corresponding sk_io
+    // push/send the event to the corresponding sk_io
     while (!fmbuf_pop(io_bridge->mq, &event, SK_EVENT_SZ)) {
-        sk_sched_t* dst = io_bridge->dst;
-        uint32_t pto_id = event.pto_id;
-        sk_proto_t* pto = dst->pto_tbl[pto_id];
-        int priority = pto->priority;
-        sk_io_t* dst_io = io_bridge->dst->io_tbl[priority];
+        sk_sched_t* dst      = io_bridge->dst;
+        uint32_t    pto_id   = event.pto_id;
+        sk_proto_t* pto      = dst->pto_tbl[pto_id];
+        int         priority = pto->priority;
+        sk_io_t*    dst_io   = io_bridge->dst->io_tbl[priority];
 
-        sk_io_push(dst_io, SK_IO_INPUT, &event, 1);
+        sk_io_type_t io_type = event.dst == dst ? SK_IO_INPUT : SK_IO_OUTPUT;
+        sk_io_push(dst_io, io_type, &event, 1);
     }
 }
 
@@ -122,7 +133,7 @@ void sk_io_bridge_destroy(sk_io_bridge_t* io_bridge)
     // clean up the events data in io bridge
     sk_event_t event;
     while (!fmbuf_pop(io_bridge->mq, &event, SK_EVENT_SZ)) {
-        free(event.data);
+        _event_destroy(&event);
     }
 
     fmbuf_delete(io_bridge->mq);
@@ -208,6 +219,21 @@ sk_io_bridge_t* _find_affinity_bridge(sk_sched_t* sched, sk_sched_t* target,
 }
 
 static
+sk_io_bridge_t* _get_bridge_roundrobin(sk_sched_t* sched,
+                                       uint32_t* bridge_index)
+{
+    *bridge_index = sched->last_delivery_idx;
+    SK_ASSERT(*bridge_index < sched->bridge_size);
+    sk_io_bridge_t* io_bridge = sched->bridge_tbl[*bridge_index];
+
+    // update the index
+    sched->last_delivery_idx = (*bridge_index + 1) % sched->bridge_size;
+
+    return io_bridge;
+}
+
+// Route a message to destination
+static
 void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
                      uint64_t* delivery)
 {
@@ -220,57 +246,51 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
             break;
         }
 
-        sk_event_t tmp;
-        sk_event_t* raw_event = sk_io_rawget(src_io, SK_IO_OUTPUT, &tmp, 1);
-        SK_ASSERT(raw_event);
-
-        // 2. get the affinity or round-robin io bridge
-        sk_io_bridge_t* io_bridge = NULL;
-        sk_txn_t* txn = raw_event->txn;
-        sk_sched_t* affinity_sched = txn ? sk_txn_sched(txn) : NULL;
-
-        uint32_t bridge_index = 0;
-        if (txn && affinity_sched) {
-            io_bridge = _find_affinity_bridge(sched, affinity_sched,
-                                                       &bridge_index);
-        }
-
-        // Notes: if the io_bridge is NULL, means this is a message delivered
-        // from worker to master, so it needs another round of delivery
-        if (!io_bridge) {
-            bridge_index = sched->last_delivery_idx;
-            SK_ASSERT(bridge_index < sched->bridge_size);
-            io_bridge = sched->bridge_tbl[bridge_index];
-        }
-
-        // 2.1 calculate how many events can be transferred
-        size_t free_slots = fmbuf_free(io_bridge->mq) / SK_EVENT_SZ;
-        if (free_slots == 0) {
-            sk_print("no slot in the io bridge");
-            return;
-        }
-
-        // 2.2 If there is a slot for io bridge, pop the event from src io
         sk_event_t event;
         nevents = sk_io_pull(src_io, SK_IO_OUTPUT, &event, 1);
         SK_ASSERT(nevents == 1);
         sk_print("prepare to deliver event, pto id: %lu\n", nevents);
 
-        // 3. deliver event
-        // 3.1 deliver to affnity io bridge if it exist
-        // 3.2 round-robin deliver to the all io bridges if it doesn't exist
-        if (io_bridge) {
-            // 3.1
-            delivery[bridge_index] +=
-                (uint64_t) sk_io_bridge_deliver(io_bridge, &event);
-        } else {
-            // 3.2
-            delivery[bridge_index] +=
-                (uint64_t) sk_io_bridge_deliver(io_bridge, &event);
-
-            // update the index
-            sched->last_delivery_idx = (bridge_index + 1) % sched->bridge_size;
+        // 2. Drop event if it reach the max routing hop
+        if (event.hop == SK_SCHED_MAX_ROUTING_HOP) {
+            sk_print("stop routing this event due to it reach the max hop: %d\n",
+                     SK_SCHED_MAX_ROUTING_HOP);
+            _event_destroy(&event);
+            continue;
         }
+
+        // 3. get the affinity or round-robin io bridge
+        sk_io_bridge_t* io_bridge = NULL;
+        sk_sched_t* dst = event.dst;
+        uint32_t bridge_index = 0;
+
+        if (dst) {
+            io_bridge = _find_affinity_bridge(sched, dst, &bridge_index);
+
+            if (!io_bridge) {
+                io_bridge = _get_bridge_roundrobin(sched, &bridge_index);
+            }
+        } else {
+            io_bridge = _get_bridge_roundrobin(sched, &bridge_index);
+            event.dst = io_bridge->dst;
+        }
+
+        // 4. Check capacity of dst
+        size_t free_slots = fmbuf_free(io_bridge->mq) / SK_EVENT_SZ;
+        if (free_slots == 0) {
+            sk_print("no slot in the io bridge, drop it\n");
+            _event_destroy(&event);
+            continue;
+        }
+
+        // 5. deliver event
+        if (io_bridge) {
+            delivery[bridge_index] +=
+                (uint64_t) sk_io_bridge_deliver(io_bridge, &event);
+        }
+
+        // 6. update hop
+        event.hop++;
     } while (nevents > 0);
 }
 
@@ -295,6 +315,8 @@ void _deliver_msg(sk_sched_t* sched)
 static
 int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 {
+    SK_ASSERT(sched == event->dst);
+
     uint32_t pto_id = event->pto_id;
     sk_proto_t* pto = sched->pto_tbl[pto_id];
     sk_print("pto_id = %u\n", pto_id);
@@ -322,14 +344,13 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
                                                       event->data);
 
     // 4. Run event
-    sk_txn_t* txn = event->txn;
-    // TODO: should check the return value, if non-zero should cancel the
-    // workflow
-    pto->run(sched, entity, txn, msg);
+    sk_txn_t*   txn = event->txn;
+    sk_sched_t* src = event->src;
+    pto->run(sched, src, entity, txn, msg);
 
     // 5. Release message resources
     protobuf_c_message_free_unpacked(msg, NULL);
-    free(event->data);
+    _event_destroy(event);
 
     // 6. Delete the entity if its status ~= ACTIVE
     if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
@@ -389,15 +410,21 @@ int _process_events(sk_sched_t* sched)
 }
 
 static
-int _emit_event(sk_sched_t* sched, sk_io_type_t io_type, sk_entity_t* entity,
-                sk_txn_t* txn, uint32_t pto_id, void* proto_msg)
+int _emit_event(sk_sched_t* sched, sk_sched_t* dst, sk_io_type_t io_type,
+                sk_entity_t* entity, sk_txn_t* txn,
+                uint32_t pto_id, void* proto_msg, int flags)
 {
     sk_proto_t* pto = sched->pto_tbl[pto_id];
 
     sk_event_t event;
+    memset(&event, 0, sizeof(event));
+    event.src    = sched;
+    event.dst    = dst;
     event.pto_id = pto_id;
+    event.hop    = 0;
+    event.flags  = (uint32_t) flags & 0x0FFFFFFF;
     event.entity = entity;
-    event.txn = txn;
+    event.txn    = txn;
 
     if (proto_msg) {
         event.sz = protobuf_c_message_get_packed_size(proto_msg);
@@ -422,11 +449,13 @@ void _cleanup_skio_events(sk_io_t* io)
 {
     sk_event_t event;
     while (sk_io_pull(io, SK_IO_INPUT, &event, 1)) {
-        free(event.data);
+        sk_print("clean up skio event from input queue\n");
+        _event_destroy(&event);
     }
 
     while (sk_io_pull(io, SK_IO_OUTPUT, &event, 1)) {
-        free(event.data);
+        sk_print("clean up skio event from output queue\n");
+        _event_destroy(&event);
     }
 }
 
@@ -501,19 +530,11 @@ int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst)
     return 0;
 }
 
-// push a event into scheduler, and the scheduler will route it to the specific
-// sk_io
-int sk_sched_push(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
-                  uint32_t pto_id, void* proto_msg)
+int sk_sched_send(sk_sched_t* sched, sk_sched_t* dst,
+                  sk_entity_t* entity, sk_txn_t* txn,
+                  uint32_t pto_id, void* proto_msg, int flag)
 {
-    SK_ASSERT(entity);
-    return _emit_event(sched, SK_IO_INPUT, entity, txn, pto_id, proto_msg);
-}
+    sk_io_type_t io_type = sched == dst ? SK_IO_INPUT : SK_IO_OUTPUT;
 
-int sk_sched_send(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
-                  uint32_t pto_id, void* proto_msg)
-{
-    SK_ASSERT(entity);
-    return _emit_event(sched, SK_IO_OUTPUT, entity, txn, pto_id, proto_msg);
+    return _emit_event(sched, dst, io_type, entity, txn, pto_id, proto_msg, flag);
 }
-

@@ -3,6 +3,7 @@
 
 #include "api/sk_config.h"
 #include "api/sk_txn.h"
+#include "api/sk_sched.h"
 #include "api/sk_queue.h"
 #include "api/sk_object.h"
 #include "api/sk_service_data.h"
@@ -51,6 +52,8 @@ typedef struct sk_srv_task_t {
     int _padding;
 #endif
 
+    sk_sched_t*          src;
+
     union {
         struct api {
             sk_service_t*  service;
@@ -60,9 +63,9 @@ typedef struct sk_srv_task_t {
         } api;
 
         struct timer {
-            sk_service_t*  service;
+            sk_entity_t*   entity;
             sk_service_job job;
-            void*          ud;
+            sk_obj_t*      ud;
             int            valid;
 
 #if __WORDSIZE == 64

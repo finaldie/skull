@@ -113,7 +113,9 @@ PTO_OBJS = \
     pto/sk_pto_service_task_complete.o \
     pto/sk_pto_timer_triggered.o \
     pto/sk_pto_timer_emit.o \
-    pto/sk_pto_stdin_start.o
+    pto/sk_pto_stdin_start.o \
+    pto/sk_pto_service_timer_run.o \
+    pto/sk_pto_service_timer_complete.o
 
 PTO_IDLS_OBJS = \
     pto/idls/net_accept.pb-c.o \
@@ -123,7 +125,8 @@ PTO_IDLS_OBJS = \
     pto/idls/service_task.pb-c.o \
     pto/idls/timer_triggered.pb-c.o \
     pto/idls/timer_emit.pb-c.o \
-    pto/idls/stdin_start.pb-c.o
+    pto/idls/stdin_start.pb-c.o \
+    pto/idls/service_timer.pb-c.o
 
 USER_C_OBJS = \
     user-c/src/logger_private.o \
@@ -157,7 +160,8 @@ PROTO_IDLS = \
     service_task.proto \
     timer_triggered.proto \
     timer_emit.proto \
-    stdin_start.proto
+    stdin_start.proto \
+    service_timer.proto
 
 UT_OBJS = \
     user-c/src/unittest.o \

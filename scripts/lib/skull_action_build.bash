@@ -26,10 +26,10 @@ function action_build()
 
     # Build accoring to the args
     if $clean; then
-        _action_clean
+        _action_clean $@
     else
         _action_prepare
-        _action_build
+        _action_build $@
     fi
 }
 

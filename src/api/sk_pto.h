@@ -30,6 +30,7 @@ typedef struct sk_proto_t {
 
     const void* descriptor; // the message descriptor
     int (*run) (struct sk_sched_t* sched,
+                struct sk_sched_t* src,
                 sk_entity_t* entity,
                 sk_txn_t* txn,
                 void* proto_msg);
@@ -80,6 +81,14 @@ extern sk_proto_t sk_pto_timer_emit;
 #include "pto/idls/stdin_start.pb-c.h"
 #define SK_PTO_STDIN_START 8
 extern sk_proto_t sk_pto_stdin_start;
+
+// Protocol 10, service timer run
+#include "pto/idls/service_timer.pb-c.h"
+#define SK_PTO_SVC_TIMER_RUN 9
+extern sk_proto_t sk_pto_svc_timer_run;
+
+#define SK_PTO_SVC_TIMER_COMPLETE 10
+extern sk_proto_t sk_pto_svc_timer_complete;
 
 /******************************************************************************/
 // global protocol table

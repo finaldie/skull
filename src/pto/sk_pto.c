@@ -12,5 +12,7 @@ sk_proto_t* sk_pto_tbl[] = {
     &sk_pto_timer_triggered,    // SK_PTO_TIMER_TRIGGERED
     &sk_pto_timer_emit,         // SK_PTO_TIMER_EMIT
     &sk_pto_stdin_start,        // SK_PTO_STDIN_START
+    &sk_pto_svc_timer_run,      // SK_PTO_SVC_TIMER_RUN
+    &sk_pto_svc_timer_complete, // SK_PTO_SVC_TIMER_COMPLETE
     NULL
 };

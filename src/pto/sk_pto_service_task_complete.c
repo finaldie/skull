@@ -17,7 +17,8 @@
  * @note This method will run in the master
  */
 static
-int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+int _run(sk_sched_t* sched, sk_sched_t* src,
+         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     SK_ASSERT(sched);
     SK_ASSERT(entity);
@@ -45,7 +46,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     //
     // note: This 'workflow' will also be ran in the previous worker
     if (sk_txn_module_complete(txn)) {
-        sk_sched_send(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
+        sk_sched_send(sched, src, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
     }
 
     // 5. schedule another round of service call if exist

@@ -12,7 +12,7 @@
 #include "api/sk_timer_service.h"
 
 static
-int _run (sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
+int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
           void* proto_msg)
 {
     TimerTriggered* timer_pto = proto_msg;

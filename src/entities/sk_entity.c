@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "api/sk_utils.h"
 #include "api/sk_entity.h"
 #include "api/sk_workflow.h"
 #include "api/sk_metrics.h"
@@ -57,6 +58,7 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
     entity->status   = SK_ENTITY_ACTIVE;
 
     sk_metrics_global.entity_create.inc(1);
+    sk_print("create entity %p\n", (void*)entity);
     return entity;
 }
 

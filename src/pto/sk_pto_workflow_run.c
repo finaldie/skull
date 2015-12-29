@@ -16,19 +16,20 @@
 
 #define SK_MAX_COOKIE_LEN 256
 
-static int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
+static int _run(sk_sched_t* sched, sk_sched_t* src,
+                sk_entity_t* entity, sk_txn_t* txn,
                 void* proto_msg);
 
 static
-int _module_run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
-                void* proto_msg)
+int _module_run(sk_sched_t* sched, sk_sched_t* src,
+                sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
     if (!module) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "no module in this workflow, skip it");
         sk_txn_setstate(txn, SK_TXN_COMPLETED);
-        return _run(sched, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, proto_msg);
     }
 
     // before run module, set the module name for this module
@@ -67,16 +68,17 @@ int _module_run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     // 3.1 if no, send a event for next module
     if (!sk_txn_is_last_module(txn)) {
         sk_print("doesn't reach the last module\n");
-        sk_sched_push(sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL);
+        sk_sched_send(sched, sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
         return 0;
     } else {
         sk_txn_setstate(txn, SK_TXN_COMPLETED);
-        return _run(sched, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, proto_msg);
     }
 }
 
 static
-int _module_pack(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
+int _module_pack(sk_sched_t* sched, sk_sched_t* src,
+                 sk_entity_t* entity, sk_txn_t* txn,
                  void* proto_msg)
 {
     sk_workflow_t* workflow = sk_txn_workflow(txn);
@@ -85,7 +87,7 @@ int _module_pack(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     // 1. no pack function means no need to send response
     if (!last_module->pack) {
         sk_txn_setstate(txn, SK_TXN_PACKED);
-        return _run(sched, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, proto_msg);
     }
 
     // 2. pack the data, and send the response if needed
@@ -112,14 +114,18 @@ int _module_pack(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn,
     }
 
     sk_txn_setstate(txn, SK_TXN_PACKED);
-    return _run(sched, entity, txn, proto_msg);
+    return _run(sched, src, entity, txn, proto_msg);
 }
 
 // Every time pick up the next module in the workflow module list, then execute
 // the its `run` method. If reach the last module of the workflow, then will
 // execute the `pack` method
+//
+// TODO: should check the _module_run return value, if non-zero should cancel
+// the workflow
 static
-int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
+         void* proto_msg)
 {
     SK_ASSERT(sched && entity && txn);
 
@@ -129,20 +135,20 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     case SK_TXN_UNPACKED: {
         sk_print("txn - UNPACKED\n");
         sk_txn_setstate(txn, SK_TXN_RUNNING);
-        return _run(sched, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, proto_msg);
     }
     case SK_TXN_RUNNING: {
         sk_print("txn - RUNNING\n");
-        return _module_run(sched, entity, txn, proto_msg);
+        return _module_run(sched, src, entity, txn, proto_msg);
     }
     case SK_TXN_PENDING: {
         sk_print("txn - PENDING\n");
         sk_txn_setstate(txn, SK_TXN_RUNNING);
-        return _run(sched, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, proto_msg);
     }
     case SK_TXN_COMPLETED: {
         sk_print("txn - COMPLETED\n");
-        return _module_pack(sched, entity, txn, proto_msg);
+        return _module_pack(sched, src, entity, txn, proto_msg);
     }
     case SK_TXN_PACKED: {
         sk_print("txn - PACKED: txn destroy\n");

@@ -31,6 +31,9 @@ void _snapshot_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     // 2. make a snapshot
     sk_core_t* core = SK_ENV_CORE;
     sk_mon_snapshot_all(core);
+
+    // 3. destroy the timer entity
+    sk_entity_mark(entity, SK_ENTITY_INACTIVE);
 }
 
 // Triggered every 1 second
@@ -43,6 +46,9 @@ void _uptime_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 
     // 2. update uptime
     sk_metrics_global.uptime.inc(1);
+
+    // 3. destroy the timer entity
+    sk_entity_mark(entity, SK_ENTITY_INACTIVE);
 }
 
 static
@@ -116,9 +122,11 @@ void* _sk_engine_thread(void* arg)
 
     // 3. Create a internal timer for metrics update & snapshot
     if (SK_ENV_ENGINE->type == SK_ENGINE_MASTER) {
+        sk_print("start uptime metrics timer\n");
         _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_UPTIME_TIMER_INTERVAL,
                               _uptime_timer_triggered);
 
+        sk_print("start metrics snapshot timer\n");
         _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_SNAPSHOT_TIMER_INTERVAL,
                               _snapshot_timer_triggered);
     }

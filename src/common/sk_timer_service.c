@@ -96,8 +96,8 @@ void _timer_triggered(fev_state* state, void* arg)
     timer_pto.timer_cb.data  = (uint8_t*) &timer->trigger;
     timer_pto.ud             = (uint64_t) (uintptr_t) timer->ud;
 
-    sk_sched_push(SK_ENV_SCHED, timer->entity, NULL, SK_PTO_TIMER_TRIGGERED,
-                  &timer_pto);
+    sk_sched_send(SK_ENV_SCHED, SK_ENV_SCHED, timer->entity, NULL,
+                  SK_PTO_TIMER_TRIGGERED, &timer_pto, 0);
 }
 
 sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
@@ -148,7 +148,6 @@ void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
 
     fhash_u64_del(svc->timers, (uint64_t) (uintptr_t) timer);
     sk_obj_destroy(timer->ud);
-    sk_entity_mark(timer->entity, SK_ENTITY_INACTIVE);
 
     free(timer);
     svc->timer_alive--;

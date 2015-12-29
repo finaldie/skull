@@ -18,12 +18,14 @@
  * @note This method will run in the worker thread
  */
 static
-int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+int _run(sk_sched_t* sched, sk_sched_t* src,
+         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     SK_ASSERT(sched);
     SK_ASSERT(entity);
     SK_ASSERT(txn);
     SK_ASSERT(proto_msg);
+    SK_ASSERT(src == SK_ENV_CORE->master->sched);
 
     // 1. unpack the parameters
     ServiceTaskRun* task_run_msg = proto_msg;
@@ -69,8 +71,8 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     task_complete_msg.task_id = task_id;
     task_complete_msg.service_name = (char*) service_name;
 
-    sk_sched_send(SK_ENV_SCHED, entity, txn,
-                  SK_PTO_SERVICE_TASK_COMPLETE, &task_complete_msg);
+    sk_sched_send(SK_ENV_SCHED, src, entity, txn,
+                  SK_PTO_SERVICE_TASK_COMPLETE, &task_complete_msg, 0);
 
     // 6. update metrics
     sk_metrics_worker.srv_iocall_execute.inc(1);

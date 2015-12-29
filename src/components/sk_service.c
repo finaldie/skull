@@ -7,6 +7,7 @@
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_pto.h"
+#include "api/sk_metrics.h"
 #include "api/sk_timer_service.h"
 #include "api/sk_service.h"
 
@@ -128,8 +129,9 @@ void _schedule_api_task(sk_service_t* service,
                               const sk_srv_task_t* task)
 {
     // construct protocol
-    uint64_t  task_id = task->data.api.task_id;
-    sk_txn_t* txn     = task->data.api.txn;
+    uint64_t    task_id = task->data.api.task_id;
+    sk_txn_t*   txn     = task->data.api.txn;
+    sk_sched_t* src     = sk_txn_sched(txn);
 
     ServiceTaskRun task_run_pto = SERVICE_TASK_RUN__INIT;
     task_run_pto.task_id      = task_id;
@@ -138,8 +140,8 @@ void _schedule_api_task(sk_service_t* service,
     task_run_pto.io_status    = (uint32_t) task->io_status;
 
     // deliver the protocol
-    sk_sched_send(SK_ENV_SCHED, sk_txn_entity(txn), txn,
-                  SK_PTO_SERVICE_TASK_RUN, &task_run_pto);
+    sk_sched_send(SK_ENV_SCHED, src, sk_txn_entity(txn), txn,
+                  SK_PTO_SERVICE_TASK_RUN, &task_run_pto, 0);
 
     sk_print("service: deliver task(%d) to worker\n", (int) task_id);
     SK_LOG_DEBUG(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
@@ -149,21 +151,23 @@ void _schedule_api_task(sk_service_t* service,
 static
 void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
 {
-    // TODO: should schedule to background io worker, currently just run at
-    // master thread
-    sk_service_job job = task->data.timer.job;
-    void* ud = task->data.timer.ud;
-    int valid = task->data.timer.valid;
+    sk_service_job job    = task->data.timer.job;
+    sk_entity_t*   entity = task->data.timer.entity;
+    sk_sched_t*    src    = task->src;
+    sk_obj_t*      ud     = task->data.timer.ud;
+    int            valid  = task->data.timer.valid;
 
-    // 1. Run timer job
+    ServiceTimerRun msg = SERVICE_TIMER_RUN__INIT;
+    msg.svc       = (uintptr_t) (void*) service;
+    msg.job.len   = sizeof (job);
+    msg.job.data  = (uint8_t*) &job;
+    msg.ud        = (uintptr_t) (void*) ud;
+    msg.valid     = valid;
+
+    // Schedule back to source scheduler to handle the task
     sk_print("schedule timer task: valid: %d\n", valid);
-    job(service, ud, valid);
-
-    // 2. mark task complete
-    sk_service_task_setcomplete(service);
-
-    // 4. Re-schedule tasks
-    sk_service_schedule_tasks(service);
+    sk_sched_send(SK_ENV_SCHED, src, entity, NULL,
+                      SK_PTO_SVC_TIMER_RUN, &msg, 0);
 }
 
 // Public APIs of service
@@ -437,7 +441,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
                   invoke from a module, service_name: %s, api_name: %s\n",
                   service->name, api_name);
 
-    // construct a sk_txn_task and add it
+    // 2. construct a sk_txn_task and add it
     sk_txn_taskdata_t task_data;
     task_data.request    = req;
     task_data.request_sz = req_sz;
@@ -445,18 +449,77 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     task_data.user_data  = ud;
     uint64_t task_id = sk_txn_task_add(txn, &task_data);
 
-    // 2. construct iocall protocol
+    // 3. construct iocall protocol
     ServiceIocall iocall_msg = SERVICE_IOCALL__INIT;
     iocall_msg.task_id       = task_id;
     iocall_msg.service_name  = (char*) service->name;
     iocall_msg.api_name      = (char*) api_name;
 
-    // 3. set the txn sched affinity
+    // TODO: delete it
+    // 4. set the txn sched affinity
     sk_txn_sched_set(txn, SK_ENV_SCHED);
 
-    sk_sched_send(SK_ENV_SCHED, sk_txn_entity(txn), txn,
-                  SK_PTO_SERVICE_IOCALL, &iocall_msg);
+    //5. Send to master engine
+    sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched,
+                  sk_txn_entity(txn), txn,
+                  SK_PTO_SERVICE_IOCALL, &iocall_msg, 0);
     return 0;
+}
+
+typedef struct timer_jobdata_t {
+    sk_service_t*  service;
+    sk_entity_t*   entity;
+    sk_service_job job;
+    sk_obj_t*      ud;
+    int            triggered;
+
+#if __WORDSIZE == 64
+    int            _padding;
+#endif
+} timer_jobdata_t;
+
+static
+void _timer_jobdata_destroy(sk_ud_t ud)
+{
+    sk_print("destroy timer jobdata\n");
+    timer_jobdata_t* jobdata = ud.ud;
+
+    if (NULL == sk_entity_owner(jobdata->entity)) {
+        sk_print("destroy orphan entity\n");
+        sk_entity_destroy(jobdata->entity);
+    }
+
+    if (!jobdata->triggered) {
+        sk_print("destroy untriggered timer userdata\n");
+        sk_obj_destroy(jobdata->ud);
+    }
+
+    free(jobdata);
+}
+
+static
+void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
+{
+    // 1. Extract timer parameters
+    sk_print("timer triggered\n");
+    timer_jobdata_t* jobdata = sk_obj_get(ud).ud;
+    sk_service_t*    svc     = jobdata->service;
+    sk_service_job   job     = jobdata->job;
+    sk_obj_t*        udata   = jobdata->ud;
+
+    TimerEmit timer_msg = TIMER_EMIT__INIT;
+    timer_msg.svc       = (uint64_t) (uintptr_t) svc;
+    timer_msg.job.len   = sizeof (job);
+    timer_msg.job.data  = (uint8_t*) &job;
+    timer_msg.udata     = (uint64_t) (uintptr_t) udata;
+    timer_msg.valid     = valid;
+
+    // 2. Send event to prepare running a service task
+    sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched, entity, NULL,
+                    SK_PTO_TIMER_EMIT, &timer_msg, 0);
+
+    // 3. mark it as triggered
+    jobdata->triggered = 1;
 }
 
 int sk_service_job_create(sk_service_t* service,
@@ -468,26 +531,27 @@ int sk_service_job_create(sk_service_t* service,
     SK_ASSERT(job);
     sk_print("create a service timer job\n");
 
-    sk_entity_t* timer_entity = sk_entity_create(NULL);
+    // 1. Create timer callback data
+    timer_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
+    jobdata->service = service;
+    jobdata->entity  = sk_entity_create(NULL);
+    jobdata->job     = job;
+    jobdata->ud      = ud;
 
-    TimerEmit timer_msg = TIMER_EMIT__INIT;
-    timer_msg.delayed   = delayed;
-    timer_msg.svc       = (uint64_t) (uintptr_t) service;
-    timer_msg.job.len   = sizeof (job);
-    timer_msg.job.data  = (uint8_t*) &job;
-    timer_msg.udata     = (uint64_t) (uintptr_t) ud;
+    sk_ud_t cb_data  = {.ud = jobdata};
+    sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_jobdata_destroy};
 
-    // During the initialization period, all the logic be ran in master thread,
-    // otherwise it be ran in worker thread, so the strategy is:
-    //  1) In master, we *push* event to master scheduler directly
-    //  2) In worker, we *send* event to master scheduler
-    if (SK_ENV_ENGINE == SK_ENV_CORE->master) {
-        sk_sched_push(SK_ENV_SCHED, timer_entity, NULL,
-                      SK_PTO_TIMER_EMIT, &timer_msg);
-    } else {
-        sk_sched_send(SK_ENV_SCHED, timer_entity, NULL,
-                      SK_PTO_TIMER_EMIT, &timer_msg);
-    }
+    sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
 
+    // 2. Create sk_timer with callback data
+    sk_timersvc_t* timersvc = SK_ENV_TMSVC;
+    sk_timer_t* timer =
+        sk_timersvc_timer_create(timersvc, jobdata->entity, delayed,
+                                            _timer_triggered, param_obj);
+    SK_ASSERT(timer);
+
+    // 3. Record metrics
+    sk_metrics_global.srv_timer_emit.inc(1);
+    sk_metrics_worker.srv_timer_emit.inc(1);
     return 0;
 }
