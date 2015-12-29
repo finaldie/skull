@@ -394,8 +394,9 @@ void sk_core_init(sk_core_t* core)
 
 void sk_core_start(sk_core_t* core)
 {
-    SK_LOG_INFO(core->logger, "skull engine starting...");
-    sk_print("skull engine starting...\n");
+    sk_print("================== skull engine starting ==================\n");
+    SK_LOG_INFO(core->logger,
+             "================== skull engine starting ==================");
     core->status = SK_CORE_STARTING;
 
     // 1. Complete the master_env
@@ -459,11 +460,12 @@ void sk_core_start(sk_core_t* core)
 
 void sk_core_stop(sk_core_t* core)
 {
-    sk_print("skull engine stoping...\n");
-    SK_LOG_INFO(core->logger, "skull engine stopping");
-    core->status = SK_CORE_STOPPING;
-
     if (!core) return;
+
+    sk_print("=================== skull engine stopping ===================\n");
+    SK_LOG_INFO(core->logger,
+             "=================== skull engine stopping ===================");
+    core->status = SK_CORE_STOPPING;
 
     sk_engine_stop(core->master);
 
@@ -478,8 +480,9 @@ void sk_core_destroy(sk_core_t* core)
         return;
     }
 
-    sk_print("skull engine destroying...\n");
-    SK_LOG_INFO(core->logger, "skull engine destroying...");
+    sk_print("================== skull engine destroying ==================\n");
+    SK_LOG_INFO(core->logger,
+             "================== skull engine destroying ==================");
     core->status = SK_CORE_DESTROYING;
 
     // 1. destroy triggers
@@ -524,8 +527,9 @@ void sk_core_destroy(sk_core_t* core)
     free((void*)core->working_dir);
 
     // 10. destroy loggers
-    sk_print("skull engine stopped\n");
-    SK_LOG_INFO(core->logger, "skull engine stopped");
+    sk_print("=================== skull engine stopped ====================\n");
+    SK_LOG_INFO(core->logger,
+             "=================== skull engine stopped ====================");
 
     sk_logger_destroy(core->logger);
     sk_log_tpl_destroy(core->info_log_tpl);
