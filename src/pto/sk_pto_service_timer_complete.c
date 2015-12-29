@@ -10,6 +10,7 @@
 #include "api/sk_entity.h"
 #include "api/sk_txn.h"
 #include "api/sk_pto.h"
+#include "api/sk_metrics.h"
 #include "api/sk_service.h"
 
 // This proto is ran in master engine
@@ -31,6 +32,10 @@ int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn
     // 3. Destory timer entity
     sk_sched_send(sched, src, entity, NULL,
                   SK_PTO_ENTITY_DESTROY, NULL, 0);
+
+    // 4. Update service timer metrics
+    sk_metrics_global.srv_timer_complete.inc(1);
+    sk_metrics_worker.srv_timer_complete.inc(1);
     return 0;
 }
 
