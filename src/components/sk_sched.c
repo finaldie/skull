@@ -9,6 +9,7 @@
 #include "flibs/fmbuf.h"
 #include "flibs/fev.h"
 
+#include "api/sk_const.h"
 #include "api/sk_utils.h"
 #include "api/sk_pto.h"
 #include "api/sk_event.h"
@@ -18,12 +19,6 @@
 #include "api/sk_env.h"
 #include "api/sk_txn.h"
 #include "api/sk_sched.h"
-
-#define SK_SCHED_PULL_NUM   65536
-
-#define SK_SCHED_MAX_IO_BRIDGE 48
-
-#define SK_SCHED_MAX_ROUTING_HOP 15
 
 // SK_IO_BRIDGE
 typedef struct sk_io_bridge_t {
@@ -49,10 +44,7 @@ struct sk_sched_t {
     uint32_t   last_delivery_idx;
     uint32_t   running:1;
     uint32_t   _reserved:31;
-
-#if __WORDSIZE == 64
-    int        _padding;
-#endif
+    int        flags;
 
     // sk_event read buffer
     sk_event_t events_buffer[1];
@@ -64,7 +56,8 @@ void _event_destroy(sk_event_t* event)
 {
     if (!event) return;
 
-    sk_print("destroy an event\n");
+    sk_print("destroy an event: {pto_id: %d, hop: %d}\n",
+             event->pto_id, event->hop);
     free(event->data);
 }
 
@@ -218,18 +211,39 @@ sk_io_bridge_t* _find_affinity_bridge(sk_sched_t* sched, sk_sched_t* target,
     return NULL;
 }
 
+// Find next routable io bridge by roundrobin alg
 static
-sk_io_bridge_t* _get_bridge_roundrobin(sk_sched_t* sched,
-                                       uint32_t* bridge_index)
+sk_io_bridge_t* _find_bridge_roundrobin(sk_sched_t* sched, uint32_t* bridge_idx)
 {
-    *bridge_index = sched->last_delivery_idx;
-    SK_ASSERT(*bridge_index < sched->bridge_size);
-    sk_io_bridge_t* io_bridge = sched->bridge_tbl[*bridge_index];
+    uint32_t end = sched->last_delivery_idx;
+    int find = 0;
 
-    // update the index
-    sched->last_delivery_idx = (*bridge_index + 1) % sched->bridge_size;
+    do {
+        uint32_t        idx       = sched->last_delivery_idx;
+        sk_io_bridge_t* bridge    = sched->bridge_tbl[idx];
+        int             dst_flags = bridge->dst->flags;
+
+        if ((dst_flags & SK_SCHED_NON_RR_ROUTABLE) == 0) {
+            find = 1;
+            break;
+        }
+
+        // update the index
+        sched->last_delivery_idx = (idx + 1) % sched->bridge_size;
+    } while (sched->last_delivery_idx != end);
+
+    if (!find) {
+        return NULL;
+    }
+
+    *bridge_idx = sched->last_delivery_idx;
+    SK_ASSERT(*bridge_idx < sched->bridge_size);
+
+    sk_io_bridge_t* io_bridge = sched->bridge_tbl[*bridge_idx];
+    sched->last_delivery_idx = (*bridge_idx + 1) % sched->bridge_size;
+
     sk_print("deliver to iobridge-%d, last_delivery_idx: %d, bridge_size: %d\n",
-             *bridge_index, sched->last_delivery_idx, sched->bridge_size);
+        *bridge_index, sched->last_delivery_idx, sched->bridge_size);
 
     return io_bridge;
 }
@@ -270,11 +284,20 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
             io_bridge = _find_affinity_bridge(sched, dst, &bridge_index);
 
             if (!io_bridge) {
-                io_bridge = _get_bridge_roundrobin(sched, &bridge_index);
+                io_bridge = _find_bridge_roundrobin(sched, &bridge_index);
             }
         } else {
-            io_bridge = _get_bridge_roundrobin(sched, &bridge_index);
+            io_bridge = _find_bridge_roundrobin(sched, &bridge_index);
             event.dst = io_bridge->dst;
+        }
+
+        if (!io_bridge) {
+            sk_print("cannot find a io bridge to deliver\n");
+            SK_LOG_WARN(SK_ENV_CORE->logger,
+                "cannot find a io bridge to deliver, ptoid: %d", event.pto_id);
+
+            _event_destroy(&event);
+            continue;
         }
 
         // 4. Check capacity of dst
@@ -461,17 +484,16 @@ void _cleanup_skio_events(sk_io_t* io)
     }
 }
 
-
-
 // APIs
-sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr)
+sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr, int flags)
 {
     sk_sched_t* sched = calloc(1, sizeof(*sched) +
                                SK_EVENT_SZ * SK_SCHED_PULL_NUM);
-    sched->evlp = evlp;
+    sched->evlp       = evlp;
     sched->entity_mgr = entity_mgr;
-    sched->pto_tbl = sk_pto_tbl;
-    sched->running = 0;
+    sched->pto_tbl    = sk_pto_tbl;
+    sched->running    = 0;
+    sched->flags      = flags;
 
     // create the default io
     for (int i = SK_PTO_PRI_MIN; i <= SK_PTO_PRI_MAX; i++) {
@@ -536,6 +558,7 @@ int sk_sched_send(sk_sched_t* sched, sk_sched_t* dst,
                   sk_entity_t* entity, sk_txn_t* txn,
                   uint32_t pto_id, void* proto_msg, int flag)
 {
+    SK_ASSERT(entity);
     sk_io_type_t io_type = sched == dst ? SK_IO_INPUT : SK_IO_OUTPUT;
 
     return _emit_event(sched, dst, io_type, entity, txn, pto_id, proto_msg, flag);

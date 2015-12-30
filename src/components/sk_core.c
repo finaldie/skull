@@ -58,14 +58,14 @@ void _sk_setup_engines(sk_core_t* core)
     sk_config_t* config = core->config;
 
     // 1. Create master engine
-    core->master = sk_engine_create(SK_ENGINE_MASTER);
+    core->master = sk_engine_create(SK_ENGINE_MASTER, 0);
     SK_LOG_INFO(core->logger, "master engine init successfully");
 
     // 2. Create worker engines
     core->workers = calloc((size_t)config->threads, sizeof(sk_engine_t*));
 
     for (int i = 0; i < config->threads; i++) {
-        core->workers[i] = sk_engine_create(SK_ENGINE_WORKER);
+        core->workers[i] = sk_engine_create(SK_ENGINE_WORKER, 0);
         SK_LOG_INFO(core->logger, "worker engine [%d] init successfully", i);
 
         // create both-way links
@@ -87,7 +87,7 @@ void _sk_setup_engines(sk_core_t* core)
     int bio_idx = 0;
 
     while ((bio_name = flist_each(&iter))) {
-        sk_engine_t* bio = sk_engine_create(SK_ENGINE_BIO);
+        sk_engine_t* bio = sk_engine_create(SK_ENGINE_BIO, SK_SCHED_NON_RR_ROUTABLE);
         sk_engine_link(bio, core->master);
         sk_engine_link(core->master, bio);
 

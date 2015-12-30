@@ -81,13 +81,13 @@ sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
     return metrics_timer;
 }
 
-sk_engine_t* sk_engine_create(sk_engine_type_t type)
+sk_engine_t* sk_engine_create(sk_engine_type_t type, int flags)
 {
     sk_engine_t* engine = calloc(1, sizeof(*engine));
     engine->type       = type;
     engine->evlp       = sk_eventloop_create();
     engine->entity_mgr = sk_entity_mgr_create(0);
-    engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr);
+    engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr, flags);
     engine->mon        = sk_mon_create();
     engine->timer_svc  = sk_timersvc_create(engine->evlp);
 
