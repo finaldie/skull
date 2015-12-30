@@ -242,8 +242,8 @@ sk_io_bridge_t* _find_bridge_roundrobin(sk_sched_t* sched, uint32_t* bridge_idx)
     sk_io_bridge_t* io_bridge = sched->bridge_tbl[*bridge_idx];
     sched->last_delivery_idx = (*bridge_idx + 1) % sched->bridge_size;
 
-    sk_print("deliver to iobridge-%d, last_delivery_idx: %d, bridge_size: %d\n",
-        *bridge_index, sched->last_delivery_idx, sched->bridge_size);
+    sk_print("deliver to iobridge-%u, last_delivery_idx: %u, bridge_size: %u\n",
+        *bridge_idx, sched->last_delivery_idx, sched->bridge_size);
 
     return io_bridge;
 }
