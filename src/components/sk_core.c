@@ -141,7 +141,7 @@ void _sk_setup_workflows(sk_core_t* core)
                           module_name);
             } else {
                 sk_print("load module [%s] failed\n", module_name);
-                SK_LOG_ERROR(core->logger, "load module [%s] failed",
+                SK_LOG_FATAL(core->logger, "load module [%s] failed",
                              module_name);
                 exit(1);
             }
@@ -244,7 +244,7 @@ void _sk_setup_services(sk_core_t* core)
         sk_service_t* service = sk_service_create(service_name, srv_cfg_item);
         int ret = sk_service_load(service, NULL);
         if (ret) {
-            SK_LOG_ERROR(core->logger, "setup service %s failed", service_name);
+            SK_LOG_FATAL(core->logger, "setup service %s failed", service_name);
             exit(1);
         }
 
@@ -463,7 +463,7 @@ void sk_core_start(sk_core_t* core)
         sk_engine_t* worker = core->workers[i];
         // this *worker_thread_env* will be deleted when thread exit
         sk_thread_env_t* worker_env = sk_thread_env_create(core, worker,
-                                                           "worker", i);
+                                                           "worker-%d", i);
         int ret = sk_engine_start(worker, worker_env, 1);
         if (ret) {
             sk_print("Start worker io engine failed, errno: %d\n", errno);

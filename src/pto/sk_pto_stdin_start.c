@@ -50,8 +50,9 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     int ret = fnet_set_nonblocking(STDIN_FILENO);
     if (ret < 0) {
         sk_print("setup stdin to nonblocking failed, errno: %d\n", errno);
-        SK_LOG_ERROR(SK_ENV_LOGGER,
+        SK_LOG_FATAL(SK_ENV_LOGGER,
             "setup stdin to nonblocking failed, errno: %d", errno);
+        SK_ASSERT(0);
 
         return 1;
     }

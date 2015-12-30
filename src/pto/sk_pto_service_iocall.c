@@ -87,7 +87,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     // 4. schedule 'service task' according the data mode
     //    (as much as possible) and deliver them to worker thread
     size_t scheduled_task = sk_service_schedule_tasks(service);
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
+    SK_LOG_TRACE(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
                  "scheduled %zu tasks", service_name, scheduled_task);
 
     // 5. update metrics

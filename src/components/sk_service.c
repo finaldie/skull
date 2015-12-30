@@ -54,15 +54,16 @@ void _sk_service_handle_exception(sk_service_t* service, sk_srv_status_t st)
 {
     switch (st) {
     case SK_SRV_STATUS_OK:
-        SK_LOG_DEBUG(SK_ENV_LOGGER, "service call ok");
+        SK_LOG_TRACE(SK_ENV_LOGGER, "service call ok");
         break;
     case SK_SRV_STATUS_PENDING:
-        SK_LOG_DEBUG(SK_ENV_LOGGER, "service is pending");
+        SK_LOG_TRACE(SK_ENV_LOGGER, "service is pending");
         break;
     case SK_SRV_STATUS_IDLE:
-        SK_LOG_DEBUG(SK_ENV_LOGGER, "service is idle");
+        SK_LOG_TRACE(SK_ENV_LOGGER, "service is idle");
         break;
     default:
+        SK_LOG_FATAL(SK_ENV_LOGGER, "Invalid exception status occured");
         SK_ASSERT_MSG(0, "Invalid exception status occured\n");
         break;
     }
@@ -143,7 +144,7 @@ void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
                   SK_PTO_SERVICE_TASK_RUN, &task_run_pto, 0);
 
     sk_print("service: deliver task(%d) to worker\n", (int) task_id);
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
+    SK_LOG_TRACE(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
                  (int) task_id);
 }
 

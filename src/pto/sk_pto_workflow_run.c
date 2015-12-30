@@ -59,7 +59,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
         sk_print("txn pending, waiting for service io calls, module %s\n",
                  module->name);
-        SK_LOG_DEBUG(SK_ENV_LOGGER, "txn pending, waiting for service calls, "
+        SK_LOG_TRACE(SK_ENV_LOGGER, "txn pending, waiting for service calls, "
                      "module %s", module->name);
         return 0;
     }
@@ -157,7 +157,8 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
     }
     default:
         sk_print("Unexpect txn state: %d, ignored\n", state);
-        SK_LOG_ERROR(SK_ENV_LOGGER, "Unexpect txn state: %d, ignored", state);
+        SK_LOG_FATAL(SK_ENV_LOGGER, "Unexpect txn state: %d, ignored", state);
+        SK_ASSERT(0);
         break;
     }
 

@@ -38,7 +38,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     sk_service_task_setcomplete(service);
 
     unsigned long long task_lifetime = sk_txn_task_lifetime(txn, task_id);
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "service: one task id: %d completed, "
+    SK_LOG_TRACE(SK_ENV_LOGGER, "service: one task id: %d completed, "
                  "cost %llu usec", (int)task_id, task_lifetime);
 
     // 4. check if all the tasks of the current module for this txn, trigger
@@ -51,7 +51,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
 
     // 5. schedule another round of service call if exist
     size_t scheduled_task = sk_service_schedule_tasks(service);
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
+    SK_LOG_TRACE(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
                  "scheduled %zu tasks", service_name, scheduled_task);
 
     // 6. update metrics
