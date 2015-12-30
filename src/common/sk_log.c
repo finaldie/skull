@@ -60,13 +60,13 @@ sk_logger_t* sk_logger_create(const char* workdir,
     flog_set_level(log_level);
 
     // 3. set flush inverval: 1 second
-    flog_set_flush_interval(1);
+    flog_set_flush_interval(SK_LOG_FLUSH_INTERVAL);
 
-    // 4. set file rolling size: 2GB
-    flog_set_roll_size(1024lu * 1024 * 1024 * 2);
+    // 4. set file rolling size: 1GB
+    flog_set_roll_size(SK_LOG_ROLLING_SIZE);
 
-    // 5. set log buffer size(per-thread): 200MB
-    flog_set_buffer_size(1024lu * 1024 * 200);
+    // 5. set log buffer size(per-thread): 20MB
+    flog_set_buffer_size(SK_LOG_MAX_PERTHREAD_BUFSIZE);
 
     // 6. set up the notification callback, we can handle it if there are some
     // abnormal things happened

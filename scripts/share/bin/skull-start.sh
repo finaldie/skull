@@ -20,7 +20,7 @@ skull_start_memcheck() {
 skull_start_gdb() {
     echo "After gdb started, type 'run -c $skull_config'"
     echo ""
-    gdb skull-engine
+    exec gdb skull-engine
 }
 
 skull_start_strace() {
