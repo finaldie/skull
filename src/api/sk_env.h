@@ -16,7 +16,7 @@
 #define SK_ENV_MON        (sk_thread_env()->engine->mon)
 #define SK_ENV_TMSVC      (sk_thread_env()->engine->timer_svc)
 
-#define SK_ENV_NAME_LEN 20
+#define SK_ENV_NAME_LEN 24
 
 typedef struct sk_thread_env_t {
     // ======== public  ========
@@ -25,14 +25,13 @@ typedef struct sk_thread_env_t {
 
     // used for logging or debugging
     char name[SK_ENV_NAME_LEN];
-    int  idx;
 } sk_thread_env_t;
 
 void sk_thread_env_init();
 void sk_thread_env_set(sk_thread_env_t* env);
 sk_thread_env_t* sk_thread_env();
 sk_thread_env_t* sk_thread_env_create(sk_core_t* core, sk_engine_t* engine,
-                                      const char* name, int idx);
+                                      const char* fmt, ...);
 
 #endif
 

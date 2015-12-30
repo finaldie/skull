@@ -68,6 +68,9 @@ typedef struct sk_config_t {
 
     // key: service name, value: sk_service_t*
     fhash* services;
+
+    // bio engine name list
+    flist* bio;
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);

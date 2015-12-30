@@ -78,6 +78,21 @@ void _sk_setup_engines(sk_core_t* core)
         SK_LOG_INFO(core->logger, "io bridge [%d] init successfully", i);
     }
 
+    // 3. Create background io engine
+    core->bio = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+
+    flist_iter iter = flist_new_iter(config->bio);
+    const char* bio_name = NULL;
+
+    while ((bio_name = flist_each(&iter))) {
+        sk_engine_t* bio_engine = sk_engine_create(SK_ENGINE_BIO);
+        sk_engine_link(bio_engine, core->master);
+        sk_engine_link(core->master, bio_engine);
+
+        fhash_str_set(core->bio, bio_name, bio_engine);
+        SK_LOG_INFO(core->logger, "bio engine [%s] init successfully", bio_name);
+    }
+
     SK_LOG_INFO(core->logger, "skull engines init successfully");
 }
 
@@ -300,10 +315,10 @@ void _sk_init_log(sk_core_t* core)
     // create a thread env for the master thread, this is necessary since during
     // the phase of loading modules, user may log something, if the thread_env
     // does not exist, the logs will be dropped
-    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "master", 0);
+    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "master");
     sk_thread_env_set(env);
 
-    SK_LOG_INFO(core->logger, "skull logger initialization successfully");
+    SK_LOG_TRACE(core->logger, "skull logger initialization successfully");
 }
 
 static
@@ -352,6 +367,29 @@ void _sk_init_moniter(sk_core_t* core)
     core->umon = sk_mon_create();
 }
 
+static
+void _sk_engines_destroy(sk_core_t* core)
+{
+    // 1. destroy workers
+    for (int i = 0; i < core->config->threads; i++) {
+        sk_engine_destroy(core->workers[i]);
+    }
+    free(core->workers);
+
+    // 2. destroy bio(s)
+    fhash_str_iter bio_iter = fhash_str_iter_new(core->bio);
+    sk_engine_t* bio_engine = NULL;
+
+    while ((bio_engine = fhash_str_next(&bio_iter))) {
+        sk_engine_destroy(bio_engine);
+    }
+    fhash_str_iter_release(&bio_iter);
+    fhash_str_delete(core->bio);
+
+    // 3. destroy master
+    sk_engine_destroy(core->master);
+}
+
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
@@ -372,6 +410,10 @@ void sk_core_init(sk_core_t* core)
 
     // 4. init logger
     _sk_init_log(core);
+
+    SK_LOG_INFO(core->logger,
+             "================= skull engine initializing =================");
+    sk_print("================= skull engine initializing =================\n");
 
     // 5. init log tempaltes
     _sk_init_log_tpls(core);
@@ -394,9 +436,9 @@ void sk_core_init(sk_core_t* core)
 
 void sk_core_start(sk_core_t* core)
 {
-    sk_print("================== skull engine starting ==================\n");
     SK_LOG_INFO(core->logger,
              "================== skull engine starting ==================");
+    sk_print("================== skull engine starting ==================\n");
     core->status = SK_CORE_STARTING;
 
     // 1. Complete the master_env
@@ -412,7 +454,7 @@ void sk_core_start(sk_core_t* core)
     _sk_service_init(core);
 
     // 4. start worker engines
-    SK_LOG_INFO(core->logger, "starting workers...");
+    SK_LOG_INFO(core->logger, "starting worker engines...");
     sk_print("starting workers...\n");
 
     sk_config_t* config = core->config;
@@ -424,12 +466,31 @@ void sk_core_start(sk_core_t* core)
                                                            "worker", i);
         int ret = sk_engine_start(worker, worker_env, 1);
         if (ret) {
-            sk_print("Start worker io thread failed, errno: %d\n", errno);
+            sk_print("Start worker io engine failed, errno: %d\n", errno);
             exit(ret);
         }
     }
 
-    // 5. start triggers
+    // 5. start bio engines
+    fhash_str_iter bio_iter = fhash_str_iter_new(core->bio);
+    sk_engine_t* bio_engine = NULL;
+
+    while ((bio_engine = fhash_str_next(&bio_iter))) {
+        const char* bio_name = bio_iter.key;
+        sk_thread_env_t* bio_env =
+            sk_thread_env_create(core, bio_engine, "bio-%s", bio_name);
+
+        int ret = sk_engine_start(bio_engine, bio_env, 1);
+        if (ret) {
+            sk_print("Start bio engine failed, errno: %d\n", errno);
+            exit(ret);
+        }
+
+        SK_LOG_INFO(core->logger, "Start bio engine [%s] successfully", bio_name);
+    }
+    fhash_str_iter_release(&bio_iter);
+
+    // 6. start triggers
     SK_LOG_INFO(core->logger, "starting triggers...");
     sk_print("starting triggers...\n");
 
@@ -439,39 +500,61 @@ void sk_core_start(sk_core_t* core)
         sk_trigger_run(trigger);
     }
 
-    // 6. update core status
+    // 7. update core status
     core->status = SK_CORE_SERVING;
 
-    // 7. start master engine
-    SK_LOG_INFO(core->logger, "skull engine is ready");
-    sk_print("skull engine is ready\n");
+    // 8. start master engine
+    SK_LOG_INFO(core->logger,
+             "================== skull engine is ready ====================");
+    sk_print("================== skull engine is ready ====================\n");
 
     int ret = sk_engine_start(master, master_env, 0);
     if (ret) {
-        sk_print("Start master io thread failed, errno: %d\n", errno);
+        sk_print("Start master io engine failed, errno: %d\n", errno);
         exit(ret);
     }
 
-    // 8. wait them quit
+    // 9. wait worker(s) and bio(s) quit
+    // 9.1 wait for worker(s)
     for (int i = 0; i < config->threads; i++) {
         sk_engine_wait(core->workers[i]);
     }
+
+    // 9.2 wait for bio(s)
+    bio_iter = fhash_str_iter_new(core->bio);
+    bio_engine = NULL;
+
+    while ((bio_engine = fhash_str_next(&bio_iter))) {
+        sk_engine_wait(bio_engine);
+    }
+    fhash_str_iter_release(&bio_iter);
 }
 
 void sk_core_stop(sk_core_t* core)
 {
     if (!core) return;
 
-    sk_print("=================== skull engine stopping ===================\n");
     SK_LOG_INFO(core->logger,
              "=================== skull engine stopping ===================");
+    sk_print("=================== skull engine stopping ===================\n");
     core->status = SK_CORE_STOPPING;
 
+    // 1. stop master
     sk_engine_stop(core->master);
 
+    // 2. stop workers
     for (int i = 0; i < core->config->threads; i++) {
         sk_engine_stop(core->workers[i]);
     }
+
+    // 3. stop bio(s)
+    fhash_str_iter bio_iter = fhash_str_iter_new(core->bio);
+    sk_engine_t* bio_engine = NULL;
+
+    while ((bio_engine = fhash_str_next(&bio_iter))) {
+        sk_engine_stop(bio_engine);
+    }
+    fhash_str_iter_release(&bio_iter);
 }
 
 void sk_core_destroy(sk_core_t* core)
@@ -480,9 +563,9 @@ void sk_core_destroy(sk_core_t* core)
         return;
     }
 
-    sk_print("================== skull engine destroying ==================\n");
     SK_LOG_INFO(core->logger,
              "================== skull engine destroying ==================");
+    sk_print("================== skull engine destroying ==================\n");
     core->status = SK_CORE_DESTROYING;
 
     // 1. destroy triggers
@@ -493,12 +576,7 @@ void sk_core_destroy(sk_core_t* core)
     flist_delete(core->triggers);
 
     // 2. destroy engines
-    for (int i = 0; i < core->config->threads; i++) {
-        sk_engine_destroy(core->workers[i]);
-    }
-    free(core->workers);
-
-    sk_engine_destroy(core->master);
+    _sk_engines_destroy(core);
 
     // 3. destroy modules
     _sk_module_destroy(core);
@@ -550,4 +628,9 @@ sk_service_t* sk_core_service(sk_core_t* core, const char* service_name)
 sk_core_status_t sk_core_status(sk_core_t* core)
 {
     return core->status;
+}
+
+sk_engine_t*     sk_core_bio(sk_core_t* core, const char* name)
+{
+    return fhash_str_get(core->bio, name);
 }

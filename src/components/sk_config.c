@@ -68,7 +68,8 @@ sk_config_t* _create_config()
 {
     sk_config_t* config = calloc(1, sizeof(*config));
     config->workflows = flist_create();
-    config->services = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    config->bio       = flist_create();
     return config;
 }
 
@@ -94,14 +95,23 @@ void _delete_config(sk_config_t* config)
     fhash_str_iter_release(&srv_iter);
     fhash_str_delete(config->services);
 
+    // destroy bio name list
+    char* bio_name = NULL;
+    while ((bio_name = flist_pop(config->bio))) {
+        free(bio_name);
+    }
+    flist_delete(config->bio);
+
     free(config);
 }
 
 static
 void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
 {
-    SK_ASSERT_MSG(node->type == SK_CFG_NODE_ARRAY,
-                  "workflow:modules must be a sequence\n");
+    if (node->type != SK_CFG_NODE_ARRAY) {
+        sk_print("Not a valid module item, won't load it\n");
+        return;
+    }
 
     sk_cfg_node_t* child = NULL;
     flist_iter iter = flist_new_iter(node->data.array);
@@ -121,8 +131,10 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
 static
 void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
 {
-    SK_ASSERT_MSG(node->type == SK_CFG_NODE_ARRAY,
-                  "workflow config must be a sequence\n");
+    if (node->type != SK_CFG_NODE_ARRAY) {
+        sk_print("Not a valid workflow item, won't load it\n");
+        return;
+    }
 
     int enabled_stdin = 0;
     sk_cfg_node_t* child = NULL;
@@ -385,6 +397,24 @@ void _load_services(sk_cfg_node_t* node, sk_config_t* config)
 }
 
 static
+void _load_bios(sk_cfg_node_t* node, sk_config_t* config)
+{
+    if (node->type != SK_CFG_NODE_ARRAY) {
+        sk_print("Not a valid bio item, won't load it\n");
+        return;
+    }
+
+    sk_cfg_node_t* child = NULL;
+    flist_iter iter = flist_new_iter(node->data.array);
+    while ((child = flist_each(&iter))) {
+        SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
+
+        int ret = flist_push(config->bio, strdup(child->data.value));
+        SK_ASSERT(!ret);
+    }
+}
+
+static
 void _load_config(sk_cfg_node_t* root, sk_config_t* config)
 {
     SK_ASSERT_MSG(root->type == SK_CFG_NODE_MAPPING,
@@ -418,6 +448,11 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         // load services
         if (0 == strcmp(key, "services")) {
             _load_services(child, config);
+        }
+
+        // load bio(s)
+        if (0 == strcmp(key, "bio")) {
+            _load_bios(child, config);
         }
     }
 

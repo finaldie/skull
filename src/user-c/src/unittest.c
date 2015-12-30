@@ -323,8 +323,7 @@ static sk_engine_t _fake_engine = {
 static sk_thread_env_t _fake_env = {
     .core   = &_fake_core,
     .engine = &_fake_engine,
-    .name   = "fake_thread",
-    .idx    = 0
+    .name   = "fake_thread"
 };
 
 // sk env

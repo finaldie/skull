@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdarg.h>
 #include <pthread.h>
 
 #include "api/sk_utils.h"
@@ -33,15 +34,17 @@ sk_thread_env_t* sk_thread_env()
 
 sk_thread_env_t* sk_thread_env_create(sk_core_t* core,
                                       sk_engine_t* engine,
-                                      const char* name,
-                                      int idx)
+                                      const char* fmt,
+                                      ...)
 {
     sk_thread_env_t* thread_env = calloc(1, sizeof(*thread_env));
     thread_env->core = core;
     thread_env->engine = engine;
 
-    snprintf(thread_env->name, SK_ENV_NAME_LEN, "%s", name);
-    thread_env->idx = idx;
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(thread_env->name, SK_ENV_NAME_LEN, fmt, ap);
+    va_end(ap);
 
     return thread_env;
 }
