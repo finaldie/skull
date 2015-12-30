@@ -228,6 +228,8 @@ sk_io_bridge_t* _get_bridge_roundrobin(sk_sched_t* sched,
 
     // update the index
     sched->last_delivery_idx = (*bridge_index + 1) % sched->bridge_size;
+    sk_print("deliver to iobridge-%d, last_delivery_idx: %d, bridge_size: %d\n",
+             *bridge_index, sched->last_delivery_idx, sched->bridge_size);
 
     return io_bridge;
 }

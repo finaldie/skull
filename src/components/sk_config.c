@@ -404,14 +404,19 @@ void _load_bios(sk_cfg_node_t* node, sk_config_t* config)
         return;
     }
 
+    int bio_cnt = 0;
     sk_cfg_node_t* child = NULL;
     flist_iter iter = flist_new_iter(node->data.array);
+
     while ((child = flist_each(&iter))) {
         SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
 
         int ret = flist_push(config->bio, strdup(child->data.value));
         SK_ASSERT(!ret);
+        bio_cnt++;
     }
+
+    config->bio_cnt = bio_cnt;
 }
 
 static

@@ -79,17 +79,21 @@ void _sk_setup_engines(sk_core_t* core)
     }
 
     // 3. Create background io engine
-    core->bio = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    core->bio     = calloc((size_t)config->bio_cnt, sizeof(sk_engine_t*));
+    core->bio_map = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
     flist_iter iter = flist_new_iter(config->bio);
     const char* bio_name = NULL;
+    int bio_idx = 0;
 
     while ((bio_name = flist_each(&iter))) {
-        sk_engine_t* bio_engine = sk_engine_create(SK_ENGINE_BIO);
-        sk_engine_link(bio_engine, core->master);
-        sk_engine_link(core->master, bio_engine);
+        sk_engine_t* bio = sk_engine_create(SK_ENGINE_BIO);
+        sk_engine_link(bio, core->master);
+        sk_engine_link(core->master, bio);
 
-        fhash_str_set(core->bio, bio_name, bio_engine);
+        core->bio[bio_idx++] = bio;
+        fhash_str_set(core->bio_map, bio_name, bio);
+
         SK_LOG_INFO(core->logger, "bio engine [%s] init successfully", bio_name);
     }
 
@@ -377,14 +381,11 @@ void _sk_engines_destroy(sk_core_t* core)
     free(core->workers);
 
     // 2. destroy bio(s)
-    fhash_str_iter bio_iter = fhash_str_iter_new(core->bio);
-    sk_engine_t* bio_engine = NULL;
-
-    while ((bio_engine = fhash_str_next(&bio_iter))) {
-        sk_engine_destroy(bio_engine);
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_destroy(core->bio[i]);
     }
-    fhash_str_iter_release(&bio_iter);
-    fhash_str_delete(core->bio);
+    fhash_str_delete(core->bio_map);
+    free(core->bio);
 
     // 3. destroy master
     sk_engine_destroy(core->master);
@@ -472,15 +473,15 @@ void sk_core_start(sk_core_t* core)
     }
 
     // 5. start bio engines
-    fhash_str_iter bio_iter = fhash_str_iter_new(core->bio);
-    sk_engine_t* bio_engine = NULL;
+    fhash_str_iter bio_iter = fhash_str_iter_new(core->bio_map);
+    sk_engine_t* bio = NULL;
 
-    while ((bio_engine = fhash_str_next(&bio_iter))) {
+    while ((bio = fhash_str_next(&bio_iter))) {
         const char* bio_name = bio_iter.key;
         sk_thread_env_t* bio_env =
-            sk_thread_env_create(core, bio_engine, "bio-%s", bio_name);
+            sk_thread_env_create(core, bio, "bio-%s", bio_name);
 
-        int ret = sk_engine_start(bio_engine, bio_env, 1);
+        int ret = sk_engine_start(bio, bio_env, 1);
         if (ret) {
             sk_print("Start bio engine failed, errno: %d\n", errno);
             exit(ret);
@@ -521,13 +522,9 @@ void sk_core_start(sk_core_t* core)
     }
 
     // 9.2 wait for bio(s)
-    bio_iter = fhash_str_iter_new(core->bio);
-    bio_engine = NULL;
-
-    while ((bio_engine = fhash_str_next(&bio_iter))) {
-        sk_engine_wait(bio_engine);
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_wait(core->bio[i]);
     }
-    fhash_str_iter_release(&bio_iter);
 }
 
 void sk_core_stop(sk_core_t* core)
@@ -548,13 +545,9 @@ void sk_core_stop(sk_core_t* core)
     }
 
     // 3. stop bio(s)
-    fhash_str_iter bio_iter = fhash_str_iter_new(core->bio);
-    sk_engine_t* bio_engine = NULL;
-
-    while ((bio_engine = fhash_str_next(&bio_iter))) {
-        sk_engine_stop(bio_engine);
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_stop(core->bio[i]);
     }
-    fhash_str_iter_release(&bio_iter);
 }
 
 void sk_core_destroy(sk_core_t* core)
@@ -632,5 +625,5 @@ sk_core_status_t sk_core_status(sk_core_t* core)
 
 sk_engine_t*     sk_core_bio(sk_core_t* core, const char* name)
 {
-    return fhash_str_get(core->bio, name);
+    return fhash_str_get(core->bio_map, name);
 }

@@ -25,6 +25,9 @@ typedef struct sk_cmd_args_t {
     const char* config_location;
 } sk_cmd_args_t;
 
+// Core data structure
+// NOTES: All the members must be thread-safe for read action after
+//  initialization
 typedef struct sk_core_t {
     // ======= private =======
     sk_mon_t*        mon;
@@ -37,8 +40,9 @@ typedef struct sk_core_t {
     sk_engine_t*     master;
     sk_engine_t**    workers;
 
-    // user bio(s)
-    fhash*           bio; // key: bio name; value: sk_engine_t*
+    // user bio(s) mapping
+    fhash*           bio_map; // key: bio name; value: sk_engine_t*
+    sk_engine_t**    bio;
 
     // logger
     sk_logger_t*     logger;

@@ -71,6 +71,13 @@ typedef struct sk_config_t {
 
     // bio engine name list
     flist* bio;
+
+    // number of bio(s)
+    int    bio_cnt;
+
+#if __WORDSIZE == 64
+    int    _padding;
+#endif
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);

@@ -186,7 +186,13 @@ void sk_mon_snapshot_all(sk_core_t* core)
         sk_mon_reset_and_snapshot(worker->mon);
     }
 
-    // 4. shapshot user metrics
+    // 4. snaphost bio metrics
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_t* bio = core->bio[i];
+        sk_mon_reset_and_snapshot(bio->mon);
+    }
+
+    // 5. shapshot user metrics
     sk_mon_reset_and_snapshot(core->umon);
 
     sk_print("snapshot all done\n");
