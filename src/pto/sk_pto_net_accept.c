@@ -40,11 +40,8 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_print("net evbuff destroy...\n");
     sk_entity_t* entity = arg;
-    sk_sched_t* sched = SK_ENV_SCHED;
 
-    EntityDestroy destroy_msg = ENTITY_DESTROY__INIT;
-    sk_sched_send(sched, sched, entity, NULL,
-                  SK_PTO_ENTITY_DESTROY, &destroy_msg, 0);
+    sk_entity_safe_destroy(entity);
 }
 
 // register the new sock fd into eventloop

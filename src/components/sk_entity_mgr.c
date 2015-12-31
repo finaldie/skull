@@ -20,11 +20,12 @@ int _mark_dead(sk_entity_mgr_t* mgr, sk_entity_t* entity, void* ud)
 struct sk_entity_mgr_t {
     fhash* entity_mgr;
     flist* inactive_entities;
+    struct sk_sched_t* owner_sched;
 };
 
 sk_entity_mgr_t* sk_entity_mgr_create(uint32_t idx_sz)
 {
-    sk_entity_mgr_t* mgr = malloc(sizeof(*mgr));
+    sk_entity_mgr_t* mgr = calloc(1, sizeof(*mgr));
     mgr->entity_mgr = fhash_u64_create(idx_sz, FHASH_MASK_AUTO_REHASH);
     mgr->inactive_entities = flist_create();
     return mgr;
@@ -59,7 +60,7 @@ sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
         return NULL;
     }
 
-    SK_ASSERT(sk_entity_owner(entity) == mgr);
+    SK_ASSERT_MSG(sk_entity_owner(entity) == mgr, "entity: %p\n", (void*)entity);
 
     if (sk_entity_status(entity) == SK_ENTITY_DEAD) {
         // already dead, it will be destroy totally when the clean_dead be
@@ -110,3 +111,15 @@ void sk_entity_mgr_clean_dead(sk_entity_mgr_t* mgr)
         sk_print("clean up dead entity: %p\n", (void*)entity);
     }
 }
+
+struct sk_sched_t* sk_entity_mgr_sched(sk_entity_mgr_t* mgr)
+{
+    return mgr->owner_sched;
+}
+
+void sk_entity_mgr_setsched(sk_entity_mgr_t* mgr, struct sk_sched_t* owner_sched)
+{
+    SK_ASSERT(!mgr->owner_sched);
+    mgr->owner_sched = owner_sched;
+}
+

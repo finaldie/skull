@@ -6,6 +6,7 @@
 #include "api/sk_sched.h"
 #include "api/sk_queue.h"
 #include "api/sk_object.h"
+#include "api/sk_entity.h"
 #include "api/sk_service_data.h"
 
 typedef struct sk_service_t sk_service_t;
@@ -50,9 +51,11 @@ typedef struct sk_srv_task_t {
 
     sk_srv_io_status_t   io_status;
 
-#if __WORDSIZE == 64
-    int _padding;
-#endif
+    // Body: bio index
+    //  (-1)  : Random pick up one
+    //  (0)   : Do not use bio
+    //  (> 0) : find and run the task on the idx of bio
+    int bidx;
 
     // Body: source scheduler of service call
     sk_sched_t*          src;
@@ -139,13 +142,17 @@ int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
  * @param delayed   delay N milliseconds to start the job
  * @param job       job function
  * @param ud        user data
+ * @param bio_idx   background io idx.
+ *                  - (0): Do not use bio
+ *                  - (-1): random pick up a bio
  *
  * @return 0: successful; 1: failed
  */
-int sk_service_job_create(sk_service_t*,
-                          uint32_t delayed,
-                          sk_service_job job,
-                          sk_obj_t* ud);
+int sk_service_job_create(sk_service_t*   svc,
+                          uint32_t        delayed,
+                          sk_service_job  job,
+                          const sk_obj_t* ud,
+                          int             bio_idx);
 
 #endif
 

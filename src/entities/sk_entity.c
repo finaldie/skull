@@ -137,17 +137,6 @@ sk_entity_status_t sk_entity_status(sk_entity_t* entity)
     return entity->status;
 }
 
-struct sk_sched_t* sk_entity_sched(sk_entity_t* entity)
-{
-    return entity->owner_sched;
-}
-
-void sk_entity_setsched(sk_entity_t* entity, struct sk_sched_t* owner_sched)
-{
-    SK_ASSERT(!entity->owner_sched);
-    entity->owner_sched = owner_sched;
-}
-
 // increase the query count
 void sk_entity_taskcnt_inc(sk_entity_t* entity)
 {

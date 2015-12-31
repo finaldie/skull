@@ -8,6 +8,7 @@
 #include "api/sk_sched.h"
 #include "api/sk_object.h"
 #include "api/sk_entity.h"
+#include "api/sk_entity_util.h"
 #include "api/sk_txn.h"
 #include "api/sk_pto.h"
 #include "api/sk_metrics.h"
@@ -30,8 +31,7 @@ int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn
     sk_service_schedule_tasks(service);
 
     // 3. Destory timer entity
-    sk_sched_send(sched, src, entity, NULL,
-                  SK_PTO_ENTITY_DESTROY, NULL, 0);
+    sk_entity_safe_destroy(entity);
 
     // 4. Update service timer metrics
     sk_metrics_global.srv_timer_complete.inc(1);
@@ -40,7 +40,7 @@ int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn
 }
 
 sk_proto_t sk_pto_svc_timer_complete = {
-    .priority = SK_PTO_PRI_9,
+    .priority   = SK_PTO_PRI_9,
     .descriptor = &service_timer_complete__descriptor,
-    .run = _run
+    .run        = _run
 };

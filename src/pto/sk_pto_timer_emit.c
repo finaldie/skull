@@ -26,6 +26,7 @@ int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn
     sk_obj_t*      udata = (void*) (uintptr_t) timer_emit_msg->udata;
     sk_service_job ujob  = *(sk_service_job*) timer_emit_msg->job.data;
     int            valid = timer_emit_msg->valid;
+    int            bidx  = timer_emit_msg->bidx;
 
     // 1. Create a service task (access -> write)
     sk_srv_task_t task;
@@ -34,6 +35,7 @@ int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn
     task.base.type         = SK_QUEUE_ELEM_WRITE;
     task.type              = SK_SRV_TASK_TIMER;
     task.io_status         = SK_SRV_IO_STATUS_OK;
+    task.bidx              = bidx;
     task.src               = src;
     task.data.timer.entity = entity;
     task.data.timer.job    = ujob;

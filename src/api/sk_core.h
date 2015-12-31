@@ -40,8 +40,7 @@ typedef struct sk_core_t {
     sk_engine_t*     master;
     sk_engine_t**    workers;
 
-    // user bio(s) mapping
-    fhash*           bio_map; // key: bio name; value: sk_engine_t*
+    // user bio(s)
     sk_engine_t**    bio;
 
     // logger
@@ -79,7 +78,7 @@ void sk_core_destroy(sk_core_t* core);
 // utils
 sk_service_t*    sk_core_service(sk_core_t*, const char* service_name);
 sk_core_status_t sk_core_status(sk_core_t*);
-sk_engine_t*     sk_core_bio(sk_core_t*, const char* name);
+sk_engine_t*     sk_core_bio(sk_core_t*, int idx);
 
 #endif
 

@@ -125,7 +125,7 @@ void sk_txn_set_input(sk_txn_t* txn, const void* data, size_t sz)
         return;
     }
 
-    txn->input = malloc(sz);
+    txn->input = calloc(1, sz);
     memcpy(txn->input, data, sz);
     txn->input_sz = sz;
 }

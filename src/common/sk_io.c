@@ -32,7 +32,7 @@ size_t _get_new_size(fmbuf* mq, size_t nevents)
 
 sk_io_t* sk_io_create(size_t input_sz, size_t output_sz)
 {
-    sk_io_t* io = malloc(sizeof(*io));
+    sk_io_t* io = calloc(1, sizeof(*io));
     io->mq[0] = fmbuf_create(SK_EVENT_SZ * input_sz);  // SK_IO_INPUT
     io->mq[1] = fmbuf_create(SK_EVENT_SZ * output_sz); // SK_IO_OUTPUT
 

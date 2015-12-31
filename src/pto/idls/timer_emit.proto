@@ -4,4 +4,5 @@ message timer_emit {
     required bytes  job     = 2;
     required uint64 udata   = 3;
     required int32  valid   = 4;
+    required int32  bidx    = 5;
 }

@@ -35,8 +35,7 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
     sk_print("stdin evbuff destroy...\n");
     sk_entity_t* entity = arg;
 
-    sk_sched_t* sched = SK_ENV_SCHED;
-    sk_sched_send(sched, sched, entity, NULL, SK_PTO_ENTITY_DESTROY, NULL, 0);
+    sk_entity_safe_destroy(entity);
 }
 
 static

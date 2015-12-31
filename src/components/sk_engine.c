@@ -10,6 +10,7 @@
 #include "api/sk_core.h"
 #include "api/sk_mon.h"
 #include "api/sk_log.h"
+#include "api/sk_entity_util.h"
 #include "api/sk_engine.h"
 
 #define SK_ENGINE_UPTIME_TIMER_INTERVAL 1000
@@ -33,7 +34,7 @@ void _snapshot_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     sk_mon_snapshot_all(core);
 
     // 3. destroy the timer entity
-    sk_entity_mark(entity, SK_ENTITY_INACTIVE);
+    sk_entity_safe_destroy(entity);
 }
 
 // Triggered every 1 second
@@ -48,7 +49,7 @@ void _uptime_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     sk_metrics_global.uptime.inc(1);
 
     // 3. destroy the timer entity
-    sk_entity_mark(entity, SK_ENTITY_INACTIVE);
+    sk_entity_safe_destroy(entity);
 }
 
 static
@@ -59,7 +60,7 @@ void _timer_data_destroy(sk_ud_t ud)
 
     // Clean the entity if it's still no owner
     if (NULL == sk_entity_owner(timer_entity)) {
-        sk_entity_destroy(timer_entity);
+        sk_entity_safe_destroy(timer_entity);
     }
 }
 

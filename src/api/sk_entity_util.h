@@ -9,5 +9,7 @@
 void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
                            sk_entity_t* entity);
 
+void sk_entity_safe_destroy(sk_entity_t*);
+
 #endif
 

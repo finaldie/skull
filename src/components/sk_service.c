@@ -9,6 +9,7 @@
 #include "api/sk_pto.h"
 #include "api/sk_metrics.h"
 #include "api/sk_timer_service.h"
+#include "api/sk_entity_util.h"
 #include "api/sk_service.h"
 
 #define SK_SRV_TASK_SZ    (sizeof(sk_srv_task_t))
@@ -151,9 +152,11 @@ void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
 static
 void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
 {
+    // 1. Create timer message
+    int            bidx   = task->bidx;
+    sk_sched_t*    src    = task->src;
     sk_service_job job    = task->data.timer.job;
     sk_entity_t*   entity = task->data.timer.entity;
-    sk_sched_t*    src    = task->src;
     sk_obj_t*      ud     = task->data.timer.ud;
     int            valid  = task->data.timer.valid;
 
@@ -164,9 +167,24 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
     msg.ud        = (uintptr_t) (void*) ud;
     msg.valid     = valid;
 
-    // Schedule back to source scheduler to handle the task
+    // 2. Find a bio if needed
+    sk_sched_t* target = NULL;
+    if (bidx == 0) {
+        target = src;
+    } else if (bidx > 0) {
+        SK_ASSERT(bidx <= SK_ENV_CORE->config->bio_cnt);
+
+        sk_engine_t* bio = sk_core_bio(SK_ENV_CORE, bidx);
+        target = bio->sched;
+    } else {
+        // use the bio-1
+        target = sk_core_bio(SK_ENV_CORE, 1)->sched;
+    }
+    SK_ASSERT(target);
+
+    // 3. Schedule to target scheduler to handle the task
     sk_print("schedule timer task: valid: %d\n", valid);
-    sk_sched_send(SK_ENV_SCHED, src, entity, NULL,
+    sk_sched_send(SK_ENV_SCHED, target, entity, NULL,
                       SK_PTO_SVC_TIMER_RUN, &msg, 0);
 }
 
@@ -463,15 +481,12 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 }
 
 typedef struct timer_jobdata_t {
-    sk_service_t*  service;
-    sk_entity_t*   entity;
-    sk_service_job job;
-    sk_obj_t*      ud;
-    int            triggered;
-
-#if __WORDSIZE == 64
-    int            _padding;
-#endif
+    sk_service_t*   service;
+    sk_entity_t*    entity;
+    sk_service_job  job;
+    const sk_obj_t* ud;
+    int             triggered;
+    int             bidx;
 } timer_jobdata_t;
 
 static
@@ -482,12 +497,12 @@ void _timer_jobdata_destroy(sk_ud_t ud)
 
     if (NULL == sk_entity_owner(jobdata->entity)) {
         sk_print("destroy orphan entity\n");
-        sk_entity_destroy(jobdata->entity);
+        sk_entity_safe_destroy(jobdata->entity);
     }
 
     if (!jobdata->triggered) {
         sk_print("destroy untriggered timer userdata\n");
-        sk_obj_destroy(jobdata->ud);
+        sk_obj_destroy((void*)jobdata->ud);
     }
 
     free(jobdata);
@@ -501,7 +516,8 @@ void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     timer_jobdata_t* jobdata = sk_obj_get(ud).ud;
     sk_service_t*    svc     = jobdata->service;
     sk_service_job   job     = jobdata->job;
-    sk_obj_t*        udata   = jobdata->ud;
+    const sk_obj_t*  udata   = jobdata->ud;
+    int              bidx    = jobdata->bidx;
 
     TimerEmit timer_msg = TIMER_EMIT__INIT;
     timer_msg.svc       = (uint64_t) (uintptr_t) svc;
@@ -509,6 +525,7 @@ void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     timer_msg.job.data  = (uint8_t*) &job;
     timer_msg.udata     = (uint64_t) (uintptr_t) udata;
     timer_msg.valid     = valid;
+    timer_msg.bidx      = bidx;
 
     // 2. Send event to prepare running a service task
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched, entity, NULL,
@@ -518,14 +535,22 @@ void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     jobdata->triggered = 1;
 }
 
-int sk_service_job_create(sk_service_t* service,
-                          uint32_t delayed,
-                          sk_service_job job,
-                          sk_obj_t* ud)
+int sk_service_job_create(sk_service_t*   service,
+                          uint32_t        delayed,
+                          sk_service_job  job,
+                          const sk_obj_t* ud,
+                          int             bidx)
 {
     SK_ASSERT(service);
     SK_ASSERT(job);
-    sk_print("create a service timer job\n");
+
+    if (bidx > 0 && !sk_core_bio(SK_ENV_CORE, bidx)) {
+        return 1;
+    } else if (bidx < 0 && !sk_core_bio(SK_ENV_CORE, 1)) {
+        return 1;
+    }
+
+    sk_print("create a service timer job, bidx: %d\n", bidx);
 
     // 1. Create timer callback data
     timer_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
@@ -533,6 +558,7 @@ int sk_service_job_create(sk_service_t* service,
     jobdata->entity  = sk_entity_create(NULL);
     jobdata->job     = job;
     jobdata->ud      = ud;
+    jobdata->bidx    = bidx;
 
     sk_ud_t cb_data  = {.ud = jobdata};
     sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_jobdata_destroy};
@@ -542,8 +568,8 @@ int sk_service_job_create(sk_service_t* service,
     // 2. Create sk_timer with callback data
     sk_timersvc_t* timersvc = SK_ENV_TMSVC;
     sk_timer_t* timer =
-        sk_timersvc_timer_create(timersvc, jobdata->entity, delayed,
-                                            _timer_triggered, param_obj);
+        sk_timersvc_timer_create(
+            timersvc, jobdata->entity, delayed, _timer_triggered, param_obj);
     SK_ASSERT(timer);
 
     // 3. Record metrics

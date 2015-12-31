@@ -15,7 +15,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
 }
 
 sk_proto_t sk_pto_entity_destroy = {
-    .priority = SK_PTO_PRI_9,
+    .priority   = SK_PTO_PRI_9,
     .descriptor = &entity_destroy__descriptor,
-    .run = _run
+    .run        = _run
 };

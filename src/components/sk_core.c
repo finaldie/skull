@@ -79,22 +79,15 @@ void _sk_setup_engines(sk_core_t* core)
     }
 
     // 3. Create background io engine
-    core->bio     = calloc((size_t)config->bio_cnt, sizeof(sk_engine_t*));
-    core->bio_map = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    core->bio = calloc((size_t)config->bio_cnt, sizeof(sk_engine_t*));
 
-    flist_iter iter = flist_new_iter(config->bio);
-    const char* bio_name = NULL;
-    int bio_idx = 0;
-
-    while ((bio_name = flist_each(&iter))) {
+    for (int i = 0; i < core->config->bio_cnt; i++) {
         sk_engine_t* bio = sk_engine_create(SK_ENGINE_BIO, SK_SCHED_NON_RR_ROUTABLE);
         sk_engine_link(bio, core->master);
         sk_engine_link(core->master, bio);
 
-        core->bio[bio_idx++] = bio;
-        fhash_str_set(core->bio_map, bio_name, bio);
-
-        SK_LOG_INFO(core->logger, "bio engine [%s] init successfully", bio_name);
+        core->bio[i] = bio;
+        SK_LOG_INFO(core->logger, "bio engine [%d] init successfully", i + 1);
     }
 
     SK_LOG_INFO(core->logger, "skull engines init successfully");
@@ -384,7 +377,6 @@ void _sk_engines_destroy(sk_core_t* core)
     for (int i = 0; i < core->config->bio_cnt; i++) {
         sk_engine_destroy(core->bio[i]);
     }
-    fhash_str_delete(core->bio_map);
     free(core->bio);
 
     // 3. destroy master
@@ -473,13 +465,11 @@ void sk_core_start(sk_core_t* core)
     }
 
     // 5. start bio engines
-    fhash_str_iter bio_iter = fhash_str_iter_new(core->bio_map);
-    sk_engine_t* bio = NULL;
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_t* bio = core->bio[i];
 
-    while ((bio = fhash_str_next(&bio_iter))) {
-        const char* bio_name = bio_iter.key;
         sk_thread_env_t* bio_env =
-            sk_thread_env_create(core, bio, "bio-%s", bio_name);
+            sk_thread_env_create(core, bio, "bio-%d", i + 1);
 
         int ret = sk_engine_start(bio, bio_env, 1);
         if (ret) {
@@ -487,9 +477,8 @@ void sk_core_start(sk_core_t* core)
             exit(ret);
         }
 
-        SK_LOG_INFO(core->logger, "Start bio engine [%s] successfully", bio_name);
+        SK_LOG_INFO(core->logger, "Start bio engine [%d] successfully", i + 1);
     }
-    fhash_str_iter_release(&bio_iter);
 
     // 6. start triggers
     SK_LOG_INFO(core->logger, "starting triggers...");
@@ -623,7 +612,13 @@ sk_core_status_t sk_core_status(sk_core_t* core)
     return core->status;
 }
 
-sk_engine_t*     sk_core_bio(sk_core_t* core, const char* name)
+sk_engine_t*     sk_core_bio(sk_core_t* core, int idx)
 {
-    return fhash_str_get(core->bio_map, name);
+    int bidx = idx - 1;
+
+    if (bidx < 0 || bidx >= core->config->bio_cnt) {
+        return NULL;
+    }
+
+    return core->bio[bidx];
 }

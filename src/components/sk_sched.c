@@ -106,7 +106,7 @@ void _setup_bridge(sk_sched_t* dst, sk_io_bridge_t* io_bridge)
 static
 sk_io_bridge_t* sk_io_bridge_create(sk_sched_t* dst, size_t size)
 {
-    sk_io_bridge_t* io_bridge = malloc(sizeof(*io_bridge));
+    sk_io_bridge_t* io_bridge = calloc(1, sizeof(*io_bridge));
     io_bridge->dst = dst;
     io_bridge->mq = fmbuf_create(SK_EVENT_SZ * size);
     io_bridge->evfd = eventfd(0, EFD_NONBLOCK);
@@ -265,7 +265,7 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
         sk_event_t event;
         nevents = sk_io_pull(src_io, SK_IO_OUTPUT, &event, 1);
         SK_ASSERT(nevents == 1);
-        sk_print("prepare to deliver event, pto id: %lu\n", nevents);
+        sk_print("prepare to deliver event, pto id: %u\n", event.pto_id);
 
         // 2. Drop event if it reach the max routing hop
         if (event.hop == SK_SCHED_MAX_ROUTING_HOP) {
@@ -359,7 +359,6 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 
     // 2. Add entity into entity_mgr
     if (NULL == sk_entity_owner(entity)) {
-        sk_entity_setsched(entity, sched);
         sk_entity_mgr_add(sched->entity_mgr, entity);
     }
 
@@ -454,7 +453,7 @@ int _emit_event(sk_sched_t* sched, sk_sched_t* dst, sk_io_type_t io_type,
 
     if (proto_msg) {
         event.sz = protobuf_c_message_get_packed_size(proto_msg);
-        event.data = malloc(event.sz);
+        event.data = calloc(1, event.sz);
         size_t packed_sz = protobuf_c_message_pack(proto_msg, event.data);
         SK_ASSERT(packed_sz == (size_t)event.sz);
     } else {
@@ -502,6 +501,7 @@ sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr, int flags)
     }
 
     _check_ptos(sched->pto_tbl);
+    sk_entity_mgr_setsched(sched->entity_mgr, sched);
     return sched;
 }
 

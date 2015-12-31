@@ -69,9 +69,6 @@ typedef struct sk_config_t {
     // key: service name, value: sk_service_t*
     fhash* services;
 
-    // bio engine name list
-    flist* bio;
-
     // number of bio(s)
     int    bio_cnt;
 
