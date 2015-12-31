@@ -338,7 +338,8 @@ skull_service_async_call (skull_txn_t* txn,
                           const char* service_name,
                           const char* api_name,
                           const void* request,
-                          skull_module_cb cb)
+                          skull_module_cb cb,
+                          int bidx)
 {
     if (!service_name) {
         return SKULL_SERVICE_ERROR_SRVNAME;

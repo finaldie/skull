@@ -94,6 +94,7 @@ typedef struct sk_service_opt_t {
 
 typedef struct sk_service_api_t {
     sk_srv_api_cfg_t* cfg;
+    char name[sizeof(void*)];
 } sk_service_api_t;
 
 sk_service_t* sk_service_create(const char* service_name,
@@ -134,7 +135,7 @@ void sk_service_data_set(sk_service_t*, const void* data);
 //  Invoke Service IO call
 int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
                       const void* req, size_t req_sz,
-                      sk_txn_module_cb cb, void* ud);
+                      sk_txn_module_cb cb, void* ud, int bio_idx);
 
 /**
  * Create a service job

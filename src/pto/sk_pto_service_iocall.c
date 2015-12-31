@@ -24,12 +24,14 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     SK_ASSERT(entity);
     SK_ASSERT(txn);
     SK_ASSERT(proto_msg);
+    SK_ASSERT(SK_ENV_ENGINE == SK_ENV_CORE->master);
 
     // 1. unpack the parameters
     ServiceIocall* iocall_msg = proto_msg;
-    uint64_t task_id          = iocall_msg->task_id;
+    uint64_t    task_id       = iocall_msg->task_id;
     const char* service_name  = iocall_msg->service_name;
     const char* api_name      = iocall_msg->api_name;
+    int         bidx          = iocall_msg->bio_idx;
 
     sk_srv_status_t srv_status   = SK_SRV_STATUS_OK;
     sk_srv_io_status_t io_status = SK_SRV_IO_STATUS_OK;
@@ -63,10 +65,11 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
 
     task.type      = SK_SRV_TASK_API_QUERY;
     task.io_status = io_status;
+    task.bidx      = bidx;
     task.src       = src;
     task.data.api.service = service;
     task.data.api.txn     = txn;
-    task.data.api.name    = api_name;
+    task.data.api.name    = srv_api->name;
     task.data.api.task_id = task_id;
 
     // 3.2 push task to service

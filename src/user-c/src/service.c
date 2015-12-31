@@ -35,7 +35,7 @@ skull_service_async_api_t* _find_api(skull_service_async_api_t** apis,
 skull_service_ret_t
 skull_service_async_call (skull_txn_t* txn, const char* service_name,
                           const char* api_name, const void* request,
-                          skull_module_cb cb)
+                          skull_module_cb cb, int bidx)
 {
     sk_core_t* core = SK_ENV_CORE;
     sk_service_t* service = sk_core_service(core, service_name);
@@ -50,9 +50,7 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
     skull_service_async_api_t** async_apis = entry->async;
     skull_service_async_api_t*  api        = _find_api(async_apis, api_name);
 
-    if (!api) {
-        return SKULL_SERVICE_ERROR_APINAME;
-    }
+    if (!api) return SKULL_SERVICE_ERROR_APINAME;
 
     // serialize the request data
     size_t req_sz         = protobuf_c_message_get_packed_size(request);
@@ -60,10 +58,11 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
     size_t packed_sz      = protobuf_c_message_pack(request, serialized_req);
     SK_ASSERT(req_sz == packed_sz);
 
-    sk_service_iocall(service, txn->txn, api_name,
+    int ioret = sk_service_iocall(service, txn->txn, api_name,
                       serialized_req, req_sz,
-                      (sk_txn_module_cb)cb, txn);
+                      (sk_txn_module_cb)cb, txn, bidx);
 
+    if (ioret) return SKULL_SERVICE_ERROR_BIO;
     return SKULL_SERVICE_OK;
 }
 

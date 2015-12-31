@@ -27,7 +27,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
     if (!module) {
-        SK_LOG_ERROR(SK_ENV_LOGGER, "no module in this workflow, skip it");
+        SK_LOG_TRACE(SK_ENV_LOGGER, "no next module in this workflow, stop it");
         sk_txn_setstate(txn, SK_TXN_COMPLETED);
         return _run(sched, src, entity, txn, proto_msg);
     }

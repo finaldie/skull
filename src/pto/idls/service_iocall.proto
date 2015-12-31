@@ -3,4 +3,5 @@ message service_iocall {
     required uint64 task_id      = 1;
     required string service_name = 2;
     required string api_name     = 3;
+    required int32  bio_idx      = 4;
 }

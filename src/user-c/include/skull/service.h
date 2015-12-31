@@ -43,15 +43,33 @@ typedef void (*skull_module_cb) (skull_txn_t*, const void* request,
 typedef enum skull_service_ret_t {
     SKULL_SERVICE_OK            = 0,
     SKULL_SERVICE_ERROR_SRVNAME = 1,
-    SKULL_SERVICE_ERROR_APINAME = 2
+    SKULL_SERVICE_ERROR_APINAME = 2,
+    SKULL_SERVICE_ERROR_BIO     = 3
 } skull_service_ret_t;
 
+/**
+ * Invoke a service async call
+ *
+ * @param serivce_name
+ * @param api_name
+ * @param request       request protobuf message
+ * @param cb            module callback function
+ * @param bio_idx       background io index
+ *                      - (-1)  : random pick up a background io to run
+ *                      - (0)   : do not use background io
+ *                      - (> 0) : run on the index of background io
+ *
+ * @return - SKULL_SERVICE_OK
+ *         - SKULL_SERVICE_ERROR_SRVNAME
+ *         - SKULL_SERVICE_ERROR_APINAME
+ */
 skull_service_ret_t
 skull_service_async_call (skull_txn_t*,
                           const char* service_name,
                           const char* api_name,
                           const void* request,
-                          skull_module_cb cb);
+                          skull_module_cb cb,
+                          int bio_idx);
 
 typedef void (*skull_timer_t) (skull_service_t*, void* ud);
 typedef void (*skull_timer_udfree_t) (void* ud);

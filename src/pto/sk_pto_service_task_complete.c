@@ -24,6 +24,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     SK_ASSERT(entity);
     SK_ASSERT(txn);
     SK_ASSERT(proto_msg);
+    SK_ASSERT(SK_ENV_ENGINE->type == SK_ENGINE_MASTER);
 
     // 1. unpack the parameters
     ServiceTaskComplete* task_complete_msg = proto_msg;
