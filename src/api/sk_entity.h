@@ -20,6 +20,7 @@ typedef enum sk_entity_status_t {
 struct sk_entity_mgr_t;
 struct sk_workflow_t;
 struct sk_txn_t;
+struct sk_sched_t;
 
 typedef struct sk_entity_t sk_entity_t;
 
@@ -37,13 +38,19 @@ ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len);
 
 sk_entity_type_t sk_entity_type(sk_entity_t* entity);
 sk_entity_status_t sk_entity_status(sk_entity_t* entity);
-struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity);
 struct sk_workflow_t* sk_entity_workflow(sk_entity_t* entity);
-struct sk_txn_t* sk_entity_halftxn(sk_entity_t* entity);
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud);
+
+struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity);
 void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr);
+
+struct sk_sched_t* sk_entity_sched(sk_entity_t* entity);
+void sk_entity_setsched(sk_entity_t* entity, struct sk_sched_t* owner_sched);
+
+struct sk_txn_t* sk_entity_halftxn(sk_entity_t* entity);
 void sk_entity_sethalftxn(sk_entity_t* entity, struct sk_txn_t* txn);
+
 void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status);
 
 void sk_entity_taskcnt_inc(sk_entity_t* entity);

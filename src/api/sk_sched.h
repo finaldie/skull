@@ -8,7 +8,7 @@
 #include "api/sk_entity_mgr.h"
 #include "api/sk_workflow.h"
 
-// flags - non RoundRobin routable
+// sched flags for sk_sched_create - non RoundRobin routable
 #define SK_SCHED_NON_RR_ROUTABLE 0x1
 
 typedef struct sk_sched_t sk_sched_t;

@@ -15,8 +15,8 @@ typedef struct sk_event_t {
     struct sk_sched_t* dst;
 
     uint32_t pto_id;
-    uint32_t hop    :4;
-    uint32_t flags  :28;
+    uint32_t hop    :8;
+    uint32_t flags  :24;
 
     // data size
     size_t   sz;

@@ -56,7 +56,7 @@ void _event_destroy(sk_event_t* event)
 {
     if (!event) return;
 
-    sk_print("destroy an event: {pto_id: %d, hop: %d}\n",
+    sk_print("destroy an event: {pto_id: %u, hop: %u}\n",
              event->pto_id, event->hop);
     free(event->data);
 }
@@ -359,6 +359,7 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 
     // 2. Add entity into entity_mgr
     if (NULL == sk_entity_owner(entity)) {
+        sk_entity_setsched(entity, sched);
         sk_entity_mgr_add(sched->entity_mgr, entity);
     }
 
@@ -447,7 +448,7 @@ int _emit_event(sk_sched_t* sched, sk_sched_t* dst, sk_io_type_t io_type,
     event.dst    = dst;
     event.pto_id = pto_id;
     event.hop    = 0;
-    event.flags  = (uint32_t) flags & 0x0FFFFFFF;
+    event.flags  = (uint32_t) flags & 0xFFFFFF;
     event.entity = entity;
     event.txn    = txn;
 

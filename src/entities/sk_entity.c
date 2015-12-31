@@ -8,9 +8,11 @@
 #include "api/sk_workflow.h"
 #include "api/sk_metrics.h"
 #include "api/sk_txn.h"
+#include "api/sk_sched.h"
 
 struct sk_entity_t {
     struct sk_entity_mgr_t* owner;
+    sk_sched_t*             owner_sched;
     sk_workflow_t*          workflow;
     sk_txn_t*               half_txn; // store the incompleted txn
     sk_entity_opt_t         opt;
@@ -101,6 +103,7 @@ ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len)
 
 void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr)
 {
+    SK_ASSERT(!entity->owner);
     entity->owner = mgr;
 }
 
@@ -132,6 +135,17 @@ sk_txn_t* sk_entity_halftxn(sk_entity_t* entity)
 sk_entity_status_t sk_entity_status(sk_entity_t* entity)
 {
     return entity->status;
+}
+
+struct sk_sched_t* sk_entity_sched(sk_entity_t* entity)
+{
+    return entity->owner_sched;
+}
+
+void sk_entity_setsched(sk_entity_t* entity, struct sk_sched_t* owner_sched)
+{
+    SK_ASSERT(!entity->owner_sched);
+    entity->owner_sched = owner_sched;
 }
 
 // increase the query count

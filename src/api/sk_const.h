@@ -28,7 +28,7 @@
 // scheduler
 #define SK_SCHED_PULL_NUM                    65535
 #define SK_SCHED_MAX_IO_BRIDGE               48
-#define SK_SCHED_MAX_ROUTING_HOP             15
+#define SK_SCHED_MAX_ROUTING_HOP             255
 
 // eventloop max events
 #define SK_EVENTLOOP_MAX_EVENTS              65535
