@@ -30,6 +30,7 @@ void _sk_init_admin(sk_core_t* core)
     sk_print("Init admin module\n");
     SK_LOG_INFO(core->logger, "Init admin module");
 
+    core->triggers     = core->triggers ? core->triggers : flist_create();
     core->admin_wf_cfg = sk_admin_workflowcfg_create(7759);
     core->admin_wf     = sk_workflow_create(core->admin_wf_cfg);
 
@@ -98,7 +99,7 @@ void _sk_setup_workflows(sk_core_t* core)
 {
     sk_config_t* config = core->config;
     core->workflows      = flist_create();
-    core->triggers       = flist_create();
+    core->triggers       = core->triggers ? core->triggers : flist_create();
     core->unique_modules = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
     flist_iter iter = flist_new_iter(config->workflows);
@@ -417,14 +418,14 @@ void sk_core_init(sk_core_t* core)
     // 7. init engines
     _sk_setup_engines(core);
 
-    // 8. load workflows and related triggers
-    _sk_setup_workflows(core);
-
-    // 9. init admin
+    // 8. init admin
     _sk_init_admin(core);
 
-    // 10. load services
+    // 9. load services
     _sk_setup_services(core);
+
+    // 10. load workflows and related triggers
+    _sk_setup_workflows(core);
 }
 
 void sk_core_start(sk_core_t* core)
