@@ -9,6 +9,7 @@
 #include "api/sk_pto.h"
 #include "api/sk_metrics.h"
 #include "api/sk_timer_service.h"
+#include "api/sk_entity_mgr.h"
 #include "api/sk_entity_util.h"
 #include "api/sk_service.h"
 
@@ -228,8 +229,11 @@ typedef struct timer_jobdata_t {
     sk_entity_t*    entity;
     sk_service_job  job;
     const sk_obj_t* ud;
-    int             triggered;
     int             bidx;
+
+#if __WORDSIZE == 64
+    int _padding;
+#endif
 } timer_jobdata_t;
 
 static
@@ -238,15 +242,10 @@ void _timer_jobdata_destroy(sk_ud_t ud)
     sk_print("destroy timer jobdata\n");
     timer_jobdata_t* jobdata = ud.ud;
 
-    if (NULL == sk_entity_owner(jobdata->entity)) {
-        sk_print("destroy orphan entity\n");
-        sk_entity_safe_destroy(jobdata->entity);
-    }
-
-    if (!jobdata->triggered) {
-        sk_print("destroy untriggered timer userdata\n");
-        sk_obj_destroy((void*)jobdata->ud);
-    }
+    //if (NULL == sk_entity_owner(jobdata->entity)) {
+    //    sk_print("destroy orphan entity\n");
+    //    sk_entity_safe_destroy(jobdata->entity);
+    //}
 
     free(jobdata);
 }
@@ -270,12 +269,9 @@ void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     timer_msg.valid     = valid;
     timer_msg.bidx      = bidx;
 
-    // 2. Send event to prepare running a service task
+    // 4. Send event to prepare running a service task
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched, entity, NULL,
                     SK_PTO_TIMER_EMIT, &timer_msg, 0);
-
-    // 3. mark it as triggered
-    jobdata->triggered = 1;
 }
 
 //========================= Public APIs of service =============================
@@ -613,6 +609,9 @@ int sk_service_job_create(sk_service_t*   service,
     jobdata->job     = job;
     jobdata->ud      = ud;
     jobdata->bidx    = bidx;
+
+    sk_entity_mgr_add(SK_ENV_ENTITY_MGR, jobdata->entity);
+    sk_entity_timeradd(jobdata->entity, ud);
 
     sk_ud_t cb_data  = {.ud = jobdata};
     sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_jobdata_destroy};

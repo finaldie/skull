@@ -1,3 +1,4 @@
+#include <stdlib.h>
 
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
