@@ -16,6 +16,7 @@ message service_task_run {
 // notify master the task is complete, and master will update the status
 message service_task_complete {
     required string service_name = 1;
+    required int32  resume_wf    = 2;
 }
 
 // Run service api callback

@@ -148,6 +148,9 @@ int sk_io_bridge_deliver(sk_io_bridge_t* io_bridge, sk_event_t* event)
     SK_ASSERT(io_bridge);
     SK_ASSERT(event);
 
+    // update the hop before send out
+    event->hop++;
+
     // copy events from src_io to io bridge's mq
     int ret = fmbuf_push(io_bridge->mq, event, SK_EVENT_SZ);
     SK_ASSERT(!ret);
@@ -313,9 +316,6 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
             delivery[bridge_index] +=
                 (uint64_t) sk_io_bridge_deliver(io_bridge, &event);
         }
-
-        // 6. update hop
-        event.hop++;
     } while (nevents > 0);
 }
 
@@ -344,45 +344,29 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 
     uint32_t pto_id = event->pto_id;
     sk_proto_t* pto = sched->pto_tbl[pto_id];
-    sk_print("pto_id = %u\n", pto_id);
+    sk_print("Run event: pto_id = %u\n", pto_id);
     SK_ASSERT(pto);
 
     sk_entity_t* entity = event->entity;
     SK_ASSERT(entity);
 
-    // 1. Check the entity is active
-    sk_entity_status_t status = sk_entity_status(entity);
-    if (status != SK_ENTITY_ACTIVE) {
-        sk_print("entity has already inactive or dead\n");
-        return 0;
-    }
-
-    // 2. Add entity into entity_mgr
+    // 1. Add entity into entity_mgr
     if (NULL == sk_entity_owner(entity)) {
         sk_entity_mgr_add(sched->entity_mgr, entity);
     }
 
-    // 3. Decode the message
-    ProtobufCMessage* msg = protobuf_c_message_unpack(pto->descriptor,
-                                                      NULL,
-                                                      event->sz,
-                                                      event->data);
+    // 2. Decode the message
+    ProtobufCMessage* msg =
+        protobuf_c_message_unpack(pto->descriptor, NULL, event->sz, event->data);
 
-    // 4. Run event
+    // 3. Run event
     sk_txn_t*   txn = event->txn;
     sk_sched_t* src = event->src;
     pto->run(sched, src, entity, txn, msg);
 
-    // 5. Release message resources
+    // 4. Release message resources
     protobuf_c_message_free_unpacked(msg, NULL);
     _event_destroy(event);
-
-    // 6. Delete the entity if its status ~= ACTIVE
-    if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
-        sk_entity_mgr_del(sched->entity_mgr, entity);
-        sk_print("entity status=%d, will be deleted\n",
-                 sk_entity_status(entity));
-    }
 
     return 0;
 }

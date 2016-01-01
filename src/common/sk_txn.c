@@ -79,16 +79,31 @@ void _sk_txn_task_destroy(sk_txn_task_t* task)
 sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
 {
     sk_txn_t* txn = calloc(1, sizeof(*txn));
-    txn->workflow = workflow;
-    txn->entity = entity;
-    txn->output = fmbuf_create(0);
-    txn->workflow_idx = flist_new_iter(workflow->modules);
-    txn->task_tbl = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
+    txn->workflow      = workflow;
+    txn->entity        = entity;
+    txn->output        = fmbuf_create(0);
+    txn->workflow_idx  = flist_new_iter(workflow->modules);
+    txn->task_tbl      = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     txn->latest_taskid = 0;
-    txn->start_time = ftime_gettime();
-    txn->state = SK_TXN_INIT;
+    txn->start_time    = ftime_gettime();
+    txn->state         = SK_TXN_INIT;
 
     return txn;
+}
+
+void sk_txn_safe_destroy(sk_txn_t* txn)
+{
+    if (!txn) {
+        return;
+    }
+
+    if (txn->complete_tasks < txn->total_tasks) {
+        sk_print("sk_txn_safe_destroy: complete_tasks(%d) < total_tasks(%d), "
+                 "won't destroy\n", txn->complete_tasks, txn->total_tasks);
+        return;
+    }
+
+    sk_txn_destroy(txn);
 }
 
 void sk_txn_destroy(sk_txn_t* txn)
@@ -97,13 +112,7 @@ void sk_txn_destroy(sk_txn_t* txn)
         return;
     }
 
-    if (txn->complete_tasks < txn->total_tasks) {
-        sk_print("sk_txn_destroy: complete_tasks(%d) < total_tasks(%d), "
-                 "won't destroy\n", txn->complete_tasks, txn->total_tasks);
-        return;
-    }
-
-    sk_entity_taskcnt_dec(txn->entity);
+    sk_entity_txndel(txn->entity, txn);
     fmbuf_delete(txn->output);
     free(txn->input);
 
@@ -226,7 +235,6 @@ uint64_t sk_txn_task_add(sk_txn_t* txn, sk_txn_taskdata_t* task_data)
 void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
                           sk_txn_task_status_t status)
 {
-    //SK_ASSERT(status != SK_TXN_TASK_RUNNING);
     SK_ASSERT(txn->complete_tasks < txn->total_tasks);
 
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
@@ -287,7 +295,7 @@ void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
         SK_ASSERT(txn->entity);
 
         // update the entity ref
-        sk_entity_taskcnt_inc(txn->entity);
+        sk_entity_txnadd(txn->entity, txn);
     }
 }
 

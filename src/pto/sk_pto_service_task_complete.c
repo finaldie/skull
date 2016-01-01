@@ -29,6 +29,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     // 1. unpack the parameters
     ServiceTaskComplete* task_complete_msg = proto_msg;
     const char* service_name = task_complete_msg->service_name;
+    int resume_wf = task_complete_msg->resume_wf;
 
     // 2. find the target service
     sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
@@ -37,12 +38,17 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     // 3. do some updating job for this service
     sk_service_task_setcomplete(service);
 
-    // 4. schedule another round of service call if exist
+    // 4. Resume txn workflow if needed
+    if (resume_wf) {
+        sk_sched_send(sched, src, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
+    }
+
+    // 5. schedule another round of service call if exist
     size_t scheduled_task = sk_service_schedule_tasks(service);
     SK_LOG_TRACE(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
                  "scheduled %zu tasks", service_name, scheduled_task);
 
-    // 5. update metrics
+    // 6. update metrics
     sk_metrics_worker.srv_iocall_complete.inc(1);
     sk_metrics_global.srv_iocall_complete.inc(1);
 

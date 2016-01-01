@@ -59,6 +59,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     // 5. send a complete protocol back to master
     ServiceTaskComplete task_complete_msg = SERVICE_TASK_COMPLETE__INIT;
     task_complete_msg.service_name = (char*) service_name;
+    task_complete_msg.resume_wf    = sk_txn_module_complete(txn);
 
     sk_sched_send(SK_ENV_SCHED, SK_ENV_MASTER_SCHED, entity, txn,
                   SK_PTO_SERVICE_TASK_COMPLETE, &task_complete_msg, 0);
@@ -67,14 +68,6 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     unsigned long long task_lifetime = sk_txn_task_lifetime(txn, task_id);
     SK_LOG_TRACE(SK_ENV_LOGGER, "service: one task id: %d completed, "
                  "cost %llu usec", (int)task_id, task_lifetime);
-
-    // 7. check if all the tasks of the current module for this txn, trigger
-    //    a 'workflow_run' protocol to continue
-    //
-    // note: This 'workflow' will also be ran in the previous worker
-    if (sk_txn_module_complete(txn)) {
-        sk_sched_send(sched, sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
-    }
 
     return 0;
 }

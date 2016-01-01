@@ -82,6 +82,10 @@ void sk_entity_safe_destroy(sk_entity_t* entity)
 
     sk_entity_mgr_t* owner = sk_entity_owner(entity);
     if (!owner) {
+        sk_entity_mark(entity, SK_ENTITY_INACTIVE);
+        sk_entity_destroy(entity);
+
+        sk_entity_mark(entity, SK_ENTITY_DEAD);
         sk_entity_destroy(entity);
     } else {
         sk_sched_t* sched  = SK_ENV_SCHED;

@@ -48,8 +48,7 @@ int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn
     SK_ASSERT(ret == SK_SRV_STATUS_OK);
 
     // 3. Reschedule service tasks
-    size_t cnt = sk_service_schedule_tasks(svc);
-    printf("service %zu tasks\n", cnt);
+    sk_service_schedule_tasks(svc);
     return 0;
 }
 

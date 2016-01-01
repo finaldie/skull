@@ -40,6 +40,7 @@ sk_entity_status_t sk_entity_status(sk_entity_t* entity);
 struct sk_workflow_t* sk_entity_workflow(sk_entity_t* entity);
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud);
+void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status);
 
 struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity);
 void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr);
@@ -47,10 +48,8 @@ void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr);
 struct sk_txn_t* sk_entity_halftxn(sk_entity_t* entity);
 void sk_entity_sethalftxn(sk_entity_t* entity, struct sk_txn_t* txn);
 
-void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status);
-
-void sk_entity_taskcnt_inc(sk_entity_t* entity);
-void sk_entity_taskcnt_dec(sk_entity_t* entity);
+void sk_entity_txnadd(sk_entity_t*, struct sk_txn_t*);
+void sk_entity_txndel(sk_entity_t*, struct sk_txn_t*);
 int  sk_entity_taskcnt(sk_entity_t* entity);
 
 // create network entity from a base entity

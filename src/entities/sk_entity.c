@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "flibs/fhash.h"
 #include "api/sk_utils.h"
 #include "api/sk_entity.h"
 #include "api/sk_workflow.h"
@@ -16,11 +17,26 @@ struct sk_entity_t {
     sk_workflow_t*          workflow;
     sk_txn_t*               half_txn; // store the incompleted txn
     sk_entity_opt_t         opt;
+    fhash*                  txns;
 
     sk_entity_status_t status;
     int   task_cnt;
     void* ud;
 };
+
+// increase the query count
+static
+void _entity_taskcnt_inc(sk_entity_t* entity)
+{
+    entity->task_cnt++;
+}
+
+// decrease the query count
+static
+void _entity_taskcnt_dec(sk_entity_t* entity)
+{
+    entity->task_cnt--;
+}
 
 // default opts
 static
@@ -57,6 +73,7 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
     entity->owner    = NULL;
     entity->workflow = workflow;
     entity->opt      = default_entity_opt;
+    entity->txns     = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     entity->status   = SK_ENTITY_ACTIVE;
 
     sk_metrics_global.entity_create.inc(1);
@@ -71,24 +88,35 @@ void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
     entity->opt.destroy = opt.destroy ? opt.destroy : default_entity_opt.destroy;
 
     entity->ud = ud;
-
-    // Update metrics
-    if (SK_ENTITY_NET == sk_entity_type(entity)) {
-        sk_metrics_global.connection_create.inc(1);
-    }
 }
 
 void sk_entity_destroy(sk_entity_t* entity)
 {
-    // Update metrcis
-    sk_metrics_global.entity_destroy.inc(1);
-    if (SK_ENTITY_NET == sk_entity_type(entity)) {
-        sk_metrics_global.connection_destroy.inc(1);
-    }
+    if (!entity) return;
 
-    // Release resources
-    entity->opt.destroy(entity, entity->ud);
-    free(entity);
+    sk_entity_status_t status = entity->status;
+    SK_ASSERT(status == SK_ENTITY_INACTIVE || status == SK_ENTITY_DEAD);
+
+    if (entity->status == SK_ENTITY_INACTIVE) {
+        // Release resources
+        entity->opt.destroy(entity, entity->ud);
+        entity->ud = NULL;
+    } else {
+        // Update metrcis
+        sk_metrics_global.entity_destroy.inc(1);
+
+        // clean up all txns
+        fhash_u64_iter iter = fhash_u64_iter_new(entity->txns);
+        sk_txn_t* txn = NULL;
+        while ((txn = fhash_u64_next(&iter))) {
+            sk_print("clean up the unfinished txn\n");
+            sk_txn_destroy(txn);
+        }
+        fhash_u64_iter_release(&iter);
+        fhash_u64_delete(entity->txns);
+
+        free(entity);
+    }
 }
 
 ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len)
@@ -137,16 +165,17 @@ sk_entity_status_t sk_entity_status(sk_entity_t* entity)
     return entity->status;
 }
 
-// increase the query count
-void sk_entity_taskcnt_inc(sk_entity_t* entity)
+void sk_entity_txnadd(sk_entity_t* entity, struct sk_txn_t* txn)
 {
-    entity->task_cnt++;
+    fhash_u64_set(entity->txns, (uint64_t) (uintptr_t) txn, txn);
+    _entity_taskcnt_inc(entity);
 }
 
-// decrease the query count
-void sk_entity_taskcnt_dec(sk_entity_t* entity)
+void sk_entity_txndel(sk_entity_t* entity, struct sk_txn_t* txn)
 {
-    entity->task_cnt--;
+    sk_txn_t* deleted = fhash_u64_del(entity->txns, (uint64_t) (uintptr_t) txn);
+    SK_ASSERT(deleted == txn);
+    _entity_taskcnt_dec(entity);
 }
 
 // get task cnt

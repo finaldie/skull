@@ -15,7 +15,7 @@
 static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
-    printf("stdin read_cb\n");
+    sk_print("stdin read_cb\n");
     sk_entity_t* entity = arg;
     sk_workflow_t* workflow = sk_entity_workflow(entity);
     int concurrent = workflow->cfg->concurrent;

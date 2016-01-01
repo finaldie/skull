@@ -24,6 +24,7 @@ typedef struct sk_txn_t sk_txn_t;
 sk_txn_t* sk_txn_create(struct sk_workflow_t* workflow,
                         struct sk_entity_t* entity);
 void sk_txn_destroy(sk_txn_t* txn);
+void sk_txn_safe_destroy(sk_txn_t* txn);
 
 const void* sk_txn_input(sk_txn_t* txn, size_t* sz);
 void sk_txn_set_input(sk_txn_t* txn, const void* data, size_t sz);
