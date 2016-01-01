@@ -33,6 +33,8 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     sk_txn_task_status_t task_status = task_cb_msg->task_status;
 
     // 2. mark the txn task complete
+    sk_txn_taskdata_t* taskdata = sk_txn_taskdata(txn, task_id);
+    const char* caller_module_name = taskdata->caller_module->name;
     sk_txn_task_setcomplete(txn, task_id, task_status);
 
     // 3. get the target service
@@ -40,7 +42,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     SK_ASSERT(service);
 
     // 4. run a specific service api callback
-    SK_LOG_SETCOOKIE("module.%s", sk_txn_current_module(txn)->name);
+    SK_LOG_SETCOOKIE("module.%s", caller_module_name);
     SK_ENV_POS = SK_ENV_POS_MODULE;
 
     int ret = sk_service_run_iocall_cb(service, txn, task_id, api_name);

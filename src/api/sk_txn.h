@@ -70,6 +70,7 @@ typedef struct sk_txn_taskdata_t {
     size_t      request_sz;
     void *      response_pb_msg; // deserialized pb-c message
     void*       user_data;
+    struct sk_module_t* caller_module;
     sk_txn_module_cb cb;
 } sk_txn_taskdata_t;
 

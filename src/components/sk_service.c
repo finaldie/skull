@@ -574,6 +574,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     task_data.request_sz = req_sz;
     task_data.cb         = cb;
     task_data.user_data  = ud;
+    task_data.caller_module = sk_txn_current_module(txn);
     uint64_t task_id = sk_txn_task_add(txn, &task_data);
 
     // 3. construct iocall protocol
