@@ -37,17 +37,14 @@ struct sk_txn_t {
     fhash*          task_tbl;   // key: task_id, value: sk_txn_task_t
 
     uint64_t        latest_taskid;
-    int             running_tasks;
+    int             total_tasks;
     int             complete_tasks;
 
     unsigned long long  start_time;
 
     sk_txn_state_t  state;
 
-#if __WORDSIZE == 64
-    int _padding;
-#endif
-
+    int             pending_tasks;
     void*           udata;
 };
 
@@ -97,6 +94,12 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
 void sk_txn_destroy(sk_txn_t* txn)
 {
     if (!txn) {
+        return;
+    }
+
+    if (txn->complete_tasks < txn->total_tasks) {
+        sk_print("sk_txn_destroy: complete_tasks(%d) < total_tasks(%d), "
+                 "won't destroy\n", txn->complete_tasks, txn->total_tasks);
         return;
     }
 
@@ -204,11 +207,7 @@ void* sk_txn_udata(sk_txn_t* txn)
 
 bool sk_txn_module_complete(sk_txn_t* txn)
 {
-    if (txn->running_tasks == txn->complete_tasks) {
-        return true;
-    }
-
-    return false;
+    return !txn->pending_tasks;
 }
 
 // =============================================================================
@@ -217,17 +216,18 @@ uint64_t sk_txn_task_add(sk_txn_t* txn, sk_txn_taskdata_t* task_data)
     sk_txn_task_t* task = _sk_txn_task_create(task_data);
     uint64_t task_id = txn->latest_taskid++;
     fhash_u64_set(txn->task_tbl, task_id, task);
-    txn->running_tasks++;
+    txn->total_tasks++;
+    txn->pending_tasks += task_data->cb ? 1 : 0;
 
-    SK_ASSERT(txn->complete_tasks < txn->running_tasks);
+    SK_ASSERT(txn->complete_tasks < txn->total_tasks);
     return task_id;
 }
 
 void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
                           sk_txn_task_status_t status)
 {
-    SK_ASSERT(status != SK_TXN_TASK_RUNNING);
-    SK_ASSERT(txn->complete_tasks < txn->running_tasks);
+    //SK_ASSERT(status != SK_TXN_TASK_RUNNING);
+    SK_ASSERT(txn->complete_tasks < txn->total_tasks);
 
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -235,6 +235,7 @@ void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
     task->end = ftime_gettime();
     task->status = status;
     txn->complete_tasks++;
+    txn->pending_tasks -= task->task_data.cb ? 1 : 0;
 }
 
 sk_txn_task_status_t sk_txn_task_status(sk_txn_t* txn, uint64_t task_id)

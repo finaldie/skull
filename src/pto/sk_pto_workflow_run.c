@@ -155,6 +155,12 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
     }
     case SK_TXN_PACKED: {
         sk_print("txn - PACKED: txn destroy\n");
+        sk_txn_setstate(txn, SK_TXN_DESTROYED);
+        sk_txn_destroy(txn);
+        break;
+    }
+    case SK_TXN_DESTROYED: {
+        sk_print("txn - DESTROYED: txn destroy\n");
         sk_txn_destroy(txn);
         break;
     }

@@ -11,26 +11,8 @@
 #include "txn_types.h"
 #include "srv_types.h"
 #include "srv_loader.h"
+#include "srv_utils.h"
 #include "skull/service.h"
-
-static
-skull_service_async_api_t* _find_api(skull_service_async_api_t** apis,
-                                     const char* api_name)
-{
-    if (!apis) {
-        return NULL;
-    }
-
-    for (int i = 0; apis[i] != NULL; i++) {
-        skull_service_async_api_t* api = apis[i];
-
-        if (0 == strcmp(api->name, api_name)) {
-            return api;
-        }
-    }
-
-    return NULL;
-}
 
 skull_service_ret_t
 skull_service_async_call (skull_txn_t* txn, const char* service_name,
@@ -48,7 +30,8 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
     skull_c_srvdata_t*          srv_data   = opt->srv_data;
     skull_service_entry_t*      entry      = srv_data->entry;
     skull_service_async_api_t** async_apis = entry->async;
-    skull_service_async_api_t*  api        = _find_api(async_apis, api_name);
+    skull_service_async_api_t*  api        = skull_svc_find_api(async_apis,
+                                                                api_name);
 
     if (!api) return SKULL_SERVICE_ERROR_APINAME;
 

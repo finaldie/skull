@@ -22,6 +22,7 @@
 #include "txn_types.h"
 #include "srv_types.h"
 #include "srv_loader.h"
+#include "srv_utils.h"
 
 #include "skull/unittest.h"
 
@@ -49,24 +50,6 @@ struct skullut_module_t {
 
     sk_workflow_cfg_t* workflow_cfg;
 };
-
-static
-skull_service_async_api_t*
-_find_api(skull_service_async_api_t** apis, const char* api_name)
-{
-    if (!apis) {
-        return NULL;
-    }
-
-    skull_service_async_api_t* api = apis[0];
-    for (; api != NULL; api += 1) {
-        if (0 == strcmp(api->name, api_name)) {
-            break;
-        }
-    }
-
-    return api;
-}
 
 skullut_module_t* skullut_module_create(const char* module_name,
                                   const char* idl_name,
@@ -354,7 +337,7 @@ skull_service_async_call (skull_txn_t* txn,
         return SKULL_SERVICE_ERROR_SRVNAME;
     }
 
-    skull_service_async_api_t* api = _find_api(service->apis, api_name);
+    skull_service_async_api_t* api = skull_svc_find_api(service->apis, api_name);
     if (!api) {
         return SKULL_SERVICE_ERROR_APINAME;
     }
@@ -436,7 +419,7 @@ void skullut_service_run(skullut_service_t* ut_service, const char* api_name,
     skull_service_entry_t* entry = srv_data->entry;
 
     // 1. find api
-    skull_service_async_api_t* api = _find_api(entry->async, api_name);
+    skull_service_async_api_t* api = skull_svc_find_api(entry->async, api_name);
     SK_ASSERT_MSG(api, "cannot find api: %s\n", api_name);
 
     // 2. construct empty response

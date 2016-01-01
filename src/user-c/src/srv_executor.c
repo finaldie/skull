@@ -5,6 +5,7 @@
 #include "idl_internal.h"
 #include "srv_types.h"
 #include "srv_loader.h"
+#include "srv_utils.h"
 #include "srv_executor.h"
 
 void skull_srv_init (sk_service_t* srv, void* data)
@@ -46,13 +47,7 @@ int  skull_srv_iocall  (sk_service_t* srv, sk_txn_t* txn, void* sdata,
         .service = srv
     };
 
-    skull_service_async_api_t* api = entry->async[0];
-    for (; api != NULL; api += 1) {
-        if (0 == strcmp(api->name, api_name)) {
-            break;
-        }
-    }
-
+    skull_service_async_api_t* api = skull_svc_find_api(entry->async, api_name);
     if (!api) {
         return 1;
     }

@@ -15,7 +15,8 @@ typedef enum sk_txn_state_t {
     SK_TXN_RUNNING   = 2,
     SK_TXN_PENDING   = 3,
     SK_TXN_COMPLETED = 4,
-    SK_TXN_PACKED    = 5
+    SK_TXN_PACKED    = 5,
+    SK_TXN_DESTROYED = 6
 } sk_txn_state_t;
 
 typedef struct sk_txn_t sk_txn_t;
