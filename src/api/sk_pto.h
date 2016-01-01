@@ -90,6 +90,9 @@ extern sk_proto_t sk_pto_svc_timer_run;
 #define SK_PTO_SVC_TIMER_COMPLETE 10
 extern sk_proto_t sk_pto_svc_timer_complete;
 
+#define SK_PTO_SVC_TASK_CB 11
+extern sk_proto_t sk_pto_srv_task_cb;
+
 /******************************************************************************/
 // global protocol table
 extern sk_proto_t* sk_pto_tbl[];

@@ -4,7 +4,6 @@
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_txn.h"
-#include "api/sk_sched.h"
 #include "api/sk_pto.h"
 #include "api/sk_log_helper.h"
 #include "api/sk_workflow.h"
@@ -91,4 +90,14 @@ void sk_entity_safe_destroy(sk_entity_t* entity)
         sk_sched_send(sched, target, entity, NULL,
                       SK_PTO_ENTITY_DESTROY, NULL, 0);
     }
+}
+
+sk_sched_t* sk_entity_sched(sk_entity_t* entity)
+{
+    if (!entity) return NULL;
+
+    sk_entity_mgr_t* owner = sk_entity_owner(entity);
+    if (!owner) return NULL;
+
+    return sk_entity_mgr_sched(owner);
 }

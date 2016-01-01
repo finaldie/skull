@@ -37,7 +37,7 @@ const void* skull_service_data_const (skull_service_t*);
 // ===================== APIs and Data Structures for Module ===================
 
 // module callback function declartion
-typedef void (*skull_module_cb) (skull_txn_t*, const void* request,
+typedef int (*skull_module_cb) (skull_txn_t*, const void* request,
                                  const void* response);
 
 typedef enum skull_service_ret_t {

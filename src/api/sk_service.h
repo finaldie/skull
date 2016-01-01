@@ -88,8 +88,11 @@ typedef struct sk_service_opt_t {
     void (*init)    (sk_service_t*, void* srv_data);
     void (*release) (sk_service_t*, void* srv_data);
 
-    int  (*io_call) (sk_service_t*, sk_txn_t*, void* srv_data, uint64_t task_id,
+    int  (*iocall)  (sk_service_t*, sk_txn_t*, void* srv_data, uint64_t task_id,
                      const char* api_name, sk_srv_io_status_t ustatus);
+
+    int  (*iocall_complete) (sk_service_t* srv, sk_txn_t* txn, void* sdata,
+                                uint64_t task_id, const char* api_name);
 } sk_service_opt_t;
 
 typedef struct sk_service_api_t {
@@ -125,6 +128,11 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t*, sk_txn_t* txn,
                                       uint64_t task_id,
                                       const char* api_name,
                                       sk_srv_io_status_t io_status);
+
+int sk_service_run_iocall_cb(sk_service_t* service,
+                             sk_txn_t* txn,
+                             uint64_t task_id,
+                             const char* api_name);
 
 // APIs for user
 //  Data APIs (Experimental)

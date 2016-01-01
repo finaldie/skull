@@ -167,6 +167,7 @@ void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
     task_run_pto.service_name = (char*) sk_service_name(service);
     task_run_pto.api_name     = (char*) task->data.api.name;
     task_run_pto.io_status    = (uint32_t) task->io_status;
+    task_run_pto.src          = (uint64_t) (uintptr_t) src;
 
     // 2. Find a bio if needed
     sk_sched_t* target = _find_target_sched(src, bidx);
@@ -470,7 +471,7 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
     sk_srv_status_t status = SK_SRV_STATUS_OK;
     void* user_srv_data = service->opt.srv_data;
 
-    int ret = service->opt.io_call(service, txn, user_srv_data, task_id,
+    int ret = service->opt.iocall(service, txn, user_srv_data, task_id,
                                    api_name, io_st);
     if (ret) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "service: task failed, service_name: %s \
@@ -479,6 +480,21 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
     }
 
     return status;
+}
+
+int sk_service_run_iocall_cb(sk_service_t* service,
+                             sk_txn_t* txn,
+                             uint64_t task_id,
+                             const char* api_name)
+{
+    SK_ASSERT(service);
+    SK_ASSERT(txn);
+    SK_ASSERT(api_name);
+
+    void* user_srv_data = service->opt.srv_data;
+
+    return service->opt.iocall_complete(
+        service, txn, user_srv_data, task_id, api_name);
 }
 
 void* sk_service_data(sk_service_t* service)

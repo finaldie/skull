@@ -14,5 +14,6 @@ sk_proto_t* sk_pto_tbl[] = {
     &sk_pto_stdin_start,        // SK_PTO_STDIN_START
     &sk_pto_svc_timer_run,      // SK_PTO_SVC_TIMER_RUN
     &sk_pto_svc_timer_complete, // SK_PTO_SVC_TIMER_COMPLETE
+    &sk_pto_srv_task_cb,        // SK_PTO_SVC_TASK_CB
     NULL
 };
