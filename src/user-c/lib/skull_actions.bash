@@ -48,9 +48,9 @@ function action_c_module_add()
     mkdir -p $module_path/config
     mkdir -p $module_path/lib
 
-    cp $LANGUAGE_PATH/share/mod.c.tpl        $module_path/src/mod.c
+    cp $LANGUAGE_PATH/share/module.c         $module_path/src/module.c
     cp $LANGUAGE_PATH/etc/config.yaml        $module_path/config/config.yaml
-    cp $LANGUAGE_PATH/share/test_mod.c.tpl   $module_path/tests/test_mod.c
+    cp $LANGUAGE_PATH/share/test_module.c    $module_path/tests/test_module.c
     cp $LANGUAGE_PATH/etc/test_config.yaml   $module_path/tests/test_config.yaml
     cp $LANGUAGE_PATH/share/gitignore-module $module_path/.gitignore
 
@@ -102,7 +102,7 @@ function action_c_common_create()
     action_c_gen_idl $config
 
     # copy the unit test file
-    cp $LANGUAGE_PATH/share/test_common.c.tpl \
+    cp $LANGUAGE_PATH/share/test_common.c \
         $COMMON_FILE_LOCATION/tests/test_common.c
 }
 

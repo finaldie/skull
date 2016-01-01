@@ -22,15 +22,5 @@ bool skull_log_enable_warn();
 bool skull_log_enable_error();
 bool skull_log_enable_fatal();
 
-// private:
-//  get log msg and solution
-const char* skull_log_info_msg(int log_id);
-const char* skull_log_warn_msg(int log_id);
-const char* skull_log_warn_solution(int log_id);
-const char* skull_log_error_msg(int log_id);
-const char* skull_log_error_solution(int log_id);
-const char* skull_log_fatal_msg(int log_id);
-const char* skull_log_fatal_solution(int log_id);
-
 #endif
 

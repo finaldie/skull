@@ -324,45 +324,6 @@ void _sk_init_log(sk_core_t* core)
 }
 
 static
-void _sk_init_log_tpls(sk_core_t* core)
-{
-    const char* working_dir = core->working_dir;
-    char log_tpl_name[SK_LOG_TPL_NAME_MAX_LEN];
-
-    // 1. load info log template
-    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
-    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
-             working_dir, SK_LOG_INFO_TPL_NAME);
-
-    core->info_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_INFO_TPL);
-    SK_ASSERT(core->info_log_tpl);
-
-    // 2. load warn log template
-    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
-    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
-             working_dir, SK_LOG_WARN_TPL_NAME);
-
-    core->warn_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_ERROR_TPL);
-    SK_ASSERT(core->warn_log_tpl);
-
-    // 3. load error log template
-    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
-    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
-             working_dir, SK_LOG_ERROR_TPL_NAME);
-
-    core->error_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_ERROR_TPL);
-    SK_ASSERT(core->error_log_tpl);
-
-    // 4. load fatal log template
-    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
-    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
-             working_dir, SK_LOG_FATAL_TPL_NAME);
-
-    core->fatal_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_ERROR_TPL);
-    SK_ASSERT(core->fatal_log_tpl);
-}
-
-static
 void _sk_init_moniter(sk_core_t* core)
 {
     core->mon = sk_mon_create();
@@ -413,22 +374,19 @@ void sk_core_init(sk_core_t* core)
              "================= skull engine initializing =================");
     sk_print("================= skull engine initializing =================\n");
 
-    // 5. init log tempaltes
-    _sk_init_log_tpls(core);
-
-    // 6. init global monitor
+    // 5. init global monitor
     _sk_init_moniter(core);
 
-    // 7. init engines
+    // 6. init engines
     _sk_setup_engines(core);
 
-    // 8. init admin
+    // 7. init admin
     _sk_init_admin(core);
 
-    // 9. load services
+    // 8. load services
     _sk_setup_services(core);
 
-    // 10. load workflows and related triggers
+    // 9. load workflows and related triggers
     _sk_setup_workflows(core);
 }
 
@@ -597,10 +555,6 @@ void sk_core_destroy(sk_core_t* core)
              "=================== skull engine stopped ====================");
 
     sk_logger_destroy(core->logger);
-    sk_log_tpl_destroy(core->info_log_tpl);
-    sk_log_tpl_destroy(core->warn_log_tpl);
-    sk_log_tpl_destroy(core->error_log_tpl);
-    sk_log_tpl_destroy(core->fatal_log_tpl);
 }
 
 // Utils APIs

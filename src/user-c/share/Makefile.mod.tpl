@@ -17,11 +17,11 @@ TEST_DEPS_LIBS += \
 
 # Objs and deployment related items
 SRCS = \
-    src/mod.c \
+    src/module.c \
     src/config.c
 
 TEST_SRCS = \
-    tests/test_mod.c
+    tests/test_module.c
 
 # valgrind suppresion file
 #  note: if the suppresion file is exist, then need to append

@@ -46,12 +46,6 @@ typedef struct sk_core_t {
     // logger
     sk_logger_t*     logger;
 
-    // log templates
-    sk_log_tpl_t*    info_log_tpl;
-    sk_log_tpl_t*    warn_log_tpl;
-    sk_log_tpl_t*    error_log_tpl;
-    sk_log_tpl_t*    fatal_log_tpl;
-
     flist*           workflows;      // element type: sk_workflow_t*
     flist*           triggers;       // emement type: sk_trigger_t*
     fhash*           unique_modules; // key: module name; value: sk_module_t*

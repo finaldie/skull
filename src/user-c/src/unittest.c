@@ -71,6 +71,7 @@ skullut_module_t* skullut_module_create(const char* module_name,
     sk_entity_sethalftxn(env->entity, (void*)env);
 
     env->txn = sk_txn_create(env->workflow, env->entity);
+    sk_txn_setstate(env->txn, SK_TXN_UNPACKED);
     env->tasks = flist_create();
 
     // run init
@@ -96,7 +97,12 @@ void skullut_module_destroy(skullut_module_t* env)
 
     sk_txn_destroy(env->txn);
 
+    sk_entity_mark(env->entity, SK_ENTITY_INACTIVE);
     sk_entity_destroy(env->entity);
+
+    sk_entity_mark(env->entity, SK_ENTITY_DEAD);
+    sk_entity_destroy(env->entity);
+
     sk_workflow_destroy(env->workflow);
 
     // destroy the services
@@ -255,14 +261,6 @@ bool skull_log_enable_info()  { return true; }
 bool skull_log_enable_warn()  { return true; }
 bool skull_log_enable_error() { return true; }
 bool skull_log_enable_fatal() { return true; }
-
-const char* skull_log_info_msg(int log_id) { return "fake info message"; }
-const char* skull_log_warn_msg(int log_id) { return "fake warn message"; }
-const char* skull_log_warn_solution(int log_id) { return "fake warn solution"; }
-const char* skull_log_error_msg(int log_id) { return "fake error message"; }
-const char* skull_log_error_solution(int log_id) { return "fake error solution"; }
-const char* skull_log_fatal_msg(int log_id) { return "fake fatal message"; }
-const char* skull_log_fatal_solution(int log_id) { return "fake fatal solution"; }
 
 // Mock API for skull_metrics
 void skull_metric_inc(const char* name, double value)
