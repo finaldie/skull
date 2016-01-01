@@ -36,7 +36,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
     SK_LOG_SETCOOKIE("module.%s", module->name);
-    sk_txn_setpos(txn, SK_TXN_POS_MODULE);
+    SK_ENV_POS = SK_ENV_POS_MODULE;
 
     // Run the module
     int ret = module->run(module->md, txn);
@@ -44,7 +44,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
     // after module exit, set back the module name
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-    sk_txn_setpos(txn, SK_TXN_POS_CORE);
+    SK_ENV_POS = SK_ENV_POS_CORE;
 
     if (ret) {
         SK_ASSERT_MSG(!ret, "un-implemented code path\n");

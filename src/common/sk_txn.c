@@ -43,7 +43,10 @@ struct sk_txn_t {
     unsigned long long  start_time;
 
     sk_txn_state_t  state;
-    sk_txn_pos_t    position;
+
+#if __WORDSIZE == 64
+    int _padding;
+#endif
 
     void*           udata;
 };
@@ -87,7 +90,6 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
     txn->latest_taskid = 0;
     txn->start_time = ftime_gettime();
     txn->state = SK_TXN_INIT;
-    txn->position = SK_TXN_POS_CORE;
 
     return txn;
 }
@@ -293,12 +295,3 @@ sk_txn_state_t sk_txn_state(sk_txn_t* txn)
     return txn->state;
 }
 
-void sk_txn_setpos(sk_txn_t* txn, sk_txn_pos_t pos)
-{
-    txn->position = pos;
-}
-
-sk_txn_pos_t sk_txn_pos(sk_txn_t* txn)
-{
-    return txn->position;
-}

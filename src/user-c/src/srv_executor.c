@@ -105,7 +105,11 @@ int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
     // get the task data
     sk_txn_taskdata_t* task_data = sk_txn_taskdata(txn, task_id);
     SK_ASSERT(task_data);
-    SK_ASSERT(task_data->cb);
+
+    if (!task_data->cb) {
+        sk_print("no service api callback function to run, skip it\n");
+        return 0;
+    }
 
     // restore the request
     char req_proto_name[SKULL_SRV_PROTO_MAXLEN];

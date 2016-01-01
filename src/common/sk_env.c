@@ -46,5 +46,6 @@ sk_thread_env_t* sk_thread_env_create(sk_core_t* core,
     vsnprintf(thread_env->name, SK_ENV_NAME_LEN, fmt, ap);
     va_end(ap);
 
+    thread_env->pos = SK_ENV_POS_CORE;
     return thread_env;
 }

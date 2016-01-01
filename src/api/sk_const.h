@@ -33,5 +33,8 @@
 // eventloop max events
 #define SK_EVENTLOOP_MAX_EVENTS              65535
 
+// thread env name len
+#define SK_ENV_NAME_LEN                      24
+
 #endif
 

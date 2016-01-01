@@ -1,6 +1,7 @@
 #ifndef SK_ENV_H
 #define SK_ENV_H
 
+#include "api/sk_const.h"
 #include "api/sk_core.h"
 
 // per-thread data and macros, most of time, you only need to use these macros
@@ -16,8 +17,13 @@
 #define SK_ENV_MON          (sk_thread_env()->engine->mon)
 #define SK_ENV_TMSVC        (sk_thread_env()->engine->timer_svc)
 #define SK_ENV_MASTER_SCHED (SK_ENV_CORE->master->sched)
+#define SK_ENV_POS          (sk_thread_env()->pos)
 
-#define SK_ENV_NAME_LEN 24
+typedef enum sk_env_pos_t {
+    SK_ENV_POS_CORE    = 0,
+    SK_ENV_POS_MODULE  = 1,
+    SK_ENV_POS_SERVICE = 2
+} sk_env_pos_t;
 
 typedef struct sk_thread_env_t {
     // ======== public  ========
@@ -26,6 +32,12 @@ typedef struct sk_thread_env_t {
 
     // used for logging or debugging
     char name[SK_ENV_NAME_LEN];
+
+    sk_env_pos_t pos;
+
+#if __WORDSIZE == 64
+    int         _padding;
+#endif
 } sk_thread_env_t;
 
 void sk_thread_env_init();

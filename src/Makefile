@@ -115,7 +115,8 @@ PTO_OBJS = \
     pto/sk_pto_timer_emit.o \
     pto/sk_pto_stdin_start.o \
     pto/sk_pto_service_timer_run.o \
-    pto/sk_pto_service_timer_complete.o
+    pto/sk_pto_service_timer_complete.o \
+    pto/sk_pto_service_task_cb.o
 
 PTO_IDLS_OBJS = \
     pto/idls/net_accept.pb-c.o \

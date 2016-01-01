@@ -49,7 +49,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src /*master*/,
     //        'task_complete' message, or the user module will be hanged
 
     SK_LOG_SETCOOKIE("service.%s", service_name);
-    sk_txn_setpos(txn, SK_TXN_POS_SERVICE);
+    SK_ENV_POS = SK_ENV_POS_SERVICE;
 
     srv_status = sk_service_run_iocall(service, txn, task_id,
                                        api_name, io_status);
@@ -64,7 +64,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src /*master*/,
                                         : SK_TXN_TASK_ERROR;
 
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-    sk_txn_setpos(txn, SK_TXN_POS_CORE);
+    SK_ENV_POS = SK_ENV_POS_CORE;
 
     // 4. schedule it back and run api callback
     ServiceTaskCb task_cb_msg = SERVICE_TASK_CB__INIT;

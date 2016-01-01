@@ -6,6 +6,7 @@
 #include "api/sk_sched.h"
 #include "api/sk_service.h"
 #include "api/sk_log.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_env.h"
 #include "api/sk_metrics.h"
 
@@ -31,18 +32,27 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     const char* api_name     = task_cb_msg->api_name;
     sk_txn_task_status_t task_status = task_cb_msg->task_status;
 
-    // 2. get the target service
+    // 2. mark the txn task complete
+    sk_txn_task_setcomplete(txn, task_id, task_status);
+
+    // 3. get the target service
     sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
     SK_ASSERT(service);
 
-    // 3. run a specific service api callback
+    // 4. run a specific service api callback
+    SK_LOG_SETCOOKIE("module.%s", sk_txn_current_module(txn)->name);
+    SK_ENV_POS = SK_ENV_POS_MODULE;
+
     int ret = sk_service_run_iocall_cb(service, txn, task_id, api_name);
-    SK_LOG_ERROR(SK_ENV_LOGGER,
+
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+    SK_ENV_POS = SK_ENV_POS_CORE;
+
+    if (ret) {
+        SK_LOG_ERROR(SK_ENV_LOGGER,
                  "Error in service task callback, ret: %d, task_id: %d\n",
                  ret, task_id);
-
-    // 4. mark the txn task complete
-    sk_txn_task_setcomplete(txn, task_id, task_status);
+    }
 
     // 5. send a complete protocol back to master
     ServiceTaskComplete task_complete_msg = SERVICE_TASK_COMPLETE__INIT;
@@ -61,7 +71,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     //
     // note: This 'workflow' will also be ran in the previous worker
     if (sk_txn_module_complete(txn)) {
-        sk_sched_send(sched, src, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
+        sk_sched_send(sched, sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
     }
 
     return 0;
