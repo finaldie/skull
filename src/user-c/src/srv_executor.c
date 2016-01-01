@@ -96,6 +96,9 @@ int  skull_srv_iocall  (sk_service_t* srv, sk_txn_t* txn, void* sdata,
 
     // clean up the req and resp
     protobuf_c_message_free_unpacked(req_msg, NULL);
+    if (!task_data->cb) {
+        protobuf_c_message_free_unpacked(resp_msg, NULL);
+    }
     return 0;
 }
 
