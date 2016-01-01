@@ -51,20 +51,20 @@ int _run(sk_sched_t* sched, sk_sched_t* src /*master*/,
     SK_LOG_SETCOOKIE("service.%s", service_name);
     SK_ENV_POS = SK_ENV_POS_SERVICE;
 
-    srv_status = sk_service_run_iocall(service, txn, task_id,
-                                       api_name, io_status);
+    srv_status =
+        sk_service_run_iocall(service, txn, task_id, api_name, io_status);
+
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+    SK_ENV_POS = SK_ENV_POS_CORE;
+
     if (srv_status != SK_SRV_STATUS_OK) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "service: user io call failed \
                      service_name: %s, api_name: %s", service_name, api_name);
         ret = 1;
     }
 
-    sk_txn_task_status_t txn_status = srv_status == SK_SRV_STATUS_OK
-                                        ? SK_TXN_TASK_DONE
-                                        : SK_TXN_TASK_ERROR;
-
-    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-    SK_ENV_POS = SK_ENV_POS_CORE;
+    sk_txn_task_status_t txn_status =
+        srv_status == SK_SRV_STATUS_OK ? SK_TXN_TASK_DONE : SK_TXN_TASK_ERROR;
 
     // 4. schedule it back and run api callback
     ServiceTaskCb task_cb_msg = SERVICE_TASK_CB__INIT;

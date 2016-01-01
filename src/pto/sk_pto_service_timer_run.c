@@ -10,6 +10,7 @@
 #include "api/sk_entity.h"
 #include "api/sk_txn.h"
 #include "api/sk_pto.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_service.h"
 
 // This proto is ran in the caller engine or bio
@@ -27,7 +28,13 @@ int _run (sk_sched_t* sched, sk_sched_t* src /*master*/,
     int            valid   = msg->valid;
 
     // Run timer job
+    SK_LOG_SETCOOKIE("service.%s", sk_service_name(service));
+    SK_ENV_POS = SK_ENV_POS_SERVICE;
+
     job(service, ud, valid);
+
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+    SK_ENV_POS = SK_ENV_POS_CORE;
 
     // Notify master the service task has completed
     ServiceTimerComplete complete_msg = SERVICE_TIMER_COMPLETE__INIT;

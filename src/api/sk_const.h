@@ -1,6 +1,8 @@
 #ifndef SK_CONST_H
 #define SK_CONST_H
 
+struct sk_const_t;
+
 // logger cookies
 #define SK_CORE_LOG_COOKIE                   "skull.core"
 
