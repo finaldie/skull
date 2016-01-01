@@ -35,7 +35,7 @@ typedef struct sk_io_bridge_t {
 struct sk_sched_t {
     void* evlp;
     sk_entity_mgr_t* entity_mgr;
-    sk_proto_t**     pto_tbl;
+    sk_proto_t*      pto_tbl;
     sk_io_t*         io_tbl[SK_PTO_PRI_SZ];
     sk_io_bridge_t*  bridge_tbl[SK_SCHED_MAX_IO_BRIDGE];
     flist*           workflows;
@@ -86,7 +86,7 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
     while (!fmbuf_pop(io_bridge->mq, &event, SK_EVENT_SZ)) {
         sk_sched_t* dst      = io_bridge->dst;
         uint32_t    pto_id   = event.pto_id;
-        sk_proto_t* pto      = dst->pto_tbl[pto_id];
+        sk_proto_t* pto      = &dst->pto_tbl[pto_id];
         int         priority = pto->priority;
         sk_io_t*    dst_io   = io_bridge->dst->io_tbl[priority];
 
@@ -158,15 +158,15 @@ int sk_io_bridge_deliver(sk_io_bridge_t* io_bridge, sk_event_t* event)
 }
 
 static
-void _check_ptos(sk_proto_t** pto_tbl)
+void _check_ptos(sk_proto_t* pto_tbl)
 {
     if (!pto_tbl) {
         return;
     }
 
-    for (int i = 0; pto_tbl[i] != NULL; i++) {
-        sk_proto_t* pto = pto_tbl[i];
-        SK_ASSERT(pto->run);
+    for (int i = 0; pto_tbl[i].pto_id != -1; i++) {
+        sk_proto_t pto = pto_tbl[i];
+        SK_ASSERT(pto.opt->run);
     }
 }
 
@@ -343,7 +343,7 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     SK_ASSERT(sched == event->dst);
 
     uint32_t pto_id = event->pto_id;
-    sk_proto_t* pto = sched->pto_tbl[pto_id];
+    sk_proto_t* pto = &sched->pto_tbl[pto_id];
     sk_print("Run event: pto_id = %u\n", pto_id);
     SK_ASSERT(pto);
 
@@ -357,12 +357,12 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 
     // 2. Decode the message
     ProtobufCMessage* msg =
-        protobuf_c_message_unpack(pto->descriptor, NULL, event->sz, event->data);
+        protobuf_c_message_unpack(pto->opt->descriptor, NULL, event->sz, event->data);
 
     // 3. Run event
     sk_txn_t*   txn = event->txn;
     sk_sched_t* src = event->src;
-    pto->run(sched, src, entity, txn, msg);
+    pto->opt->run(sched, src, entity, txn, msg);
 
     // 4. Release message resources
     protobuf_c_message_free_unpacked(msg, NULL);
@@ -423,7 +423,7 @@ int _emit_event(sk_sched_t* sched, sk_sched_t* dst, sk_io_type_t io_type,
                 sk_entity_t* entity, sk_txn_t* txn,
                 uint32_t pto_id, void* proto_msg, int flags)
 {
-    sk_proto_t* pto = sched->pto_tbl[pto_id];
+    sk_proto_t* pto = &sched->pto_tbl[pto_id];
 
     sk_event_t event;
     memset(&event, 0, sizeof(event));
@@ -468,6 +468,30 @@ void _cleanup_skio_events(sk_io_t* io)
     }
 }
 
+static
+sk_proto_t* _create_proto_tbl(sk_proto_t* tbl)
+{
+    // 1. calculate table size
+    size_t size = 0;
+    while (tbl[size++].pto_id >= 0);
+
+    // 2. create mapping table
+    sk_proto_t* mapping = calloc(1, sizeof(*mapping) * size);
+    for (size_t i = 0; i < size; i++) {
+        sk_proto_t proto = tbl[i];
+        int pto_id = proto.pto_id;
+
+        if (pto_id == -1) {
+            mapping[size - 1] = proto;
+            continue;
+        }
+
+        mapping[pto_id] = proto;
+    }
+
+    return mapping;
+}
+
 // APIs
 sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr, int flags)
 {
@@ -475,7 +499,7 @@ sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr, int flags)
                                SK_EVENT_SZ * SK_SCHED_PULL_NUM);
     sched->evlp       = evlp;
     sched->entity_mgr = entity_mgr;
-    sched->pto_tbl    = sk_pto_tbl;
+    sched->pto_tbl    = _create_proto_tbl(sk_pto_tbl);
     sched->running    = 0;
     sched->flags      = flags;
 
@@ -505,6 +529,7 @@ void sk_sched_destroy(sk_sched_t* sched)
         sk_io_destroy(sched->io_tbl[i]);
     }
 
+    free(sched->pto_tbl);
     free(sched);
 }
 

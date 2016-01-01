@@ -55,8 +55,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     return 0;
 }
 
-sk_proto_t sk_pto_srv_task_complete = {
-    .priority   = SK_PTO_PRI_6,
+sk_proto_opt_t sk_pto_srv_task_complete = {
     .descriptor = &service_task_complete__descriptor,
     .run        = _run
 };

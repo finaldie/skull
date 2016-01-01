@@ -52,8 +52,7 @@ int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn
     return 0;
 }
 
-sk_proto_t sk_pto_timer_emit = {
-    .priority = SK_PTO_PRI_9,
+sk_proto_opt_t sk_pto_timer_emit = {
     .descriptor = &timer_emit__descriptor,
     .run = _run
 };

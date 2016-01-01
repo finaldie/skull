@@ -38,8 +38,7 @@ int _run (sk_sched_t* sched, sk_sched_t* src /*master*/,
     return 0;
 }
 
-sk_proto_t sk_pto_svc_timer_run = {
-    .priority = SK_PTO_PRI_9,
+sk_proto_opt_t sk_pto_svc_timer_run = {
     .descriptor = &service_timer_run__descriptor,
-    .run = _run
+    .run        = _run
 };

@@ -101,8 +101,7 @@ io_call_exit:
     return ret;
 }
 
-sk_proto_t sk_pto_srv_iocall = {
-    .priority   = SK_PTO_PRI_6,
+sk_proto_opt_t sk_pto_srv_iocall = {
     .descriptor = &service_iocall__descriptor,
     .run        = _run
 };

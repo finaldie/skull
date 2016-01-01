@@ -65,8 +65,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     return 0;
 }
 
-sk_proto_t sk_pto_stdin_start = {
-    .priority   = SK_PTO_PRI_8,
+sk_proto_opt_t sk_pto_stdin_start = {
     .descriptor = &stdin_start__descriptor,
     .run        = _run
 };

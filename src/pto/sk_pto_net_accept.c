@@ -66,8 +66,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     return 0;
 }
 
-sk_proto_t sk_pto_net_accept = {
-    .priority   = SK_PTO_PRI_8,
+sk_proto_opt_t sk_pto_net_accept = {
     .descriptor = &net_accept__descriptor,
     .run        = _run
 };
