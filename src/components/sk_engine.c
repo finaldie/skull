@@ -10,6 +10,7 @@
 #include "api/sk_core.h"
 #include "api/sk_mon.h"
 #include "api/sk_log.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_entity_util.h"
 #include "api/sk_engine.h"
 
@@ -119,7 +120,7 @@ void* _sk_engine_thread(void* arg)
 
     // 2. Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros.
     //    Set logger cookie
-    sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     // 3. Create a internal timer for metrics update & snapshot
     if (SK_ENV_ENGINE->type == SK_ENGINE_MASTER) {

@@ -10,6 +10,7 @@
 #include "api/sk_pto.h"
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_env.h"
 #include "api/sk_metrics.h"
 #include "api/sk_sched.h"
@@ -34,7 +35,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
-    sk_logger_setcookie("module.%s", module->name);
+    SK_LOG_SETCOOKIE("module.%s", module->name);
     sk_txn_setpos(txn, SK_TXN_POS_MODULE);
 
     // Run the module
@@ -42,7 +43,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     sk_print("module execution return code=%d\n", ret);
 
     // after module exit, set back the module name
-    sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     sk_txn_setpos(txn, SK_TXN_POS_CORE);
 
     if (ret) {
@@ -91,7 +92,9 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
     }
 
     // 2. pack the data, and send the response if needed
+    SK_LOG_SETCOOKIE("module.%s", last_module->name);
     last_module->pack(last_module->md, txn);
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     size_t packed_data_sz = 0;
     const char* packed_data = sk_txn_output(txn, &packed_data_sz);

@@ -72,11 +72,6 @@ sk_logger_t* sk_logger_create(const char* workdir,
     // abnormal things happened
     flog_register_event_callback(_skull_log_notification_cb);
 
-    // 7. set up the cookie
-    // NOTES: in skull engine, the cookie will be the skull.core, otherwise
-    //   the cookie will be the module name or other name
-    flog_set_cookie(SK_CORE_LOG_COOKIE);
-
     return logger;
 }
 

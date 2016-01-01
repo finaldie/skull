@@ -1,10 +1,12 @@
 #include <stdlib.h>
 
+#include "api/sk_const.h"
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_txn.h"
 #include "api/sk_sched.h"
 #include "api/sk_pto.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_workflow.h"
 #include "api/sk_metrics.h"
 #include "api/sk_entity_util.h"
@@ -45,9 +47,12 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     }
 
     // 3. try to unpack the user data
+    SK_LOG_SETCOOKIE("module.%s", first_module->name);
     const void* data = fevbuff_rawget(evbuff);
-    size_t consumed = first_module->unpack(first_module->md, txn,
-                                           data, (size_t)bytes);
+    size_t consumed =
+        first_module->unpack(first_module->md, txn, data, (size_t)bytes);
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+
     if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", bytes);

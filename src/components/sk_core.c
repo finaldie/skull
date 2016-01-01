@@ -19,6 +19,7 @@
 #include "api/sk_const.h"
 #include "api/sk_env.h"
 #include "api/sk_log.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_log_tpl.h"
 #include "api/sk_core.h"
 
@@ -198,9 +199,9 @@ void _sk_module_init(sk_core_t* core)
         sk_print("module [%s] init...\n", module->name);
         SK_LOG_INFO(core->logger, "module [%s] init...", module->name);
 
-        sk_logger_setcookie("module.%s", module->name);
+        SK_LOG_SETCOOKIE("module.%s", module->name);
         module->init(module->md);
-        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 
     fhash_str_iter_release(&iter);
@@ -214,9 +215,9 @@ void _sk_module_destroy(sk_core_t* core)
 
     while ((module = fhash_str_next(&iter))) {
         // 1. release module user layer data
-        sk_logger_setcookie("module.%s", module->name);
+        SK_LOG_SETCOOKIE("module.%s", module->name);
         module->release(module->md);
-        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
         // 2. release module core layer data
         sk_module_unload(module);
@@ -266,9 +267,9 @@ void _sk_service_init(sk_core_t* core)
         sk_print("init service %s\n", service_name);
         SK_LOG_INFO(core->logger, "init service %s", service_name);
 
-        sk_logger_setcookie("service.%s", service_name);
+        SK_LOG_SETCOOKIE("service.%s", service_name);
         sk_service_start(service);
-        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 
     fhash_str_iter_release(&srv_iter);
@@ -285,9 +286,9 @@ void _sk_service_destroy(sk_core_t* core)
         SK_LOG_INFO(core->logger, "destroy service %s", service_name);
 
         // 1. release service user layer data
-        sk_logger_setcookie("service.%s", service_name);
+        SK_LOG_SETCOOKIE("service.%s", service_name);
         sk_service_stop(service);
-        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
         // 2. release service core layer data
         sk_service_unload(service);
@@ -315,6 +316,9 @@ void _sk_init_log(sk_core_t* core)
     // does not exist, the logs will be dropped
     sk_thread_env_t* env = sk_thread_env_create(core, NULL, "master");
     sk_thread_env_set(env);
+
+    // set the core logging cookie
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     SK_LOG_TRACE(core->logger, "skull logger initialization successfully");
 }

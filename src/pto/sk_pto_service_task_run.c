@@ -7,6 +7,7 @@
 #include "api/sk_sched.h"
 #include "api/sk_service.h"
 #include "api/sk_log.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_env.h"
 #include "api/sk_metrics.h"
 
@@ -46,7 +47,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     // notes: even the user iocall failed, still need to send back a
     //        'task_complete' message, or the user module will be hanged
 
-    sk_logger_setcookie("service.%s", service_name);
+    SK_LOG_SETCOOKIE("service.%s", service_name);
     sk_txn_setpos(txn, SK_TXN_POS_SERVICE);
 
     srv_status = sk_service_run_iocall(service, txn, task_id,
@@ -57,7 +58,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
         ret = 1;
     }
 
-    sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     sk_txn_setpos(txn, SK_TXN_POS_CORE);
 
     // 4. mark the txn task complete
