@@ -35,7 +35,7 @@ skull_service_async_api_t* _find_api(skull_service_async_api_t** apis,
 skull_service_ret_t
 skull_service_async_call (skull_txn_t* txn, const char* service_name,
                           const char* api_name, const void* request,
-                          skull_module_cb cb, int bidx)
+                          skull_svc_api_cb cb, int bidx)
 {
     sk_core_t* core = SK_ENV_CORE;
     sk_service_t* service = sk_core_service(core, service_name);
@@ -60,7 +60,7 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
 
     int ioret = sk_service_iocall(service, txn->txn, api_name,
                       serialized_req, req_sz,
-                      (sk_txn_module_cb)cb, txn, bidx);
+                      (sk_txn_task_cb)cb, txn, bidx);
 
     if (ioret) return SKULL_SERVICE_ERROR_BIO;
     return SKULL_SERVICE_OK;

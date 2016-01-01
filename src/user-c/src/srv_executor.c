@@ -125,7 +125,7 @@ int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
 
     // Run api callback
     skull_txn_t* skull_txn = task_data->user_data;
-    int ret = ((skull_module_cb)task_data->cb)(skull_txn, req_msg,
+    int ret = ((skull_svc_api_cb)task_data->cb)(skull_txn, req_msg,
                                                task_data->response_pb_msg);
 
     protobuf_c_message_free_unpacked(req_msg, NULL);

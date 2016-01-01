@@ -553,7 +553,7 @@ void sk_service_data_set(sk_service_t* service, const void* data)
 // protocol, and send to master
 int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
                       const char* api_name, const void* req, size_t req_sz,
-                      sk_txn_module_cb cb, void* ud, int bidx)
+                      sk_txn_task_cb cb, void* ud, int bidx)
 {
     SK_ASSERT(service);
     SK_ASSERT(txn);

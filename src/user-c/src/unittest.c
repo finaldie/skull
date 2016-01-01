@@ -35,7 +35,7 @@ typedef struct mock_task_t {
     const void* req_msg;  // This is a protobuf message
     mock_service_t* service;
     skull_service_async_api_t* api;
-    skull_module_cb cb;
+    skull_svc_api_cb cb;
 } mock_task_t;
 
 struct skullut_module_t {
@@ -338,7 +338,7 @@ skull_service_async_call (skull_txn_t* txn,
                           const char* service_name,
                           const char* api_name,
                           const void* request,
-                          skull_module_cb cb,
+                          skull_svc_api_cb cb,
                           int bidx)
 {
     if (!service_name) {

@@ -64,14 +64,14 @@ typedef enum sk_txn_task_status_t {
     SK_TXN_TASK_ERROR = 2
 } sk_txn_task_status_t;
 
-typedef int (*sk_txn_module_cb) ();
+typedef int (*sk_txn_task_cb) ();
 typedef struct sk_txn_taskdata_t {
     const void* request;         // serialized pb-c message data
     size_t      request_sz;
     void *      response_pb_msg; // deserialized pb-c message
     void*       user_data;
     struct sk_module_t* caller_module;
-    sk_txn_module_cb cb;
+    sk_txn_task_cb cb;
 } sk_txn_taskdata_t;
 
 /**
