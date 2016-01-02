@@ -1,3 +1,21 @@
+* 2016-01-03 0.6.6
+  * Core
+    * **New:** Add `last` admin command to show the latest snapshot
+    * **New:** Add `status` admin command
+    * **New:** Add `bio` engine which is used for execuating low async/low priority tasks
+    * **Enhancement:** Refactor service timer logic
+    * **Enhancement:** Reduce memory usage
+    * **Enhancement:** Add engine name in log cookie
+    * **Enhancement:** txn api callback name refactor
+    * **Enhancement:** workflow won't be blocked if api call without a callback function
+    * **Enhancement:** Refactor sk_pto table, make the priority field easy to adjust
+    * **Enhancement:** Update `flibs` to 0.8.9
+    * **Fix:** Memleak in unfinished txn or timer
+  * Script
+    * **Enhancement:** Display modules better
+  * User
+    * **Enhancement:** Remove the log templates
+    * **Enhancement:** txnsharedata/api protos moved to subfolder `protos`
 * 2015-12-28 0.6.5
   * Core
     * **New:** Add two internal timers for update metrics
