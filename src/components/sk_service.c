@@ -176,7 +176,7 @@ void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
 
     // 3. Deliver the protocol
     sk_sched_send(SK_ENV_SCHED, target, sk_txn_entity(txn), txn,
-                  SK_PTO_SERVICE_TASK_RUN, &task_run_pto, 0);
+                  SK_PTO_SVC_TASK_RUN, &task_run_pto, 0);
 
     sk_print("service: deliver task(%d) to worker\n", (int) task_id);
     SK_LOG_TRACE(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
@@ -241,12 +241,7 @@ void _timer_jobdata_destroy(sk_ud_t ud)
 {
     sk_print("destroy timer jobdata\n");
     timer_jobdata_t* jobdata = ud.ud;
-
-    //if (NULL == sk_entity_owner(jobdata->entity)) {
-    //    sk_print("destroy orphan entity\n");
-    //    sk_entity_safe_destroy(jobdata->entity);
-    //}
-
+    SK_ASSERT(sk_entity_owner(jobdata->entity));
     free(jobdata);
 }
 
@@ -583,7 +578,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     //5. Send to master engine
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched,
                   sk_txn_entity(txn), txn,
-                  SK_PTO_SERVICE_IOCALL, &iocall_msg, 0);
+                  SK_PTO_SVC_IOCALL, &iocall_msg, 0);
     return 0;
 }
 

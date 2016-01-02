@@ -8,6 +8,7 @@
 #include "api/sk_log.h"
 #include "api/sk_log_helper.h"
 #include "api/sk_env.h"
+#include "api/sk_entity_util.h"
 #include "api/sk_metrics.h"
 
 #include "api/sk_pto.h"
@@ -24,6 +25,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     SK_ASSERT(entity);
     SK_ASSERT(txn);
     SK_ASSERT(proto_msg);
+    SK_ASSERT(sched == sk_entity_sched(entity));
 
     // 1. unpack the parameters
     ServiceTaskCb* task_cb_msg = proto_msg;
@@ -52,17 +54,23 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
 
     if (ret) {
         SK_LOG_ERROR(SK_ENV_LOGGER,
-                 "Error in service task callback, ret: %d, task_id: %d\n",
-                 ret, task_id);
+            "Error in service task callback, module: %s ret: %d, task_id: %d\n",
+            caller_module_name, ret, task_id);
+
+        // Mark txn as ERROR, then after iocall complete, the workflow will
+        //  be go to 'pack' directly
+        sk_txn_setstate(txn, SK_TXN_ERROR);
     }
 
     // 5. send a complete protocol back to master
     ServiceTaskComplete task_complete_msg = SERVICE_TASK_COMPLETE__INIT;
     task_complete_msg.service_name = (char*) service_name;
-    task_complete_msg.resume_wf    = sk_txn_module_complete(txn);
+    task_complete_msg.resume_wf    = taskdata->cb
+        ? sk_txn_module_complete(txn)
+        : sk_txn_alltask_complete(txn);
 
     sk_sched_send(SK_ENV_SCHED, SK_ENV_MASTER_SCHED, entity, txn,
-                  SK_PTO_SERVICE_TASK_COMPLETE, &task_complete_msg, 0);
+                  SK_PTO_SVC_TASK_COMPLETE, &task_complete_msg, 0);
 
     // 6. log the task lifetime for debugging purpose
     unsigned long long task_lifetime = sk_txn_task_lifetime(txn, task_id);

@@ -3,6 +3,7 @@
 
 #include "api/sk_utils.h"
 #include "idl_internal.h"
+#include "txn_utils.h"
 #include "srv_types.h"
 #include "srv_loader.h"
 #include "srv_utils.h"
@@ -122,9 +123,14 @@ int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
             req_desc, NULL, task_data->request_sz, task_data->request);
 
     // Run api callback
-    skull_txn_t* skull_txn = task_data->user_data;
-    int ret = ((skull_svc_api_cb)task_data->cb)(skull_txn, req_msg,
+    skull_txn_t skull_txn;
+    skull_txn_init(&skull_txn, txn);
+
+    int ret = ((skull_svc_api_cb)task_data->cb)(&skull_txn, req_msg,
                                                task_data->response_pb_msg);
+
+    // Release unpacked resources
+    skull_txn_release(&skull_txn, txn);
 
     protobuf_c_message_free_unpacked(req_msg, NULL);
     protobuf_c_message_free_unpacked(task_data->response_pb_msg, NULL);

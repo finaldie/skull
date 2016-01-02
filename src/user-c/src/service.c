@@ -8,7 +8,7 @@
 #include "api/sk_object.h"
 
 #include "skull/txn.h"
-#include "txn_types.h"
+#include "txn_utils.h"
 #include "srv_types.h"
 #include "srv_loader.h"
 #include "srv_utils.h"
@@ -45,7 +45,11 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
                       serialized_req, req_sz,
                       (sk_txn_task_cb)cb, txn, bidx);
 
-    if (ioret) return SKULL_SERVICE_ERROR_BIO;
+    if (ioret) {
+        free(serialized_req);
+        return SKULL_SERVICE_ERROR_BIO;
+    }
+
     return SKULL_SERVICE_OK;
 }
 
@@ -121,5 +125,10 @@ int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
     sk_obj_opt_t opt     = {.preset = NULL, .destroy = _timer_data_destroy};
     sk_obj_t*    param_obj = sk_obj_create(opt, cb_data);
 
-    return sk_service_job_create(sk_svc, delayed, _timer_cb, param_obj, bidx);
+    int ret = sk_service_job_create(sk_svc, delayed, _timer_cb, param_obj, bidx);
+    if (ret) {
+        sk_obj_destroy(param_obj);
+    }
+
+    return ret;
 }

@@ -1,3 +1,9 @@
+* 2016-01-04 0.7.1
+  * Core
+    * **New:** Make workflow cancelable
+    * **Fix:** Service iocall/timer memleak
+    * **Fix:** Invalid memory issue when clean up timers during shutdown
+    * **Fix:** Service api call chain crash issue
 * 2016-01-03 0.6.6
   * Core
     * **New:** Add `last` admin command to show the latest snapshot

@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "api/sk_workflow.h"
-#include "txn_types.h"
+#include "txn_utils.h"
 #include "skull/txn.h"
 #include "skull/txndata.h"
 

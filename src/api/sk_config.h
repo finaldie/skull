@@ -7,14 +7,10 @@
 
 #include "flibs/flist.h"
 #include "flibs/fhash.h"
+#include "api/sk_const.h"
 #include "api/sk_types.h"
 #include "api/sk_module.h"
 #include "api/sk_service_data.h"
-
-#define SK_CONFIG_LOCATION_LEN    1024
-#define SK_CONFIG_LOGNAME_LEN	  1024
-
-#define SK_CONFIG_NO_PORT         -1
 
 typedef struct sk_workflow_cfg_t {
     uint32_t concurrent   :1;

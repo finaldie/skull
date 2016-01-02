@@ -30,5 +30,11 @@ struct sk_const_t;
 // thread env name len
 #define SK_ENV_NAME_LEN                      24
 
+// config
+#define SK_CONFIG_LOCATION_LEN               1024
+#define SK_CONFIG_LOGNAME_LEN                1024
+
+#define SK_CONFIG_NO_PORT                    (-1)
+
 #endif
 

@@ -40,6 +40,8 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
 
     // 4. Resume txn workflow if needed
     if (resume_wf) {
+        sk_print("Resume workflow\n");
+        SK_LOG_TRACE(SK_ENV_LOGGER, "Resume workflow");
         sk_sched_send(sched, src, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
     }
 
