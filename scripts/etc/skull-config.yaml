@@ -1,7 +1,9 @@
 thread_num: 1
+bio: 1
 log_name: skull.log
 log_level: debug
 
 workflows:
 
 services:
+

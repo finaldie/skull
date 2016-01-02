@@ -24,6 +24,8 @@ void sk_entity_stdin_create(sk_entity_t* entity, void* evbuff)
 static
 ssize_t _stdin_read(sk_entity_t* entity, void* buf, size_t len, void* ud)
 {
+    if (!ud) return -1;
+
     sk_entity_stdin_data_t* data = ud;
     fev_buff* evbuff = data->evbuff;
 
@@ -48,6 +50,7 @@ ssize_t _stdout_write(sk_entity_t* entity, const void* buf, size_t len,
 static
 void _std_destroy(sk_entity_t* entity, void* ud)
 {
+    if (!ud) return;
     sk_print("stdin entity destroy\n");
 
     sk_entity_stdin_data_t* data = ud;

@@ -10,6 +10,7 @@
 #include "api/sk_pto.h"
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_env.h"
 #include "api/sk_metrics.h"
 #include "api/sk_sched.h"
@@ -27,23 +28,23 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
     if (!module) {
-        SK_LOG_ERROR(SK_ENV_LOGGER, "no module in this workflow, skip it");
+        SK_LOG_TRACE(SK_ENV_LOGGER, "no next module in this workflow, stop it");
         sk_txn_setstate(txn, SK_TXN_COMPLETED);
         return _run(sched, src, entity, txn, proto_msg);
     }
 
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
-    sk_logger_setcookie("module.%s", module->name);
-    sk_txn_setpos(txn, SK_TXN_POS_MODULE);
+    SK_LOG_SETCOOKIE("module.%s", module->name);
+    SK_ENV_POS = SK_ENV_POS_MODULE;
 
     // Run the module
     int ret = module->run(module->md, txn);
     sk_print("module execution return code=%d\n", ret);
 
     // after module exit, set back the module name
-    sk_logger_setcookie(SK_CORE_LOG_COOKIE);
-    sk_txn_setpos(txn, SK_TXN_POS_CORE);
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+    SK_ENV_POS = SK_ENV_POS_CORE;
 
     if (ret) {
         SK_ASSERT_MSG(!ret, "un-implemented code path\n");
@@ -59,7 +60,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
         sk_print("txn pending, waiting for service io calls, module %s\n",
                  module->name);
-        SK_LOG_DEBUG(SK_ENV_LOGGER, "txn pending, waiting for service calls, "
+        SK_LOG_TRACE(SK_ENV_LOGGER, "txn pending, waiting for service calls, "
                      "module %s", module->name);
         return 0;
     }
@@ -91,7 +92,9 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
     }
 
     // 2. pack the data, and send the response if needed
+    SK_LOG_SETCOOKIE("module.%s", last_module->name);
     last_module->pack(last_module->md, txn);
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     size_t packed_data_sz = 0;
     const char* packed_data = sk_txn_output(txn, &packed_data_sz);
@@ -152,20 +155,26 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
     }
     case SK_TXN_PACKED: {
         sk_print("txn - PACKED: txn destroy\n");
-        sk_txn_destroy(txn);
+        sk_txn_setstate(txn, SK_TXN_DESTROYED);
+        sk_txn_safe_destroy(txn);
+        break;
+    }
+    case SK_TXN_DESTROYED: {
+        sk_print("txn - DESTROYED: txn destroy\n");
+        sk_txn_safe_destroy(txn);
         break;
     }
     default:
         sk_print("Unexpect txn state: %d, ignored\n", state);
-        SK_LOG_ERROR(SK_ENV_LOGGER, "Unexpect txn state: %d, ignored", state);
+        SK_LOG_FATAL(SK_ENV_LOGGER, "Unexpect txn state: %d, ignored", state);
+        SK_ASSERT(0);
         break;
     }
 
     return 0;
 }
 
-sk_proto_t sk_pto_workflow_run = {
-    .priority = SK_PTO_PRI_5,
+sk_proto_opt_t sk_pto_workflow_run = {
     .descriptor = &workflow_run__descriptor,
-    .run = _run
+    .run        = _run
 };

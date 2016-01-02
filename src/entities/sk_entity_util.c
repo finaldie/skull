@@ -1,10 +1,11 @@
 #include <stdlib.h>
 
+#include "api/sk_const.h"
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_txn.h"
-#include "api/sk_sched.h"
 #include "api/sk_pto.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_workflow.h"
 #include "api/sk_metrics.h"
 #include "api/sk_entity_util.h"
@@ -45,9 +46,12 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     }
 
     // 3. try to unpack the user data
+    SK_LOG_SETCOOKIE("module.%s", first_module->name);
     const void* data = fevbuff_rawget(evbuff);
-    size_t consumed = first_module->unpack(first_module->md, txn,
-                                           data, (size_t)bytes);
+    size_t consumed =
+        first_module->unpack(first_module->md, txn, data, (size_t)bytes);
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+
     if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", bytes);
@@ -69,4 +73,35 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     // 7. update metrics
     sk_metrics_worker.request.inc(1);
     sk_metrics_global.request.inc(1);
+}
+
+void sk_entity_safe_destroy(sk_entity_t* entity)
+{
+    if (!entity) return;
+    sk_print("sk_entity_safe_destroy: entity %p\n", (void*)entity);
+
+    sk_entity_mgr_t* owner = sk_entity_owner(entity);
+    if (!owner) {
+        sk_entity_mark(entity, SK_ENTITY_INACTIVE);
+        sk_entity_destroy(entity);
+
+        sk_entity_mark(entity, SK_ENTITY_DEAD);
+        sk_entity_destroy(entity);
+    } else {
+        sk_sched_t* sched  = SK_ENV_SCHED;
+        sk_sched_t* target = sk_entity_mgr_sched(owner);
+
+        sk_sched_send(sched, target, entity, NULL,
+                      SK_PTO_ENTITY_DESTROY, NULL, 0);
+    }
+}
+
+sk_sched_t* sk_entity_sched(sk_entity_t* entity)
+{
+    if (!entity) return NULL;
+
+    sk_entity_mgr_t* owner = sk_entity_owner(entity);
+    if (!owner) return NULL;
+
+    return sk_entity_mgr_sched(owner);
 }

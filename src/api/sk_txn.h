@@ -9,19 +9,14 @@ struct sk_workflow_t;
 struct sk_entity_t;
 struct sk_module_t;
 
-typedef enum sk_txn_pos_t {
-    SK_TXN_POS_CORE    = 0,
-    SK_TXN_POS_MODULE  = 1,
-    SK_TXN_POS_SERVICE = 2
-} sk_txn_pos_t;
-
 typedef enum sk_txn_state_t {
     SK_TXN_INIT      = 0,
     SK_TXN_UNPACKED  = 1,
     SK_TXN_RUNNING   = 2,
     SK_TXN_PENDING   = 3,
     SK_TXN_COMPLETED = 4,
-    SK_TXN_PACKED    = 5
+    SK_TXN_PACKED    = 5,
+    SK_TXN_DESTROYED = 6
 } sk_txn_state_t;
 
 typedef struct sk_txn_t sk_txn_t;
@@ -29,6 +24,7 @@ typedef struct sk_txn_t sk_txn_t;
 sk_txn_t* sk_txn_create(struct sk_workflow_t* workflow,
                         struct sk_entity_t* entity);
 void sk_txn_destroy(sk_txn_t* txn);
+void sk_txn_safe_destroy(sk_txn_t* txn);
 
 const void* sk_txn_input(sk_txn_t* txn, size_t* sz);
 void sk_txn_set_input(sk_txn_t* txn, const void* data, size_t sz);
@@ -55,9 +51,6 @@ void* sk_txn_udata(sk_txn_t* txn);
 
 bool sk_txn_module_complete(sk_txn_t* txn);
 
-void sk_txn_setpos(sk_txn_t*, sk_txn_pos_t pos);
-sk_txn_pos_t sk_txn_pos(sk_txn_t*);
-
 void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state);
 sk_txn_state_t sk_txn_state(sk_txn_t* txn);
 
@@ -73,12 +66,14 @@ typedef enum sk_txn_task_status_t {
     SK_TXN_TASK_ERROR = 2
 } sk_txn_task_status_t;
 
-typedef void (*sk_txn_module_cb) ();
+typedef int (*sk_txn_task_cb) ();
 typedef struct sk_txn_taskdata_t {
-    const void* request;
+    const void* request;         // serialized pb-c message data
     size_t      request_sz;
+    void *      response_pb_msg; // deserialized pb-c message
     void*       user_data;
-    sk_txn_module_cb cb;
+    struct sk_module_t* caller_module;
+    sk_txn_task_cb cb;
 } sk_txn_taskdata_t;
 
 /**

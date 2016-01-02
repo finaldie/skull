@@ -5,7 +5,7 @@ set -e
 ##################################### Utils ####################################
 usage() {
     echo "usage:"
-    echo "  skull-start.sh -c config [--memcheck|--gdb|--strace]"
+    echo "  skull-start.sh -c config [--memcheck|--gdb|--strace|--massif]"
 }
 
 skull_start() {
@@ -20,11 +20,17 @@ skull_start_memcheck() {
 skull_start_gdb() {
     echo "After gdb started, type 'run -c $skull_config'"
     echo ""
-    gdb skull-engine
+    exec gdb skull-engine
 }
 
 skull_start_strace() {
     exec strace -f skull-engine -c $skull_config
+}
+
+skull_start_massif() {
+    echo "After profiling, run 'ms_print massif.out.pid' to analyze the result"
+    echo ""
+    exec valgrind --tool=massif skull-engine -c $skull_config
 }
 ################################## End of Utils ################################
 
@@ -39,10 +45,11 @@ skull_config=""
 memcheck=false
 run_by_gdb=false
 run_by_strace=false
+massif=false
 
 args=`getopt -a \
         -o c:h \
-        -l memcheck,gdb,strace,help \
+        -l memcheck,gdb,strace,massif,help \
         -n "skull-start.sh" -- "$@"`
 if [ $? != 0 ]; then
     echo "Error: Invalid parameters" >&2
@@ -70,6 +77,10 @@ while true; do
         --strace)
             shift
             run_by_strace=true
+            ;;
+        --massif)
+            shift
+            massif=true
             ;;
         -h|--help)
             shift
@@ -107,6 +118,8 @@ elif $run_by_gdb; then
     skull_start_gdb
 elif $run_by_strace; then
     skull_start_strace
+elif $massif; then
+    skull_start_massif
 else
     skull_start
 fi

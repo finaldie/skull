@@ -5,9 +5,14 @@
 #include "flibs/fev_buff.h"
 
 #include "api/sk_entity.h"
+#include "api/sk_sched.h"
 
 void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
                            sk_entity_t* entity);
+
+void sk_entity_safe_destroy(sk_entity_t*);
+
+sk_sched_t* sk_entity_sched(sk_entity_t*);
 
 #endif
 

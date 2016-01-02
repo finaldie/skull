@@ -15,7 +15,7 @@
 static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
-    printf("stdin read_cb\n");
+    sk_print("stdin read_cb\n");
     sk_entity_t* entity = arg;
     sk_workflow_t* workflow = sk_entity_workflow(entity);
     int concurrent = workflow->cfg->concurrent;
@@ -35,8 +35,7 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
     sk_print("stdin evbuff destroy...\n");
     sk_entity_t* entity = arg;
 
-    sk_sched_t* sched = SK_ENV_SCHED;
-    sk_sched_send(sched, sched, entity, NULL, SK_PTO_ENTITY_DESTROY, NULL, 0);
+    sk_entity_safe_destroy(entity);
 }
 
 static
@@ -50,8 +49,9 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     int ret = fnet_set_nonblocking(STDIN_FILENO);
     if (ret < 0) {
         sk_print("setup stdin to nonblocking failed, errno: %d\n", errno);
-        SK_LOG_ERROR(SK_ENV_LOGGER,
+        SK_LOG_FATAL(SK_ENV_LOGGER,
             "setup stdin to nonblocking failed, errno: %d", errno);
+        SK_ASSERT(0);
 
         return 1;
     }
@@ -65,8 +65,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     return 0;
 }
 
-sk_proto_t sk_pto_stdin_start = {
-    .priority   = SK_PTO_PRI_8,
+sk_proto_opt_t sk_pto_stdin_start = {
     .descriptor = &stdin_start__descriptor,
     .run        = _run
 };

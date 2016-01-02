@@ -68,6 +68,13 @@ typedef struct sk_config_t {
 
     // key: service name, value: sk_service_t*
     fhash* services;
+
+    // number of bio(s)
+    int    bio_cnt;
+
+#if __WORDSIZE == 64
+    int    _padding;
+#endif
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);

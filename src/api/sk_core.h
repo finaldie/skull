@@ -25,6 +25,9 @@ typedef struct sk_cmd_args_t {
     const char* config_location;
 } sk_cmd_args_t;
 
+// Core data structure
+// NOTES: All the members must be thread-safe for read action after
+//  initialization
 typedef struct sk_core_t {
     // ======= private =======
     sk_mon_t*        mon;
@@ -37,19 +40,16 @@ typedef struct sk_core_t {
     sk_engine_t*     master;
     sk_engine_t**    workers;
 
+    // user bio(s)
+    sk_engine_t**    bio;
+
     // logger
     sk_logger_t*     logger;
 
-    // log templates
-    sk_log_tpl_t*    info_log_tpl;
-    sk_log_tpl_t*    warn_log_tpl;
-    sk_log_tpl_t*    error_log_tpl;
-    sk_log_tpl_t*    fatal_log_tpl;
-
-    flist*           workflows;      // element type: sk_workflow_t
-    flist*           triggers;       // emement type: sk_trigger_t
-    fhash*           unique_modules; // key: module name; value: sk_module_t
-    fhash*           services;       // key: service name; value: sk_service_t
+    flist*           workflows;      // element type: sk_workflow_t*
+    flist*           triggers;       // emement type: sk_trigger_t*
+    fhash*           unique_modules; // key: module name; value: sk_module_t*
+    fhash*           services;       // key: service name; value: sk_service_t*
     const char*      working_dir;
 
     // admin module and config
@@ -72,6 +72,7 @@ void sk_core_destroy(sk_core_t* core);
 // utils
 sk_service_t*    sk_core_service(sk_core_t*, const char* service_name);
 sk_core_status_t sk_core_status(sk_core_t*);
+sk_engine_t*     sk_core_bio(sk_core_t*, int idx);
 
 #endif
 

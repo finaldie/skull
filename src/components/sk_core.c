@@ -19,6 +19,7 @@
 #include "api/sk_const.h"
 #include "api/sk_env.h"
 #include "api/sk_log.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_log_tpl.h"
 #include "api/sk_core.h"
 
@@ -30,6 +31,7 @@ void _sk_init_admin(sk_core_t* core)
     sk_print("Init admin module\n");
     SK_LOG_INFO(core->logger, "Init admin module");
 
+    core->triggers     = core->triggers ? core->triggers : flist_create();
     core->admin_wf_cfg = sk_admin_workflowcfg_create(7759);
     core->admin_wf     = sk_workflow_create(core->admin_wf_cfg);
 
@@ -58,14 +60,14 @@ void _sk_setup_engines(sk_core_t* core)
     sk_config_t* config = core->config;
 
     // 1. Create master engine
-    core->master = sk_engine_create(SK_ENGINE_MASTER);
+    core->master = sk_engine_create(SK_ENGINE_MASTER, 0);
     SK_LOG_INFO(core->logger, "master engine init successfully");
 
     // 2. Create worker engines
     core->workers = calloc((size_t)config->threads, sizeof(sk_engine_t*));
 
     for (int i = 0; i < config->threads; i++) {
-        core->workers[i] = sk_engine_create(SK_ENGINE_WORKER);
+        core->workers[i] = sk_engine_create(SK_ENGINE_WORKER, 0);
         SK_LOG_INFO(core->logger, "worker engine [%d] init successfully", i);
 
         // create both-way links
@@ -78,6 +80,18 @@ void _sk_setup_engines(sk_core_t* core)
         SK_LOG_INFO(core->logger, "io bridge [%d] init successfully", i);
     }
 
+    // 3. Create background io engine
+    core->bio = calloc((size_t)config->bio_cnt, sizeof(sk_engine_t*));
+
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_t* bio = sk_engine_create(SK_ENGINE_BIO, SK_SCHED_NON_RR_ROUTABLE);
+        sk_engine_link(bio, core->master);
+        sk_engine_link(core->master, bio);
+
+        core->bio[i] = bio;
+        SK_LOG_INFO(core->logger, "bio engine [%d] init successfully", i + 1);
+    }
+
     SK_LOG_INFO(core->logger, "skull engines init successfully");
 }
 
@@ -86,7 +100,7 @@ void _sk_setup_workflows(sk_core_t* core)
 {
     sk_config_t* config = core->config;
     core->workflows      = flist_create();
-    core->triggers       = flist_create();
+    core->triggers       = core->triggers ? core->triggers : flist_create();
     core->unique_modules = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
     flist_iter iter = flist_new_iter(config->workflows);
@@ -126,7 +140,7 @@ void _sk_setup_workflows(sk_core_t* core)
                           module_name);
             } else {
                 sk_print("load module [%s] failed\n", module_name);
-                SK_LOG_ERROR(core->logger, "load module [%s] failed",
+                SK_LOG_FATAL(core->logger, "load module [%s] failed",
                              module_name);
                 exit(1);
             }
@@ -185,9 +199,9 @@ void _sk_module_init(sk_core_t* core)
         sk_print("module [%s] init...\n", module->name);
         SK_LOG_INFO(core->logger, "module [%s] init...", module->name);
 
-        sk_logger_setcookie("module.%s", module->name);
+        SK_LOG_SETCOOKIE("module.%s", module->name);
         module->init(module->md);
-        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 
     fhash_str_iter_release(&iter);
@@ -200,10 +214,12 @@ void _sk_module_destroy(sk_core_t* core)
     sk_module_t* module = NULL;
 
     while ((module = fhash_str_next(&iter))) {
+        SK_LOG_INFO(core->logger, "Module %s is destroying", module->name);
+
         // 1. release module user layer data
-        sk_logger_setcookie("module.%s", module->name);
+        SK_LOG_SETCOOKIE("module.%s", module->name);
         module->release(module->md);
-        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
         // 2. release module core layer data
         sk_module_unload(module);
@@ -229,7 +245,7 @@ void _sk_setup_services(sk_core_t* core)
         sk_service_t* service = sk_service_create(service_name, srv_cfg_item);
         int ret = sk_service_load(service, NULL);
         if (ret) {
-            SK_LOG_ERROR(core->logger, "setup service %s failed", service_name);
+            SK_LOG_FATAL(core->logger, "setup service %s failed", service_name);
             exit(1);
         }
 
@@ -253,9 +269,9 @@ void _sk_service_init(sk_core_t* core)
         sk_print("init service %s\n", service_name);
         SK_LOG_INFO(core->logger, "init service %s", service_name);
 
-        sk_logger_setcookie("service.%s", service_name);
+        SK_LOG_SETCOOKIE("service.%s", service_name);
         sk_service_start(service);
-        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 
     fhash_str_iter_release(&srv_iter);
@@ -272,9 +288,9 @@ void _sk_service_destroy(sk_core_t* core)
         SK_LOG_INFO(core->logger, "destroy service %s", service_name);
 
         // 1. release service user layer data
-        sk_logger_setcookie("service.%s", service_name);
+        SK_LOG_SETCOOKIE("service.%s", service_name);
         sk_service_stop(service);
-        sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
         // 2. release service core layer data
         sk_service_unload(service);
@@ -300,49 +316,13 @@ void _sk_init_log(sk_core_t* core)
     // create a thread env for the master thread, this is necessary since during
     // the phase of loading modules, user may log something, if the thread_env
     // does not exist, the logs will be dropped
-    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "master", 0);
+    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "master");
     sk_thread_env_set(env);
 
-    SK_LOG_INFO(core->logger, "skull logger initialization successfully");
-}
+    // set the core logging cookie
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
-static
-void _sk_init_log_tpls(sk_core_t* core)
-{
-    const char* working_dir = core->working_dir;
-    char log_tpl_name[SK_LOG_TPL_NAME_MAX_LEN];
-
-    // 1. load info log template
-    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
-    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
-             working_dir, SK_LOG_INFO_TPL_NAME);
-
-    core->info_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_INFO_TPL);
-    SK_ASSERT(core->info_log_tpl);
-
-    // 2. load warn log template
-    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
-    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
-             working_dir, SK_LOG_WARN_TPL_NAME);
-
-    core->warn_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_ERROR_TPL);
-    SK_ASSERT(core->warn_log_tpl);
-
-    // 3. load error log template
-    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
-    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
-             working_dir, SK_LOG_ERROR_TPL_NAME);
-
-    core->error_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_ERROR_TPL);
-    SK_ASSERT(core->error_log_tpl);
-
-    // 4. load fatal log template
-    memset(log_tpl_name, 0, SK_LOG_TPL_NAME_MAX_LEN);
-    snprintf(log_tpl_name, SK_LOG_TPL_NAME_MAX_LEN, "%s/%s",
-             working_dir, SK_LOG_FATAL_TPL_NAME);
-
-    core->fatal_log_tpl = sk_log_tpl_create(log_tpl_name, SK_LOG_ERROR_TPL);
-    SK_ASSERT(core->fatal_log_tpl);
+    SK_LOG_TRACE(core->logger, "skull logger initialization successfully");
 }
 
 static
@@ -350,6 +330,27 @@ void _sk_init_moniter(sk_core_t* core)
 {
     core->mon = sk_mon_create();
     core->umon = sk_mon_create();
+}
+
+static
+void _sk_engines_destroy(sk_core_t* core)
+{
+    // 1. destroy workers
+    for (int i = 0; i < core->config->threads; i++) {
+        SK_LOG_INFO(core->logger, "Engine worker-%d is destroying", i);
+        sk_engine_destroy(core->workers[i]);
+    }
+    free(core->workers);
+
+    // 2. destroy bio(s)
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        SK_LOG_INFO(core->logger, "Engine bio-%d is destroying", i);
+        sk_engine_destroy(core->bio[i]);
+    }
+    free(core->bio);
+
+    // 3. destroy master
+    sk_engine_destroy(core->master);
 }
 
 // APIs
@@ -373,30 +374,31 @@ void sk_core_init(sk_core_t* core)
     // 4. init logger
     _sk_init_log(core);
 
-    // 5. init log tempaltes
-    _sk_init_log_tpls(core);
+    SK_LOG_INFO(core->logger,
+             "================= skull engine initializing =================");
+    sk_print("================= skull engine initializing =================\n");
 
-    // 6. init global monitor
+    // 5. init global monitor
     _sk_init_moniter(core);
 
-    // 7. init engines
+    // 6. init engines
     _sk_setup_engines(core);
 
-    // 8. load workflows and related triggers
-    _sk_setup_workflows(core);
-
-    // 9. init admin
+    // 7. init admin
     _sk_init_admin(core);
 
-    // 10. load services
+    // 8. load services
     _sk_setup_services(core);
+
+    // 9. load workflows and related triggers
+    _sk_setup_workflows(core);
 }
 
 void sk_core_start(sk_core_t* core)
 {
-    sk_print("================== skull engine starting ==================\n");
     SK_LOG_INFO(core->logger,
              "================== skull engine starting ==================");
+    sk_print("================== skull engine starting ==================\n");
     core->status = SK_CORE_STARTING;
 
     // 1. Complete the master_env
@@ -412,7 +414,7 @@ void sk_core_start(sk_core_t* core)
     _sk_service_init(core);
 
     // 4. start worker engines
-    SK_LOG_INFO(core->logger, "starting workers...");
+    SK_LOG_INFO(core->logger, "starting worker engines...");
     sk_print("starting workers...\n");
 
     sk_config_t* config = core->config;
@@ -421,15 +423,31 @@ void sk_core_start(sk_core_t* core)
         sk_engine_t* worker = core->workers[i];
         // this *worker_thread_env* will be deleted when thread exit
         sk_thread_env_t* worker_env = sk_thread_env_create(core, worker,
-                                                           "worker", i);
+                                                           "worker-%d", i);
         int ret = sk_engine_start(worker, worker_env, 1);
         if (ret) {
-            sk_print("Start worker io thread failed, errno: %d\n", errno);
+            sk_print("Start worker io engine failed, errno: %d\n", errno);
             exit(ret);
         }
     }
 
-    // 5. start triggers
+    // 5. start bio engines
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_t* bio = core->bio[i];
+
+        sk_thread_env_t* bio_env =
+            sk_thread_env_create(core, bio, "bio-%d", i + 1);
+
+        int ret = sk_engine_start(bio, bio_env, 1);
+        if (ret) {
+            sk_print("Start bio engine failed, errno: %d\n", errno);
+            exit(ret);
+        }
+
+        SK_LOG_INFO(core->logger, "Start bio engine [%d] successfully", i + 1);
+    }
+
+    // 6. start triggers
     SK_LOG_INFO(core->logger, "starting triggers...");
     sk_print("starting triggers...\n");
 
@@ -439,22 +457,29 @@ void sk_core_start(sk_core_t* core)
         sk_trigger_run(trigger);
     }
 
-    // 6. update core status
+    // 7. update core status
     core->status = SK_CORE_SERVING;
 
-    // 7. start master engine
-    SK_LOG_INFO(core->logger, "skull engine is ready");
-    sk_print("skull engine is ready\n");
+    // 8. start master engine
+    SK_LOG_INFO(core->logger,
+             "================== skull engine is ready ====================");
+    sk_print("================== skull engine is ready ====================\n");
 
     int ret = sk_engine_start(master, master_env, 0);
     if (ret) {
-        sk_print("Start master io thread failed, errno: %d\n", errno);
+        sk_print("Start master io engine failed, errno: %d\n", errno);
         exit(ret);
     }
 
-    // 8. wait them quit
+    // 9. wait worker(s) and bio(s) quit
+    // 9.1 wait for worker(s)
     for (int i = 0; i < config->threads; i++) {
         sk_engine_wait(core->workers[i]);
+    }
+
+    // 9.2 wait for bio(s)
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_wait(core->bio[i]);
     }
 }
 
@@ -462,15 +487,22 @@ void sk_core_stop(sk_core_t* core)
 {
     if (!core) return;
 
-    sk_print("=================== skull engine stopping ===================\n");
     SK_LOG_INFO(core->logger,
              "=================== skull engine stopping ===================");
+    sk_print("=================== skull engine stopping ===================\n");
     core->status = SK_CORE_STOPPING;
 
+    // 1. stop master
     sk_engine_stop(core->master);
 
+    // 2. stop workers
     for (int i = 0; i < core->config->threads; i++) {
         sk_engine_stop(core->workers[i]);
+    }
+
+    // 3. stop bio(s)
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_stop(core->bio[i]);
     }
 }
 
@@ -480,9 +512,9 @@ void sk_core_destroy(sk_core_t* core)
         return;
     }
 
-    sk_print("================== skull engine destroying ==================\n");
     SK_LOG_INFO(core->logger,
              "================== skull engine destroying ==================");
+    sk_print("================== skull engine destroying ==================\n");
     core->status = SK_CORE_DESTROYING;
 
     // 1. destroy triggers
@@ -493,12 +525,7 @@ void sk_core_destroy(sk_core_t* core)
     flist_delete(core->triggers);
 
     // 2. destroy engines
-    for (int i = 0; i < core->config->threads; i++) {
-        sk_engine_destroy(core->workers[i]);
-    }
-    free(core->workers);
-
-    sk_engine_destroy(core->master);
+    _sk_engines_destroy(core);
 
     // 3. destroy modules
     _sk_module_destroy(core);
@@ -532,10 +559,6 @@ void sk_core_destroy(sk_core_t* core)
              "=================== skull engine stopped ====================");
 
     sk_logger_destroy(core->logger);
-    sk_log_tpl_destroy(core->info_log_tpl);
-    sk_log_tpl_destroy(core->warn_log_tpl);
-    sk_log_tpl_destroy(core->error_log_tpl);
-    sk_log_tpl_destroy(core->fatal_log_tpl);
 }
 
 // Utils APIs
@@ -550,4 +573,15 @@ sk_service_t* sk_core_service(sk_core_t* core, const char* service_name)
 sk_core_status_t sk_core_status(sk_core_t* core)
 {
     return core->status;
+}
+
+sk_engine_t*     sk_core_bio(sk_core_t* core, int idx)
+{
+    int bidx = idx - 1;
+
+    if (bidx < 0 || bidx >= core->config->bio_cnt) {
+        return NULL;
+    }
+
+    return core->bio[bidx];
 }

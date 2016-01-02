@@ -157,7 +157,15 @@ void _process_metrics(sk_txn_t* txn)
         sk_mon_snapshot_destroy(worker_snapshot);
     }
 
-    // 4. shapshot user metrics
+    // 4. snapshot bio metrics
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_engine_t* bio = core->bio[i];
+        sk_mon_snapshot_t* bio_snapshot = sk_mon_snapshot(bio->mon);
+        _transport_mon_snapshot(bio_snapshot, admin_data);
+        sk_mon_snapshot_destroy(bio_snapshot);
+    }
+
+    // 5. shapshot user metrics
     sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot(core->umon);
     _transport_mon_snapshot(user_snapshot, admin_data);
     sk_mon_snapshot_destroy(user_snapshot);

@@ -10,6 +10,8 @@
 #include "api/sk_core.h"
 #include "api/sk_mon.h"
 #include "api/sk_log.h"
+#include "api/sk_log_helper.h"
+#include "api/sk_entity_util.h"
 #include "api/sk_engine.h"
 
 #define SK_ENGINE_UPTIME_TIMER_INTERVAL 1000
@@ -33,7 +35,7 @@ void _snapshot_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     sk_mon_snapshot_all(core);
 
     // 3. destroy the timer entity
-    sk_entity_mark(entity, SK_ENTITY_INACTIVE);
+    sk_entity_safe_destroy(entity);
 }
 
 // Triggered every 1 second
@@ -48,7 +50,7 @@ void _uptime_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     sk_metrics_global.uptime.inc(1);
 
     // 3. destroy the timer entity
-    sk_entity_mark(entity, SK_ENTITY_INACTIVE);
+    sk_entity_safe_destroy(entity);
 }
 
 static
@@ -59,7 +61,7 @@ void _timer_data_destroy(sk_ud_t ud)
 
     // Clean the entity if it's still no owner
     if (NULL == sk_entity_owner(timer_entity)) {
-        sk_entity_destroy(timer_entity);
+        sk_entity_safe_destroy(timer_entity);
     }
 }
 
@@ -81,13 +83,13 @@ sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
     return metrics_timer;
 }
 
-sk_engine_t* sk_engine_create(sk_engine_type_t type)
+sk_engine_t* sk_engine_create(sk_engine_type_t type, int flags)
 {
     sk_engine_t* engine = calloc(1, sizeof(*engine));
     engine->type       = type;
     engine->evlp       = sk_eventloop_create();
-    engine->entity_mgr = sk_entity_mgr_create(65535);
-    engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr);
+    engine->entity_mgr = sk_entity_mgr_create(0);
+    engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr, flags);
     engine->mon        = sk_mon_create();
     engine->timer_svc  = sk_timersvc_create(engine->evlp);
 
@@ -118,7 +120,7 @@ void* _sk_engine_thread(void* arg)
 
     // 2. Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros.
     //    Set logger cookie
-    sk_logger_setcookie(SK_CORE_LOG_COOKIE);
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     // 3. Create a internal timer for metrics update & snapshot
     if (SK_ENV_ENGINE->type == SK_ENGINE_MASTER) {

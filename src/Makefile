@@ -115,7 +115,8 @@ PTO_OBJS = \
     pto/sk_pto_timer_emit.o \
     pto/sk_pto_stdin_start.o \
     pto/sk_pto_service_timer_run.o \
-    pto/sk_pto_service_timer_complete.o
+    pto/sk_pto_service_timer_complete.o \
+    pto/sk_pto_service_task_cb.o
 
 PTO_IDLS_OBJS = \
     pto/idls/net_accept.pb-c.o \
@@ -138,6 +139,7 @@ USER_C_OBJS = \
     user-c/src/module_executor.o \
     user-c/src/srv_loader.o \
     user-c/src/srv_executor.o \
+    user-c/src/srv_utils.o \
     user-c/src/service.o
 
 SKULL_MAIN_OBJ = main.o
@@ -169,6 +171,7 @@ UT_OBJS = \
     user-c/src/loader.o \
     user-c/src/srv_loader.o \
     user-c/src/srv_executor.o \
+    user-c/src/srv_utils.o \
     user-c/src/idl.o \
     user-c/src/txn.o \
     user-c/src/config.o \
@@ -181,6 +184,7 @@ UT_OBJS = \
     common/sk_queue.o \
     common/sk_service_data.o \
     common/sk_metrics.o \
+    common/sk_object.o \
     entities/sk_entity.o \
     entities/sk_entity_net.o \
     entities/sk_entity_stdin.o \

@@ -17,6 +17,8 @@
 # static env var
 LANGUAGE_PATH=$SKULL_ROOT/share/skull/lang/c
 COMMON_FILE_LOCATION=$SKULL_PROJ_ROOT/src/common/c
+PROTO_FOLDER_NAME=protos
+PROTO_FOLDER=$COMMON_FILE_LOCATION/src/$PROTO_FOLDER_NAME
 
 # return:
 #  - 0 if this is a valid C module
@@ -48,9 +50,9 @@ function action_c_module_add()
     mkdir -p $module_path/config
     mkdir -p $module_path/lib
 
-    cp $LANGUAGE_PATH/share/mod.c.tpl        $module_path/src/mod.c
+    cp $LANGUAGE_PATH/share/module.c         $module_path/src/module.c
     cp $LANGUAGE_PATH/etc/config.yaml        $module_path/config/config.yaml
-    cp $LANGUAGE_PATH/share/test_mod.c.tpl   $module_path/tests/test_mod.c
+    cp $LANGUAGE_PATH/share/test_module.c    $module_path/tests/test_module.c
     cp $LANGUAGE_PATH/etc/test_config.yaml   $module_path/tests/test_config.yaml
     cp $LANGUAGE_PATH/share/gitignore-module $module_path/.gitignore
 
@@ -102,7 +104,7 @@ function action_c_common_create()
     action_c_gen_idl $config
 
     # copy the unit test file
-    cp $LANGUAGE_PATH/share/test_common.c.tpl \
+    cp $LANGUAGE_PATH/share/test_common.c \
         $COMMON_FILE_LOCATION/tests/test_common.c
 }
 
@@ -156,19 +158,21 @@ function action_c_gen_idl()
     # 1. generate protobuf-c source code for workflows
     (
         cd $SKULL_WORKFLOW_IDL_FOLDER
+        mkdir -p $PROTO_FOLDER
         local proto_cnt=`ls ./ | grep ".proto" | wc -l`
         if [ $proto_cnt -eq 0 ]; then
             return 0
         fi
 
         for idl in ./*.proto; do
-            protoc-c --c_out=$COMMON_FILE_LOCATION/src $idl
+            protoc-c --c_out=$PROTO_FOLDER $idl
         done
     )
 
     # 2. generate user api source code
     local config=$1
     $LANGUAGE_PATH/bin/skull-idl-gen.py -m txn -c $config \
+        -p $PROTO_FOLDER_NAME \
         -h $COMMON_FILE_LOCATION/src/skull_txn_sharedata.h \
         -s $COMMON_FILE_LOCATION/src/skull_txn_sharedata.c
 
@@ -228,9 +232,10 @@ function action_c_service_api_gen()
     # 1. generate protobuf-c source code for workflows
     (
         cd $SKULL_SERVICE_IDL_FOLDER
+        mkdir -p $PROTO_FOLDER
 
         for idl in ${api_list[*]}; do
-            protoc-c --c_out=$COMMON_FILE_LOCATION/src $idl
+            protoc-c --c_out=$PROTO_FOLDER $idl
         done
     )
 
@@ -241,7 +246,7 @@ function action_c_service_api_gen()
         api_name_list+="|"
     done
 
-    $LANGUAGE_PATH/bin/skull-idl-gen.py -m service \
+    $LANGUAGE_PATH/bin/skull-idl-gen.py -m service -p $PROTO_FOLDER_NAME \
         -h $COMMON_FILE_LOCATION/src/skull_srv_api_proto.h \
         -s $COMMON_FILE_LOCATION/src/skull_srv_api_proto.c \
         -l $api_name_list
