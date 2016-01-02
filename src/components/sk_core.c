@@ -214,6 +214,8 @@ void _sk_module_destroy(sk_core_t* core)
     sk_module_t* module = NULL;
 
     while ((module = fhash_str_next(&iter))) {
+        SK_LOG_INFO(core->logger, "Module %s is destroying", module->name);
+
         // 1. release module user layer data
         SK_LOG_SETCOOKIE("module.%s", module->name);
         module->release(module->md);
@@ -335,12 +337,14 @@ void _sk_engines_destroy(sk_core_t* core)
 {
     // 1. destroy workers
     for (int i = 0; i < core->config->threads; i++) {
+        SK_LOG_INFO(core->logger, "Engine worker-%d is destroying", i);
         sk_engine_destroy(core->workers[i]);
     }
     free(core->workers);
 
     // 2. destroy bio(s)
     for (int i = 0; i < core->config->bio_cnt; i++) {
+        SK_LOG_INFO(core->logger, "Engine bio-%d is destroying", i);
         sk_engine_destroy(core->bio[i]);
     }
     free(core->bio);
