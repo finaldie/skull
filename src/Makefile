@@ -134,6 +134,7 @@ USER_C_OBJS = \
     user-c/src/metrics_utils.o \
     user-c/src/loader.o \
     user-c/src/txn.o \
+    user-c/src/txn_utils.o \
     user-c/src/idl.o \
     user-c/src/config.o \
     user-c/src/module_executor.o \
@@ -174,6 +175,7 @@ UT_OBJS = \
     user-c/src/srv_utils.o \
     user-c/src/idl.o \
     user-c/src/txn.o \
+    user-c/src/txn_utils.o \
     user-c/src/config.o \
     common/sk_utils.o \
     common/sk_loader.o \

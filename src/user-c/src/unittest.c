@@ -19,7 +19,7 @@
 #include "skull/idl.h"
 #include "skull/metrics_utils.h"
 #include "idl_internal.h"
-#include "txn_types.h"
+#include "txn_utils.h"
 #include "srv_types.h"
 #include "srv_loader.h"
 #include "srv_utils.h"
@@ -172,14 +172,15 @@ int skullut_module_run(skullut_module_t* env)
         api->iocall(&skull_service, task->req_msg, resp_msg);
 
         // 3. call module callback
-        skull_txn_t skull_txn = {
-            .txn = env->txn
-        };
+        skull_txn_t skull_txn;
+        skull_txn_init(&skull_txn, env->txn);
 
         task->cb(&skull_txn, task->req_msg, resp_msg);
 
         // 4. clean up
         // notes: the req_msg no needs to be released, due to it's on the stack
+        skull_txn_release(&skull_txn, env->txn);
+
         protobuf_c_message_free_unpacked(resp_msg, NULL);
         free(task);
     }

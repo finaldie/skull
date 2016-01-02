@@ -47,8 +47,9 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     SK_ENV_POS = SK_ENV_POS_CORE;
 
     if (ret) {
-        SK_ASSERT_MSG(!ret, "un-implemented code path\n");
-        return 1;
+        sk_print("module (%s) encounter error\n", module->name);
+        SK_LOG_ERROR(SK_ENV_LOGGER, "module (%s) encounter error", module->name);
+        sk_txn_setstate(txn, SK_TXN_ERROR);
     }
 
     // 2. Check whether the module is completed, if not, means there are
@@ -56,13 +57,22 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     //    completed, the master will re-schedule the 'workflow_run' protocol
     //    again
     if (!sk_txn_module_complete(txn)) {
-        sk_txn_setstate(txn, SK_TXN_PENDING);
+        if (!ret) {
+            sk_txn_setstate(txn, SK_TXN_PENDING);
+        }
 
         sk_print("txn pending, waiting for service io calls, module %s\n",
                  module->name);
         SK_LOG_TRACE(SK_ENV_LOGGER, "txn pending, waiting for service calls, "
                      "module %s", module->name);
         return 0;
+    }
+
+    if (ret) {
+        sk_print("module (%s) encounter error, goto pack directly\n", module->name);
+        SK_LOG_ERROR(SK_ENV_LOGGER,
+            "module (%s) encounter error, goto pack directly", module->name);
+        return _run(sched, src, entity, txn, proto_msg);
     }
 
     // 3. check whether is the last module:
@@ -158,6 +168,10 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
         sk_txn_setstate(txn, SK_TXN_DESTROYED);
         sk_txn_safe_destroy(txn);
         break;
+    }
+    case SK_TXN_ERROR: {
+        sk_print("txn - ERROR: txn error\n");
+        return _module_pack(sched, src, entity, txn, proto_msg);
     }
     case SK_TXN_DESTROYED: {
         sk_print("txn - DESTROYED: txn destroy\n");

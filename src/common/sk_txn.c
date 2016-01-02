@@ -127,7 +127,7 @@ void sk_txn_destroy(sk_txn_t* txn)
     free(txn);
 }
 
-const void* sk_txn_input(sk_txn_t* txn, size_t* sz)
+const void* sk_txn_input(const sk_txn_t* txn, size_t* sz)
 {
     *sz = txn->input_sz;
     return txn->input;
@@ -161,18 +161,18 @@ void sk_txn_output_append(sk_txn_t* txn, const void* data, size_t sz)
     SK_ASSERT(!ret);
 }
 
-const void* sk_txn_output(sk_txn_t* txn, size_t* sz)
+const void* sk_txn_output(const sk_txn_t* txn, size_t* sz)
 {
     *sz = fmbuf_used(txn->output);
     return fmbuf_head(txn->output);
 }
 
-struct sk_workflow_t* sk_txn_workflow(sk_txn_t* txn)
+struct sk_workflow_t* sk_txn_workflow(const sk_txn_t* txn)
 {
     return txn->workflow;
 }
 
-struct sk_entity_t* sk_txn_entity(sk_txn_t* txn)
+struct sk_entity_t* sk_txn_entity(const sk_txn_t* txn)
 {
     return txn->entity;
 }
@@ -184,22 +184,22 @@ struct sk_module_t* sk_txn_next_module(sk_txn_t* txn)
     return module;
 }
 
-struct sk_module_t* sk_txn_current_module(sk_txn_t* txn)
+struct sk_module_t* sk_txn_current_module(const sk_txn_t* txn)
 {
     return txn->current;
 }
 
-int sk_txn_is_first_module(sk_txn_t* txn)
+int sk_txn_is_first_module(const sk_txn_t* txn)
 {
     return txn->current == sk_workflow_first_module(txn->workflow);
 }
 
-int sk_txn_is_last_module(sk_txn_t* txn)
+int sk_txn_is_last_module(const sk_txn_t* txn)
 {
     return txn->current == sk_workflow_last_module(txn->workflow);
 }
 
-unsigned long long sk_txn_alivetime(sk_txn_t* txn)
+unsigned long long sk_txn_alivetime(const sk_txn_t* txn)
 {
     return ftime_gettime() - txn->start_time;
 }
@@ -209,14 +209,19 @@ void sk_txn_setudata(sk_txn_t* txn, void* data)
     txn->udata = data;
 }
 
-void* sk_txn_udata(sk_txn_t* txn)
+void* sk_txn_udata(const sk_txn_t* txn)
 {
     return txn->udata;
 }
 
-bool sk_txn_module_complete(sk_txn_t* txn)
+bool sk_txn_module_complete(const sk_txn_t* txn)
 {
     return !txn->pending_tasks;
+}
+
+bool sk_txn_alltask_complete(const sk_txn_t* txn)
+{
+    return txn->complete_tasks == txn->total_tasks;
 }
 
 // =============================================================================
@@ -299,7 +304,7 @@ void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
     }
 }
 
-sk_txn_state_t sk_txn_state(sk_txn_t* txn)
+sk_txn_state_t sk_txn_state(const sk_txn_t* txn)
 {
     return txn->state;
 }

@@ -60,9 +60,9 @@ typedef struct sk_proto_t {
 #define SK_PTO_NET_ACCEPT               0
 #define SK_PTO_WORKFLOW_RUN             1
 #define SK_PTO_ENTITY_DESTROY           2
-#define SK_PTO_SERVICE_IOCALL           3
-#define SK_PTO_SERVICE_TASK_RUN         4
-#define SK_PTO_SERVICE_TASK_COMPLETE    5
+#define SK_PTO_SVC_IOCALL               3
+#define SK_PTO_SVC_TASK_RUN             4
+#define SK_PTO_SVC_TASK_COMPLETE        5
 #define SK_PTO_TIMER_TRIGGERED          6
 #define SK_PTO_TIMER_EMIT               7
 #define SK_PTO_STDIN_START              8

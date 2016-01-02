@@ -16,7 +16,8 @@ typedef enum sk_txn_state_t {
     SK_TXN_PENDING   = 3,
     SK_TXN_COMPLETED = 4,
     SK_TXN_PACKED    = 5,
-    SK_TXN_DESTROYED = 6
+    SK_TXN_ERROR     = 6,
+    SK_TXN_DESTROYED = 7
 } sk_txn_state_t;
 
 typedef struct sk_txn_t sk_txn_t;
@@ -26,33 +27,34 @@ sk_txn_t* sk_txn_create(struct sk_workflow_t* workflow,
 void sk_txn_destroy(sk_txn_t* txn);
 void sk_txn_safe_destroy(sk_txn_t* txn);
 
-const void* sk_txn_input(sk_txn_t* txn, size_t* sz);
+const void* sk_txn_input(const sk_txn_t* txn, size_t* sz);
 void sk_txn_set_input(sk_txn_t* txn, const void* data, size_t sz);
 
 void sk_txn_output_append(sk_txn_t* txn, const void* data, size_t sz);
-const void* sk_txn_output(sk_txn_t* txn, size_t* sz);
+const void* sk_txn_output(const sk_txn_t* txn, size_t* sz);
 
-struct sk_workflow_t* sk_txn_workflow(sk_txn_t* txn);
-struct sk_entity_t* sk_txn_entity(sk_txn_t* txn);
+struct sk_workflow_t* sk_txn_workflow(const sk_txn_t* txn);
+struct sk_entity_t* sk_txn_entity(const sk_txn_t* txn);
 
 struct sk_module_t* sk_txn_next_module(sk_txn_t* txn);
-struct sk_module_t* sk_txn_current_module(sk_txn_t* txn);
-int sk_txn_is_first_module(sk_txn_t* txn);
-int sk_txn_is_last_module(sk_txn_t* txn);
+struct sk_module_t* sk_txn_current_module(const sk_txn_t* txn);
+int sk_txn_is_first_module(const sk_txn_t* txn);
+int sk_txn_is_last_module(const sk_txn_t* txn);
 
 // sk_txn's alive time from it be created
-unsigned long long sk_txn_alivetime(sk_txn_t* txn);
+unsigned long long sk_txn_alivetime(const sk_txn_t* txn);
 
 // set user data
 void sk_txn_setudata(sk_txn_t* txn, void* data);
 
 // get user data
-void* sk_txn_udata(sk_txn_t* txn);
+void* sk_txn_udata(const sk_txn_t* txn);
 
-bool sk_txn_module_complete(sk_txn_t* txn);
+bool sk_txn_module_complete(const sk_txn_t* txn);
+bool sk_txn_alltask_complete(const sk_txn_t* txn);
 
 void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state);
-sk_txn_state_t sk_txn_state(sk_txn_t* txn);
+sk_txn_state_t sk_txn_state(const sk_txn_t* txn);
 
 /**
  * Async io task APIs
