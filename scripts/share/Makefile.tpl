@@ -96,7 +96,6 @@ prepare_deploy_files:
 	@echo -n "Copying basic files ... "
 	@cp ChangeLog.md README.md $(DEPLOY_DIR_ROOT)
 	@cp $(SKULL_CONFIG_DIR)/skull-config.yaml $(DEPLOY_DIR_ROOT)
-	@cp $(SKULL_CONFIG_DIR)/skull-log-*-tpl.yaml $(DEPLOY_ETC_ROOT)
 	@cp -r $(SKULL_BIN_DIR)/* $(DEPLOY_BIN_ROOT)
 	@echo "done"
 

@@ -68,12 +68,22 @@ def _process_show_workflow():
             print " - stdin: %d" % workflow['stdin']
 
         print " - modules:"
-        for module in workflow['modules']:
-            print "  - %s" % module
+        print "   -",
+
+        modules = workflow['modules']
+        numOfModule = len(modules)
+
+        for i in range(numOfModule):
+            module = modules[i]
+
+            if i == 0:
+                print ("%s" % module),
+            else:
+                print ("-> %s" % module),
 
         # increase the workflow count
         workflow_cnt += 1
-        print "\n",
+        print "\n\n",
 
     print "total %d workflows" % (workflow_cnt)
 
