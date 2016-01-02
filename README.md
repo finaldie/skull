@@ -109,14 +109,14 @@ skull.core.g.global.entity_destroy: 39.000000
 skull.core.g.global.latency: 148.000000
 skull.core.g.global.timer_emit: 41.000000
 skull.core.g.global.request: 2.000000
-skull.core.t.worker.timer_complete.master0: 39.000000
-skull.core.t.worker.entity_create.master0: 43.000000
-skull.core.t.worker.entity_destroy.master0: 39.000000
-skull.core.t.worker.timer_emit.master0: 41.000000
-skull.core.t.worker.accept.worker0: 1.000000
-skull.core.t.worker.latency.worker0: 148.000000
-skull.core.t.worker.response.worker0: 1.000000
-skull.core.t.worker.request.worker0: 2.000000
+skull.core.t.worker.master.timer_complete: 39.000000
+skull.core.t.worker.master.entity_create: 43.000000
+skull.core.t.worker.master.entity_destroy: 39.000000
+skull.core.t.worker.master.timer_emit: 41.000000
+skull.core.t.worker.worker-0.accept: 1.000000
+skull.core.t.worker.worker-0.latency: 148.000000
+skull.core.t.worker.worker-0.response: 1.000000
+skull.core.t.worker.worker-0.request: 2.000000
 ```
 
 ## Frequent Questions
