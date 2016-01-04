@@ -32,8 +32,8 @@ size_t _get_new_size(fmbuf* mq, size_t nevents)
 
 sk_io_t* sk_io_create(size_t input_sz, size_t output_sz)
 {
-    sk_io_t* io = malloc(sizeof(*io));
-    io->mq[0] = fmbuf_create(SK_EVENT_SZ * input_sz); // SK_IO_INPUT
+    sk_io_t* io = calloc(1, sizeof(*io));
+    io->mq[0] = fmbuf_create(SK_EVENT_SZ * input_sz);  // SK_IO_INPUT
     io->mq[1] = fmbuf_create(SK_EVENT_SZ * output_sz); // SK_IO_OUTPUT
 
     return io;
@@ -50,7 +50,7 @@ void sk_io_push(sk_io_t* io, sk_io_type_t type, sk_event_t* events,
                 size_t nevents)
 {
     fmbuf* mq = io->mq[type];
-    int ret = fmbuf_push(mq, events, SK_EVENT_SZ * (size_t)nevents);
+    int ret = fmbuf_push(mq, events, SK_EVENT_SZ * nevents);
     if (!ret) {
         // push done, return directly
         return;
@@ -60,7 +60,7 @@ void sk_io_push(sk_io_t* io, sk_io_type_t type, sk_event_t* events,
     sk_print("new_sz = %zu\n", new_sz);
     io->mq[type] = fmbuf_realloc(mq, new_sz);
     mq = io->mq[type];
-    ret = fmbuf_push(mq, events, SK_EVENT_SZ * (size_t)nevents);
+    ret = fmbuf_push(mq, events, SK_EVENT_SZ * nevents);
     SK_ASSERT(!ret);
 }
 
@@ -69,7 +69,7 @@ size_t sk_io_pull(sk_io_t* io, sk_io_type_t type, sk_event_t* events,
 {
     fmbuf* mq = io->mq[type];
     size_t mq_cnt = fmbuf_used(mq) / SK_EVENT_SZ;
-    size_t actual_cnt = (size_t)nevents > mq_cnt ? mq_cnt : nevents;
+    size_t actual_cnt = nevents > mq_cnt ? mq_cnt : nevents;
 
     if (mq_cnt == 0) {
         return 0;

@@ -68,7 +68,7 @@ sk_config_t* _create_config()
 {
     sk_config_t* config = calloc(1, sizeof(*config));
     config->workflows = flist_create();
-    config->services = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     return config;
 }
 
@@ -90,7 +90,6 @@ void _delete_config(sk_config_t* config)
     while ((srv_cfg_item = fhash_str_next(&srv_iter))) {
         _service_cfg_item_destroy(srv_cfg_item);
     }
-
     fhash_str_iter_release(&srv_iter);
     fhash_str_delete(config->services);
 
@@ -100,8 +99,10 @@ void _delete_config(sk_config_t* config)
 static
 void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
 {
-    SK_ASSERT_MSG(node->type == SK_CFG_NODE_ARRAY,
-                  "workflow:modules must be a sequence\n");
+    if (node->type != SK_CFG_NODE_ARRAY) {
+        sk_print("Not a valid module item, won't load it\n");
+        return;
+    }
 
     sk_cfg_node_t* child = NULL;
     flist_iter iter = flist_new_iter(node->data.array);
@@ -121,11 +122,15 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
 static
 void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
 {
-    SK_ASSERT_MSG(node->type == SK_CFG_NODE_ARRAY,
-                  "workflow config must be a sequence\n");
+    if (node->type != SK_CFG_NODE_ARRAY) {
+        sk_print("Not a valid workflow item, won't load it\n");
+        return;
+    }
 
+    int enabled_stdin = 0;
     sk_cfg_node_t* child = NULL;
     flist_iter iter = flist_new_iter(node->data.array);
+
     while ((child = flist_each(&iter))) {
         SK_ASSERT_MSG(child->type == SK_CFG_NODE_MAPPING,
                       "workflow sequence item must be a mapping\n");
@@ -142,13 +147,25 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
             } else if (0 == strcmp(key, "idl")) {
                 workflow->idl_name = strdup(child->data.value);
             } else if (0 == strcmp(key, "concurrent")) {
-                workflow->concurrent = sk_config_getint(child);
+                workflow->concurrent = (uint32_t) sk_config_getint(child) & 0x1;
             } else if (0 == strcmp(key, "port")) {
                 int port = sk_config_getint(child);
+                if (port <= 0) {
+                    sk_print("port (%d) is <= 0, skip it\n", port);
+                    continue;
+                }
+
                 SK_ASSERT_MSG(port > 0 && port <= 65535, "port[%d] should be "
                               "in (0, 65535]\n", port);
 
                 workflow->port = port;
+            } else if (0 == strcmp(key, "stdin")) {
+                workflow->enable_stdin =
+                    (uint32_t) sk_config_getint(child) & 0x1;
+
+                SK_ASSERT_MSG(enabled_stdin == 0,
+                              "Only one workflow can enable stdin\n");
+                enabled_stdin = 1;
             }
         }
         fhash_str_iter_release(&item_iter);
@@ -353,8 +370,10 @@ void _load_service(const char* service_name, sk_cfg_node_t* node,
 static
 void _load_services(sk_cfg_node_t* node, sk_config_t* config)
 {
-    SK_ASSERT_MSG(node->type == SK_CFG_NODE_MAPPING,
-                  "service config must be a mapping\n");
+    if (node->type != SK_CFG_NODE_MAPPING) {
+        sk_print_err("service config must be a mapping, skip it\n");
+        return;
+    }
 
     sk_cfg_node_t* child = NULL;
     fhash_str_iter iter = fhash_str_iter_new(node->data.mapping);
@@ -366,6 +385,18 @@ void _load_services(sk_cfg_node_t* node, sk_config_t* config)
     }
 
     fhash_str_iter_release(&iter);
+}
+
+static
+void _load_bios(sk_cfg_node_t* node, sk_config_t* config)
+{
+    if (node->type != SK_CFG_NODE_VALUE) {
+        sk_print("Not a valid bio item, won't load it\n");
+        return;
+    }
+
+    config->bio_cnt = sk_config_getint(node);
+    SK_ASSERT_MSG(config->bio_cnt >= 0, "config: bio must >= 0\n");
 }
 
 static
@@ -382,6 +413,7 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         const char* key = iter.key;
         if (0 == strcmp(key, "thread_num")) {
             config->threads = sk_config_getint(child);
+            SK_ASSERT_MSG(config->threads > 0, "config: thread_num must > 0\n");
         }
 
         // load working flows
@@ -402,6 +434,11 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         // load services
         if (0 == strcmp(key, "services")) {
             _load_services(child, config);
+        }
+
+        // load bio(s)
+        if (0 == strcmp(key, "bio")) {
+            _load_bios(child, config);
         }
     }
 

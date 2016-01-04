@@ -17,7 +17,11 @@
 #define SK_CONFIG_NO_PORT         -1
 
 typedef struct sk_workflow_cfg_t {
-    int concurrent;
+    uint32_t concurrent   :1;
+    uint32_t enable_stdin :1;
+    uint32_t localhost    :1;
+    uint32_t _reserved    :29;
+
     int port;
 
     const char* idl_name; // workflow idl name
@@ -64,6 +68,13 @@ typedef struct sk_config_t {
 
     // key: service name, value: sk_service_t*
     fhash* services;
+
+    // number of bio(s)
+    int    bio_cnt;
+
+#if __WORDSIZE == 64
+    int    _padding;
+#endif
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);

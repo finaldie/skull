@@ -22,6 +22,7 @@
 #include "txn_types.h"
 #include "srv_types.h"
 #include "srv_loader.h"
+#include "srv_utils.h"
 
 #include "skull/unittest.h"
 
@@ -35,7 +36,7 @@ typedef struct mock_task_t {
     const void* req_msg;  // This is a protobuf message
     mock_service_t* service;
     skull_service_async_api_t* api;
-    skull_module_cb cb;
+    skull_svc_api_cb cb;
 } mock_task_t;
 
 struct skullut_module_t {
@@ -49,24 +50,6 @@ struct skullut_module_t {
 
     sk_workflow_cfg_t* workflow_cfg;
 };
-
-static
-skull_service_async_api_t*
-_find_api(skull_service_async_api_t** apis, const char* api_name)
-{
-    if (!apis) {
-        return NULL;
-    }
-
-    skull_service_async_api_t* api = apis[0];
-    for (; api != NULL; api += 1) {
-        if (0 == strcmp(api->name, api_name)) {
-            break;
-        }
-    }
-
-    return api;
-}
 
 skullut_module_t* skullut_module_create(const char* module_name,
                                   const char* idl_name,
@@ -88,6 +71,7 @@ skullut_module_t* skullut_module_create(const char* module_name,
     sk_entity_sethalftxn(env->entity, (void*)env);
 
     env->txn = sk_txn_create(env->workflow, env->entity);
+    sk_txn_setstate(env->txn, SK_TXN_UNPACKED);
     env->tasks = flist_create();
 
     // run init
@@ -113,7 +97,12 @@ void skullut_module_destroy(skullut_module_t* env)
 
     sk_txn_destroy(env->txn);
 
+    sk_entity_mark(env->entity, SK_ENTITY_INACTIVE);
     sk_entity_destroy(env->entity);
+
+    sk_entity_mark(env->entity, SK_ENTITY_DEAD);
+    sk_entity_destroy(env->entity);
+
     sk_workflow_destroy(env->workflow);
 
     // destroy the services
@@ -273,14 +262,6 @@ bool skull_log_enable_warn()  { return true; }
 bool skull_log_enable_error() { return true; }
 bool skull_log_enable_fatal() { return true; }
 
-const char* skull_log_info_msg(int log_id) { return "fake info message"; }
-const char* skull_log_warn_msg(int log_id) { return "fake warn message"; }
-const char* skull_log_warn_solution(int log_id) { return "fake warn solution"; }
-const char* skull_log_error_msg(int log_id) { return "fake error message"; }
-const char* skull_log_error_solution(int log_id) { return "fake error solution"; }
-const char* skull_log_fatal_msg(int log_id) { return "fake fatal message"; }
-const char* skull_log_fatal_solution(int log_id) { return "fake fatal solution"; }
-
 // Mock API for skull_metrics
 void skull_metric_inc(const char* name, double value)
 {
@@ -298,13 +279,48 @@ void skull_metric_foreach(skull_metric_each metric_cb, void* ud)
     // No implementation, note: test metrics in FT
 }
 
+void sk_mon_inc(sk_mon_t* sk_mon, const char* name, double value)
+{
+    // No implementation, note: test metrics in FT
+}
+
+double sk_mon_get(sk_mon_t* sk_mon, const char* name)
+{
+    // No implementation, note: test metrics in FT
+    return 0.0f;
+}
+
+// Fake core
+static sk_core_t _fake_core = {
+    .mon = NULL
+};
+
+// Fake engine
+static sk_engine_t _fake_engine = {
+    .mon = NULL
+};
+
+// Fake thread_env
+static sk_thread_env_t _fake_env = {
+    .core   = &_fake_core,
+    .engine = &_fake_engine,
+    .name   = "fake_thread"
+};
+
+// sk env
+sk_thread_env_t* sk_thread_env()
+{
+    return &_fake_env;
+}
+
 // Mock API for running mock service api in module ut
 skull_service_ret_t
 skull_service_async_call (skull_txn_t* txn,
                           const char* service_name,
                           const char* api_name,
                           const void* request,
-                          skull_module_cb cb)
+                          skull_svc_api_cb cb,
+                          int bidx)
 {
     if (!service_name) {
         return SKULL_SERVICE_ERROR_SRVNAME;
@@ -319,7 +335,7 @@ skull_service_async_call (skull_txn_t* txn,
         return SKULL_SERVICE_ERROR_SRVNAME;
     }
 
-    skull_service_async_api_t* api = _find_api(service->apis, api_name);
+    skull_service_async_api_t* api = skull_svc_find_api(service->apis, api_name);
     if (!api) {
         return SKULL_SERVICE_ERROR_APINAME;
     }
@@ -401,7 +417,7 @@ void skullut_service_run(skullut_service_t* ut_service, const char* api_name,
     skull_service_entry_t* entry = srv_data->entry;
 
     // 1. find api
-    skull_service_async_api_t* api = _find_api(entry->async, api_name);
+    skull_service_async_api_t* api = skull_svc_find_api(entry->async, api_name);
     SK_ASSERT_MSG(api, "cannot find api: %s\n", api_name);
 
     // 2. construct empty response
@@ -449,8 +465,9 @@ void  skull_service_data_set (skull_service_t* service, const void* data)
     sk_srv_data_set(fake_service->data, data);
 }
 
-int skull_service_cronjob_create(skull_service_t* service, uint32_t delayed,
-                                 uint32_t interval, skull_cronjob job)
+int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
+                               skull_timer_t job, void* ud,
+                               skull_timer_udfree_t destroyer, int bidx)
 {
     // Won't create anything
     return 0;
@@ -464,7 +481,6 @@ const char* sk_service_name(const sk_service_t* service)
 
 sk_service_opt_t* sk_service_opt(sk_service_t* service)
 {
-
     return &((fake_service_t*)service)->opt;
 }
 

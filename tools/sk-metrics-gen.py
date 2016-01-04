@@ -67,8 +67,8 @@ void _sk_%s_%s_inc(double value)\n\
 {\n\
     sk_mon_t* mon = SK_ENV_MON;\n\
     char name[256] = {0};\n\
-    snprintf(name, 256, \"skull.core.t.%s.%s.%%s%%d\",\n\
-             SK_ENV->name, SK_ENV->idx);\n\
+    snprintf(name, 256, \"skull.core.t.%s.%%s.%s\",\n\
+             SK_ENV->name);\n\
     sk_mon_inc(mon, name, value);\n\
 }\n\n"
 
@@ -77,8 +77,8 @@ double _sk_%s_%s_get()\n\
 {\n\
     sk_mon_t* mon = SK_ENV_MON;\n\
     char name[256] = {0};\n\
-    snprintf(name, 256, \"skull.core.t.%s.%s,%%s%%d\",\n\
-             SK_ENV->name, SK_ENV->idx);\n\
+    snprintf(name, 256, \"skull.core.t.%s.%%s.%s\",\n\
+             SK_ENV->name);\n\
     return sk_mon_get(mon, name);\n\
 }\n\n"
 

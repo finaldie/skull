@@ -14,39 +14,28 @@
         skull_log(SKULL_LOG_PREFIX " DEBUG - " __VA_ARGS__); \
     }
 
-#define SKULL_LOG_INFO(log_id, fmt, ...) \
+#define SKULL_LOG_INFO(code, fmt, ...) \
     if (skull_log_enable_info()) { \
-        skull_log(SKULL_LOG_PREFIX " INFO - [%d] %s; " fmt, \
-                  log_id, \
-                  skull_log_info_msg(log_id), \
-                  ##__VA_ARGS__); \
+        skull_log(SKULL_LOG_PREFIX " INFO - {%s} " fmt, \
+                  code, ##__VA_ARGS__); \
     }
 
-#define SKULL_LOG_WARN(log_id, fmt, ...) \
+#define SKULL_LOG_WARN(code, fmt, ...) \
     if (skull_log_enable_warn()) { \
-        skull_log(SKULL_LOG_PREFIX " WARN - [%d] %s; suggestion:%s; " fmt, \
-                  log_id, \
-                  skull_log_warn_msg(log_id), \
-                  skull_log_warn_solution(log_id), \
-                  ##__VA_ARGS__); \
+        skull_log(SKULL_LOG_PREFIX " WARN - {%s} " fmt "; suggestion: %s", \
+                  code, ##__VA_ARGS__); \
     }
 
-#define SKULL_LOG_ERROR(log_id, fmt, ...) \
+#define SKULL_LOG_ERROR(code, fmt, ...) \
     if (skull_log_enable_error()) { \
-        skull_log(SKULL_LOG_PREFIX " ERROR - [%d] %s; solution:%s; " fmt, \
-                  log_id, \
-                  skull_log_error_msg(log_id), \
-                  skull_log_error_solution(log_id), \
-                  ##__VA_ARGS__); \
+        skull_log(SKULL_LOG_PREFIX " ERROR - {%s} " fmt "; solution: %s", \
+                  code, ##__VA_ARGS__); \
     }
 
-#define SKULL_LOG_FATAL(log_id, fmt, ...) \
+#define SKULL_LOG_FATAL(code, fmt, ...) \
     if (skull_log_enable_fatal()) { \
-        skull_log(SKULL_LOG_PREFIX " FATAL - [%d] %s; solution:%s; " fmt, \
-                  log_id, \
-                  skull_log_fatal_msg(log_id), \
-                  skull_log_fatal_solution(log_id), \
-                  ##__VA_ARGS__); \
+        skull_log(SKULL_LOG_PREFIX " FATAL - {%s} " fmt "; solution: %s", \
+                  code, ##__VA_ARGS__); \
     }
 
 #endif

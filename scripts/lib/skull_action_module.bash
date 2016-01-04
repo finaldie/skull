@@ -6,10 +6,11 @@
 # Add module need 2 steps:
 # 1. Add the module folder structure into project according to its language
 # 2. Change the main config
+
+#set -x
+
 function action_module()
 {
-    local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
-
     # parse the command args
     local args=`getopt -a \
         -o ah \
@@ -34,7 +35,7 @@ function action_module()
                 ;;
             -h|--help)
                 shift
-                action_module_usage >&2
+                action_module_usage
                 exit 0
                 ;;
             --conf-gen)
@@ -58,8 +59,12 @@ function action_module()
                 exit 0
                 ;;
             --)
-                shift; break
-                exit 0
+                shift;
+                # if there is no parameter left, show the modules directly
+                if [ $# = 0 ]; then
+                    _action_module_list
+                fi
+                break;
                 ;;
             *)
                 echo "Error: Invalid parameters $1" >&2
@@ -69,6 +74,15 @@ function action_module()
                 ;;
         esac
     done
+
+    # If there is no normal parameter, check whether there is module name here
+    if [ $# = 0 ]; then
+        exit 0;
+    fi
+
+    # There is module name exist, show the module path to user
+    local module_name="$1"
+    _action_module_path "$module_name"
 }
 
 function action_module_usage()
@@ -80,6 +94,23 @@ function action_module_usage()
     echo "  skull module --conf-cat"
     echo "  skull module --conf-edit"
     echo "  skull module --conf-check"
+}
+
+function _action_module_list()
+{
+    _module_list
+}
+
+function _action_module_path()
+{
+    if [ $# = 0 ]; then
+        echo "Error: empty module name" >&2
+        exit 1
+    fi
+
+    local module_name="$1"
+    local module_path="$SKULL_PROJ_ROOT/src/modules/$module_name"
+    echo "module path: $module_path"
 }
 
 function _action_module_add()
@@ -133,8 +164,8 @@ function _action_module_add()
     action_${language}_module_add $module
 
     # 4. Add module into main config
-    $SKULL_ROOT/bin/skull-config-utils.py -m add_module -c $skull_conf \
-        -M $module -i $workflow_idx
+    $SKULL_ROOT/bin/skull-config-utils.py -m module -c $SKULL_CONFIG_FILE \
+        -a add -M $module -i $workflow_idx
 
     # 5. add common folder
     action_${language}_common_create

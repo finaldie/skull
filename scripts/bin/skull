@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#set -x
+
 ########################## Global Environment Variables ########################
 # detected skull project root folder
 SKULL_PROJ_ROOT=
@@ -12,9 +14,10 @@ function print_usage()
 {
     echo "usage:"
     echo " \_ skull create"
+    echo " \_ skull config"
+    echo " \_ skull common"
     echo " \_ skull workflow"
     echo " \_ skull module"
-    echo " \_ skull common"
     echo " \_ skull service"
     echo " \_ skull build"
     echo " \_ skull deploy"
@@ -57,6 +60,7 @@ function prepare()
     . $SKULL_ROOT/lib/skull/skull_action_deploy.bash
     . $SKULL_ROOT/lib/skull/skull_action_start.bash
     . $SKULL_ROOT/lib/skull/skull_action_version.bash
+    . $SKULL_ROOT/lib/skull/skull_action_config.bash
 
     # If no need to get project root path, return 0 directly
     if ! $should_get_proj_root; then
@@ -98,7 +102,7 @@ case "$1" in
 
         action_$entry $@
         ;;
-    (workflow|module|common|service|build|deploy|start)
+    (workflow|module|common|config|service|build|deploy|start)
         prepare true
         entry=$1
         shift

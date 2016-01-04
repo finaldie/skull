@@ -1,3 +1,52 @@
+* 2016-01-03 0.6.6
+  * Core
+    * **New:** Add `last` admin command to show the latest snapshot
+    * **New:** Add `status` admin command
+    * **New:** Add `bio` engine which is used for execuating low async/low priority tasks
+    * **Enhancement:** Refactor service timer logic
+    * **Enhancement:** Reduce memory usage
+    * **Enhancement:** Add engine name in log cookie
+    * **Enhancement:** txn api callback name refactor
+    * **Enhancement:** workflow won't be blocked if api call without a callback function
+    * **Enhancement:** Refactor sk_pto table, make the priority field easy to adjust
+    * **Enhancement:** Update `flibs` to 0.8.9
+    * **Fix:** Memleak in unfinished txn or timer
+  * Script
+    * **Enhancement:** Display modules better
+  * User
+    * **Enhancement:** Remove the log templates
+    * **Enhancement:** txnsharedata/api protos moved to subfolder `protos`
+* 2015-12-28 0.6.5
+  * Core
+    * **New:** Add two internal timers for update metrics
+    * **New:** Add sk_mon_snapshot_xx apis
+    * **New:** Import `AdminModule`, right now the metrics would be exposed by port 7759
+    * **Fix:** Correct timer metrics
+    * **Fix:** Make stdin fd nonblocking
+    * **Fix:** Upgrade `flibs` to 0.8.6, which fixed few memory issues
+    * **Enhancement:** Add a orphan entity manager, a new entity will be there first
+* 2015-12-21 0.6.4
+  * Core
+    * **New:** Support stdin trigger
+    * **New:** Add entity metrics and correct connection metrics
+    * **Enhancement:** Refine timer service apis
+  * Scripts
+    * **Fix:** Fix errors when there is no service exist
+* 2015-12-10 0.6.3
+  * Scripts
+    * **New:** Add skull-service-import which easy to import a new service
+    * **New:** Add skull-config command
+    * **Enhancement:** Refine skull-config-utils.py
+* 2015-12-08 0.6.2
+  * Core
+    * **Fix:** Fix timer entity memleak
+  * Scripts
+    * **Enhancement:** Show workflow/modules/services directly when no parameter
+* 2015-12-07 0.6.1
+  * Core
+    * **Fix:** Fix service timer memleak issue
+  * User API
+    * **Enhancement:** Service timer support user parameter
 * 2015-11-15 0.5.5
   * Core
     * **New:** Add 'Timer Service'

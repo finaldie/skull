@@ -1,8 +1,7 @@
 #include <stdlib.h>
 
 #include "flibs/fev.h"
-
-#define SK_EVENTLOOP_MAX_EVENTS 65535
+#include "api/sk_const.h"
 
 void* sk_eventloop_create()
 {

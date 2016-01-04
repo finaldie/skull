@@ -3,10 +3,11 @@
 
 #include <stdint.h>
 #include "api/sk_entity.h"
+#include "api/sk_object.h"
 
 typedef struct sk_timersvc_t sk_timersvc_t;
 typedef struct sk_timer_t sk_timer_t;
-typedef void   (*sk_timer_triggered) (sk_entity_t*, int valid, void* ud);
+typedef void   (*sk_timer_triggered) (sk_entity_t*, int valid, sk_obj_t* ud);
 
 int sk_timer_valid(sk_timer_t*);
 void sk_timer_cancel(sk_timer_t*);
@@ -21,7 +22,7 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t*,
                                      sk_entity_t*,
                                      uint32_t expiration, // unit: millisecond
                                      sk_timer_triggered,
-                                     void* ud);
+                                     sk_obj_t* ud);
 
 // Destroy a timer when a timer has already been cancelled
 void sk_timersvc_timer_destroy(sk_timersvc_t*, sk_timer_t*);

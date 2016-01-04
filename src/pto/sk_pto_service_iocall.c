@@ -17,24 +17,27 @@
  * @note This method will run in the master thread
  */
 static
-int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+int _run(sk_sched_t* sched, sk_sched_t* src,
+         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     SK_ASSERT(sched);
     SK_ASSERT(entity);
     SK_ASSERT(txn);
     SK_ASSERT(proto_msg);
+    SK_ASSERT(SK_ENV_ENGINE == SK_ENV_CORE->master);
 
     // 1. unpack the parameters
     ServiceIocall* iocall_msg = proto_msg;
-    uint64_t task_id          = iocall_msg->task_id;
+    uint64_t    task_id       = iocall_msg->task_id;
     const char* service_name  = iocall_msg->service_name;
     const char* api_name      = iocall_msg->api_name;
+    int         bidx          = iocall_msg->bio_idx;
 
     sk_srv_status_t srv_status   = SK_SRV_STATUS_OK;
     sk_srv_io_status_t io_status = SK_SRV_IO_STATUS_OK;
 
     // 2. find the target service
-    sk_service_t* service = sk_core_get_service(SK_ENV_CORE, service_name);
+    sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
     if (!service) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "Invalid service name %s", service_name);
         io_status = SK_SRV_IO_STATUS_INVALID_SRV_NAME;
@@ -62,9 +65,11 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 
     task.type      = SK_SRV_TASK_API_QUERY;
     task.io_status = io_status;
+    task.bidx      = bidx;
+    task.src       = src;
     task.data.api.service = service;
     task.data.api.txn     = txn;
-    task.data.api.name    = api_name;
+    task.data.api.name    = srv_api->name;
     task.data.api.task_id = task_id;
 
     // 3.2 push task to service
@@ -85,7 +90,7 @@ int _run(sk_sched_t* sched, sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
     // 4. schedule 'service task' according the data mode
     //    (as much as possible) and deliver them to worker thread
     size_t scheduled_task = sk_service_schedule_tasks(service);
-    SK_LOG_DEBUG(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
+    SK_LOG_TRACE(SK_ENV_LOGGER, "Service Iocall:, service name %s, "
                  "scheduled %zu tasks", service_name, scheduled_task);
 
     // 5. update metrics
@@ -96,8 +101,7 @@ io_call_exit:
     return ret;
 }
 
-sk_proto_t sk_pto_srv_iocall = {
-    .priority = SK_PTO_PRI_6,
+sk_proto_opt_t sk_pto_srv_iocall = {
     .descriptor = &service_iocall__descriptor,
-    .run = _run
+    .run        = _run
 };

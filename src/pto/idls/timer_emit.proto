@@ -1,8 +1,8 @@
 
 message timer_emit {
-    required uint32 delayed  = 1;
-    required uint32 interval = 2;
-    required uint64 svc      = 3;
-    required bytes  job      = 4;
-    required uint64 udata    = 5;
+    required uint64 svc     = 1;
+    required bytes  job     = 2;
+    required uint64 udata   = 3;
+    required int32  valid   = 4;
+    required int32  bidx    = 5;
 }

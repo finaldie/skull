@@ -15,7 +15,7 @@ typedef struct sk_module_t {
     sk_mtype_t  type;
 
 #if __WORDSIZE == 64
-    int         padding;
+    int         _padding;
 #endif
 
     void   (*init)   (void* md);

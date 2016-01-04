@@ -3,7 +3,9 @@
 
 #include <skull/unittest.h>
 #include "skull_txn_sharedata.h"
-#include "skull_srv_api_proto.h"
+
+// After you add a service, uncomment the following line
+//#include "skull_srv_api_proto.h"
 
 /**
  * Basic Unit Test Rules for skull module:

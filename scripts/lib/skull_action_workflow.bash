@@ -31,11 +31,13 @@ function action_workflow()
                 ;;
             -h|--help)
                 shift
-                action_workflow_usage >&2
+                action_workflow_usage
                 exit 0
                 ;;
             --)
-                shift; break
+                shift;
+                action_workflow_show
+                break;
                 exit 0
                 ;;
             *)
@@ -58,22 +60,24 @@ function action_workflow_usage()
 
 function _action_workflow_add()
 {
-    # prepare add workflow
+    # 1. prepare add workflow
     local skull_conf=$SKULL_CONFIG_FILE
     local concurrent=1
+    local enable_stdin=0
     local idl=""
-    local port=1234
+    local port=-1
 
     local yn_concurrent=true
+    local yn_stdin=true
     local yn_port=true
 
-    # set the concurrent
+    # 2. set the concurrent
     read -p "Whether allow concurrent? (y/n) " yn_concurrent
     if [ ! "$yn_concurrent" = "y" ]; then
         concurrent=0
     fi
 
-    # set idl
+    # 3. set idl
     while true; do
         read -p "input the idl name: " idl
 
@@ -84,22 +88,39 @@ function _action_workflow_add()
         fi
     done
 
+    # 4. set trigger
+    ## 4.1 set the stdin
+    read -p "Data source: stdin? (y/n) " yn_stdin
+
+    if [ "$yn_stdin" = "y" ]; then
+        enable_stdin=1
+    else
+        ## 4.2 set the port
+        read -p "Data source: Network? (y/n) " yn_port
+
+        if [ "$yn_port" = "y" ]; then
+            while true; do
+                read -p "Input the port you want (1025-65535): " port
+
+                if ! $(_is_number $port); then
+                    echo "Error: please input a digital for the port" >&2
+                else
+                    break
+                fi
+            done
+        fi
+    fi
+
+    # 5. add workflow into skull-config.yaml
+    $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
+        -c $skull_conf -a add -C $concurrent -i $idl -p $port -I $enable_stdin
+
+    # 6. generate the workflow txn idl file if it's not exist
     local idl_path=$SKULL_WORKFLOW_IDL_FOLDER
-    local is_gen_idl="True"
-    if [ -f $SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto ]; then
-        is_gen_idl="False"
+    if [ ! -f $SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto ]; then
+        $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
+            -c $skull_conf -a gen_idl -n $idl -p $idl_path
     fi
-
-    # set the port
-    read -p "Need listen on a port? (y/n) " yn_port
-    if [ "$yn_port" = "y" ]; then
-        read -p "Input the port you want (1025-65535): " port
-    fi
-
-    # add workflow into skull-config.yaml
-    $SKULL_ROOT/bin/skull-config-utils.py -m add_workflow \
-        -c $skull_conf -C $concurrent -i $idl -p $port \
-        -g $is_gen_idl -P $idl_path
 
     echo "workflow added successfully"
     echo "note: run 'skull module --add' to create a new module for it"
@@ -107,7 +128,6 @@ function _action_workflow_add()
 
 function action_workflow_show()
 {
-    local skull_conf=$SKULL_PROJ_ROOT/config/skull-config.yaml
-
-    $SKULL_ROOT/bin/skull-config-utils.py -m show_workflow -c $skull_conf
+    $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
+        -c $SKULL_CONFIG_FILE -a show
 }

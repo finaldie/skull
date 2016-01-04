@@ -3,12 +3,15 @@
 
 #include "api/sk_config.h"
 #include "api/sk_txn.h"
+#include "api/sk_sched.h"
 #include "api/sk_queue.h"
+#include "api/sk_object.h"
+#include "api/sk_entity.h"
 #include "api/sk_service_data.h"
 
 typedef struct sk_service_t sk_service_t;
 
-typedef void (*sk_service_job) (sk_service_t*, void* ud, int valid);
+typedef void (*sk_service_job) (sk_service_t*, sk_obj_t* ud, int valid);
 
 typedef enum sk_service_type_t {
     SK_C_SERVICE_TYPE = 0
@@ -42,14 +45,22 @@ typedef enum sk_srv_task_type_t {
 } sk_srv_task_type_t;
 
 typedef struct sk_srv_task_t {
+    // Header
     sk_queue_elem_base_t base;  // This must be placed at the front
     sk_srv_task_type_t   type;
 
     sk_srv_io_status_t   io_status;
-#if __WORDSIZE == 64
-    int _padding;
-#endif
 
+    // Body: bio index
+    //  (-1)  : Random pick up one
+    //  (0)   : Do not use bio
+    //  (> 0) : find and run the task on the idx of bio
+    int bidx;
+
+    // Body: source scheduler of service call
+    sk_sched_t*          src;
+
+    // Body: Api or Timer call data
     union {
         struct api {
             sk_service_t*  service;
@@ -59,9 +70,9 @@ typedef struct sk_srv_task_t {
         } api;
 
         struct timer {
-            sk_service_t*  service;
+            sk_entity_t*   entity;
             sk_service_job job;
-            void*          ud;
+            sk_obj_t*      ud;
             int            valid;
 
 #if __WORDSIZE == 64
@@ -77,12 +88,16 @@ typedef struct sk_service_opt_t {
     void (*init)    (sk_service_t*, void* srv_data);
     void (*release) (sk_service_t*, void* srv_data);
 
-    int  (*io_call) (sk_service_t*, sk_txn_t*, void* srv_data, uint64_t task_id,
+    int  (*iocall)  (sk_service_t*, sk_txn_t*, void* srv_data, uint64_t task_id,
                      const char* api_name, sk_srv_io_status_t ustatus);
+
+    int  (*iocall_complete) (sk_service_t* srv, sk_txn_t* txn, void* sdata,
+                                uint64_t task_id, const char* api_name);
 } sk_service_opt_t;
 
 typedef struct sk_service_api_t {
     sk_srv_api_cfg_t* cfg;
+    char name[sizeof(void*)];
 } sk_service_api_t;
 
 sk_service_t* sk_service_create(const char* service_name,
@@ -114,6 +129,11 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t*, sk_txn_t* txn,
                                       const char* api_name,
                                       sk_srv_io_status_t io_status);
 
+int sk_service_run_iocall_cb(sk_service_t* service,
+                             sk_txn_t* txn,
+                             uint64_t task_id,
+                             const char* api_name);
+
 // APIs for user
 //  Data APIs (Experimental)
 void* sk_service_data(sk_service_t*);
@@ -123,23 +143,25 @@ void sk_service_data_set(sk_service_t*, const void* data);
 //  Invoke Service IO call
 int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
                       const void* req, size_t req_sz,
-                      sk_txn_module_cb cb, void* ud);
+                      sk_txn_task_cb cb, void* ud, int bio_idx);
 
 /**
  * Create a service job
  *
  * @param delayed   delay N milliseconds to start the job
- * @param interval  interval (milliseconds) of next time the job be triggered
  * @param job       job function
  * @param ud        user data
+ * @param bio_idx   background io idx.
+ *                  - (0): Do not use bio
+ *                  - (-1): random pick up a bio
  *
  * @return 0: successful; 1: failed
  */
-int sk_service_job_create(sk_service_t*,
-                          uint32_t delayed,
-                          uint32_t interval,
-                          sk_service_job job,
-                          void* ud);
+int sk_service_job_create(sk_service_t*   svc,
+                          uint32_t        delayed,
+                          sk_service_job  job,
+                          const sk_obj_t* ud,
+                          int             bio_idx);
 
 #endif
 

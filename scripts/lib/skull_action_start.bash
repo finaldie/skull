@@ -7,10 +7,8 @@ function action_start()
 {
     deploy_dir=$SKULL_PROJ_ROOT/run
 
-    (
-        cd $deploy_dir
-        ./bin/skull-start.sh -c $deploy_dir/skull-config.yaml $@
-    )
+    cd $deploy_dir
+    exec ./bin/skull-start.sh -c $deploy_dir/skull-config.yaml $@
 }
 
 function action_start_usage()

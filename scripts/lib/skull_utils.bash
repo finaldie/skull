@@ -68,6 +68,18 @@ function _check_language()
     return 1
 }
 
+function _is_number()
+{
+    local value="$1"
+    local re="^[0-9]+$"
+
+    if [[ $value =~ $re ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # return:
 #  - 0 if the two files are the same
 #  - 1 if the two files are not the same
@@ -152,6 +164,11 @@ function _module_language()
     done
 
     echo ""
+}
+
+function _module_list()
+{
+    ls $SKULL_PROJ_ROOT/src/modules;
 }
 
 # param action_name
@@ -295,6 +312,10 @@ function skull_utils_srv_api_gen()
 
     # copy all service api protos to idls/service and get api list
     for service in "$service_list"; do
+        if [ -z "$service" ]; then
+            continue
+        fi
+
         local apis=$(_utils_srv_api_copy $service)
 
         api_list+=$apis

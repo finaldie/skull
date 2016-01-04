@@ -15,6 +15,7 @@ config_name = ""
 header_name = ""
 source_name = ""
 api_file_list = []
+prefix = ""
 
 # static
 HEADER_CONTENT_START = "\
@@ -50,9 +51,9 @@ def load_yaml_config():
     yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
-def _generate_header(idl_name):
+def _generate_header(folder, idl_name):
     content = ""
-    content += "#include \"%s.pb-c.h\"\n" % idl_name
+    content += "#include \"%s/%s.pb-c.h\"\n" % (folder, idl_name)
     content += "void* skull_txn_sharedata_%s(skull_txn_t*);\n\n" % idl_name
 
     return content
@@ -84,7 +85,7 @@ def generate_txn_header():
             continue
 
         idl_tbl.add(idl_name)
-        content += _generate_header(idl_name)
+        content += _generate_header(prefix, idl_name)
 
     # add desc tbl api
     content += "extern const ProtobufCMessageDescriptor* skull_idl_desc_tbl[];\n"
@@ -214,7 +215,7 @@ def generate_srv_header():
         api_basename = api_file.split(".")
         api_basename = api_basename[0]
 
-        content += "#include \"%s.pb-c.h\"\n" % api_basename
+        content += "#include \"%s/%s.pb-c.h\"\n" % (prefix, api_basename)
 
     content += "\n"
     content += "extern const ProtobufCMessageDescriptor* skull_srv_api_desc_tbl[];\n"
@@ -273,7 +274,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'm:c:h:s:l:')
+        opts, args = getopt.getopt(sys.argv[1:], 'm:c:h:s:l:p:')
 
         for op, value in opts:
             if op == "-m":
@@ -288,6 +289,8 @@ if __name__ == "__main__":
             elif op == "-l":
                 api_file_list = value.split('|')
                 api_file_list = filter(None, api_file_list)
+            elif op == "-p":
+                prefix = value
 
         # Now run the process func according the mode
         if mode == "txn":

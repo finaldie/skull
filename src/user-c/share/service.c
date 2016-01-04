@@ -31,6 +31,7 @@ void skull_service_getdata(skull_service_t* service, const void* request,
                            void* response)
 {
     printf("skull service api: getdata\n");
+    SKULL_LOG_INFO("svc.test.get-1", "service get data");
 }
 
 static
@@ -38,20 +39,21 @@ void skull_service_setdata(skull_service_t* service, const void* request,
                            void* response)
 {
     printf("skull service api: setdata\n");
+    SKULL_LOG_INFO("svc.test.set-1", "service set data");
 }
 
 // ====================== Service APIs Calls End ===============================
 
 static
 skull_service_async_api_t test_get = {
-    .name             = "get",
-    .iocall           = skull_service_getdata
+    .name   = "get",
+    .iocall = skull_service_getdata
 };
 
 static
 skull_service_async_api_t test_set = {
-    .name             = "set",
-    .iocall           = skull_service_setdata
+    .name   = "set",
+    .iocall = skull_service_setdata
 };
 
 static
@@ -63,9 +65,9 @@ skull_service_async_api_t* api_tbl[] = {
 
 static
 skull_service_entry_t service_entry = {
-    .init = skull_service_init,
+    .init    = skull_service_init,
     .release = skull_service_release,
-    .async = api_tbl
+    .async   = api_tbl
 };
 
 SKULL_SERVICE_REGISTER(&service_entry)

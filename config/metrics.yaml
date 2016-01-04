@@ -7,16 +7,30 @@ global:
             desc: Everytime we send a response, this counter will +1
         latency:
             desc: "This is the sum of the latency for each transcation (unit: micro-second)"
-        connection:
-            desc: The total connection amount
+        entity_create:
+            desc: The total amount of entities be created
+        entity_destroy:
+            desc: The total amount of entities be destroyed
+        connection_create:
+            desc: The total connections be created
+        connection_destroy:
+            desc: How many connections be destroyed
         uptime:
             desc: System uptime, every second +1
+        timer_emit:
+            desc: How many timers be emitted
+        timer_complete:
+            desc: How many timers be completed
         srv_iocall:
             desc: How many service iocalls be invoked
         srv_iocall_complete:
             desc: How many service iocalls be completed
         srv_iocall_execute:
             desc: How many service iocalls be executed
+        srv_timer_emit:
+            desc: How many timers be emitted
+        srv_timer_complete:
+            desc: How many timers be completed
 
 worker:
     mode: thread
@@ -29,12 +43,26 @@ worker:
             desc: When the worker thread send a response, this coutner will +1
         latency:
             desc: "The sum of the latency for each transcation in the thread (unit: micro-second)"
-        connection:
-            desc: The total count of the entities in the thread
+        entity_create:
+            desc: The total amount of entities be created
+        entity_destroy:
+            desc: The total amount of entities be destroyed
+        connection_create:
+            desc: The total count of the connections be hold in this thread
+        connection_destroy:
+            desc: How many connections be destroyed in this thread
+        timer_emit:
+            desc: How many timers be emitted
+        timer_complete:
+            desc: How many timers be completed
         srv_iocall:
             desc: How many service iocalls be invoked
         srv_iocall_complete:
             desc: How many service iocalls be completed
         srv_iocall_execute:
             desc: How many service iocalls be executed
+        srv_timer_emit:
+            desc: How many timers be emitted
+        srv_timer_complete:
+            desc: How many timers be completed
 

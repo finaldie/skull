@@ -35,17 +35,16 @@ struct sk_txn_t {
     flist_iter      workflow_idx;
     sk_module_t*    current;
     fhash*          task_tbl;   // key: task_id, value: sk_txn_task_t
-    sk_sched_t*     working_sched; // which sched the txn module executed
 
     uint64_t        latest_taskid;
-    int             running_tasks;
+    int             total_tasks;
     int             complete_tasks;
 
     unsigned long long  start_time;
 
     sk_txn_state_t  state;
-    sk_txn_pos_t    position;
 
+    int             pending_tasks;
     void*           udata;
 };
 
@@ -80,19 +79,31 @@ void _sk_txn_task_destroy(sk_txn_task_t* task)
 sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
 {
     sk_txn_t* txn = calloc(1, sizeof(*txn));
-    txn->workflow = workflow;
-    txn->entity = entity;
-    txn->output = fmbuf_create(0);
-    txn->workflow_idx = flist_new_iter(workflow->modules);
-    txn->task_tbl = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
+    txn->workflow      = workflow;
+    txn->entity        = entity;
+    txn->output        = fmbuf_create(0);
+    txn->workflow_idx  = flist_new_iter(workflow->modules);
+    txn->task_tbl      = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     txn->latest_taskid = 0;
-    txn->start_time = ftime_gettime();
-    txn->state = SK_TXN_INIT;
-    txn->position = SK_TXN_POS_CORE;
+    txn->start_time    = ftime_gettime();
+    txn->state         = SK_TXN_INIT;
 
-    // update the entity ref
-    sk_entity_taskcnt_inc(entity);
     return txn;
+}
+
+void sk_txn_safe_destroy(sk_txn_t* txn)
+{
+    if (!txn) {
+        return;
+    }
+
+    if (txn->complete_tasks < txn->total_tasks) {
+        sk_print("sk_txn_safe_destroy: complete_tasks(%d) < total_tasks(%d), "
+                 "won't destroy\n", txn->complete_tasks, txn->total_tasks);
+        return;
+    }
+
+    sk_txn_destroy(txn);
 }
 
 void sk_txn_destroy(sk_txn_t* txn)
@@ -101,7 +112,7 @@ void sk_txn_destroy(sk_txn_t* txn)
         return;
     }
 
-    sk_entity_taskcnt_dec(txn->entity);
+    sk_entity_txndel(txn->entity, txn);
     fmbuf_delete(txn->output);
     free(txn->input);
 
@@ -128,7 +139,7 @@ void sk_txn_set_input(sk_txn_t* txn, const void* data, size_t sz)
         return;
     }
 
-    txn->input = malloc(sz);
+    txn->input = calloc(1, sz);
     memcpy(txn->input, data, sz);
     txn->input_sz = sz;
 }
@@ -188,23 +199,6 @@ int sk_txn_is_last_module(sk_txn_t* txn)
     return txn->current == sk_workflow_last_module(txn->workflow);
 }
 
-struct sk_sched_t* sk_txn_sched(sk_txn_t* txn)
-{
-    return txn->working_sched;
-}
-
-void sk_txn_sched_set(sk_txn_t* txn, sk_sched_t* working_sched)
-{
-    // The txn user module should always be running in the same worker,
-    // so the working_sched should be same as previous one
-    if (txn->working_sched) {
-        SK_ASSERT(txn->working_sched == working_sched);
-        return;
-    } else {
-        txn->working_sched = working_sched;
-    }
-}
-
 unsigned long long sk_txn_alivetime(sk_txn_t* txn)
 {
     return ftime_gettime() - txn->start_time;
@@ -222,11 +216,7 @@ void* sk_txn_udata(sk_txn_t* txn)
 
 bool sk_txn_module_complete(sk_txn_t* txn)
 {
-    if (txn->running_tasks == txn->complete_tasks) {
-        return true;
-    }
-
-    return false;
+    return !txn->pending_tasks;
 }
 
 // =============================================================================
@@ -235,17 +225,17 @@ uint64_t sk_txn_task_add(sk_txn_t* txn, sk_txn_taskdata_t* task_data)
     sk_txn_task_t* task = _sk_txn_task_create(task_data);
     uint64_t task_id = txn->latest_taskid++;
     fhash_u64_set(txn->task_tbl, task_id, task);
-    txn->running_tasks++;
+    txn->total_tasks++;
+    txn->pending_tasks += task_data->cb ? 1 : 0;
 
-    SK_ASSERT(txn->complete_tasks < txn->running_tasks);
+    SK_ASSERT(txn->complete_tasks < txn->total_tasks);
     return task_id;
 }
 
 void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
                           sk_txn_task_status_t status)
 {
-    SK_ASSERT(status != SK_TXN_TASK_RUNNING);
-    SK_ASSERT(txn->complete_tasks < txn->running_tasks);
+    SK_ASSERT(txn->complete_tasks < txn->total_tasks);
 
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -253,6 +243,7 @@ void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
     task->end = ftime_gettime();
     task->status = status;
     txn->complete_tasks++;
+    txn->pending_tasks -= task->task_data.cb ? 1 : 0;
 }
 
 sk_txn_task_status_t sk_txn_task_status(sk_txn_t* txn, uint64_t task_id)
@@ -299,6 +290,13 @@ unsigned long long sk_txn_task_livetime(sk_txn_t* txn, uint64_t task_id)
 void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
 {
     txn->state = state;
+
+    if (state == SK_TXN_UNPACKED) {
+        SK_ASSERT(txn->entity);
+
+        // update the entity ref
+        sk_entity_txnadd(txn->entity, txn);
+    }
 }
 
 sk_txn_state_t sk_txn_state(sk_txn_t* txn)
@@ -306,12 +304,3 @@ sk_txn_state_t sk_txn_state(sk_txn_t* txn)
     return txn->state;
 }
 
-void sk_txn_setpos(sk_txn_t* txn, sk_txn_pos_t pos)
-{
-    txn->position = pos;
-}
-
-sk_txn_pos_t sk_txn_pos(sk_txn_t* txn)
-{
-    return txn->position;
-}

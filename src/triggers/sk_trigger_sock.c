@@ -23,17 +23,17 @@ typedef struct sk_trigger_sock_data_t {
 static
 void _sk_accept(fev_state* fev, int fd, void* ud)
 {
-    sk_trigger_t* trigger = ud;
-    sk_engine_t* engine = trigger->engine;
+    sk_trigger_t*  trigger  = ud;
+    sk_engine_t*   engine   = trigger->engine;
     sk_workflow_t* workflow = trigger->workflow;
-    sk_sched_t* sched = engine->sched;
+    sk_sched_t*    sched    = engine->sched;
 
     sk_entity_t* entity = sk_entity_create(workflow);
     sk_print("create a new entity(%d)\n", fd);
 
     NetAccept accept_msg = NET_ACCEPT__INIT;
     accept_msg.fd = fd;
-    sk_sched_send(sched, entity, NULL, SK_PTO_NET_ACCEPT, &accept_msg);
+    sk_sched_send(sched, NULL, entity, NULL, SK_PTO_NET_ACCEPT, &accept_msg, 0);
 }
 
 static
@@ -44,7 +44,9 @@ void _trigger_sock_create(sk_trigger_t* trigger, sk_workflow_cfg_t* cfg)
 
     sk_trigger_sock_data_t* data = calloc(1, sizeof(*data));
     data->port = (in_port_t)cfg->port;
-    data->listen_fd = fnet_listen(NULL, data->port, 1024, 0);
+    data->listen_fd = !cfg->localhost
+                          ? fnet_listen(NULL, data->port, 1024, 0)
+                          : fnet_listen("127.0.0.1", data->port, 1024, 0);
 
     trigger->data = data;
 }
@@ -53,9 +55,9 @@ static
 void _trigger_sock_run(sk_trigger_t* trigger)
 {
     sk_trigger_sock_data_t* data = trigger->data;
-    sk_engine_t* engine = trigger->engine;
-    fev_state* fev = engine->evlp;
-    int listen_fd = data->listen_fd;
+    sk_engine_t* engine    = trigger->engine;
+    fev_state*   fev       = engine->evlp;
+    int          listen_fd = data->listen_fd;
 
     data->listener = fev_add_listener_byfd(fev, listen_fd, _sk_accept, trigger);
     SK_ASSERT(data->listener);
