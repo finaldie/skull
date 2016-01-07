@@ -16,7 +16,7 @@ void sk_entity_mgr_add(sk_entity_mgr_t* mgr, sk_entity_t* entity);
 sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity);
 void sk_entity_mgr_clean_dead(sk_entity_mgr_t* mgr);
 
-struct sk_sched_t* sk_entity_mgr_sched(sk_entity_mgr_t* mgr);
+struct sk_sched_t* sk_entity_mgr_sched(const sk_entity_mgr_t* mgr);
 void sk_entity_mgr_setsched(sk_entity_mgr_t* mgr,
                             struct sk_sched_t* owner_sched);
 

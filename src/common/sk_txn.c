@@ -12,6 +12,7 @@
 #include "api/sk_txn.h"
 
 struct sk_txn_task_t {
+    uint64_t id;
     // record the time of start and end
     unsigned long long start;
     unsigned long long end;   // If end is non-zero, means the task is done
@@ -50,16 +51,23 @@ struct sk_txn_t {
 
 // Internal APIs
 static
-sk_txn_task_t* _sk_txn_task_create(sk_txn_taskdata_t* task_data)
+sk_txn_task_t* _sk_txn_task_create(
+    sk_txn_t* txn, sk_txn_taskdata_t* task_data)
 {
+    uint64_t task_id = txn->latest_taskid++;
+
     sk_txn_task_t* task = calloc(1, sizeof(*task));
+    task->id    = task_id;
     task->start = ftime_gettime();
+
     if (task_data) {
         task->task_data = *task_data;
     }
 
     task->status = SK_TXN_TASK_RUNNING;
 
+    // update the taskdata owner
+    task->task_data.owner = task;
     return task;
 }
 
@@ -225,16 +233,26 @@ bool sk_txn_alltask_complete(const sk_txn_t* txn)
 }
 
 // =============================================================================
+uint64_t sk_txn_task_id(const sk_txn_task_t* task)
+{
+    return task->id;
+}
+
 uint64_t sk_txn_task_add(sk_txn_t* txn, sk_txn_taskdata_t* task_data)
 {
-    sk_txn_task_t* task = _sk_txn_task_create(task_data);
-    uint64_t task_id = txn->latest_taskid++;
-    fhash_u64_set(txn->task_tbl, task_id, task);
+    sk_txn_task_t* task = _sk_txn_task_create(txn, task_data);
+    fhash_u64_set(txn->task_tbl, task->id, task);
+
     txn->total_tasks++;
     txn->pending_tasks += task_data->cb ? 1 : 0;
 
     SK_ASSERT(txn->complete_tasks < txn->total_tasks);
-    return task_id;
+    return task->id;
+}
+
+int sk_txn_task_done(const sk_txn_taskdata_t* task)
+{
+    return task->pendings > 0 ? 0 : 1;
 }
 
 void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
@@ -247,6 +265,7 @@ void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
 
     task->end = ftime_gettime();
     task->status = status;
+
     txn->complete_tasks++;
     txn->pending_tasks -= task->task_data.cb ? 1 : 0;
 }

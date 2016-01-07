@@ -142,7 +142,7 @@ void sk_entity_mgr_clean_dead(sk_entity_mgr_t* mgr)
     _cleanup_dead_entities(mgr, 0);
 }
 
-struct sk_sched_t* sk_entity_mgr_sched(sk_entity_mgr_t* mgr)
+struct sk_sched_t* sk_entity_mgr_sched(const sk_entity_mgr_t* mgr)
 {
     return mgr->owner_sched;
 }

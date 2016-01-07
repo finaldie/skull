@@ -133,9 +133,6 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
 // Every time pick up the next module in the workflow module list, then execute
 // the its `run` method. If reach the last module of the workflow, then will
 // execute the `pack` method
-//
-// TODO: should check the _module_run return value, if non-zero should cancel
-// the workflow
 static
 int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
          void* proto_msg)

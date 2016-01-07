@@ -67,6 +67,7 @@ typedef struct sk_srv_task_t {
             sk_txn_t*      txn;
             const char*    name;
             uint64_t       task_id;
+            sk_txn_taskdata_t* txn_task;
         } api;
 
         struct timer {
@@ -88,7 +89,8 @@ typedef struct sk_service_opt_t {
     void (*init)    (sk_service_t*, void* srv_data);
     void (*release) (sk_service_t*, void* srv_data);
 
-    int  (*iocall)  (sk_service_t*, sk_txn_t*, void* srv_data, uint64_t task_id,
+    int  (*iocall)  (sk_service_t*, const sk_txn_t*, void* srv_data,
+                     sk_txn_taskdata_t* task_data,
                      const char* api_name, sk_srv_io_status_t ustatus);
 
     int  (*iocall_complete) (sk_service_t* srv, sk_txn_t* txn, void* sdata,
@@ -124,8 +126,8 @@ void sk_service_schedule_task(sk_service_t*, const sk_srv_task_t*);
 void sk_service_task_setcomplete(sk_service_t*);
 
 // APIs for worker
-sk_srv_status_t sk_service_run_iocall(sk_service_t*, sk_txn_t* txn,
-                                      uint64_t task_id,
+sk_srv_status_t sk_service_run_iocall(sk_service_t*, const sk_txn_t* txn,
+                                      sk_txn_taskdata_t* taskdata,
                                       const char* api_name,
                                       sk_srv_io_status_t io_status);
 

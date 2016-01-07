@@ -101,7 +101,8 @@ COMPONENTS_OBJS = \
     components/sk_config.o \
     components/sk_engine.o \
     components/sk_service.o \
-    components/sk_admin.o
+    components/sk_admin.o \
+    components/sk_ep_pool.o
 
 PTO_OBJS = \
     pto/sk_pto.o \
@@ -141,7 +142,8 @@ USER_C_OBJS = \
     user-c/src/srv_loader.o \
     user-c/src/srv_executor.o \
     user-c/src/srv_utils.o \
-    user-c/src/service.o
+    user-c/src/service.o \
+    user-c/src/ep.o
 
 SKULL_MAIN_OBJ = main.o
 

@@ -1,6 +1,5 @@
 // service task, which is running in a worker thread
 message service_task_run {
-    required uint64 task_id = 1 [default = 0];
     required string service_name = 2;
 
     required string api_name = 3;
@@ -11,18 +10,23 @@ message service_task_run {
 
     // caller scheduler
     required uint64 src = 5;
+
+    // txn taskdata
+    required uint64 taskdata = 6;
 }
 
 // notify master the task is complete, and master will update the status
 message service_task_complete {
-    required string service_name = 1;
-    required int32  resume_wf    = 2;
+    required string service_name  = 1;
+    required int32  resume_wf     = 2;
+    required int32  svc_task_done = 3;
 }
 
 // Run service api callback
 message service_task_cb {
-    required uint64 task_id      = 1 [default = 0];
-    required string service_name = 2;
-    required string api_name     = 3;
-    required uint32 task_status  = 4;
+    required uint64 taskdata      = 1;
+    required string service_name  = 2;
+    required string api_name      = 3;
+    required uint32 task_status   = 4;
+    required int32  svc_task_done = 5;
 }

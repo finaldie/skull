@@ -420,7 +420,7 @@ int _process_events(sk_sched_t* sched)
 
 static
 int _emit_event(sk_sched_t* sched, sk_sched_t* dst, sk_io_type_t io_type,
-                sk_entity_t* entity, sk_txn_t* txn,
+                const sk_entity_t* entity, const sk_txn_t* txn,
                 uint32_t pto_id, void* proto_msg, int flags)
 {
     sk_proto_t* pto = &sched->pto_tbl[pto_id];
@@ -432,8 +432,8 @@ int _emit_event(sk_sched_t* sched, sk_sched_t* dst, sk_io_type_t io_type,
     event.pto_id = pto_id;
     event.hop    = 0;
     event.flags  = (uint32_t) flags & 0xFFFFFF;
-    event.entity = entity;
-    event.txn    = txn;
+    event.entity = (sk_entity_t*) entity;
+    event.txn    = (sk_txn_t*) txn;
 
     if (proto_msg) {
         event.sz = protobuf_c_message_get_packed_size(proto_msg);
@@ -565,7 +565,7 @@ int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst)
 }
 
 int sk_sched_send(sk_sched_t* sched, sk_sched_t* dst,
-                  sk_entity_t* entity, sk_txn_t* txn,
+                  const sk_entity_t* entity, const sk_txn_t* txn,
                   uint32_t pto_id, void* proto_msg, int flag)
 {
     SK_ASSERT(entity);
