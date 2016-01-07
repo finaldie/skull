@@ -110,7 +110,13 @@ void sk_service_setopt(sk_service_t*, const sk_service_opt_t opt);
 sk_service_opt_t* sk_service_opt(sk_service_t*);
 void sk_service_settype(sk_service_t*, sk_service_type_t type);
 
-const sk_service_api_t* sk_service_api(sk_service_t*, const char* api_name);
+const sk_service_api_t* sk_service_api(const sk_service_t*,
+                                       const char* api_name);
+
+void sk_service_api_complete(const sk_service_t* service,
+                             const sk_txn_t* txn,
+                             sk_txn_taskdata_t* taskdata,
+                             const char* api_name);
 
 void sk_service_start(sk_service_t*);
 void sk_service_stop(sk_service_t*);

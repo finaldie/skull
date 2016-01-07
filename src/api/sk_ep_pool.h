@@ -41,7 +41,6 @@ typedef struct sk_ep_handler_t {
     // return 0:   The response data has not finished yet
     // return > 0: The response data has finished
     size_t       (*unpack)  (void* ud, const void* data, size_t len);
-    void         (*error)   (void* ud);
     void         (*release) (void* ud);
 } sk_ep_handler_t;
 

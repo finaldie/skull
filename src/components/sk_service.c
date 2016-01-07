@@ -316,7 +316,7 @@ void sk_service_settype(sk_service_t* service, sk_service_type_t type)
     service->type = type;
 }
 
-const sk_service_api_t* sk_service_api(sk_service_t* service,
+const sk_service_api_t* sk_service_api(const sk_service_t* service,
                                        const char* api_name)
 {
     return fhash_str_get(service->apis, api_name);
@@ -491,7 +491,7 @@ int sk_service_run_iocall_cb(sk_service_t* service,
 }
 
 // Run on worker/bio
-void sk_service_api_complete(sk_service_t* service,
+void sk_service_api_complete(const sk_service_t* service,
                              const sk_txn_t* txn,
                              sk_txn_taskdata_t* taskdata,
                              const char* api_name)
@@ -588,6 +588,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 
     // 2. construct a sk_txn_task and add it
     sk_txn_taskdata_t task_data;
+    task_data.api_name   = sk_service_api(service, api_name)->name;
     task_data.request    = req;
     task_data.request_sz = req_sz;
     task_data.cb         = cb;
