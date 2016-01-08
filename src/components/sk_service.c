@@ -603,6 +603,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     iocall_msg.service_name  = (char*) service->name;
     iocall_msg.api_name      = (char*) api_name;
     iocall_msg.bio_idx       = bidx;
+    iocall_msg.txn_task      = (uint64_t) (uintptr_t) sk_txn_taskdata(txn, task_id);
 
     //5. Send to master engine
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched,

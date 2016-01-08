@@ -92,7 +92,8 @@ sk_engine_t* sk_engine_create(sk_engine_type_t type, int flags)
     engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr, flags);
     engine->mon        = sk_mon_create();
     engine->timer_svc  = sk_timersvc_create(engine->evlp);
-    engine->ep_pool    = sk_ep_pool_create(SK_EP_POOL_MAX);
+    engine->ep_pool    = sk_ep_pool_create(engine->evlp, engine->timer_svc,
+                                           SK_EP_POOL_MAX);
 
     return engine;
 }

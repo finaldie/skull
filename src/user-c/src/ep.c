@@ -85,9 +85,10 @@ int skull_ep_send(skull_service_t* service, const skull_ep_handler_t handler,
     // Construct ep job
     sk_ep_handler_t sk_handler;
     ep_job_t* job = _ep_job_create(service, &handler, cb, ud, &sk_handler);
+    const sk_entity_t* ett = sk_txn_entity(service->txn);
 
     // Send job to ep pool
-    int ret = sk_ep_send(SK_ENV_EP, sk_handler, data, count, _ep_cb, job);
+    int ret = sk_ep_send(SK_ENV_EP, ett, sk_handler, data, count, _ep_cb, job);
     if (ret == 0) {
         service->task->pendings++;
     } else {

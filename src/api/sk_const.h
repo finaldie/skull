@@ -38,6 +38,7 @@ struct sk_const_t;
 
 // ep pool
 #define SK_EP_POOL_MAX                       (1024)
+#define SK_EP_KEY_MAX                        (64)
 
 #endif
 
