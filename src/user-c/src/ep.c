@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "api/sk_utils.h"
 #include "api/sk_txn.h"
 #include "api/sk_env.h"
 #include "api/sk_ep_pool.h"
@@ -78,9 +79,10 @@ ep_job_t* _ep_job_create(skull_service_t* service,
     return job;
 }
 
-int skull_ep_send(skull_service_t* service, const skull_ep_handler_t handler,
-                  const void* data, size_t count,
-                  skull_ep_cb_t cb, void* ud)
+skull_ep_status_t
+skull_ep_send(skull_service_t* service, const skull_ep_handler_t handler,
+              const void* data, size_t count,
+              skull_ep_cb_t cb, void* ud)
 {
     // Construct ep job
     sk_ep_handler_t sk_handler;
@@ -88,12 +90,16 @@ int skull_ep_send(skull_service_t* service, const skull_ep_handler_t handler,
     const sk_entity_t* ett = sk_txn_entity(service->txn);
 
     // Send job to ep pool
-    int ret = sk_ep_send(SK_ENV_EP, ett, sk_handler, data, count, _ep_cb, job);
-    if (ret == 0) {
+    sk_ep_status_t ret = sk_ep_send(SK_ENV_EP, ett, sk_handler, data, count, _ep_cb, job);
+    if (ret == SK_EP_OK) {
         service->task->pendings++;
-    } else {
-        _release(job);
     }
 
-    return ret;
+    switch (ret) {
+    case SK_EP_OK:          return SKULL_EP_OK;
+    case SK_EP_ERROR:       return SKULL_EP_ERROR;
+    case SK_EP_TIMEOUT:     return SKULL_EP_TIMEOUT;
+    case SK_EP_NO_RESOURCE: return SKULL_EP_NO_RESOURCE;
+    default: SK_ASSERT(0);  return SKULL_EP_ERROR;
+    }
 }

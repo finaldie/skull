@@ -11,9 +11,10 @@ typedef enum skull_ep_type_t {
 } skull_ep_type_t;
 
 typedef enum skull_ep_status_t {
-    SKULL_EP_OK      = 0,
-    SKULL_EP_ERROR   = 1,
-    SKULL_EP_TIMEOUT = 2
+    SKULL_EP_OK          = 0,
+    SKULL_EP_ERROR       = 1,
+    SKULL_EP_TIMEOUT     = 2,
+    SKULL_EP_NO_RESOURCE = 3
 } skull_ep_status_t;
 
 typedef struct skull_ep_ret_t {
@@ -40,9 +41,10 @@ typedef void (*skull_ep_cb_t) (skull_ep_ret_t, const void* response,
                                 size_t len, void* ud,
                                 const void* req, void* resp);
 
-int skull_ep_send(skull_service_t*, const skull_ep_handler_t handler,
-                  const void* data, size_t count,
-                  const skull_ep_cb_t cb, void* ud);
+skull_ep_status_t
+skull_ep_send(skull_service_t*, const skull_ep_handler_t handler,
+              const void* data, size_t count,
+              const skull_ep_cb_t cb, void* ud);
 
 #endif
 

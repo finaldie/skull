@@ -496,6 +496,7 @@ void sk_service_api_complete(const sk_service_t* service,
                              sk_txn_taskdata_t* taskdata,
                              const char* api_name)
 {
+    sk_print("api_complete: taskdata.pending: %u\n", taskdata->pendings);
     if (!sk_txn_task_done(taskdata)) {
         return;
     }

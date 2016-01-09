@@ -88,6 +88,34 @@ static
 void sk_ep_mgr_del(sk_ep_mgr_t* mgr, sk_ep_t* ep);
 
 static
+int  sk_ep_timeout(sk_ep_t* ep)
+{
+    unsigned long long consumed = ftime_gettime() - ep->curr.start;
+    if (consumed >= ep->curr.handler.timeout) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+static
+unsigned long long sk_ep_time_consumed(sk_ep_t* ep)
+{
+    return ftime_gettime() - ep->curr.start;
+}
+
+static
+unsigned long long sk_ep_time_left(sk_ep_t* ep)
+{
+    unsigned long long consumed = ftime_gettime() - ep->curr.start;
+    if (consumed >= ep->curr.handler.timeout) {
+        return 0;
+    } else {
+        return ep->curr.handler.timeout - consumed;
+    }
+}
+
+static
 void sk_ep_destroy(sk_ep_t* ep)
 {
     if (!ep) return;
@@ -124,8 +152,6 @@ void sk_ep_mgr_destroy(sk_ep_mgr_t* mgr)
 {
     if (!mgr) return;
 
-    sk_entity_mgr_destroy(mgr->eps);
-
     // Destroy mapping
     fhash_u64_iter eiter = fhash_u64_iter_new(mgr->ee);
     fhash* ipm = NULL;
@@ -146,6 +172,8 @@ void sk_ep_mgr_destroy(sk_ep_mgr_t* mgr)
     fhash_u64_iter_release(&eiter);
     fhash_u64_delete(mgr->ee);
 
+    // destroy entity manager
+    sk_entity_mgr_destroy(mgr->eps);
     flist_delete(mgr->tmp);
     free(mgr);
 }
@@ -240,26 +268,29 @@ void _timer_data_destroy(sk_ud_t ud)
 }
 
 static
-void _ep_send(sk_ep_t* ep, const void* data, size_t len)
+sk_ep_status_t _ep_send(sk_ep_t* ep, const void* data, size_t len)
 {
     if (ep->status != SK_EP_ST_CONNECTED) {
+        SK_ASSERT(ep->status == SK_EP_ST_CONNECTING);
         // ep still not ready (under connecting), just return
         sk_print("ep still not ready (under connecting), just return\n");
-        return;
+        return SK_EP_OK;
     }
 
     sk_entity_write(ep->ep, data, len);
 
-    // If the ep is concurrent, which means it shouldn't be pended on response
-    if (ep->curr.handler.flags & SK_EP_F_CONCURRENT) {
-        return;
+    // If the ep is non-concurrent, set status to SENT
+    if (!(ep->curr.handler.flags & SK_EP_F_CONCURRENT)) {
+        ep->status = SK_EP_ST_SENT;
     }
 
-    ep->status = SK_EP_ST_SENT;
-
     // Set up a timeout timer if needed
-    if (ep->curr.handler.timeout && ep->curr.cb && ep->curr.handler.unpack) {
-        unsigned long long consumed = ftime_gettime() - ep->curr.start;
+    if (ep->curr.handler.timeout && ep->curr.handler.unpack) {
+        unsigned long long time_left = sk_ep_time_left(ep);
+        if (time_left == 0) {
+            return SK_EP_TIMEOUT;
+        }
+
         sk_ep_mgr_t* mgr = ep->owner;
 
         sk_ep_conn_t* conn = calloc(1, sizeof(*conn));
@@ -271,18 +302,23 @@ void _ep_send(sk_ep_t* ep, const void* data, size_t len)
 
         conn->timer =
             sk_timersvc_timer_create(mgr->owner->tmsvc, ep->conn.timer_entity,
-                (uint32_t)(ep->curr.handler.timeout - consumed), _recv_timeout,
-                param_obj);
+                (uint32_t)time_left, _recv_timeout, param_obj);
         SK_ASSERT(conn->timer);
 
         conn->ep = ep;
         ep->conn = *conn;
+
+        sk_print("_ep_send: setup timer, timeout = %u ms\n",
+                 (uint32_t)time_left);
     }
+
+    return SK_EP_OK;
 }
 
 static
 void _handle_timeout(sk_ep_t* ep, int latency)
 {
+    sk_print("handle timeout\n");
     if (ep->status != SK_EP_ST_CONNECTING &&
         ep->status != SK_EP_ST_SENT) {
         sk_print("ep is not in connecting/sent, skip it\n");
@@ -313,14 +349,15 @@ void _handle_error(sk_ep_t* ep, int latency)
 }
 
 static
-void _handle_send(sk_ep_t* ep)
+sk_ep_status_t _handle_send(sk_ep_t* ep)
 {
-    _ep_send(ep, ep->curr.data, ep->curr.count);
+    return _ep_send(ep, ep->curr.data, ep->curr.count);
 }
 
 static
 void _recv_timeout(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
+    sk_print("recv_timeout, valid: %d\n", valid);
     if (!valid) {
         sk_print("recv_timeout: timer invalid, skip it\n");
         return;
@@ -417,7 +454,10 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
             sk_entity_net_create(ep->ep, evbuff);
             ep->status = SK_EP_ST_CONNECTED;
 
-            _handle_send(ep);
+            sk_ep_status_t ret = _handle_send(ep);
+            if (ret == SK_EP_TIMEOUT) {
+                _handle_timeout(ep, (int)sk_ep_time_consumed(ep));
+            }
             return;
         }
     }
@@ -429,6 +469,7 @@ CONN_ERROR:
 static
 void _conn_timeout(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
+    sk_print("conn_timeout, valid: %d\n", valid);
     if (!valid) {
         sk_print("connection timer not valid, skip it\n");
         return;
@@ -450,8 +491,12 @@ static
 int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                        sk_ep_t* ep, unsigned long long start)
 {
-    unsigned long long now = ftime_gettime();
-    unsigned long long consumed = now - start;
+    unsigned long long time_left = sk_ep_time_left(ep);
+    if (time_left == 0) {
+        sk_print("time left = 0, won't connect to target\n");
+        return 1;
+    }
+
     ep->status = SK_EP_ST_CONNECTING;
 
     int sockfd = -1;
@@ -476,9 +521,9 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 
         conn->timer =
             sk_timersvc_timer_create(mgr->owner->tmsvc, conn->timer_entity,
-                (uint32_t)(handler->timeout - consumed), _conn_timeout,
-                param_obj);
+                (uint32_t)time_left, _conn_timeout, param_obj);
         SK_ASSERT(conn->timer);
+        sk_print("connection setup timer: timeout: %u\n", (uint32_t)time_left);
 
         int ret = fev_reg_event(mgr->owner->evlp, sockfd, FEV_WRITE, NULL,
                                 _on_connect, ep);
@@ -598,7 +643,7 @@ void sk_ep_pool_destroy(sk_ep_pool_t* pool)
     free(pool);
 }
 
-int sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
+sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
                const sk_ep_handler_t handler,
                const void* data, size_t count,
                sk_ep_cb_t cb, void* ud)
@@ -608,15 +653,18 @@ int sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
 
     // 1. check
     if (!data || !count) {
-        return 1;
+        sk_print("sk_ep_send: error -> no data or data_len\n");
+        return SK_EP_ERROR;
     }
 
     if (!handler.ip || handler.port == 0) {
-        return 1;
+        sk_print("sk_ep_send: error -> invalid ip or port\n");
+        return SK_EP_ERROR;
     }
 
     if (handler.unpack && handler.timeout == 0) {
-        return 1;
+        sk_print("sk_ep_send: error -> timeout value is 0\n");
+        return SK_EP_ERROR;
     }
 
     // 2. get ep mgr
@@ -625,21 +673,22 @@ int sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
     if (et == SK_EP_TCP) {
         mgr = pool->tcp;
     } else {
-        return 1;
+        sk_print("sk_ep_send: error -> invalid protocol\n");
+        return SK_EP_ERROR;
     }
 
     // 3. pick up one ep from ep mgr
     if (mgr->nep == mgr->max) {
-        return 1;
+        return SK_EP_NO_RESOURCE;
     }
 
     sk_ep_t* ep =
         _ep_mgr_get_or_create(mgr, entity, &handler, start, cb, ud, data, count);
     if (!ep) {
-        return 1;
+        sk_print("sk_ep_send: error -> create ep failed\n");
+        return SK_EP_ERROR;
     }
 
     // 4. send via ep
-    _ep_send(ep, data, count);
-    return 0;
+    return _ep_send(ep, data, count);
 }
