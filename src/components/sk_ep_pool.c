@@ -23,9 +23,14 @@
 typedef enum sk_ep_st_t {
     SK_EP_ST_INIT       = 0,
     SK_EP_ST_CONNECTING = 1,
-    SK_EP_ST_CONNECTED  = 2,
-    SK_EP_ST_SENT       = 3,
+    SK_EP_ST_CONNECTED  = 2
 } sk_ep_st_t;
+
+typedef enum sk_ep_nst_t {
+    SK_EP_NST_INIT  = 0,
+    SK_EP_NST_SENT  = 1,
+    SK_EP_NST_RECVD = 2
+} sk_ep_nst_t;
 
 typedef struct sk_ep_timerdata_t {
     sk_entity_t*   timer_entity;
@@ -45,6 +50,12 @@ typedef struct sk_ep_data_t {
 
     sk_timer_t*        conn_timer;
     sk_timer_t*        recv_timer;
+
+    sk_ep_nst_t        status;
+
+#if __WORDSIZE == 64
+    int                _padding;
+#endif
 } sk_ep_data_t;
 
 typedef struct sk_ep_readarg_t {
@@ -100,6 +111,10 @@ void _ep_mgr_del(sk_ep_mgr_t* mgr, sk_ep_t* ep);
 static
 int  sk_ep_timeout(sk_ep_data_t* ep_data)
 {
+    if (ep_data->handler.timeout == 0) {
+        return 0;
+    }
+
     unsigned long long consumed = ftime_gettime() - ep_data->start;
     if (consumed >= ep_data->handler.timeout) {
         return 1;
@@ -307,6 +322,32 @@ void _timer_data_destroy(sk_ud_t ud)
 }
 
 static
+sk_timer_t* _ep_node_create_timer(fdlist_node_t* ep_node,
+                                  sk_timer_triggered timer_cb,
+                                  uint32_t timeout)
+{
+    if (timeout == 0) return NULL;
+
+    sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
+    sk_ep_mgr_t*  mgr     = ep_data->owner->owner;
+
+    sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
+    timerdata->timer_entity = sk_entity_create(NULL);
+    timerdata->ep_node = ep_node;
+
+    sk_ud_t cb_data  = {.ud = timerdata};
+    sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_data_destroy};
+    sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
+
+    sk_timer_t* timer =
+        sk_timersvc_timer_create(mgr->owner->tmsvc, timerdata->timer_entity,
+            timeout, timer_cb, param_obj);
+    SK_ASSERT(timer);
+
+    return timer;
+}
+
+static
 sk_ep_status_t _ep_send(fdlist_node_t* ep_node, const void* data, size_t len)
 {
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
@@ -321,11 +362,6 @@ sk_ep_status_t _ep_send(fdlist_node_t* ep_node, const void* data, size_t len)
 
     sk_entity_write(ep->ep, data, len);
 
-    // If the ep is non-concurrent, set status to SENT
-    if (!(ep_data->handler.flags & SK_EP_F_CONCURRENT)) {
-        ep->status = SK_EP_ST_SENT;
-    }
-
     // Set up a timeout timer if needed
     if (ep_data->handler.timeout && ep_data->handler.unpack) {
         unsigned long long time_left = sk_ep_time_left(ep_data);
@@ -333,21 +369,11 @@ sk_ep_status_t _ep_send(fdlist_node_t* ep_node, const void* data, size_t len)
             return SK_EP_TIMEOUT;
         }
 
-        sk_ep_mgr_t* mgr = ep->owner;
-        sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
-        timerdata->timer_entity = sk_entity_create(NULL);
-        timerdata->ep_node = ep_node;
-
-        sk_ud_t cb_data  = {.ud = timerdata};
-        sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_data_destroy};
-        sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
-
         ep_data->recv_timer =
-            sk_timersvc_timer_create(mgr->owner->tmsvc, timerdata->timer_entity,
-                (uint32_t)time_left, _recv_timeout, param_obj);
+            _ep_node_create_timer(ep_node, _recv_timeout, (uint32_t)time_left);
         SK_ASSERT(ep_data->recv_timer);
 
-        sk_print("_ep_send: setup timer, timeout = %u ms\n",
+        sk_print("_ep_send: setup recv timer, timeout = %u ms\n",
                  (uint32_t)time_left);
     }
 
@@ -362,8 +388,7 @@ void _handle_timeout(fdlist_node_t* ep_node, int latency)
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
     sk_ep_t*      ep      = ep_data->owner;
 
-    if (ep->status != SK_EP_ST_CONNECTING &&
-        ep->status != SK_EP_ST_SENT) {
+    if (ep->status != SK_EP_ST_CONNECTING) {
         sk_print("ep is not in connecting/sent, skip it\n");
         return;
     }
@@ -425,7 +450,10 @@ static
 int _try_unpack(fdlist_node_t* ep_node, void* ud)
 {
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
-    sk_ep_t*      ep      = ep_data->owner;
+    if (!ep_data->handler.unpack) {
+        sk_print("no ep unpack function, skip it\n");
+        return 0;
+    }
 
     sk_ep_readarg_t* readarg = ud;
     const void*      data    = readarg->data;
@@ -441,11 +469,6 @@ int _try_unpack(fdlist_node_t* ep_node, void* ud)
     // Set return consumed value
     readarg->consumed = consumed;
 
-    // Set status to connected, so that others can pick this ep again
-    if (!(ep_data->handler.flags & SK_EP_F_CONCURRENT)) {
-        ep->status = SK_EP_ST_CONNECTED;
-    }
-
     // cancel the timer if needed
     if (ep_data->recv_timer) {
         sk_timer_cancel(ep_data->recv_timer);
@@ -458,7 +481,7 @@ static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_ep_t* ep = arg;
-    SK_ASSERT(ep->status == SK_EP_ST_CONNECTED || ep->status == SK_EP_ST_SENT);
+    SK_ASSERT(ep->status == SK_EP_ST_CONNECTED);
 
     size_t read_len = 0;
     size_t used_len = fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
@@ -506,17 +529,32 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 }
 
 static
-void _on_connect(fev_state* fev, int fd, int mask, void* arg)
+int _send_each(fdlist_node_t* ep_node, void* ud)
 {
-    fdlist_node_t* ep_node = arg;
-    sk_ep_data_t*  ep_data = fdlist_get_nodedata(ep_node);
-    sk_ep_t*       ep      = ep_data->owner;
-
-    int sockfd = fd;
-    fev_del_event(fev, sockfd, FEV_READ | FEV_WRITE);
+    flist* timeout_nodes = ud;
+    sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
+    if (ep_data->status != SK_EP_NST_INIT) {
+        return 0;
+    }
 
     sk_timer_cancel(ep_data->conn_timer);
     ep_data->conn_timer = NULL;
+
+    sk_ep_status_t ret = _ep_send(ep_node, ep_data->data, ep_data->count);
+    if (ret == SK_EP_TIMEOUT) {
+        flist_push(timeout_nodes, ep_node);
+    }
+
+    return 0;
+}
+
+static
+void _on_connect(fev_state* fev, int fd, int mask, void* arg)
+{
+    sk_ep_t* ep = arg;
+
+    int sockfd = fd;
+    fev_del_event(fev, sockfd, FEV_READ | FEV_WRITE);
 
     if (mask & FEV_ERROR) {
         goto CONN_ERROR;
@@ -524,8 +562,7 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
 
     if (ep->status != SK_EP_ST_CONNECTING) {
         SK_ASSERT(0);
-        _ep_node_destroy(ep_node);
-        _ep_mgr_del(ep->owner, ep);
+        _ep_destroy(ep);
         return;
     }
 
@@ -540,9 +577,13 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
             sk_entity_net_create(ep->ep, evbuff);
             ep->status = SK_EP_ST_CONNECTED;
 
-            sk_ep_status_t ret = _ep_send(ep_node, ep_data->data, ep_data->count);
-            if (ret == SK_EP_TIMEOUT) {
-                _handle_timeout(ep_node, (int)sk_ep_time_consumed(ep_data));
+            flist* timeout_nodes = ep->owner->tmp;
+            fdlist_foreach(ep->txns, _send_each, timeout_nodes);
+
+            fdlist_node_t* timeout_node = NULL;
+            while ((timeout_node = flist_pop(timeout_nodes))) {
+                sk_ep_data_t* ep_data = fdlist_get_nodedata(timeout_node);
+                _handle_timeout(timeout_node, (int)sk_ep_time_consumed(ep_data));
             }
             return;
         }
@@ -581,8 +622,7 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                        fdlist_node_t* ep_node)
 {
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
-    unsigned long long time_left = sk_ep_time_left(ep_data);
-    if (time_left == 0) {
+    if (sk_ep_timeout(ep_data)) {
         sk_print("time left = 0, won't connect to target\n");
         return 1;
     }
@@ -602,24 +642,28 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         ep->status = SK_EP_ST_CONNECTED;
         return 0;
     } else if (s > 0) {
-        // Setup a connection timeout timer
-        sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
-        timerdata->timer_entity = sk_entity_create(NULL);
-        timerdata->ep_node = ep_node;
+        if (ep_data->handler.timeout > 0) {
+            do {
+                unsigned long long time_left = sk_ep_time_left(ep_data);
+                if (time_left == 0) {
+                    sk_print("time left = 0, won't connect to target\n");
+                    break;
+                }
 
-        sk_ud_t cb_data  = {.ud = timerdata};
-        sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_data_destroy};
-        sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
+                // Setup a connection timeout timer
+                ep_data->conn_timer =
+                    _ep_node_create_timer(ep_node, _conn_timeout,
+                        (uint32_t)time_left);
+                SK_ASSERT(ep_data->conn_timer);
 
-        ep_data->conn_timer =
-            sk_timersvc_timer_create(mgr->owner->tmsvc, timerdata->timer_entity,
-                (uint32_t)time_left, _conn_timeout, param_obj);
-        SK_ASSERT(ep_data->conn_timer);
-        sk_print("connection setup timer: timeout: %u\n", (uint32_t)time_left);
+                sk_print("connection setup timer: timeout: %u\n",
+                         (uint32_t)time_left);
+            } while (0);
+        }
 
         // Setup connection socket to evlp
         int ret = fev_reg_event(mgr->owner->evlp, sockfd, FEV_WRITE, NULL,
-                                _on_connect, ep_node);
+                                _on_connect, ep);
         SK_ASSERT(!ret);
 
         return 0;
@@ -704,6 +748,7 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
     ep_data->data    = data;
     ep_data->count   = count;
     ep_data->e       = entity;
+    ep_data->status  = SK_EP_NST_INIT;
 
     fdlist_node_t* ep_node = fdlist_make_node(ep_data, sizeof(*ep_data));
     fdlist_push(ep->txns, ep_node);
@@ -757,11 +802,6 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
 
     if (!handler.ip || handler.port == 0) {
         sk_print("sk_ep_send: error -> invalid ip or port\n");
-        return SK_EP_ERROR;
-    }
-
-    if (handler.unpack && handler.timeout == 0) {
-        sk_print("sk_ep_send: error -> timeout value is 0\n");
         return SK_EP_ERROR;
     }
 
