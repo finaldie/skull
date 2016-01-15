@@ -25,8 +25,6 @@ typedef enum sk_ep_st_t {
     SK_EP_ST_CONNECTING = 1,
     SK_EP_ST_CONNECTED  = 2,
     SK_EP_ST_SENT       = 3,
-    SK_EP_ST_ERROR      = 4,
-    SK_EP_ST_TIMEOUT    = 5
 } sk_ep_st_t;
 
 typedef struct sk_ep_timerdata_t {
@@ -49,6 +47,12 @@ typedef struct sk_ep_data_t {
     sk_timer_t*        recv_timer;
 } sk_ep_data_t;
 
+typedef struct sk_ep_readarg_t {
+    const void*   data;     // in
+    size_t        len;      // in
+    size_t        consumed; // out
+} sk_ep_readarg_t;
+
 struct sk_ep_mgr_t;
 typedef struct sk_ep_t {
     struct sk_ep_mgr_t* owner;
@@ -58,6 +62,9 @@ typedef struct sk_ep_t {
     sk_ep_st_t          status;
     sk_entity_t*        ep;
     fdlist*             txns;  // ep txns, type: sk_ep_data_t
+
+    int                 ntxn;
+    int                 flags;
 } sk_ep_t;
 
 struct sk_ep_pool_t;
@@ -88,7 +95,7 @@ static
 void _recv_timeout(sk_entity_t* entity, int valid, sk_obj_t* ud);
 
 static
-void sk_ep_mgr_del(sk_ep_mgr_t* mgr, fdlist_node_t* ep_node);
+void _ep_mgr_del(sk_ep_mgr_t* mgr, sk_ep_t* ep);
 
 static
 int  sk_ep_timeout(sk_ep_data_t* ep_data)
@@ -121,11 +128,35 @@ unsigned long long sk_ep_time_left(sk_ep_data_t* ep_data)
 static
 void _ep_data_release(sk_ep_data_t* ep_data)
 {
+    if (ep_data->conn_timer) {
+        sk_timer_cancel(ep_data->conn_timer);
+        ep_data->conn_timer = NULL;
+    }
+
+    if (ep_data->recv_timer) {
+        sk_timer_cancel(ep_data->recv_timer);
+        ep_data->recv_timer = NULL;
+    }
+
     if (ep_data->handler.release) {
         ep_data->handler.release(ep_data->ud);
     }
 
     free(ep_data);
+}
+
+static
+void _ep_node_destroy(fdlist_node_t* ep_node)
+{
+    if (!ep_node) return;
+
+    sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
+    sk_ep_t*      ep      = ep_data->owner;
+    _ep_data_release(ep_data);
+
+    fdlist_delete_node(ep_node);
+    fdlist_destroy_node(ep_node);
+    ep->ntxn--;
 }
 
 static
@@ -136,10 +167,7 @@ void _ep_destroy(sk_ep_t* ep)
     // release unfinished user resources
     fdlist_node_t* node = NULL;
     while ((node = fdlist_pop(ep->txns))) {
-        sk_ep_data_t* ep_data = fdlist_get_nodedata(node);
-        _ep_data_release(ep_data);
-
-        fdlist_destroy_node(node);
+        _ep_node_destroy(node);
     }
     fdlist_destroy(ep->txns);
     free(ep);
@@ -226,7 +254,7 @@ sk_ep_t* _find_ep(sk_ep_mgr_t* mgr, flist* ep_list,
     sk_ep_t* t = NULL;
     flist_iter iter = flist_new_iter(ep_list);
     while ((t = flist_each(&iter))) {
-        if (t->status == SK_EP_ST_CONNECTED) {
+        if (t->status == SK_EP_ST_CONNECTED && handler->flags == t->flags) {
             return t;
         }
     }
@@ -235,44 +263,32 @@ sk_ep_t* _find_ep(sk_ep_mgr_t* mgr, flist* ep_list,
 }
 
 static
-void sk_ep_mgr_del(sk_ep_mgr_t* mgr, fdlist_node_t* ep_node)
+void _ep_mgr_del(sk_ep_mgr_t* mgr, sk_ep_t* ep)
 {
-    if (!ep_node) return;
+    if (!ep) return;
 
-    sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
-    sk_ep_t*      ep      = ep_data->owner;
     sk_entity_mgr_t* emgr = sk_entity_owner(ep->ep);
 
     SK_ASSERT(emgr);
     SK_ASSERT(ep->owner == mgr);
 
-    // 1. update mapping
-    sk_print("sk_ep_mgr_del: ekey: %" PRId64 "\n", ep->ekey);
+    // 2.1. update mapping
     fhash* ipm = fhash_u64_get(mgr->ee, ep->ekey);
     if (ipm) {
-        sk_print("sk_ep_mgr_del: ipkey: %s\n", ep->ipkey);
         flist* ep_list = fhash_str_get(ipm, ep->ipkey);
         if (ep_list) {
-            sk_print("sk_ep_mgr_del: remove it from ep_list\n");
             _remove_ep(mgr, ep_list, ep);
         }
     }
 
-    // 2. clean up ep entity
+    // 2.2 Destroy ep entity
     mgr->nep--;
     sk_entity_mgr_del(emgr, ep->ep);
     sk_entity_mgr_clean_dead(emgr);
     ep->ep = NULL;
 
-    // 3. remove the ep node from ep txn list
-    _ep_data_release(ep_data);
-    fdlist_delete_node(ep_node);
-    fdlist_destroy_node(ep_node);
-
-    // 4. destroy ep if there is no txns
-    if (fdlist_empty(ep->txns)) {
-        _ep_destroy(ep);
-    }
+    // 2.3 Destroy ep
+    _ep_destroy(ep);
 }
 
 static
@@ -352,47 +368,40 @@ void _handle_timeout(fdlist_node_t* ep_node, int latency)
         return;
     }
 
-    ep->status = SK_EP_ST_TIMEOUT;
     sk_ep_ret_t ret = {SK_EP_TIMEOUT, latency};
     ep_data->cb(ret, NULL, 0, ep_data->ud);
 
-    sk_ep_mgr_del(ep->owner, ep_node);
+    _ep_node_destroy(ep_node);
 }
 
 static
-void _handle_error(fdlist_node_t* ep_node, int latency)
+void _handle_error(sk_ep_t* ep)
 {
-    sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
-    sk_ep_t*      ep      = ep_data->owner;
-    sk_print("handle_error, ep: %p, latency: %d\n", (void*)ep, latency);
+    unsigned long long now = ftime_gettime();
+    fdlist_node_t* ep_node = NULL;
+    while ((ep_node = fdlist_pop(ep->txns))) {
+        sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
+        int latency = (int)(now - ep_data->start);
 
-    ep->status = SK_EP_ST_ERROR;
-    sk_ep_ret_t ret = {SK_EP_ERROR, latency};
-    ep_data->cb(ret, NULL, 0, ep_data->ud);
+        sk_print("handle_error, ep: %p, latency: %d\n", (void*)ep, latency);
+        sk_ep_ret_t ret = {SK_EP_ERROR, latency};
+        ep_data->cb(ret, NULL, 0, ep_data->ud);
 
-    if (ep_data->conn_timer) {
-        sk_timer_cancel(ep_data->conn_timer);
-        ep_data->conn_timer = NULL;
+        _ep_node_destroy(ep_node);
     }
 
-    if (ep_data->recv_timer) {
-        sk_timer_cancel(ep_data->recv_timer);
-        ep_data->recv_timer = NULL;
-    }
-
-    sk_ep_mgr_del(ep->owner, ep_node);
+    _ep_mgr_del(ep->owner, ep);
 }
 
 static
 void _handle_ok(fdlist_node_t* ep_node, const void* data, size_t len)
 {
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
-    sk_ep_t*      ep      = ep_data->owner;
 
     sk_ep_ret_t ret = {SK_EP_OK, (int)sk_ep_time_consumed(ep_data)};
     ep_data->cb(ret, data, len, ep_data->ud);
 
-    sk_ep_mgr_del(ep->owner, ep_node);
+    _ep_node_destroy(ep_node);
 }
 
 static
@@ -413,11 +422,42 @@ void _recv_timeout(sk_entity_t* entity, int valid, sk_obj_t* ud)
 }
 
 static
+int _try_unpack(fdlist_node_t* ep_node, void* ud)
+{
+    sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
+    sk_ep_t*      ep      = ep_data->owner;
+
+    sk_ep_readarg_t* readarg = ud;
+    const void*      data    = readarg->data;
+    size_t           len     = readarg->len;
+
+    size_t consumed = ep_data->handler.unpack(ep_data->ud, data, len);
+    if (consumed == 0) {
+        // means user need more data, re-try in next round
+        sk_print("user need more data, current data size=%zu\n", len);
+        return 0;
+    }
+
+    // Set return consumed value
+    readarg->consumed = consumed;
+
+    // Set status to connected, so that others can pick this ep again
+    if (!(ep_data->handler.flags & SK_EP_F_CONCURRENT)) {
+        ep->status = SK_EP_ST_CONNECTED;
+    }
+
+    // cancel the timer if needed
+    if (ep_data->recv_timer) {
+        sk_timer_cancel(ep_data->recv_timer);
+        ep_data->recv_timer = NULL;
+    }
+    return 1;
+}
+
+static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
-    fdlist_node_t* ep_node = arg;
-    sk_ep_data_t*  ep_data = fdlist_get_nodedata(ep_node);
-    sk_ep_t*       ep      = ep_data->owner;
+    sk_ep_t* ep = arg;
     SK_ASSERT(ep->status == SK_EP_ST_CONNECTED || ep->status == SK_EP_ST_SENT);
 
     size_t read_len = 0;
@@ -436,36 +476,33 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
     }
 
     const void* data = fevbuff_rawget(evbuff);
-    size_t consumed = ep_data->handler.unpack(ep_data->ud, data, (size_t)bytes);
-    if (consumed == 0) {
-        // means user need more data, re-try in next round
-        sk_print("user need more data, current data size=%zu\n", bytes);
+
+    sk_ep_readarg_t readarg = {
+        .data     = data,
+        .len      = (size_t)bytes,
+        .consumed = 0
+    };
+
+    fdlist_node_t* succeed_node =
+        fdlist_foreach(ep->txns, _try_unpack, &readarg);
+
+    if (!succeed_node) {
+        sk_print("There is no ep txn unpack succeed, waiting for next time\n");
         return;
     }
 
-    sk_ep_ret_t ret = {SK_EP_OK, (int)sk_ep_time_consumed(ep_data)};
-    ep_data->cb(ret, data, consumed, ep_data->ud);
-
+    size_t consumed = readarg.consumed;
+    sk_print("ep txn unpack succeed, consumed: %zu\n", consumed);
     fevbuff_pop(evbuff, consumed);
 
-    // Set status to connected, so that others can pick this ep again
-    if (!(ep_data->handler.flags & SK_EP_F_CONCURRENT)) {
-        ep->status = SK_EP_ST_CONNECTED;
-    }
-
-    // cancel the timer if needed
-    if (ep_data->recv_timer) {
-        sk_timer_cancel(ep_data->recv_timer);
-        ep_data->recv_timer = NULL;
-    }
+    _handle_ok(succeed_node, data, consumed);
 }
 
 static
 void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {
-    fdlist_node_t* ep_node = arg;
-    sk_ep_data_t*  ep_data = fdlist_get_nodedata(ep_node);
-    _handle_error(ep_node, (int)sk_ep_time_consumed(ep_data));
+    sk_ep_t* ep = arg;
+    _handle_error(ep);
 }
 
 static
@@ -487,7 +524,8 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
 
     if (ep->status != SK_EP_ST_CONNECTING) {
         SK_ASSERT(0);
-        sk_ep_mgr_del(ep->owner, ep_node);
+        _ep_node_destroy(ep_node);
+        _ep_mgr_del(ep->owner, ep);
         return;
     }
 
@@ -497,7 +535,7 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
         if (0 == err) {
             sk_ep_mgr_t* mgr = ep->owner;
             fev_buff* evbuff =
-                fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep_node);
+                fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep);
             SK_ASSERT(evbuff);
             sk_entity_net_create(ep->ep, evbuff);
             ep->status = SK_EP_ST_CONNECTED;
@@ -511,7 +549,7 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
     }
 
 CONN_ERROR:
-    _handle_error(ep_node, (int)sk_ep_time_consumed(ep_data));
+    _handle_error(ep);
 }
 
 static
@@ -557,7 +595,7 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         sk_entity_t* net_entity = ep->ep;
 
         fev_buff* evbuff =
-            fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep_node);
+            fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep);
         SK_ASSERT(evbuff);
         sk_entity_net_create(net_entity, evbuff);
 
@@ -596,27 +634,29 @@ sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                     unsigned long long start)
 {
     sk_ep_t* ep = calloc(1, sizeof(*ep));
-    ep->ekey   = ekey;
+    ep->ekey    = ekey;
     strncpy(ep->ipkey, ipkey, SK_EP_KEY_MAX);
-    ep->type   = handler->type;
-    ep->status = SK_EP_ST_INIT;
-    ep->owner  = mgr;
-    ep->ep     = sk_entity_create(NULL);
+    ep->type    = handler->type;
+    ep->status  = SK_EP_ST_INIT;
+    ep->owner   = mgr;
+    ep->ep      = sk_entity_create(NULL);
+    ep->txns    = fdlist_create();
+    ep->ntxn    = 0;
+    ep->flags   = handler->flags;
     SK_ASSERT(ep->ep);
-    ep->txns   = fdlist_create();
 
     return ep;
 }
 
 static
 fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
-                               const sk_entity_t*     entity,
-                               const sk_ep_handler_t* handler,
-                               unsigned long long     start,
-                               sk_ep_cb_t             cb,
-                               void*                  ud,
-                               const void*            data,
-                               size_t                 count)
+                                     const sk_entity_t*     entity,
+                                     const sk_ep_handler_t* handler,
+                                     unsigned long long     start,
+                                     sk_ep_cb_t             cb,
+                                     void*                  ud,
+                                     const void*            data,
+                                     size_t                 count)
 {
     fhash*   ipm     = NULL;
     flist*   ep_list = NULL;
@@ -667,12 +707,14 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
 
     fdlist_node_t* ep_node = fdlist_make_node(ep_data, sizeof(*ep_data));
     fdlist_push(ep->txns, ep_node);
+    ep->ntxn++;
 
     // Connect to target if needed
     if (ep->status == SK_EP_ST_INIT) {
         int r = _create_entity_tcp(mgr, handler, ep, start, ep_node);
         if (r) {
-            sk_ep_mgr_del(mgr, ep_node);
+            _ep_node_destroy(ep_node);
+            _ep_mgr_del(mgr, ep);
             return NULL;
         }
     }
