@@ -36,6 +36,8 @@ void _release(void* ud)
 static
 void _ep_cb(sk_ep_ret_t ret, const void* response, size_t len, void* ud)
 {
+    sk_print("prepare to run ep callback\n");
+
     // 1. Call user callback
     ep_job_t* job = ud;
     skull_ep_ret_t skull_ret;
@@ -50,6 +52,7 @@ void _ep_cb(sk_ep_ret_t ret, const void* response, size_t len, void* ud)
 
     // 2. Reduce pending tasks counts
     job->service.task->pendings--;
+    sk_print("service task pending cnt: %u\n", service->task->pendings);
 
     // 3. Try to call api callback
     sk_service_api_complete(service->service, service->txn, service->task,
@@ -84,6 +87,8 @@ skull_ep_send(skull_service_t* service, const skull_ep_handler_t handler,
               const void* data, size_t count,
               skull_ep_cb_t cb, void* ud)
 {
+    sk_print("calling ep_send...\n");
+
     // Construct ep job
     sk_ep_handler_t sk_handler;
     ep_job_t* job = _ep_job_create(service, &handler, cb, ud, &sk_handler);
@@ -94,6 +99,8 @@ skull_ep_send(skull_service_t* service, const skull_ep_handler_t handler,
     if (ret == SK_EP_OK) {
         service->task->pendings++;
     }
+
+    sk_print("service task pending cnt: %u\n", service->task->pendings);
 
     switch (ret) {
     case SK_EP_OK:          return SKULL_EP_OK;

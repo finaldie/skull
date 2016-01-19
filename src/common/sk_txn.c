@@ -313,6 +313,12 @@ unsigned long long sk_txn_task_livetime(sk_txn_t* txn, uint64_t task_id)
 
 void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
 {
+    // Do a basic checking first, txn's state cannot be reset when its value =
+    //  SK_TXN_DESTROYED
+    if (txn->state == SK_TXN_DESTROYED) {
+        SK_ASSERT(state == SK_TXN_DESTROYED);
+    }
+
     txn->state = state;
 
     if (state == SK_TXN_UNPACKED) {

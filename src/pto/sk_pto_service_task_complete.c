@@ -31,6 +31,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     const char* service_name = task_complete_msg->service_name;
     int resume_wf = task_complete_msg->resume_wf;
     int svc_task_done = task_complete_msg->svc_task_done;
+    sk_print("debug: svc_task_done: %d\n", svc_task_done);
 
     // 2. find the target service
     sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);

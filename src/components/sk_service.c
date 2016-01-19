@@ -498,10 +498,13 @@ void sk_service_api_complete(const sk_service_t* service,
 {
     sk_print("api_complete: taskdata.pending: %u\n", taskdata->pendings);
     if (!sk_txn_task_done(taskdata)) {
+        sk_print("sk_txn task has not done, won't trigger workflow\n");
         return;
     }
 
     // If api task done, schedule it back to caller (a worker) to run task_cb
+    sk_print("sk_txn task has all set, trigger task_cb\n");
+
     sk_entity_t* entity = sk_txn_entity(txn);
     sk_sched_t* api_caller = sk_entity_sched(entity);
 
