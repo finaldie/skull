@@ -122,7 +122,6 @@ skull_ep_send(skull_service_t* service, const skull_ep_handler_t handler,
     case SK_EP_OK:          return SKULL_EP_OK;
     case SK_EP_ERROR:       return SKULL_EP_ERROR;
     case SK_EP_TIMEOUT:     return SKULL_EP_TIMEOUT;
-    case SK_EP_NO_RESOURCE: return SKULL_EP_NO_RESOURCE;
     default: SK_ASSERT(0);  return SKULL_EP_ERROR;
     }
 }

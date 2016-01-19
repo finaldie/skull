@@ -14,6 +14,7 @@
 #include "api/sk_const.h"
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
+#include "api/sk_metrics.h"
 #include "api/sk_entity.h"
 #include "api/sk_entity_mgr.h"
 #include "api/sk_entity_util.h"
@@ -21,6 +22,36 @@
 #include "api/sk_ep_pool.h"
 
 #define SK_TIME_NOW (ftime_gettime() / 1000L)
+
+#define SK_METRICS_EP_OK() { \
+    sk_metrics_global.ep_ok.inc(1); \
+    sk_metrics_worker.ep_ok.inc(1); \
+}
+
+#define SK_METRICS_EP_ERROR() { \
+    sk_metrics_global.ep_error.inc(1); \
+    sk_metrics_worker.ep_error.inc(1); \
+}
+
+#define SK_METRICS_EP_TIMEOUT() { \
+    sk_metrics_global.ep_timeout.inc(1); \
+    sk_metrics_worker.ep_timeout.inc(1); \
+}
+
+#define SK_METRICS_EP_CREATE() { \
+    sk_metrics_global.ep_create.inc(1); \
+    sk_metrics_worker.ep_create.inc(1); \
+}
+
+#define SK_METRICS_EP_SEND() { \
+    sk_metrics_global.ep_send.inc(1); \
+    sk_metrics_worker.ep_send.inc(1); \
+}
+
+#define SK_METRICS_EP_RECV() { \
+    sk_metrics_global.ep_recv.inc(1); \
+    sk_metrics_worker.ep_recv.inc(1); \
+}
 
 typedef enum sk_ep_st_t {
     SK_EP_ST_INIT       = 0,
@@ -377,10 +408,14 @@ sk_ep_status_t _ep_send(fdlist_node_t* ep_node, const void* data, size_t len)
     sk_entity_write(ep->ep, data, len);
     ep_data->status = SK_EP_NST_SENT;
 
+    SK_METRICS_EP_SEND();
+    SK_LOG_TRACE(SK_ENV_LOGGER, "ep send");
+
     // Set up a timeout timer if needed
     if (ep_data->handler.timeout && ep_data->handler.unpack) {
         unsigned long long time_left = sk_ep_time_left(ep_data);
         if (time_left == 0) {
+            SK_METRICS_EP_TIMEOUT();
             return SK_EP_TIMEOUT;
         }
 
@@ -405,6 +440,8 @@ void _handle_timeout(fdlist_node_t* ep_node, int latency)
     ep_data->cb(ret, NULL, 0, ep_data->ud);
 
     _ep_node_destroy(ep_node);
+
+    SK_METRICS_EP_TIMEOUT();
 }
 
 static
@@ -420,6 +457,8 @@ void _handle_error(sk_ep_t* ep)
         ep_data->cb(ret, NULL, 0, ep_data->ud);
 
         _ep_node_destroy(ep_node);
+
+        SK_METRICS_EP_ERROR();
     }
 
     _ep_mgr_del(ep->owner, ep);
@@ -434,6 +473,8 @@ void _handle_ok(fdlist_node_t* ep_node, const void* data, size_t len)
     ep_data->cb(ret, data, len, ep_data->ud);
 
     _ep_node_destroy(ep_node);
+
+    SK_METRICS_EP_OK();
 }
 
 static
@@ -527,6 +568,8 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
     fevbuff_pop(evbuff, consumed);
 
     _handle_ok(succeed_node, data, consumed);
+    SK_METRICS_EP_RECV();
+    SK_LOG_TRACE(SK_ENV_LOGGER, "ep recv");
 }
 
 static
@@ -565,8 +608,9 @@ static
 void _on_connect(fev_state* fev, int fd, int mask, void* arg)
 {
     sk_print("_on_connect\n");
-    sk_ep_t* ep = arg;
+    SK_LOG_TRACE(SK_ENV_LOGGER, "_on_connect");
 
+    sk_ep_t* ep = arg;
     int sockfd = fd;
     fev_del_event(fev, sockfd, FEV_READ | FEV_WRITE);
 
@@ -592,6 +636,7 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
             SK_ASSERT(evbuff);
             sk_entity_net_create(ep->ep, evbuff);
             ep->status = SK_EP_ST_CONNECTED;
+            SK_LOG_TRACE(SK_ENV_LOGGER, "ep connected (async)");
 
             sk_print("prepare send data to target, txns size: %zu\n", fdlist_size(ep->txns));
             flist* timeout_nodes = ep->owner->tmp;
@@ -659,6 +704,7 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         sk_entity_net_create(net_entity, evbuff);
 
         ep->status = SK_EP_ST_CONNECTED;
+        SK_LOG_TRACE(SK_ENV_LOGGER, "ep connected (sync)");
         return 0;
     } else if (s > 0) {
         if (ep_data->handler.timeout > 0) {
@@ -753,6 +799,9 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
         sk_entity_mgr_add(mgr->eps, ep->ep);
         flist_push(ep_list, ep);
         mgr->nep++;
+
+        SK_METRICS_EP_CREATE();
+        SK_LOG_TRACE(SK_ENV_LOGGER, "ep create");
     }
 
     // Create new ep data
@@ -814,11 +863,13 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
     // 1. check
     if (!data || !count) {
         sk_print("sk_ep_send: error -> no data or data_len\n");
+        SK_METRICS_EP_ERROR();
         return SK_EP_ERROR;
     }
 
     if (!handler.ip || handler.port == 0) {
         sk_print("sk_ep_send: error -> invalid ip or port\n");
+        SK_METRICS_EP_ERROR();
         return SK_EP_ERROR;
     }
 
@@ -829,18 +880,21 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
         mgr = pool->tcp;
     } else {
         sk_print("sk_ep_send: error -> invalid protocol\n");
+        SK_METRICS_EP_ERROR();
         return SK_EP_ERROR;
     }
 
     // 3. pick up one ep from ep mgr
     if (mgr->nep == mgr->max) {
-        return SK_EP_NO_RESOURCE;
+        SK_METRICS_EP_ERROR();
+        return SK_EP_ERROR;
     }
 
     fdlist_node_t* ep_node =
         _ep_mgr_get_or_create(mgr, entity, &handler, start, cb, ud, data, count);
     if (!ep_node) {
         sk_print("sk_ep_send: error -> create ep failed\n");
+        SK_METRICS_EP_ERROR();
         return SK_EP_ERROR;
     }
 

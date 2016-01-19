@@ -21,7 +21,6 @@ typedef enum sk_ep_status_t {
     SK_EP_OK          = 0,
     SK_EP_ERROR       = 1,
     SK_EP_TIMEOUT     = 2,
-    SK_EP_NO_RESOURCE = 3
 } sk_ep_status_t;
 
 typedef struct sk_ep_ret_t {
