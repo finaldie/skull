@@ -61,6 +61,11 @@ void _event_destroy(sk_event_t* event)
     free(event->data);
 }
 
+sk_proto_t* _get_pto(sk_sched_t* sched, uint32_t pto_id)
+{
+    return &sched->pto_tbl[pto_id];
+}
+
 // copy the events from bridge mq
 // NOTES: this copy action will be executed on the dst eventloop thread,
 //        here we only can do fetch and copy, DO NOT PUSH events into it
@@ -86,7 +91,7 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
     while (!fmbuf_pop(io_bridge->mq, &event, SK_EVENT_SZ)) {
         sk_sched_t* dst      = io_bridge->dst;
         uint32_t    pto_id   = event.pto_id;
-        sk_proto_t* pto      = &dst->pto_tbl[pto_id];
+        sk_proto_t* pto      = _get_pto(dst, pto_id);
         int         priority = pto->priority;
         sk_io_t*    dst_io   = io_bridge->dst->io_tbl[priority];
 
@@ -343,8 +348,8 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
     SK_ASSERT(sched == event->dst);
 
     uint32_t pto_id = event->pto_id;
-    sk_proto_t* pto = &sched->pto_tbl[pto_id];
-    sk_print("Run event: pto_id = %u\n", pto_id);
+    sk_proto_t* pto = _get_pto(sched, pto_id);
+    sk_print("Run event: pto_id = %u, priority: %d\n", pto_id, pto->priority);
     SK_ASSERT(pto);
 
     sk_entity_t* entity = event->entity;
@@ -423,7 +428,7 @@ int _emit_event(sk_sched_t* sched, sk_sched_t* dst, sk_io_type_t io_type,
                 const sk_entity_t* entity, const sk_txn_t* txn,
                 uint32_t pto_id, void* proto_msg, int flags)
 {
-    sk_proto_t* pto = &sched->pto_tbl[pto_id];
+    sk_proto_t* pto = _get_pto(sched, pto_id);
 
     sk_event_t event;
     memset(&event, 0, sizeof(event));

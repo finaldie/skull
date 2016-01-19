@@ -6,6 +6,7 @@
 #include "api/sk_env.h"
 #include "api/sk_ep_pool.h"
 #include "api/sk_service.h"
+#include "idl_internal.h"
 #include "srv_types.h"
 #include "skull/ep.h"
 
@@ -47,14 +48,29 @@ void _ep_cb(sk_ep_ret_t ret, const void* response, size_t len, void* ud)
     // TODO: Tricky here, should manually convert the fields one by one
     memcpy(&skull_ret, &ret, sizeof(ret));
 
+    // 2. Restore the request
+    char req_proto_name[SKULL_SRV_PROTO_MAXLEN];
+    snprintf(req_proto_name, SKULL_SRV_PROTO_MAXLEN, "%s.%s_req",
+             sk_service_name(service->service), service->task->api_name);
+
+    const ProtobufCMessageDescriptor* req_desc =
+        skull_srv_idl_descriptor(req_proto_name);
+
+    ProtobufCMessage* req_msg = NULL;
+    req_msg = protobuf_c_message_unpack(
+            req_desc, NULL, service->task->request_sz, service->task->request);
+
     job->cb(skull_ret, response, len, job->ud, service->task->request,
             service->task->response_pb_msg);
 
-    // 2. Reduce pending tasks counts
+    // 3. clean up the req
+    protobuf_c_message_free_unpacked(req_msg, NULL);
+
+    // 4. Reduce pending tasks counts
     job->service.task->pendings--;
     sk_print("service task pending cnt: %u\n", service->task->pendings);
 
-    // 3. Try to call api callback
+    // 5. Try to call api callback
     sk_service_api_complete(service->service, service->txn, service->task,
                             service->task->api_name);
 }
