@@ -18,6 +18,7 @@
 
 #include "skull/idl.h"
 #include "skull/metrics_utils.h"
+#include "skull/ep.h"
 #include "idl_internal.h"
 #include "txn_utils.h"
 #include "srv_types.h"
@@ -498,4 +499,14 @@ void sk_service_settype(sk_service_t* service, sk_service_type_t type)
 sk_service_type_t sk_service_type(const sk_service_t* service)
 {
     return ((fake_service_t*)service)->type;
+}
+
+// Mock API for skull_ep_send. Return ok directly, since we don't need to mock
+// network, only mock the api response is enough
+skull_ep_status_t
+skull_ep_send(skull_service_t* service, const skull_ep_handler_t handler,
+              const void* data, size_t count,
+              const skull_ep_cb_t cb, void* ud)
+{
+    return SKULL_EP_OK;
 }
