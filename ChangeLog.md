@@ -1,3 +1,7 @@
+* 2016-01-19 0.7.2
+  * Core
+    * **New:** Add `EndPoint` component and related api
+    * **Enhancement:** Upgrade `flibs` to 0.8.11
 * 2016-01-04 0.7.1
   * Core
     * **New:** Make workflow cancelable
