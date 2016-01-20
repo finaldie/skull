@@ -12,6 +12,7 @@ extern "C" {
 #include <skull/config.h>
 #include <skull/idl.h>
 #include <skull/service.h>
+#include <skull/ep.h>
 
 #ifdef __cplusplus
 }

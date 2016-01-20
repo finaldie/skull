@@ -96,7 +96,7 @@ void sk_entity_safe_destroy(sk_entity_t* entity)
     }
 }
 
-sk_sched_t* sk_entity_sched(sk_entity_t* entity)
+sk_sched_t* sk_entity_sched(const sk_entity_t* entity)
 {
     if (!entity) return NULL;
 

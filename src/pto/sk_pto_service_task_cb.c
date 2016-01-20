@@ -15,7 +15,7 @@
 /**
  * @desc Run api callback
  *
- * @note This method will run in the api caller engine
+ * @note This method will run in the api caller engine (worker)
  */
 static
 int _run(sk_sched_t* sched, sk_sched_t* src,
@@ -29,37 +29,42 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
 
     // 1. unpack the parameters
     ServiceTaskCb* task_cb_msg = proto_msg;
-    uint64_t task_id         = task_cb_msg->task_id;
+    sk_txn_taskdata_t* taskdata
+        = (sk_txn_taskdata_t*) (uintptr_t ) task_cb_msg->taskdata;
     const char* service_name = task_cb_msg->service_name;
     const char* api_name     = task_cb_msg->api_name;
     sk_txn_task_status_t task_status = task_cb_msg->task_status;
+    int svc_task_done        = task_cb_msg->svc_task_done;
+
+    const char* caller_module_name = taskdata->caller_module->name;
+    uint64_t task_id = sk_txn_task_id(taskdata->owner);
 
     // 2. mark the txn task complete
-    sk_txn_taskdata_t* taskdata = sk_txn_taskdata(txn, task_id);
-    const char* caller_module_name = taskdata->caller_module->name;
-    sk_txn_task_setcomplete(txn, task_id, task_status);
+    if (task_status == SK_TXN_TASK_DONE) {
+        sk_txn_task_setcomplete(txn, task_id, task_status);
 
-    // 3. get the target service
-    sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
-    SK_ASSERT(service);
+        // 3. get the target service
+        sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
+        SK_ASSERT(service);
 
-    // 4. run a specific service api callback
-    SK_LOG_SETCOOKIE("module.%s", caller_module_name);
-    SK_ENV_POS = SK_ENV_POS_MODULE;
+        // 4. run a specific service api callback
+        SK_LOG_SETCOOKIE("module.%s", caller_module_name);
+        SK_ENV_POS = SK_ENV_POS_MODULE;
 
-    int ret = sk_service_run_iocall_cb(service, txn, task_id, api_name);
+        int ret = sk_service_run_iocall_cb(service, txn, task_id, api_name);
 
-    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-    SK_ENV_POS = SK_ENV_POS_CORE;
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+        SK_ENV_POS = SK_ENV_POS_CORE;
 
-    if (ret) {
-        SK_LOG_ERROR(SK_ENV_LOGGER,
-            "Error in service task callback, module: %s ret: %d, task_id: %d\n",
-            caller_module_name, ret, task_id);
+        if (ret) {
+            SK_LOG_ERROR(SK_ENV_LOGGER,
+                "Error in service task callback, module: %s ret: %d, task_id: %d\n",
+                caller_module_name, ret, task_id);
 
-        // Mark txn as ERROR, then after iocall complete, the workflow will
-        //  be go to 'pack' directly
-        sk_txn_setstate(txn, SK_TXN_ERROR);
+            // Mark txn as ERROR, then after iocall complete, the workflow will
+            //  be go to 'pack' directly
+            sk_txn_setstate(txn, SK_TXN_ERROR);
+        }
     }
 
     // 5. send a complete protocol back to master
@@ -68,6 +73,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     task_complete_msg.resume_wf    = taskdata->cb
         ? sk_txn_module_complete(txn)
         : sk_txn_alltask_complete(txn);
+    task_complete_msg.svc_task_done = svc_task_done;
 
     sk_sched_send(SK_ENV_SCHED, SK_ENV_MASTER_SCHED, entity, txn,
                   SK_PTO_SVC_TASK_COMPLETE, &task_complete_msg, 0);

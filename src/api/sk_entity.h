@@ -44,7 +44,7 @@ struct sk_workflow_t* sk_entity_workflow(sk_entity_t* entity);
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud);
 void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status);
 
-struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity);
+struct sk_entity_mgr_t* sk_entity_owner(const sk_entity_t* entity);
 void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr);
 
 struct sk_txn_t* sk_entity_halftxn(sk_entity_t* entity);

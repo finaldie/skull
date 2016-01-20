@@ -4,4 +4,5 @@ message service_iocall {
     required string service_name = 2;
     required string api_name     = 3;
     required int32  bio_idx      = 4;
+    required uint64 txn_task     = 5; // sk_txn_taskdata
 }

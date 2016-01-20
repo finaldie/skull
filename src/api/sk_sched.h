@@ -23,7 +23,7 @@ int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst);
 
 // deliver a event to dst scheduler
 int sk_sched_send(sk_sched_t* sched, sk_sched_t* dst,
-                  sk_entity_t* entity, sk_txn_t* txn,
+                  const sk_entity_t* entity, const sk_txn_t* txn,
                   uint32_t pto_id, void* proto_msg, int flags);
 
 #endif

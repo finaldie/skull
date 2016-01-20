@@ -7,6 +7,7 @@
 #include "api/sk_entity_mgr.h"
 #include "api/sk_mon.h"
 #include "api/sk_timer_service.h"
+#include "api/sk_ep_pool.h"
 
 typedef enum sk_engine_type_t {
     SK_ENGINE_MASTER = 0,
@@ -27,6 +28,7 @@ typedef struct sk_engine_t {
     sk_entity_mgr_t* entity_mgr;
     sk_mon_t*        mon;
     sk_timersvc_t*   timer_svc;
+    sk_ep_pool_t*    ep_pool;
 } sk_engine_t;
 
 sk_engine_t* sk_engine_create(sk_engine_type_t type, int flags);

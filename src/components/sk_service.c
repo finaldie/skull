@@ -162,13 +162,14 @@ void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
     int         bidx    = task->bidx;
     uint64_t    task_id = task->data.api.task_id;
     sk_txn_t*   txn     = task->data.api.txn;
+    sk_txn_taskdata_t* taskdata = task->data.api.txn_task;
 
     ServiceTaskRun task_run_pto = SERVICE_TASK_RUN__INIT;
-    task_run_pto.task_id      = task_id;
     task_run_pto.service_name = (char*) sk_service_name(service);
     task_run_pto.api_name     = (char*) task->data.api.name;
     task_run_pto.io_status    = (uint32_t) task->io_status;
     task_run_pto.src          = (uint64_t) (uintptr_t) src;
+    task_run_pto.taskdata     = (uint64_t) (uintptr_t) taskdata;
 
     // 2. Find a bio if needed
     sk_sched_t* target = _find_target_sched(src, bidx);
@@ -315,7 +316,7 @@ void sk_service_settype(sk_service_t* service, sk_service_type_t type)
     service->type = type;
 }
 
-const sk_service_api_t* sk_service_api(sk_service_t* service,
+const sk_service_api_t* sk_service_api(const sk_service_t* service,
                                        const char* api_name)
 {
     return fhash_str_get(service->apis, api_name);
@@ -451,8 +452,8 @@ void sk_service_task_setcomplete(sk_service_t* service)
 }
 
 sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
-                                      sk_txn_t* txn,
-                                      uint64_t task_id,
+                                      const sk_txn_t* txn,
+                                      sk_txn_taskdata_t* taskdata,
                                       const char* api_name,
                                       sk_srv_io_status_t io_st)
 {
@@ -462,7 +463,7 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
     sk_srv_status_t status = SK_SRV_STATUS_OK;
     void* user_srv_data = service->opt.srv_data;
 
-    int ret = service->opt.iocall(service, txn, user_srv_data, task_id,
+    int ret = service->opt.iocall(service, txn, user_srv_data, taskdata,
                                    api_name, io_st);
     if (ret) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "service: task failed, service_name: %s \
@@ -473,6 +474,7 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
     return status;
 }
 
+// Run on worker, run api callback
 int sk_service_run_iocall_cb(sk_service_t* service,
                              sk_txn_t* txn,
                              uint64_t task_id,
@@ -486,6 +488,35 @@ int sk_service_run_iocall_cb(sk_service_t* service,
 
     return service->opt.iocall_complete(
         service, txn, user_srv_data, task_id, api_name);
+}
+
+// Run on worker/bio
+void sk_service_api_complete(const sk_service_t* service,
+                             const sk_txn_t* txn,
+                             sk_txn_taskdata_t* taskdata,
+                             const char* api_name)
+{
+    sk_print("api_complete: taskdata.pending: %u\n", taskdata->pendings);
+    if (!sk_txn_task_done(taskdata)) {
+        sk_print("sk_txn task has not done, won't trigger workflow\n");
+        return;
+    }
+
+    // If api task done, schedule it back to caller (a worker) to run task_cb
+    sk_print("sk_txn task has all set, trigger task_cb\n");
+
+    sk_entity_t* entity = sk_txn_entity(txn);
+    sk_sched_t* api_caller = sk_entity_sched(entity);
+
+    ServiceTaskCb task_cb_msg = SERVICE_TASK_CB__INIT;
+    task_cb_msg.taskdata      = (uint64_t) (uintptr_t) taskdata;
+    task_cb_msg.service_name  = (char*) service->name;
+    task_cb_msg.api_name = (char*) sk_service_api(service, api_name)->name;
+    task_cb_msg.task_status   = SK_TXN_TASK_DONE;
+    task_cb_msg.svc_task_done = 0; // do not complete the svc task again
+
+    sk_sched_send(SK_ENV_SCHED, api_caller, entity, txn,
+                  SK_PTO_SVC_TASK_CB, &task_cb_msg, 0);
 }
 
 void* sk_service_data(sk_service_t* service)
@@ -561,11 +592,13 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 
     // 2. construct a sk_txn_task and add it
     sk_txn_taskdata_t task_data;
+    task_data.api_name   = sk_service_api(service, api_name)->name;
     task_data.request    = req;
     task_data.request_sz = req_sz;
     task_data.cb         = cb;
     task_data.user_data  = ud;
     task_data.caller_module = sk_txn_current_module(txn);
+    task_data.pendings   = 0; // how many internal pending ep calls
     uint64_t task_id = sk_txn_task_add(txn, &task_data);
 
     // 3. construct iocall protocol
@@ -574,6 +607,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     iocall_msg.service_name  = (char*) service->name;
     iocall_msg.api_name      = (char*) api_name;
     iocall_msg.bio_idx       = bidx;
+    iocall_msg.txn_task      = (uint64_t) (uintptr_t) sk_txn_taskdata(txn, task_id);
 
     //5. Send to master engine
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched,

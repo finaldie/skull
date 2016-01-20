@@ -157,7 +157,7 @@ void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status)
     entity->status = status;
 }
 
-struct sk_entity_mgr_t* sk_entity_owner(sk_entity_t* entity)
+struct sk_entity_mgr_t* sk_entity_owner(const sk_entity_t* entity)
 {
     return entity->owner;
 }

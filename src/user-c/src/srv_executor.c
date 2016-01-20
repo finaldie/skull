@@ -15,7 +15,9 @@ void skull_srv_init (sk_service_t* srv, void* data)
     skull_service_entry_t* entry = srv_data->entry;
 
     skull_service_t skull_service = {
-        .service = srv
+        .service = srv,
+        .txn     = NULL,
+        .task    = NULL
     };
 
     entry->init(&skull_service, srv_data->config);
@@ -27,7 +29,9 @@ void skull_srv_release (sk_service_t* srv, void* data)
     skull_service_entry_t* entry = srv_data->entry;
 
     skull_service_t skull_service = {
-        .service = srv
+        .service = srv,
+        .txn     = NULL,
+        .task    = NULL
     };
 
     entry->release(&skull_service);
@@ -35,27 +39,22 @@ void skull_srv_release (sk_service_t* srv, void* data)
 
 /**
  * Invoke the real user service api function
+ * Notes: This api can be ran on worker/bio
  */
-int  skull_srv_iocall  (sk_service_t* srv, sk_txn_t* txn, void* sdata,
-                        uint64_t task_id, const char* api_name,
+int  skull_srv_iocall  (sk_service_t* srv, const sk_txn_t* txn, void* sdata,
+                        sk_txn_taskdata_t* task_data, const char* api_name,
                         sk_srv_io_status_t ustatus)
 {
+    SK_ASSERT(task_data);
+
     // find the api func
     skull_c_srvdata_t* srv_data = sdata;
     skull_service_entry_t* entry = srv_data->entry;
-
-    skull_service_t skull_service = {
-        .service = srv
-    };
 
     skull_service_async_api_t* api = skull_svc_find_api(entry->async, api_name);
     if (!api) {
         return 1;
     }
-
-    // get the task data
-    sk_txn_taskdata_t* task_data = sk_txn_taskdata(txn, task_id);
-    SK_ASSERT(task_data);
 
     // construct empty response
     char resp_proto_name[SKULL_SRV_PROTO_MAXLEN];
@@ -83,6 +82,12 @@ int  skull_srv_iocall  (sk_service_t* srv, sk_txn_t* txn, void* sdata,
             req_desc, NULL, task_data->request_sz, task_data->request);
 
     // invoke the user service api
+    skull_service_t skull_service = {
+        .service = srv,
+        .txn     = txn,
+        .task    = task_data
+    };
+
     api->iocall(&skull_service, req_msg, resp_msg);
 
     // fill api callback response pb message
@@ -98,6 +103,9 @@ int  skull_srv_iocall  (sk_service_t* srv, sk_txn_t* txn, void* sdata,
     return 0;
 }
 
+/**
+ * Notes: This api only can be ran on worker
+ */
 int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
                                 uint64_t task_id, const char* api_name)
 {
