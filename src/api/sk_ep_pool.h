@@ -40,7 +40,7 @@ typedef struct sk_ep_handler_t {
     uint16_t     _reserved;
 
     const char*  ip;
-    uint32_t     timeout;
+    uint32_t     timeout; // unit: millisecond
     int          flags;
 
     /**

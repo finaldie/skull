@@ -27,7 +27,7 @@ typedef struct skull_ep_handler_t {
     uint16_t     _reserved;
 
     const char*  ip;
-    int          timeout;
+    int          timeout; // unit: millisecond
     int          flags;
 
     // return 0:   The response data has not finished yet
