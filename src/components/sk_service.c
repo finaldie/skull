@@ -247,7 +247,7 @@ void _timer_jobdata_destroy(sk_ud_t ud)
 }
 
 static
-void _timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
+void _job_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
     // 1. Extract timer parameters
     sk_print("timer triggered\n");
@@ -647,12 +647,17 @@ int sk_service_job_create(sk_service_t*   service,
 
     sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
 
-    // 2. Create sk_timer with callback data
-    sk_timersvc_t* timersvc = SK_ENV_TMSVC;
-    sk_timer_t* timer =
-        sk_timersvc_timer_create(
-            timersvc, jobdata->entity, delayed, _timer_triggered, param_obj);
-    SK_ASSERT(timer);
+    // 2. Create sk_timer with callback data or create job immediately
+    if (delayed > 0) {
+        sk_timersvc_t* timersvc = SK_ENV_TMSVC;
+        sk_timer_t* timer =
+            sk_timersvc_timer_create(
+                timersvc, jobdata->entity, delayed, _job_triggered, param_obj);
+        SK_ASSERT(timer);
+    } else {
+        _job_triggered(jobdata->entity, 1, param_obj);
+        sk_obj_destroy(param_obj);
+    }
 
     // 3. Record metrics
     sk_metrics_global.srv_timer_emit.inc(1);
