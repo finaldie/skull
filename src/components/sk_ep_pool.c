@@ -2,6 +2,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <inttypes.h>
+#include <errno.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "flibs/fhash.h"
 #include "flibs/flist.h"
@@ -126,6 +130,9 @@ typedef struct sk_ep_mgr_t {
 struct sk_ep_pool_t {
     // SK_EP_TCP
     sk_ep_mgr_t*   tcp;
+
+    // SK_EP_UDP
+    sk_ep_mgr_t*   udp;
 
     // evlp
     fev_state*     evlp;
@@ -615,7 +622,7 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
     fev_del_event(fev, sockfd, FEV_READ | FEV_WRITE);
 
     if (mask & FEV_ERROR) {
-        sk_print("error ocurred\n");
+        sk_print("mask: %d, error ocurred: %s\n", mask, strerror(errno));
         goto CONN_ERROR;
     }
 
@@ -731,8 +738,46 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 
         return 0;
     } else {
+        sk_print("connect to target %s:%d failed: %s\n", handler->ip, handler->port, strerror(errno));
         return -1;
     }
+}
+
+static
+int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
+                       sk_ep_t* ep, unsigned long long start,
+                       fdlist_node_t* ep_node)
+{
+    ep->status = SK_EP_ST_CONNECTING;
+
+    int fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
+    if (fd < 0) {
+        return -1;
+    }
+
+    struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(handler->port);
+    server_addr.sin_addr.s_addr = inet_addr(handler->ip);
+
+    int ret= connect(fd, (struct sockaddr *)(&server_addr),
+                     sizeof(struct sockaddr));
+    if (ret != 0) {
+        return -1;
+    }
+
+    fnet_set_nonblocking(fd);
+
+    sk_entity_t* net_entity = ep->ep;
+
+    fev_buff* evbuff =
+        fevbuff_new(mgr->owner->evlp, fd, _read_cb, _error, ep);
+    SK_ASSERT(evbuff);
+    sk_entity_net_create(net_entity, evbuff);
+
+    ep->status = SK_EP_ST_CONNECTED;
+    return 0;
 }
 
 static
@@ -822,7 +867,14 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
 
     // Connect to target if needed
     if (ep->status == SK_EP_ST_INIT) {
-        int r = _create_entity_tcp(mgr, handler, ep, start, ep_node);
+        sk_print("ep handler type: %d\n", handler->type);
+        int r = 0;
+        if (handler->type == SK_EP_TCP) {
+            r = _create_entity_tcp(mgr, handler, ep, start, ep_node);
+        } else {
+            r = _create_entity_udp(mgr, handler, ep, start, ep_node);
+        }
+
         if (r) {
             _ep_node_destroy(ep_node);
             _ep_mgr_del(mgr, ep);
@@ -838,6 +890,7 @@ sk_ep_pool_t* sk_ep_pool_create(void* evlp, sk_timersvc_t* tmsvc, int max)
 {
     sk_ep_pool_t* pool = calloc(1, sizeof(*pool));
     pool->tcp   = sk_ep_mgr_create(pool, max);
+    pool->udp   = sk_ep_mgr_create(pool, max);
     pool->evlp  = evlp;
     pool->tmsvc = tmsvc;
 
@@ -849,6 +902,7 @@ void sk_ep_pool_destroy(sk_ep_pool_t* pool)
     if (!pool) return;
 
     sk_ep_mgr_destroy(pool->tcp);
+    sk_ep_mgr_destroy(pool->udp);
     free(pool);
 }
 
@@ -878,6 +932,8 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
     sk_ep_type_t et = handler.type;
     if (et == SK_EP_TCP) {
         mgr = pool->tcp;
+    } else if (et == SK_EP_UDP) {
+        mgr = pool->udp;
     } else {
         sk_print("sk_ep_send: error -> invalid protocol\n");
         SK_METRICS_EP_ERROR();

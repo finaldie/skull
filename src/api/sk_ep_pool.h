@@ -14,7 +14,8 @@ sk_ep_pool_t* sk_ep_pool_create(void* evlp, sk_timersvc_t*, int max);
 void sk_ep_pool_destroy(sk_ep_pool_t*);
 
 typedef enum sk_ep_type_t {
-    SK_EP_TCP = 0
+    SK_EP_TCP = 0,
+    SK_EP_UDP = 1
 } sk_ep_type_t;
 
 typedef enum sk_ep_status_t {

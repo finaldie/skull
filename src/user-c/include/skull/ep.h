@@ -7,7 +7,8 @@
 #include "skull/service.h"
 
 typedef enum skull_ep_type_t {
-    SKULL_EP_TCP = 0
+    SKULL_EP_TCP = 0,
+    SKULL_EP_UDP = 1
 } skull_ep_type_t;
 
 typedef enum skull_ep_status_t {
