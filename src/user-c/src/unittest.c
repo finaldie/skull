@@ -468,8 +468,8 @@ void  skull_service_data_set (skull_service_t* service, const void* data)
 }
 
 int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
-                               skull_timer_t job, void* ud,
-                               skull_timer_udfree_t destroyer, int bidx)
+                               skull_job_t job, void* ud,
+                               skull_job_udfree_t destroyer, int bidx)
 {
     // Won't create anything
     return 0;

@@ -71,14 +71,14 @@ skull_service_async_call (skull_txn_t*,
                           skull_svc_api_cb cb,
                           int bio_idx);
 
-typedef void (*skull_timer_t) (skull_service_t*, void* ud);
-typedef void (*skull_timer_udfree_t) (void* ud);
+typedef void (*skull_job_t) (skull_service_t*, void* ud);
+typedef void (*skull_job_udfree_t) (void* ud);
 
 /**
- * Create a service timer job
+ * Create a service job
  *
  * @param delayed  unit milliseconds
- * @param timer    timer callback function
+ * @param timer    job callback function
  * @param ud       user data
  * @param udfree   the function is used for releasing user data after timer be
  *                  finished
@@ -89,12 +89,12 @@ typedef void (*skull_timer_udfree_t) (void* ud);
  *
  * @return 0 on success, 1 on failure
  */
-int skull_service_timer_create(skull_service_t*     svc,
-                               uint32_t             delayed,
-                               skull_timer_t        timer,
-                               void*                ud,
-                               skull_timer_udfree_t udfree,
-                               int                  bio_idx);
+int skull_service_job_create(skull_service_t*   svc,
+                             uint32_t           delayed,
+                             skull_job_t        timer,
+                             void*              ud,
+                             skull_job_udfree_t udfree,
+                             int                bio_idx);
 
 #endif
 

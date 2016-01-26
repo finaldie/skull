@@ -55,6 +55,10 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
 
 void  skull_service_data_set (skull_service_t* service, const void* data)
 {
+    if (service->freezed) {
+        return;
+    }
+
     sk_service_t* sk_srv = service->service;
     SK_ASSERT(sk_srv);
 
@@ -63,6 +67,10 @@ void  skull_service_data_set (skull_service_t* service, const void* data)
 
 void* skull_service_data (skull_service_t* service)
 {
+    if (service->freezed) {
+        return NULL;
+    }
+
     sk_service_t* sk_srv = service->service;
     SK_ASSERT(sk_srv);
     return sk_service_data(sk_srv);
@@ -70,14 +78,19 @@ void* skull_service_data (skull_service_t* service)
 
 const void* skull_service_data_const (skull_service_t* service)
 {
+    if (service->freezed) {
+        return NULL;
+    }
+
     sk_service_t* sk_srv = service->service;
     SK_ASSERT(sk_srv);
     return sk_service_data_const(sk_srv);
 }
 
 typedef struct timer_data_t {
-    skull_timer_t job;
-    skull_timer_udfree_t destroyer;
+    skull_service_t    svc;
+    skull_job_t        job;
+    skull_job_udfree_t destroyer;
     void* ud;
 } timer_data_t;
 
@@ -100,9 +113,8 @@ void _timer_cb (sk_service_t* sk_svc, sk_obj_t* ud, int valid)
     timer_data_t* jobdata = sk_obj_get(ud).ud;
 
     if (valid) {
-        skull_service_t service = {
-            .service = sk_svc
-        };
+        skull_service_t service = jobdata->svc;
+        service.freezed = 0;
 
         jobdata->job(&service, jobdata->ud);
     } else {
@@ -110,13 +122,14 @@ void _timer_cb (sk_service_t* sk_svc, sk_obj_t* ud, int valid)
     }
 }
 
-int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
-                               skull_timer_t job, void* ud,
-                               skull_timer_udfree_t udfree, int bidx)
+int skull_service_job_create(skull_service_t* service, uint32_t delayed,
+                               skull_job_t job, void* ud,
+                               skull_job_udfree_t udfree, int bidx)
 {
     sk_service_t* sk_svc = service->service;
 
     timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
+    jobdata->svc       = *service;
     jobdata->job       = job;
     jobdata->destroyer = udfree;
     jobdata->ud        = ud;

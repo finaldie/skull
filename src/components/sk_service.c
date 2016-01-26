@@ -592,6 +592,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 
     // 2. construct a sk_txn_task and add it
     sk_txn_taskdata_t task_data;
+    memset(&task_data, 0, sizeof(task_data));
     task_data.api_name   = sk_service_api(service, api_name)->name;
     task_data.request    = req;
     task_data.request_sz = req_sz;

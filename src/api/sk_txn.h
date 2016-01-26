@@ -75,7 +75,8 @@ typedef struct sk_txn_taskdata_t {
     const char* api_name;
     const void* request;         // serialized pb-c message data
     size_t      request_sz;
-    void *      response_pb_msg; // deserialized pb-c message
+    void *      response;        // serialized pb-c message data
+    size_t      response_sz;
     void*       user_data;
     struct sk_module_t* caller_module;
     sk_txn_task_cb cb;

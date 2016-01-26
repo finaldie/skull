@@ -454,6 +454,8 @@ void _handle_timeout(fdlist_node_t* ep_node, int latency)
 static
 void _handle_error(sk_ep_t* ep)
 {
+    sk_print("handle error: %s\n", strerror(errno));
+
     fdlist_node_t* ep_node = NULL;
     while ((ep_node = fdlist_pop(ep->txns))) {
         sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
