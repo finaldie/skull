@@ -1,3 +1,10 @@
+* 2016-01-27 0.7.3
+  * Core
+    * **New:** `EndPoint` support UDP protocol
+    * **Enhancement:** service job accept 0 delayed task, which would be scheduled immediately
+    * **Enhancement:** `EndPoint` can be called recursively
+  * Scripts:
+    * **Fix:** Fix incorrect generating service proto api header script
 * 2016-01-19 0.7.2
   * Core
     * **New:** Add `EndPoint` component and related api
