@@ -1,7 +1,7 @@
 #ifndef SKULL_CONFIG_H
 #define SKULL_CONFIG_H
 
-// A simple config object, only support 1D format (key: value)
+// A simple yaml config object, only support 1D format (key: value)
 typedef struct skull_config_t skull_config_t;
 
 skull_config_t* skull_config_create(const char* config_file_name);

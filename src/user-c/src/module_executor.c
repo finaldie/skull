@@ -4,7 +4,6 @@
 #include "api/sk_workflow.h"
 #include "api/sk_utils.h"
 #include "txn_utils.h"
-#include "idl_internal.h"
 #include "skull/module_loader.h"
 
 #include "module_executor.h"

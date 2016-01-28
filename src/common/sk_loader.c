@@ -61,8 +61,8 @@ sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
 
     char fullname[SK_MODULE_NAME_MAX_LEN] = {0};
     loader->name(name, fullname, SK_MODULE_NAME_MAX_LEN, loader->ud);
-    sk_print("try to load module: %s, type: %d - %s\n",
-             short_name, loader->type, fullname);
+    sk_print("try to load module: %s, type: %s - %s\n",
+             name, type, fullname);
 
     sk_module_t* module = loader->open(fullname, loader->ud);
     if (!module) {
@@ -70,7 +70,7 @@ sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
     }
 
     // We successfully load a module, now init other attributes
-    //  the short_name is the config value, feel free to use it
+    //  the 'name' is the config value, feel free to use it
     module->cfg = cfg;
 
     // load config
@@ -87,7 +87,7 @@ sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
         return NULL;
     }
 
-    sk_print("load module{%s:%d} successfully\n", short_name, module->type);
+    sk_print("load module{%s:%s} successfully\n", name, type);
     return module;
 }
 

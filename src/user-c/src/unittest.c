@@ -16,10 +16,8 @@
 #include "api/sk_service.h"
 #include "api/sk_loader.h"
 
-#include "skull/idl.h"
 #include "skull/metrics_utils.h"
 #include "skull/ep.h"
-#include "idl_internal.h"
 #include "txn_utils.h"
 #include "srv_types.h"
 
@@ -95,12 +93,6 @@ void skullut_module_destroy(skullut_module_t* env)
 
     env->module->release(env->module->md);
     sk_module_unload(env->module);
-
-    skull_idl_data_t* idl_data = sk_txn_udata(env->txn);
-    if (idl_data) {
-        free(idl_data->data);
-        free(idl_data);
-    }
 
     sk_txn_destroy(env->txn);
 
@@ -314,8 +306,8 @@ skull_service_async_call (skull_txn_t* txn,
     task->service = service;
     task->api = api;
     task->cb = cb;
-    task->taskdata.api_name = api_name;
-    task->taskdata.request = request;
+    task->taskdata.api_name   = api_name;
+    task->taskdata.request    = request;
     task->taskdata.request_sz = request_sz;
 
     flist_push(env->tasks, task);
@@ -348,6 +340,7 @@ skullut_service_t* skullut_service_create(const char* name, const char* config,
 
     // 1. create a fake service
     fake_service_t* fake_service = calloc(1, sizeof(*fake_service));
+    fake_service->type = type;
     fake_service->name = name;
     fake_service->data = sk_srv_data_create(SK_SRV_DATA_MODE_RW_PR);
 
@@ -392,7 +385,8 @@ void skullut_service_run(skullut_service_t* ut_service, const char* api_name,
 
     skull_service_t skull_service = {
         .service = (sk_service_t*)ut_service,
-        .task    = &taskdata
+        .task    = &taskdata,
+        .freezed = 0
     };
 
     opt->iocall(&skull_service, api_name, opt->ud);
@@ -448,6 +442,12 @@ void sk_service_setopt(sk_service_t* service, sk_service_opt_t opt)
 const char* sk_service_type(const sk_service_t* service)
 {
     return ((fake_service_t*)service)->type;
+}
+
+// No one use it, just return NULL
+const sk_service_api_t* sk_service_api(const sk_service_t* svc, const char* api)
+{
+    return NULL;
 }
 
 // Mock API for skull_ep_send. Return ok directly, since we don't need to mock

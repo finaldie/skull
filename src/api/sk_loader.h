@@ -73,5 +73,9 @@ void sk_service_unload(sk_service_t* service);
 
 void sk_service_loader_register(const char* type, sk_service_loader_t loader);
 
+/******************************************************************************/
+int sk_userlib_load(const char* libname);
+void sk_userlib_unload();
+
 #endif
 

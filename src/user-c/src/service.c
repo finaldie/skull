@@ -24,7 +24,7 @@ skull_service_async_call (skull_txn_t* txn, const char* service_name,
     }
 
     // find the exact async api
-    const sk_service_api_t*     api = sk_service_api(service, api_name);
+    const sk_service_api_t* api = sk_service_api(service, api_name);
     if (!api) {
         return SKULL_SERVICE_ERROR_APINAME;
     }

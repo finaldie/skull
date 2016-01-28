@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "api/sk_utils.h"
-#include "idl_internal.h"
 #include "txn_utils.h"
 #include "srv_types.h"
 #include "srv_executor.h"

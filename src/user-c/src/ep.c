@@ -6,7 +6,6 @@
 #include "api/sk_env.h"
 #include "api/sk_ep_pool.h"
 #include "api/sk_service.h"
-#include "idl_internal.h"
 #include "srv_types.h"
 #include "skull/ep.h"
 

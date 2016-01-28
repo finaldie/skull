@@ -117,7 +117,7 @@ void _sk_setup_workflows(sk_core_t* core)
         flist_iter name_iter = flist_new_iter(workflow_cfg->modules);
         sk_module_cfg_t* module_cfg = NULL;
         while ((module_cfg = flist_each(&name_iter))) {
-            sk_print("loading module: %s\n", module_name);
+            sk_print("loading module: %s\n", module_cfg->name);
 
             // 1. check whether has loaded
             // 2. Load the module
@@ -128,7 +128,7 @@ void _sk_setup_workflows(sk_core_t* core)
             // 1.
             if (fhash_str_get(core->unique_modules, module_cfg->name)) {
                 sk_print("we have already loaded this module(%s), skip it\n",
-                         module_name);
+                         module_cfg->name);
                 continue;
             }
 
@@ -353,6 +353,30 @@ void _sk_engines_destroy(sk_core_t* core)
     sk_engine_destroy(core->master);
 }
 
+static
+void _sk_init_user_loaders(sk_core_t* core)
+{
+    sk_config_t* cfg = core->config;
+    flist* user_langs = cfg->langs;
+    const char* lang = NULL;
+
+    flist_iter iter = flist_new_iter(user_langs);
+    while ((lang = flist_each(&iter))) {
+        // 1. generate user library name
+        char mlibname[SK_MODULE_NAME_MAX_LEN];
+        memset(mlibname, 0, SK_MODULE_NAME_MAX_LEN);
+
+        snprintf(mlibname, SK_MODULE_NAME_MAX_LEN, SK_USER_LIBNAME_FORMAT, lang);
+
+        // 2. load module and service loader
+        int ret = sk_userlib_load(mlibname);
+        if (ret) {
+            SK_LOG_FATAL(core->logger, "Load user lib %s failed", mlibname);
+            exit(1);
+        }
+    }
+}
+
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
@@ -378,19 +402,22 @@ void sk_core_init(sk_core_t* core)
              "================= skull engine initializing =================");
     sk_print("================= skull engine initializing =================\n");
 
-    // 5. init global monitor
+    // 5. loader user loaders
+    _sk_init_user_loaders(core);
+
+    // 6. init global monitor
     _sk_init_moniter(core);
 
-    // 6. init engines
+    // 7. init engines
     _sk_setup_engines(core);
 
-    // 7. init admin
+    // 8. init admin
     _sk_init_admin(core);
 
-    // 8. load services
+    // 9. load services
     _sk_setup_services(core);
 
-    // 9. load workflows and related triggers
+    // 10. load workflows and related triggers
     _sk_setup_workflows(core);
 }
 
@@ -553,7 +580,10 @@ void sk_core_destroy(sk_core_t* core)
     // 9. destroy working dir string
     free((void*)core->working_dir);
 
-    // 10. destroy loggers
+    // 10. destroy user lib loaders
+    sk_userlib_unload();
+
+    // 11. destroy loggers
     sk_print("=================== skull engine stopped ====================\n");
     SK_LOG_INFO(core->logger,
              "=================== skull engine stopped ====================");

@@ -65,6 +65,7 @@ SKULL_UTLIB_C = libskull-unittest-c.so
 COMMON_OBJS = \
     common/sk_loader.o \
     common/sk_srv_loader.o \
+    common/sk_user_loader.o \
     common/sk_utils.o \
     common/sk_io.o \
     common/sk_eventloop.o \
@@ -136,7 +137,6 @@ USER_C_OBJS = \
     user-c/src/module_loader.o \
     user-c/src/txn.o \
     user-c/src/txn_utils.o \
-    user-c/src/idl.o \
     user-c/src/config.o \
     user-c/src/module_executor.o \
     user-c/src/service_loader.o \
@@ -173,7 +173,6 @@ UT_OBJS = \
     user-c/src/module_loader.o \
     user-c/src/service_loader.o \
     user-c/src/srv_executor.o \
-    user-c/src/idl.o \
     user-c/src/txn.o \
     user-c/src/txn_utils.o \
     user-c/src/config.o \
