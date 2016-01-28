@@ -213,9 +213,9 @@ unsigned long long sk_txn_alivetime(const sk_txn_t* txn)
     return ftime_gettime() - txn->start_time;
 }
 
-void sk_txn_setudata(sk_txn_t* txn, void* data)
+void sk_txn_setudata(sk_txn_t* txn, const void* data)
 {
-    txn->udata = data;
+    txn->udata = (void*)data;
 }
 
 void* sk_txn_udata(const sk_txn_t* txn)

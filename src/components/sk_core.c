@@ -115,8 +115,8 @@ void _sk_setup_workflows(sk_core_t* core)
 
         // set up modules
         flist_iter name_iter = flist_new_iter(workflow_cfg->modules);
-        char* module_name = NULL;
-        while ((module_name = flist_each(&name_iter))) {
+        sk_module_cfg_t* module_cfg = NULL;
+        while ((module_cfg = flist_each(&name_iter))) {
             sk_print("loading module: %s\n", module_name);
 
             // 1. check whether has loaded
@@ -126,32 +126,32 @@ void _sk_setup_workflows(sk_core_t* core)
             //    twice
 
             // 1.
-            if (fhash_str_get(core->unique_modules, module_name)) {
+            if (fhash_str_get(core->unique_modules, module_cfg->name)) {
                 sk_print("we have already loaded this module(%s), skip it\n",
                          module_name);
                 continue;
             }
 
             // 2.
-            sk_module_t* module = sk_module_load(module_name, NULL);
+            sk_module_t* module = sk_module_load(module_cfg, NULL);
             if (module) {
-                sk_print("load module [%s] successful\n", module_name);
+                sk_print("load module [%s] successful\n", module_cfg->name);
                 SK_LOG_INFO(core->logger, "load module [%s] successful",
-                          module_name);
+                          module_cfg->name);
             } else {
-                sk_print("load module [%s] failed\n", module_name);
+                sk_print("load module [%s] failed\n", module_cfg->name);
                 SK_LOG_FATAL(core->logger, "load module [%s] failed",
-                             module_name);
+                             module_cfg->name);
                 exit(1);
             }
 
             // 3.
             int ret = sk_workflow_add_module(workflow, module);
             SK_ASSERT_MSG(!ret, "add module {%s} to workflow failed\n",
-                          module_name);
+                          module_cfg->name);
 
             // 4.
-            fhash_str_set(core->unique_modules, module_name, module);
+            fhash_str_set(core->unique_modules, module_cfg->name, module);
         }
 
         // store this workflow to sk_core::workflows
@@ -196,10 +196,10 @@ void _sk_module_init(sk_core_t* core)
     sk_module_t* module = NULL;
 
     while ((module = fhash_str_next(&iter))) {
-        sk_print("module [%s] init...\n", module->name);
-        SK_LOG_INFO(core->logger, "module [%s] init...", module->name);
+        sk_print("module [%s] init...\n", module->cfg->name);
+        SK_LOG_INFO(core->logger, "module [%s] init...", module->cfg->name);
 
-        SK_LOG_SETCOOKIE("module.%s", module->name);
+        SK_LOG_SETCOOKIE("module.%s", module->cfg->name);
         module->init(module->md);
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
@@ -214,10 +214,10 @@ void _sk_module_destroy(sk_core_t* core)
     sk_module_t* module = NULL;
 
     while ((module = fhash_str_next(&iter))) {
-        SK_LOG_INFO(core->logger, "Module %s is destroying", module->name);
+        SK_LOG_INFO(core->logger, "Module %s is destroying", module->cfg->name);
 
         // 1. release module user layer data
-        SK_LOG_SETCOOKIE("module.%s", module->name);
+        SK_LOG_SETCOOKIE("module.%s", module->cfg->name);
         module->release(module->md);
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 

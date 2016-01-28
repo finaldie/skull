@@ -2,37 +2,27 @@
 #include <string.h>
 
 #include "api/sk_utils.h"
-#include "api/sk_workflow.h"
 #include "api/sk_txn.h"
 #include "txn_utils.h"
 #include "skull/txn.h"
 #include "skull/txndata.h"
 
+// TXN
 const char* skull_txn_idlname(skull_txn_t* txn)
 {
-    size_t offset = 0;
-    size_t package_name_len = strlen(txn->descriptor->package_name);
-    if (package_name_len > 0) {
-        offset = package_name_len + 1;
-    }
-
-    return txn->descriptor->name + offset;
+    return txn->idl_name;
 }
 
-void* skull_txn_idldata(skull_txn_t* txn)
+void skull_txn_setdata(skull_txn_t* skull_txn, const void* data)
 {
-    return txn->idl;
+    sk_txn_t* txn = skull_txn->txn;
+    sk_txn_setudata(txn, data);
 }
 
-const void* skull_txndata_input(skull_txndata_t* txndata, size_t* buffer_size)
+void* skull_txn_data(skull_txn_t* skull_txn)
 {
-    return sk_txn_input(txndata->txn, buffer_size);
-}
-
-void skull_txndata_output_append(skull_txndata_t* txndata, const void* data,
-                                 size_t size)
-{
-    sk_txn_output_append(txndata->txn, data, size);
+    sk_txn_t* txn = skull_txn->txn;
+    return sk_txn_udata(txn);
 }
 
 skull_txn_status_t skull_txn_status(skull_txn_t* skull_txn)
@@ -47,3 +37,16 @@ skull_txn_status_t skull_txn_status(skull_txn_t* skull_txn)
         return SKULL_TXN_ERROR;
     }
 }
+
+// TXNDATA
+const void* skull_txndata_input(skull_txndata_t* txndata, size_t* buffer_size)
+{
+    return sk_txn_input(txndata->txn, buffer_size);
+}
+
+void skull_txndata_output_append(skull_txndata_t* txndata, const void* data,
+                                 size_t size)
+{
+    sk_txn_output_append(txndata->txn, data, size);
+}
+

@@ -7,6 +7,8 @@
 
 #include <google/protobuf-c/protobuf-c.h>
 
+#include "skull/module_loader.h"
+#include "skull/service_loader.h"
 #include "skull/service.h"
 
 // Basic assersion macros
@@ -30,40 +32,41 @@ typedef struct skullut_module_t skullut_module_t;
 
 skullut_module_t* skullut_module_create(const char* module_name,
                                         const char* idl_name,
-                                        const char* config);
+                                        const char* config,
+                                        const char* type,
+                                        skull_module_loader_t loader);
 void skullut_module_destroy(skullut_module_t*);
 int  skullut_module_run(skullut_module_t*);
 
-int skullut_module_mocksrv_add(skullut_module_t* env, const char* name,
-                            skull_service_async_api_t** apis,
-                            const ProtobufCMessageDescriptor** tbl);
+typedef struct skullut_svc_api_t {
+    const char* api_name;
+    void (*iocall) (skull_service_t*, const void* request, size_t req_sz);
+} skullut_svc_api_t;
+
+int skullut_module_mocksrv_add(skullut_module_t* env, const char* svc_name,
+                               const skullut_svc_api_t** apis);
 
 // When user call `skull_utenv_sharedata`, then must call the *release api to
 // free the share data memory
 // return a data which based on `ProtobufCMessage`
 void* skullut_module_data(skullut_module_t*);
 
-// Release the memory allocated by the `skull_utenv_sharedata`
+// Release the memory allocated by the `skullut_env_sharedata`
 // Note: the data arg must a structure which base on `ProtobufCMessage`
-void  skullut_module_data_release(void* data);
-
-// Serialize the Protobuf message to buffered data, then reset the 'shared data'
-//  field for a utenv
-//
-// Note: the data arg must a structure which base on `ProtobufCMessage`
-// Note: If the data is NULL, it will clear the old 'shared data'
-void  skullut_module_data_reset(skullut_module_t*, const void* data);
+void  skullut_module_setdata(skullut_module_t*, const void* data);
 
 // *****************************************************************************
 typedef struct skullut_service_t skullut_service_t;
-typedef void (*skullut_service_api_validator)(const void* req,
-                                              const void* resp, void* ud);
+typedef void (*skullut_service_api_validator)(const void* req, size_t req_sz,
+                                              const void* resp, size_t resp_sz,
+                                              void* ud);
 
-skullut_service_t* skullut_service_create(const char* name, const char* config);
+skullut_service_t* skullut_service_create(const char* name, const char* config,
+                               const char* type, skull_service_loader_t loader);
 void skullut_service_destroy(skullut_service_t*);
 void skullut_service_run(skullut_service_t* ut_service, const char* api,
-                        const void* req_msg, skullut_service_api_validator,
-                        void* ud);
+                        const void* req_msg, size_t req_sz,
+                        skullut_service_api_validator, void* ud);
 
 #endif
 

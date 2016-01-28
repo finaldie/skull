@@ -6,102 +6,78 @@
 #include "api/sk_loader.h"
 #include "api/sk_txn.h"
 #include "srv_executor.h"
-
-#include "skull/txn.h"
-#include "srv_loader.h"
-
-#define SKULL_SRV_REG_NAME "skull_service_register"
-
-#define SKULL_SRV_PREFIX_NAME "libskull-services-"
-#define SKULL_SRV_CONF_PREFIX_NAME "skull-services-"
+#include "skull/service_loader.h"
 
 static
-const char* _srv_name (const char* short_name, char* fullname, size_t sz)
+const char* _srv_name (const char* short_name, char* fullname, size_t sz,
+                       void* ud)
 {
-    memset(fullname, 0, sz);
-
-    // The full name format: lib/libskull-services-%s.so
-    snprintf(fullname, sz, "lib/" SKULL_SRV_PREFIX_NAME "%s.so", short_name);
-    return fullname;
+    skull_service_loader_t* loader = ud;
+    return loader->name(short_name, fullname, sz);
 }
 
 static
-const char* _srv_conf_name (const char* short_name, char* confname, size_t sz)
+const char* _srv_conf_name (const char* short_name, char* confname, size_t sz,
+                            void* ud)
 {
-    memset(confname, 0, sz);
-
-    // The full name format: etc/skull-services-%s.yaml
-    snprintf(confname, sz, "etc/" SKULL_SRV_CONF_PREFIX_NAME "%s.yaml",
-             short_name);
-    return confname;
+    skull_service_loader_t* loader = ud;
+    return loader->conf_name(short_name, confname, sz);
 }
 
 static
-int _srv_open (const char* filename, sk_service_opt_t* opt/*out*/)
+int _srv_open (const char* filename, sk_service_opt_t* opt/*out*/,
+               void* ud)
 {
-    // 1. empty all errors first
-    dlerror();
+    skull_service_loader_t* loader = ud;
+    skull_service_opt_t* u_opt = calloc(1, sizeof(*u_opt));
 
-    char* error = NULL;
-    void* handler = dlopen(filename, RTLD_NOW);
-    if (!handler) {
-        sk_print("error: cannot open %s: %s\n", filename, dlerror());
-        return 1;
-    }
+    int ret = loader->open(filename, u_opt);
 
-    // 2. create service and its private data
-    skull_c_srvdata_t* md = calloc(1, sizeof(*md));
-    md->handler = handler;
-
-    // 3. load service register func
-    *(void**)(&md->reg) = dlsym(handler, SKULL_SRV_REG_NAME);
-    if ((error = dlerror()) != NULL) {
-        sk_print("error: load %s failed: %s\n", SKULL_SRV_REG_NAME, error);
-        return 1;
-    }
-
-    md->entry = md->reg();
-
-    opt->srv_data = md;
-    opt->init    = skull_srv_init;
-    opt->release = skull_srv_release;
-    opt->iocall  = skull_srv_iocall;
+    opt->srv_data = u_opt;
+    opt->init     = skull_srv_init;
+    opt->release  = skull_srv_release;
+    opt->iocall   = skull_srv_iocall;
     opt->iocall_complete = skull_srv_iocall_complete;
 
-    return 0;
+    return ret;
 }
 
 static
-int _srv_close (sk_service_t* service)
+int _srv_close (sk_service_t* service, void* ud)
 {
+    skull_service_loader_t* loader = ud;
     sk_service_opt_t* opt = sk_service_opt(service);
-    skull_c_srvdata_t* srv_data = opt->srv_data;
-    void* handler = srv_data->handler;
-    skull_config_destroy(srv_data->config);
-
-    free(srv_data);
-    return dlclose(handler);
+    return loader->close(opt->srv_data);
 }
 
 static
-int _srv_load_config (sk_service_t* service, const char* filename)
+int _srv_load_config (sk_service_t* service, const char* filename, void* ud)
 {
     if (!filename) {
         sk_print("error: service config name is NULL\n");
         return 1;
     }
 
+    skull_service_loader_t* loader = ud;
     sk_service_opt_t* opt = sk_service_opt(service);
-    skull_c_srvdata_t* srv_data = opt->srv_data;
-    srv_data->config = skull_config_create(filename);
-    return 0;
+    skull_service_opt_t* u_opt = opt->srv_data;
+    return loader->load_config(u_opt, filename);
 }
 
-sk_service_loader_t sk_c_service_loader = {
-    .type        = SK_C_SERVICE_TYPE,
-    .name        = _srv_name,
-    .conf_name   = _srv_conf_name,
-    .load_config = _srv_load_config,
-    .open        = _srv_open,
-    .close       = _srv_close
-};
+void skull_service_loader_register(const char* type,
+                                   skull_service_loader_t loader)
+{
+    skull_service_loader_t* uloader = calloc(1, sizeof(*uloader));
+    *uloader = loader;
+
+    sk_service_loader_t sk_loader = {
+        .name        = _srv_name,
+        .conf_name   = _srv_conf_name,
+        .load_config = _srv_load_config,
+        .open        = _srv_open,
+        .close       = _srv_close,
+        .ud          = uloader
+    };
+
+    sk_service_loader_register(type, sk_loader);
+}

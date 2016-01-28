@@ -3,42 +3,28 @@
 
 #include <stdint.h>
 #include <skull/txn.h>
-#include <skull/config.h>
 
 typedef struct _skull_service_t skull_service_t;
 
 // ===================== APIs and Data Structures for Service ==================
-#define SKULL_SRV_PROTO_MAXLEN 64
-
-// Notes:
-//  - request proto name is 'service.name_req'
-//  - response proto name is 'service.name_resp'
-typedef struct skull_service_async_api_t {
-    const char* name;
-    void (*iocall) (skull_service_t*, const void* request, void* response);
-} skull_service_async_api_t;
-
-typedef struct skull_service_entry_t {
-    void (*init)    (skull_service_t*, skull_config_t*);
-    void (*release) (skull_service_t*);
-
-    skull_service_async_api_t** async;
-} skull_service_entry_t;
-
-#define SKULL_SERVICE_REGISTER(entry) \
-    skull_service_entry_t* skull_service_register() { \
-        return entry; \
-    }
-
 void  skull_service_data_set (skull_service_t*, const void* data);
 void* skull_service_data (skull_service_t*);
 const void* skull_service_data_const (skull_service_t*);
 
+// api data type definition
+#define SKULL_API_REQ  0
+#define SKULL_API_RESP 1
+
+int skull_service_apidata_set(skull_service_t*, int type,
+                               const void* data, size_t sz);
+void* skull_service_apidata(skull_service_t*, int type, size_t* sz);
+
 // ===================== APIs and Data Structures for Module ===================
 
 // module callback function declartion
-typedef int (*skull_svc_api_cb) (skull_txn_t*, const void* request,
-                                 const void* response);
+typedef int (*skull_svc_api_cb) (skull_txn_t*,
+                                 const void* request, size_t req_sz,
+                                 const void* response, size_t resp_sz);
 
 typedef enum skull_service_ret_t {
     SKULL_SERVICE_OK            = 0,
@@ -53,6 +39,7 @@ typedef enum skull_service_ret_t {
  * @param serivce_name
  * @param api_name
  * @param request       request protobuf message
+ * @param request_sz    request protobuf message size
  * @param cb            module callback function
  * @param bio_idx       background io index
  *                      - (-1)  : random pick up a background io to run
@@ -68,6 +55,7 @@ skull_service_async_call (skull_txn_t*,
                           const char* service_name,
                           const char* api_name,
                           const void* request,
+                          size_t request_sz,
                           skull_svc_api_cb cb,
                           int bio_idx);
 

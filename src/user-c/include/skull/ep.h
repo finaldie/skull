@@ -39,7 +39,8 @@ typedef struct skull_ep_handler_t {
 
 typedef void (*skull_ep_cb_t) (skull_service_t*, skull_ep_ret_t,
                                const void* response, size_t len, void* ud,
-                               const void* api_req, void* api_resp);
+                               const void* api_req, size_t api_req_sz,
+                               void* api_resp, size_t api_resp_sz);
 
 skull_ep_status_t
 skull_ep_send(skull_service_t*, const skull_ep_handler_t handler,

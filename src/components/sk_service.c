@@ -17,8 +17,8 @@
 #define SK_SRV_MAX_TASK   1024
 
 struct sk_service_t {
-    sk_service_type_t type;
     int running_task_cnt;
+    int _reserved;
 
     const char*       name; // a ref
     sk_service_opt_t  opt;
@@ -311,11 +311,6 @@ sk_service_opt_t* sk_service_opt(sk_service_t* service)
     return &service->opt;
 }
 
-void sk_service_settype(sk_service_t* service, sk_service_type_t type)
-{
-    service->type = type;
-}
-
 const sk_service_api_t* sk_service_api(const sk_service_t* service,
                                        const char* api_name)
 {
@@ -337,9 +332,9 @@ const char* sk_service_name(const sk_service_t* service)
     return service->name;
 }
 
-sk_service_type_t sk_service_type(const sk_service_t* service)
+const char* sk_service_type(const sk_service_t* service)
 {
-    return service->type;
+    return service->cfg->type;
 }
 
 const sk_service_cfg_t* sk_service_config(const sk_service_t* service)

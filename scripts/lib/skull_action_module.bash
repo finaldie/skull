@@ -150,7 +150,7 @@ function _action_module_add()
         fi
     done
 
-    # NOTES: currently, we only support C language
+    # NOTES: currently, we only support Cpp language
     while true; do
         read -p "which language the module belongs to? ($lang_names) " language
 
@@ -165,7 +165,7 @@ function _action_module_add()
 
     # 4. Add module into main config
     $SKULL_ROOT/bin/skull-config-utils.py -m module -c $SKULL_CONFIG_FILE \
-        -a add -M $module -i $workflow_idx
+        -a add -M $module -i $workflow_idx -l $language
 
     # 5. add common folder
     action_${language}_common_create

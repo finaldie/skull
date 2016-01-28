@@ -21,9 +21,11 @@ sk_workflow_cfg_t* _create_workflow_cfg()
 static
 void _delete_workflow_cfg(sk_workflow_cfg_t* workflow)
 {
-    char* module_name = NULL;
-    while ((module_name = flist_pop(workflow->modules))) {
-        free(module_name);
+    sk_module_cfg_t* mcfg = NULL;
+    while ((mcfg = flist_pop(workflow->modules))) {
+        free((void*)mcfg->name);
+        free((void*)mcfg->type);
+        free(mcfg);
     }
     flist_delete(workflow->modules);
 
@@ -56,10 +58,10 @@ void _service_cfg_item_destroy(sk_service_cfg_t* cfg)
     while ((api_cfg_item = fhash_str_next(&api_iter))) {
         free(api_cfg_item);
     }
-
     fhash_str_iter_release(&api_iter);
-
     fhash_str_delete(cfg->apis);
+
+    free((void*)cfg->type);
     free(cfg);
 }
 
@@ -69,15 +71,16 @@ sk_config_t* _create_config()
     sk_config_t* config = calloc(1, sizeof(*config));
     config->workflows = flist_create();
     config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    config->langs     = flist_create();
     return config;
 }
 
 static
 void _delete_config(sk_config_t* config)
 {
+    // destroy workflow
     sk_workflow_cfg_t* workflow = NULL;
 
-    // destroy workflow
     while ((workflow = flist_pop(config->workflows))) {
         _delete_workflow_cfg(workflow);
     }
@@ -92,6 +95,13 @@ void _delete_config(sk_config_t* config)
     }
     fhash_str_iter_release(&srv_iter);
     fhash_str_delete(config->services);
+
+    // destroy langs
+    char* lang = NULL;
+    while ((lang = flist_pop(config->langs))) {
+        free(lang);
+    }
+    flist_delete(config->langs);
 
     free(config);
 }
@@ -109,7 +119,28 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
     while ((child = flist_each(&iter))) {
         SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
 
-        int ret = flist_push(workflow->modules, strdup(child->data.value));
+        sk_module_cfg_t* mcfg = calloc(1, sizeof(*mcfg));
+        const char* raw = child->data.value;
+        char* tmp = strdup(raw);
+
+        // Format: 'name:type'
+        char* token = NULL;
+        int i = 0;
+        while ((token = strsep(&tmp, ":")) && i < 2) {
+            if (i == 0) {
+                // fill name
+                mcfg->name = strdup(token);
+            } else {
+                mcfg->type = strdup(token);
+            }
+
+            i++;
+        }
+
+        SK_ASSERT_MSG(i == 2, "Invalid module format, correct it. "
+                      "Format: 'name:type', content: %s\n", raw);
+
+        int ret = flist_push(workflow->modules, mcfg);
         SK_ASSERT(!ret);
     }
 }
@@ -345,6 +376,8 @@ void _load_service(const char* service_name, sk_cfg_node_t* node,
             _load_service_data_mode(child, service_cfg);
         } else if (0 == strcmp(key, "apis")) {
             _load_service_apis(child, service_name, service_cfg);
+        } else if (0 == strcmp(key, "type")) {
+            service_cfg->type = strdup(key);
         }
     }
 
@@ -400,6 +433,24 @@ void _load_bios(sk_cfg_node_t* node, sk_config_t* config)
 }
 
 static
+void _load_langs(sk_cfg_node_t* node, sk_config_t* config)
+{
+    if (node->type != SK_CFG_NODE_ARRAY) {
+        sk_print("Not a valid language item, won't load it\n");
+        return;
+    }
+
+    sk_cfg_node_t* child = NULL;
+    flist_iter iter = flist_new_iter(node->data.array);
+    while ((child = flist_each(&iter))) {
+        SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
+
+        int ret = flist_push(config->langs, strdup(child->data.value));
+        SK_ASSERT(!ret);
+    }
+}
+
+static
 void _load_config(sk_cfg_node_t* root, sk_config_t* config)
 {
     SK_ASSERT_MSG(root->type == SK_CFG_NODE_MAPPING,
@@ -439,6 +490,11 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         // load bio(s)
         if (0 == strcmp(key, "bio")) {
             _load_bios(child, config);
+        }
+
+        // load languages
+        if (0 == strcmp(key, "languages")) {
+            _load_langs(child, config);
         }
     }
 

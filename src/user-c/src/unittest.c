@@ -22,22 +22,20 @@
 #include "idl_internal.h"
 #include "txn_utils.h"
 #include "srv_types.h"
-#include "srv_loader.h"
-#include "srv_utils.h"
 
 #include "skull/unittest.h"
 
 typedef struct mock_service_t {
     const char* name;
-
-    skull_service_async_api_t** apis;
+    const skullut_svc_api_t** apis;
 } mock_service_t;
 
 typedef struct mock_task_t {
     const void* req_msg;  // This is a protobuf message
     mock_service_t* service;
-    skull_service_async_api_t* api;
+    const skullut_svc_api_t* api;
     skull_svc_api_cb cb;
+    sk_txn_taskdata_t taskdata;
 } mock_task_t;
 
 struct skullut_module_t {
@@ -50,14 +48,22 @@ struct skullut_module_t {
     flist*          tasks;    // hold mock_tasks
 
     sk_workflow_cfg_t* workflow_cfg;
+    sk_module_cfg_t    module_cfg;
 };
 
 skullut_module_t* skullut_module_create(const char* module_name,
                                   const char* idl_name,
-                                  const char* conf_name)
+                                  const char* conf_name,
+                                  const char* type,
+                                  skull_module_loader_t loader)
 {
+    skull_module_register_loader(type, loader);
+
     skullut_module_t* env = calloc(1, sizeof(*env));
-    env->module = sk_module_load(module_name, conf_name);
+    env->module_cfg.name = module_name;
+    env->module_cfg.type = type;
+
+    env->module = sk_module_load(&env->module_cfg, conf_name);
 
     env->workflow_cfg = calloc(1, sizeof(sk_workflow_cfg_t));
     env->workflow_cfg->idl_name = idl_name;
@@ -123,8 +129,7 @@ void skullut_module_destroy(skullut_module_t* env)
 }
 
 int skullut_module_mocksrv_add(skullut_module_t* env, const char* name,
-                            skull_service_async_api_t** apis,
-                            const ProtobufCMessageDescriptor** tbl)
+                               const skullut_svc_api_t** apis)
 {
     SK_ASSERT_MSG(name, "service name must not empty\n");
 
@@ -133,8 +138,6 @@ int skullut_module_mocksrv_add(skullut_module_t* env, const char* name,
     service->apis = apis;
 
     fhash_str_set(env->services, name, service);
-
-    skull_srv_idl_register(tbl);
 
     return 0;
 }
@@ -151,38 +154,30 @@ int skullut_module_run(skullut_module_t* env)
     mock_task_t* task = NULL;
     while ((task = flist_pop(env->tasks))) {
         // 1. prepare a response
-        skull_service_async_api_t* api = task->api;
+        const skullut_svc_api_t* api = task->api;
 
-        char resp_proto_name[SKULL_SRV_PROTO_MAXLEN];
-        snprintf(resp_proto_name, SKULL_SRV_PROTO_MAXLEN, "%s.%s_resp",
-                 task->service->name, api->name);
-
-        const ProtobufCMessageDescriptor* resp_desc =
-            skull_srv_idl_descriptor(resp_proto_name);
-        SK_ASSERT(resp_desc);
-
-        ProtobufCMessage* resp_msg = NULL;
-        resp_msg = calloc(1, resp_desc->sizeof_message);
-        protobuf_c_message_init(resp_desc, resp_msg);
+        sk_txn_taskdata_t* taskdata = &task->taskdata;
 
         // 2. call api
         skull_service_t skull_service = {
-            .service = (sk_service_t*)task->service
+            .service = (sk_service_t*)task->service,
+            .txn     = env->txn,
+            .task    = taskdata,
+            .freezed = 0
         };
 
-        api->iocall(&skull_service, task->req_msg, resp_msg);
+        api->iocall(&skull_service, taskdata->request, taskdata->request_sz);
 
         // 3. call module callback
         skull_txn_t skull_txn;
         skull_txn_init(&skull_txn, env->txn);
 
-        task->cb(&skull_txn, task->req_msg, resp_msg);
+        task->cb(&skull_txn, taskdata->request, taskdata->request_sz,
+                 taskdata->response, taskdata->response_sz);
 
         // 4. clean up
         // notes: the req_msg no needs to be released, due to it's on the stack
         skull_txn_release(&skull_txn, env->txn);
-
-        protobuf_c_message_free_unpacked(resp_msg, NULL);
         free(task);
     }
 
@@ -191,59 +186,13 @@ int skullut_module_run(skullut_module_t* env)
 
 void* skullut_module_data(skullut_module_t* env)
 {
-    const ProtobufCMessageDescriptor* desc =
-        skull_idl_descriptor(env->workflow_cfg->idl_name);
-
-    ProtobufCMessage* msg = NULL;
-    skull_idl_data_t* idl_data = sk_txn_udata(env->txn);
-    if (idl_data) {
-        msg = protobuf_c_message_unpack(
-            desc, NULL, idl_data->data_sz, idl_data->data);
-    } else {
-        msg = calloc(1, desc->sizeof_message);
-        protobuf_c_message_init(desc, msg);
-    }
-
-    return msg;
-}
-
-void  skullut_module_data_release(void* data)
-{
-    if (!data) {
-        return;
-    }
-
-    protobuf_c_message_free_unpacked(data, NULL);
-}
-
-void  skullut_module_data_reset(skullut_module_t* env, const void* msg)
-{
     sk_txn_t* txn = env->txn;
-    skull_idl_data_t* idl_data = sk_txn_udata(txn);
-    if (!msg) {
-        if (idl_data) {
-            free(idl_data->data);
-        }
+    return sk_txn_udata(txn);
+}
 
-        return;
-    }
-
-    size_t new_msg_sz = protobuf_c_message_get_packed_size(msg);
-    void*  new_msg_data = calloc(1, new_msg_sz);
-    size_t packed_sz = protobuf_c_message_pack(msg, new_msg_data);
-    SK_ASSERT(new_msg_sz == packed_sz);
-
-    if (!idl_data) {
-        idl_data = calloc(1, sizeof(*idl_data));
-        idl_data->data = new_msg_data;
-        idl_data->data_sz = packed_sz;
-        sk_txn_setudata(txn, idl_data);
-    } else {
-        free(idl_data->data);
-
-        idl_data->data = new_msg_data;
-        idl_data->data_sz = packed_sz;
-    }
+void  skullut_module_setdata(skullut_module_t* env, const void* data)
+{
+    sk_txn_setudata(env->txn, data);
 }
 
 // Mock API for skull_log
@@ -315,12 +264,29 @@ sk_thread_env_t* sk_thread_env()
     return &_fake_env;
 }
 
+static
+const skullut_svc_api_t* skullut_service_find(const skullut_svc_api_t** apis,
+                                        const char* api_name)
+{
+    const skullut_svc_api_t* api = NULL;
+    for (int i = 0; apis[i] != NULL; i++) {
+        api = apis[i];
+
+        if (0 == strcmp(api->api_name, api_name)) {
+            return api;
+        }
+    }
+
+    return NULL;
+}
+
 // Mock API for running mock service api in module ut
 skull_service_ret_t
 skull_service_async_call (skull_txn_t* txn,
                           const char* service_name,
                           const char* api_name,
                           const void* request,
+                          size_t request_sz,
                           skull_svc_api_cb cb,
                           int bidx)
 {
@@ -337,7 +303,7 @@ skull_service_async_call (skull_txn_t* txn,
         return SKULL_SERVICE_ERROR_SRVNAME;
     }
 
-    skull_service_async_api_t* api = skull_svc_find_api(service->apis, api_name);
+    const skullut_svc_api_t* api = skullut_service_find(service->apis, api_name);
     if (!api) {
         return SKULL_SERVICE_ERROR_APINAME;
     }
@@ -348,6 +314,9 @@ skull_service_async_call (skull_txn_t* txn,
     task->service = service;
     task->api = api;
     task->cb = cb;
+    task->taskdata.api_name = api_name;
+    task->taskdata.request = request;
+    task->taskdata.request_sz = request_sz;
 
     flist_push(env->tasks, task);
 
@@ -357,13 +326,8 @@ skull_service_async_call (skull_txn_t* txn,
 // Simulate the same layout of the real sk_service_t, and beware of that if the
 // real sk_service is changed, this structure has to be changed as well
 typedef struct fake_service_t {
-    sk_service_type_t type;
-
-#if __WORDSIZE == 64
-    int _padding;
-#endif
-
-    const char*       name; // a ref
+    const char* type;
+    const char* name; // a ref
     sk_service_opt_t  opt;
 
     sk_srv_data_t* data;
@@ -373,10 +337,12 @@ struct skullut_service_t {
     fake_service_t* service;
 };
 
-skullut_service_t* skullut_service_create(const char* name, const char* config)
+skullut_service_t* skullut_service_create(const char* name, const char* config,
+                                const char* type, skull_service_loader_t loader)
 {
     SK_ASSERT_MSG(name, "service must contain a non-empty name\n");
     SK_ASSERT_MSG(config, "service must contain a non-empty config\n");
+    skull_service_loader_register(type, loader);
 
     skullut_service_t* ut_service = calloc(1, sizeof(*ut_service));
 
@@ -411,44 +377,32 @@ void skullut_service_destroy(skullut_service_t* ut_service)
 }
 
 void skullut_service_run(skullut_service_t* ut_service, const char* api_name,
-                   const void* req_msg, skullut_service_api_validator validator,
+                   const void* req, size_t req_sz,
+                   skullut_service_api_validator validator,
                    void* ud)
 {
     fake_service_t* fake_service = ut_service->service;
-    skull_c_srvdata_t* srv_data = fake_service->opt.srv_data;
-    skull_service_entry_t* entry = srv_data->entry;
+    skull_service_opt_t* opt = fake_service->opt.srv_data;
 
-    // 1. find api
-    skull_service_async_api_t* api = skull_svc_find_api(entry->async, api_name);
-    SK_ASSERT_MSG(api, "cannot find api: %s\n", api_name);
+    // run api
+    sk_txn_taskdata_t taskdata;
+    memset(&taskdata, 0, sizeof(taskdata));
+    taskdata.request = req;
+    taskdata.request_sz = req_sz;
 
-    // 2. construct empty response
-    char resp_proto_name[SKULL_SRV_PROTO_MAXLEN];
-    snprintf(resp_proto_name, SKULL_SRV_PROTO_MAXLEN, "%s.%s_resp",
-             fake_service->name, api_name);
-
-    const ProtobufCMessageDescriptor* resp_desc =
-        skull_srv_idl_descriptor(resp_proto_name);
-    SK_ASSERT_MSG(resp_desc, "cannot find response descriptor\n");
-
-    ProtobufCMessage* resp_msg = NULL;
-    resp_msg = calloc(1, resp_desc->sizeof_message);
-    protobuf_c_message_init(resp_desc, resp_msg);
-
-    // 3. run api
     skull_service_t skull_service = {
-        .service = (sk_service_t*)ut_service
+        .service = (sk_service_t*)ut_service,
+        .task    = &taskdata
     };
 
-    api->iocall(&skull_service, req_msg, resp_msg);
+    opt->iocall(&skull_service, api_name, opt->ud);
 
     // 4. call the validator
-    validator(req_msg, resp_msg, ud);
-
-    // 5. clean up
-    protobuf_c_message_free_unpacked(resp_msg, NULL);
+    validator(taskdata.request, taskdata.request_sz,
+              taskdata.response, taskdata.response_sz, ud);
 }
 
+// Service Mock APIs
 void* skull_service_data (skull_service_t* service)
 {
     fake_service_t* fake_service = (fake_service_t*)service->service;
@@ -491,12 +445,7 @@ void sk_service_setopt(sk_service_t* service, sk_service_opt_t opt)
     ((fake_service_t*)service)->opt = opt;
 }
 
-void sk_service_settype(sk_service_t* service, sk_service_type_t type)
-{
-    ((fake_service_t*)service)->type = type;
-}
-
-sk_service_type_t sk_service_type(const sk_service_t* service)
+const char* sk_service_type(const sk_service_t* service)
 {
     return ((fake_service_t*)service)->type;
 }

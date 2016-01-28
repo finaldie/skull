@@ -36,7 +36,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     sk_txn_task_status_t task_status = task_cb_msg->task_status;
     int svc_task_done        = task_cb_msg->svc_task_done;
 
-    const char* caller_module_name = taskdata->caller_module->name;
+    const char* caller_module_name = taskdata->caller_module->cfg->name;
     uint64_t task_id = sk_txn_task_id(taskdata->owner);
 
     // 2. mark the txn task complete

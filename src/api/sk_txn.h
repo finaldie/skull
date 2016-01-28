@@ -45,7 +45,7 @@ int sk_txn_is_last_module(const sk_txn_t* txn);
 unsigned long long sk_txn_alivetime(const sk_txn_t* txn);
 
 // set user data
-void sk_txn_setudata(sk_txn_t* txn, void* data);
+void sk_txn_setudata(sk_txn_t* txn, const void* data);
 
 // get user data
 void* sk_txn_udata(const sk_txn_t* txn);

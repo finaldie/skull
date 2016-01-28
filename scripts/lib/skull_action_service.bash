@@ -200,7 +200,7 @@ function _action_service_add()
         return 1
     fi
 
-    # NOTES: currently, we only support C language
+    # NOTES: currently, we only support Cpp language
     while true; do
         read -p "which language the service belongs to? ($lang_names) " language
 
@@ -227,7 +227,8 @@ function _action_service_add()
     # 5. Add service into main config
     local service_local_yml="$service_path/.skull-service.yml"
     $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
-        -a add -s $service -b true -d $data_mode -i "$service_local_yml"
+        -a add -s $service -b true -d $data_mode -i "$service_local_yml" \
+        -l $language
 
     # 6. add common folder
     _run_lang_action $language $SKULL_LANG_COMMON_CREATE

@@ -13,7 +13,7 @@ Use Ubuntu14.04 as an example.
 
 ### Install dependencies
 ```console
-apt-get install valgrind libyaml-dev python-yaml libprotobuf-c0 libprotobuf-c0-dev protobuf-c-compiler
+apt-get install valgrind libyaml-dev python-yaml libprotobuf-c0 libprotobuf-c0-dev protobuf-c-compiler libprotobuf-dev
 
 git clone git@github.com:finaldie/skull.git
 cd skull
