@@ -6,15 +6,14 @@
 #include <skull/config.h>
 
 typedef struct skull_module_t {
-    // config, it only support 1D format (key: value)
-    const skull_config_t* config;
+    void* ud;
 
     // user layer callback apis
-    void   (*init)    (const skull_config_t*);
-    int    (*run)     (skull_txn_t* txn);
-    size_t (*unpack)  (skull_txn_t* txn, const void* data, size_t data_len);
-    void   (*pack)    (skull_txn_t* txn, skull_txndata_t* txndata);
-    void   (*release) ();
+    void   (*init)    (void* ud);
+    int    (*run)     (void* ud, skull_txn_t* txn);
+    size_t (*unpack)  (void* ud, skull_txn_t* txn, const void* data, size_t data_len);
+    void   (*pack)    (void* ud, skull_txn_t* txn, skull_txndata_t* txndata);
+    void   (*release) (void* ud);
 } skull_module_t;
 
 #endif
