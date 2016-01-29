@@ -39,7 +39,7 @@ void skullut_module_destroy(skullut_module_t*);
 int  skullut_module_run(skullut_module_t*);
 
 typedef struct skullut_svc_api_t {
-    const char* api_name;
+    const char* name;
     void (*iocall) (skull_service_t*, const void* request, size_t req_sz);
 } skullut_svc_api_t;
 

@@ -84,9 +84,9 @@ int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
     skull_txn_init(&skull_txn, txn);
 
     // Invoke task callback
-    int ret = ((skull_svc_api_cb)task_data->cb)(&skull_txn,
-                                    task_data->request, task_data->request_sz,
-                                    task_data->response, task_data->response_sz);
+    int ret = ((skull_svc_api_cb)task_data->cb)(&skull_txn, api_name,
+                                  task_data->request, task_data->request_sz,
+                                  task_data->response, task_data->response_sz);
 
     skull_txn_release(&skull_txn, txn);
     return ret;

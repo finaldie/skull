@@ -164,7 +164,7 @@ int skullut_module_run(skullut_module_t* env)
         skull_txn_t skull_txn;
         skull_txn_init(&skull_txn, env->txn);
 
-        task->cb(&skull_txn, taskdata->request, taskdata->request_sz,
+        task->cb(&skull_txn, api->name, taskdata->request, taskdata->request_sz,
                  taskdata->response, taskdata->response_sz);
 
         // 4. clean up
@@ -217,11 +217,6 @@ double skull_metric_get(const char* name)
     return 0.0f;
 }
 
-void skull_metric_foreach(skull_metric_each metric_cb, void* ud)
-{
-    // No implementation, note: test metrics in FT
-}
-
 void sk_mon_inc(sk_mon_t* sk_mon, const char* name, double value)
 {
     // No implementation, note: test metrics in FT
@@ -264,7 +259,7 @@ const skullut_svc_api_t* skullut_service_find(const skullut_svc_api_t** apis,
     for (int i = 0; apis[i] != NULL; i++) {
         api = apis[i];
 
-        if (0 == strcmp(api->api_name, api_name)) {
+        if (0 == strcmp(api->name, api_name)) {
             return api;
         }
     }

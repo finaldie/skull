@@ -19,10 +19,12 @@ int skull_service_apidata_set(skull_service_t*, int type,
                                const void* data, size_t sz);
 void* skull_service_apidata(skull_service_t*, int type, size_t* sz);
 
+const char* skull_service_name(skull_service_t*);
+
 // ===================== APIs and Data Structures for Module ===================
 
 // module callback function declartion
-typedef int (*skull_svc_api_cb) (skull_txn_t*,
+typedef int (*skull_svc_api_cb) (skull_txn_t*, const char* api_name,
                                  const void* request, size_t req_sz,
                                  const void* response, size_t resp_sz);
 
@@ -49,6 +51,7 @@ typedef enum skull_service_ret_t {
  * @return - SKULL_SERVICE_OK
  *         - SKULL_SERVICE_ERROR_SRVNAME
  *         - SKULL_SERVICE_ERROR_APINAME
+ *         - SKULL_SERVICE_BIO
  */
 skull_service_ret_t
 skull_service_async_call (skull_txn_t*,

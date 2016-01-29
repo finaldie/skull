@@ -169,3 +169,8 @@ void* skull_service_apidata(skull_service_t* svc, int type, size_t* sz)
     }
 }
 
+const char* skull_service_name(skull_service_t* service)
+{
+    sk_service_t* svc = service->service;
+    return sk_service_name(svc);
+}
