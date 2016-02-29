@@ -1,8 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-
-#include <google/protobuf-c/protobuf-c.h>
+#include <stdbool.h>
 
 #include "flibs/fhash.h"
 #include "flibs/flist.h"
@@ -22,19 +21,6 @@
 #include "srv_types.h"
 
 #include "skull/unittest.h"
-
-typedef struct mock_service_t {
-    const char* name;
-    const skullut_svc_api_t** apis;
-} mock_service_t;
-
-typedef struct mock_task_t {
-    const void* req_msg;  // This is a protobuf message
-    mock_service_t* service;
-    const skullut_svc_api_t* api;
-    skull_svc_api_cb cb;
-    sk_txn_taskdata_t taskdata;
-} mock_task_t;
 
 struct skullut_module_t {
     sk_module_t*    module;
@@ -106,9 +92,10 @@ void skullut_module_destroy(skullut_module_t* env)
 
     // destroy the services
     fhash_str_iter srv_iter = fhash_str_iter_new(env->services);
-    mock_service_t* service = NULL;
+    skullmock_svc_t* service = NULL;
 
     while ((service = fhash_str_next(&srv_iter))) {
+        service->release(service->ud);
         free(service);
     }
 
@@ -120,17 +107,13 @@ void skullut_module_destroy(skullut_module_t* env)
     free(env);
 }
 
-int skullut_module_mocksrv_add(skullut_module_t* env, const char* name,
-                               const skullut_svc_api_t** apis)
+int skullut_module_mocksrv_add(skullut_module_t* env, skullmock_svc_t ut_svc)
 {
-    SK_ASSERT_MSG(name, "service name must not empty\n");
+    SK_ASSERT_MSG(ut_svc.name, "service name must not empty\n");
+    skullmock_svc_t* svc = calloc(1, sizeof(ut_svc));
+    memcpy(svc, &ut_svc, sizeof(ut_svc));
 
-    mock_service_t* service = calloc(1, sizeof(*service));
-    service->name = name;
-    service->apis = apis;
-
-    fhash_str_set(env->services, name, service);
-
+    fhash_str_set(env->services, ut_svc.name, svc);
     return 0;
 }
 
@@ -143,32 +126,24 @@ int skullut_module_run(skullut_module_t* env)
     }
 
     // process all service tasks
-    mock_task_t* task = NULL;
+    skullmock_task_t* task = NULL;
     while ((task = flist_pop(env->tasks))) {
         // 1. prepare a response
-        const skullut_svc_api_t* api = task->api;
+        skullmock_svc_t* mock_svc = task->service;
 
-        sk_txn_taskdata_t* taskdata = &task->taskdata;
+        const char* api_name = task->api_name;
 
         // 2. call api
-        skull_service_t skull_service = {
-            .service = (sk_service_t*)task->service,
-            .txn     = env->txn,
-            .task    = taskdata,
-            .freezed = 0
-        };
-
-        api->iocall(&skull_service, taskdata->request, taskdata->request_sz);
+        mock_svc->iocall(api_name, task, mock_svc->ud);
 
         // 3. call module callback
         skull_txn_t skull_txn;
         skull_txn_init(&skull_txn, env->txn);
 
-        task->cb(&skull_txn, api->name, taskdata->request, taskdata->request_sz,
-                 taskdata->response, taskdata->response_sz);
+        task->cb(&skull_txn, api_name, task->request, task->request_sz,
+                 task->response, task->response_sz);
 
         // 4. clean up
-        // notes: the req_msg no needs to be released, due to it's on the stack
         skull_txn_release(&skull_txn, env->txn);
         free(task);
     }
@@ -251,22 +226,6 @@ sk_thread_env_t* sk_thread_env()
     return &_fake_env;
 }
 
-static
-const skullut_svc_api_t* skullut_service_find(const skullut_svc_api_t** apis,
-                                        const char* api_name)
-{
-    const skullut_svc_api_t* api = NULL;
-    for (int i = 0; apis[i] != NULL; i++) {
-        api = apis[i];
-
-        if (0 == strcmp(api->name, api_name)) {
-            return api;
-        }
-    }
-
-    return NULL;
-}
-
 // Mock API for running mock service api in module ut
 skull_service_ret_t
 skull_service_async_call (skull_txn_t* txn,
@@ -285,28 +244,20 @@ skull_service_async_call (skull_txn_t* txn,
     sk_entity_t* entity = sk_txn_entity(sk_txn);
     skullut_module_t* env = (skullut_module_t*)sk_entity_halftxn(entity);
 
-    mock_service_t* service = fhash_str_get(env->services, service_name);
+    skullmock_svc_t* service = fhash_str_get(env->services, service_name);
     if (!service) {
         return SKULL_SERVICE_ERROR_SRVNAME;
     }
 
-    const skullut_svc_api_t* api = skullut_service_find(service->apis, api_name);
-    if (!api) {
-        return SKULL_SERVICE_ERROR_APINAME;
-    }
-
     // create a mock task and push it task list
-    mock_task_t* task = calloc(1, sizeof(*task));
-    task->req_msg = request;
+    skullmock_task_t* task = calloc(1, sizeof(*task));
     task->service = service;
-    task->api = api;
     task->cb = cb;
-    task->taskdata.api_name   = api_name;
-    task->taskdata.request    = request;
-    task->taskdata.request_sz = request_sz;
+    task->api_name   = api_name;
+    task->request    = request;
+    task->request_sz = request_sz;
 
     flist_push(env->tasks, task);
-
     return SKULL_SERVICE_OK;
 }
 

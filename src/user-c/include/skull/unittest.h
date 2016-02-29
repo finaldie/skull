@@ -3,9 +3,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-
-#include <google/protobuf-c/protobuf-c.h>
 
 #include "skull/module_loader.h"
 #include "skull/service_loader.h"
@@ -38,21 +35,29 @@ skullut_module_t* skullut_module_create(const char* module_name,
 void skullut_module_destroy(skullut_module_t*);
 int  skullut_module_run(skullut_module_t*);
 
-typedef struct skullut_svc_api_t {
+struct skullmock_task_t;
+typedef struct skullmock_svc_t {
     const char* name;
-    void (*iocall) (skull_service_t*, const void* request, size_t req_sz);
-} skullut_svc_api_t;
+    void* ud;
 
-int skullut_module_mocksrv_add(skullut_module_t* env, const char* svc_name,
-                               const skullut_svc_api_t** apis);
+    void (*iocall)  (const char* api_name, struct skullmock_task_t*, void* ud);
+    void (*release) (void* ud);
+} skullmock_svc_t;
 
-// When user call `skull_utenv_sharedata`, then must call the *release api to
-// free the share data memory
-// return a data which based on `ProtobufCMessage`
+typedef struct skullmock_task_t {
+    skullmock_svc_t* service;
+    skull_svc_api_cb cb;
+
+    const char* api_name;
+    const void* request;
+    size_t      request_sz;
+    void *      response;
+    size_t      response_sz;
+} skullmock_task_t;
+
+int skullut_module_mocksrv_add(skullut_module_t* env, skullmock_svc_t ut_svc);
+
 void* skullut_module_data(skullut_module_t*);
-
-// Release the memory allocated by the `skullut_env_sharedata`
-// Note: the data arg must a structure which base on `ProtobufCMessage`
 void  skullut_module_setdata(skullut_module_t*, const void* data);
 
 // *****************************************************************************
