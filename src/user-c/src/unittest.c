@@ -36,10 +36,10 @@ struct skullut_module_t {
 };
 
 skullut_module_t* skullut_module_create(const char* module_name,
-                                  const char* idl_name,
-                                  const char* conf_name,
-                                  const char* type,
-                                  skull_module_loader_t loader)
+                                        const char* idl_name,
+                                        const char* conf_name,
+                                        const char* type,
+                                        skull_module_loader_t loader)
 {
     skull_module_register_loader(type, loader);
 
