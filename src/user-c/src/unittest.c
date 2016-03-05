@@ -145,6 +145,9 @@ int skullut_module_run(skullut_module_t* env)
 
         // 4. clean up
         skull_txn_release(&skull_txn, env->txn);
+
+        free((void*)task->request);
+        free(task->response);
         free(task);
     }
 
