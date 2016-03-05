@@ -23,7 +23,7 @@ PROTO_FOLDER=$COMMON_FILE_LOCATION/src/$PROTO_FOLDER_NAME
 # return:
 #  - 0 if this is a valid C module
 #  - 1 if this is not a valid C module
-function action_c_module_valid()
+function action_cpp_module_valid()
 {
     # for now, just check whether there is mod.c exist
     local module=$1
@@ -34,7 +34,7 @@ function action_c_module_valid()
     fi
 }
 
-function action_c_module_add()
+function action_cpp_module_add()
 {
     local module=$1
     local module_path=$SKULL_PROJ_ROOT/src/modules/$module
@@ -50,11 +50,12 @@ function action_c_module_add()
     mkdir -p $module_path/config
     mkdir -p $module_path/lib
 
-    cp $LANGUAGE_PATH/share/module.cpp       $module_path/src/module.cpp
-    cp $LANGUAGE_PATH/etc/config.yaml        $module_path/config/config.yaml
-    cp $LANGUAGE_PATH/share/test_module.cpp  $module_path/tests/test_module.cpp
-    cp $LANGUAGE_PATH/etc/test_config.yaml   $module_path/tests/test_config.yaml
-    cp $LANGUAGE_PATH/share/gitignore-module $module_path/.gitignore
+    cp $LANGUAGE_PATH/etc/config.yaml         $module_path/config/config.yaml
+    cp $LANGUAGE_PATH/etc/test_config.yaml    $module_path/tests/test_config.yaml
+    cp $LANGUAGE_PATH/share/module.cpp        $module_path/src/module.cpp
+    cp $LANGUAGE_PATH/share/test_module.cpp   $module_path/tests/test_module.cpp
+    cp $LANGUAGE_PATH/share/gitignore-module  $module_path/.gitignore
+    cp $LANGUAGE_PATH/share/ycm_extra_conf.py $module_path/.ycm_extra_conf.py
 
     # copy makefile templates
     cp $LANGUAGE_PATH/share/Makefile.mod     $module_path/Makefile
@@ -63,15 +64,15 @@ function action_c_module_add()
 
     # generate a static config code for user
     local module_config=$module_path/config/config.yaml
-    action_c_gen_config $module_config
+    action_cpp_gen_config $module_config
 
     return 0
 }
 
-function action_c_common_create()
+function action_cpp_common_create()
 {
     if [ -d "$COMMON_FILE_LOCATION" ]; then
-        echo "notice: the common/c folder has already exist, ignore it"
+        echo "notice: the common/cpp folder has already exist, ignore it"
         return 0
     fi
 
@@ -80,7 +81,7 @@ function action_c_common_create()
     mkdir -p $COMMON_FILE_LOCATION/tests
     mkdir -p $COMMON_FILE_LOCATION/lib
 
-    # move the Makefile to common/c only when there is no Makefile in common/c
+    # move the Makefile to common/cpp only when there is no Makefile in there
     if [ ! -f $COMMON_FILE_LOCATION/Makefile ]; then
         cp $LANGUAGE_PATH/share/Makefile.common \
             $COMMON_FILE_LOCATION/Makefile
@@ -97,25 +98,25 @@ function action_c_common_create()
         $SKULL_MAKEFILE_FOLDER/Makefile.common.cpp.targets
 
     # generate the metrics
-    action_c_gen_metrics $SKULL_METRICS_FILE
+    action_cpp_gen_metrics $SKULL_METRICS_FILE
 
     # generate idl source code according to the idls
     local config=$SKULL_PROJ_ROOT/config/skull-config.yaml
-    action_c_gen_idl $config
+    action_cpp_gen_idl $config
 
     # copy the unit test file
     cp $LANGUAGE_PATH/share/test_common.cpp \
         $COMMON_FILE_LOCATION/tests/test_common.cpp
 }
 
-function action_c_gen_metrics()
+function action_cpp_gen_metrics()
 {
     local config=$1
     local tmpdir=/tmp
     local tmp_header_file=$tmpdir/skull_metrics.h
-    local tmp_source_file=$tmpdir/skull_metrics.c
+    local tmp_source_file=$tmpdir/skull_metrics.cpp
     local header_file=$COMMON_FILE_LOCATION/src/skull_metrics.h
-    local source_file=$COMMON_FILE_LOCATION/src/skull_metrics.c
+    local source_file=$COMMON_FILE_LOCATION/src/skull_metrics.cpp
 
     $LANGUAGE_PATH/bin/skull-metrics-gen.py -c $config \
         -h $tmp_header_file \
@@ -130,7 +131,7 @@ function action_c_gen_metrics()
     fi
 }
 
-function action_c_gen_config()
+function action_cpp_gen_config()
 {
     local config=$1
     local confdir=`dirname $config`
@@ -141,19 +142,19 @@ function action_c_gen_config()
     # replace them if they are same, it will reduce the compiling time
     $LANGUAGE_PATH/bin/skull-config-gen.py -c $config \
         -h $tmpdir/config.h \
-        -s $tmpdir/config.c
+        -s $tmpdir/config.cpp
 
     # if the new config.x are different from the old ones, replace them
     if ! $(_compare_file $targetdir/config.h $tmpdir/config.h); then
         cp $tmpdir/config.h $targetdir/config.h
     fi
 
-    if ! $(_compare_file $targetdir/config.c $tmpdir/config.c); then
-        cp $tmpdir/config.c $targetdir/config.c
+    if ! $(_compare_file $targetdir/config.cpp $tmpdir/config.cpp); then
+        cp $tmpdir/config.cpp $targetdir/config.cpp
     fi
 }
 
-function action_c_gen_idl()
+function action_cpp_gen_idl()
 {
     # 1. generate protobuf source code for workflows
     (
@@ -170,17 +171,12 @@ function action_c_gen_idl()
     )
 
     # 2. generate user api source code
-    local config=$1
-    $LANGUAGE_PATH/bin/skull-idl-gen.py -m txn -c $config \
-        -p $PROTO_FOLDER_NAME \
-        -h $COMMON_FILE_LOCATION/src/skull_txn_sharedata.h \
-        -s $COMMON_FILE_LOCATION/src/skull_txn_sharedata.c
-
+    _generate_protos
     return 0
 }
 
 # Service Related
-function action_c_service_valid()
+function action_cpp_service_valid()
 {
     local service=$1
     if [ -f $SKULL_PROJ_ROOT/src/services/$service/src/service.cpp ]; then
@@ -190,7 +186,7 @@ function action_c_service_valid()
     fi
 }
 
-function action_c_service_add()
+function action_cpp_service_add()
 {
     local service=$1
     local srv_path=$SKULL_PROJ_ROOT/src/services/$service
@@ -207,49 +203,60 @@ function action_c_service_add()
     mkdir -p $srv_path/lib
     mkdir -p $srv_path/idl
 
-    cp $LANGUAGE_PATH/share/service.cpp       $srv_path/src/service.cpp
     cp $LANGUAGE_PATH/etc/config.yaml         $srv_path/config/config.yaml
-    cp $LANGUAGE_PATH/share/test_service.cpp  $srv_path/tests/test_service.cpp
     cp $LANGUAGE_PATH/etc/test_config.yaml    $srv_path/tests/test_config.yaml
+    cp $LANGUAGE_PATH/share/service.cpp       $srv_path/src/service.cpp
+    cp $LANGUAGE_PATH/share/test_service.cpp  $srv_path/tests/test_service.cpp
     cp $LANGUAGE_PATH/share/gitignore-service $srv_path/.gitignore
+    cp $LANGUAGE_PATH/share/ycm_extra_conf.py $srv_path/.ycm_extra_conf.py
 
     # copy makefile templates
-    cp $LANGUAGE_PATH/share/Makefile.svc         $srv_path/Makefile
-    cp $LANGUAGE_PATH/share/Makefile.inc         $SKULL_MAKEFILE_FOLDER/Makefile.cpp.inc
-    cp $LANGUAGE_PATH/share/Makefile.targets.tpl $SKULL_MAKEFILE_FOLDER/Makefile.cpp.targets
+    cp $LANGUAGE_PATH/share/Makefile.svc      $srv_path/Makefile
+    cp $LANGUAGE_PATH/share/Makefile.inc      $SKULL_MAKEFILE_FOLDER/Makefile.cpp.inc
+    cp $LANGUAGE_PATH/share/Makefile.targets  $SKULL_MAKEFILE_FOLDER/Makefile.cpp.targets
 
     # generate a static config code for user
     local srv_config=$srv_path/config/config.yaml
-    action_c_gen_config $srv_config
+    action_cpp_gen_config $srv_config
 
     return 0
 }
 
-function action_c_service_api_gen()
+function _generate_protos()
 {
-    local api_list=($@)
+    local wf_proto_raw_list=`ls -1 $SKULL_WORKFLOW_IDL_FOLDER | grep .proto`
+    local wf_proto_list=`echo $wf_proto_raw_list | sed 's/ /|/g'`
 
+    local svc_proto_raw_list=`ls -1 $SKULL_SERVICE_IDL_FOLDER | grep .proto`
+    local svc_proto_list=`echo $svc_proto_raw_list | sed 's/ /|/g'`
+
+    local param_list=""
+    if [ -n "$wf_proto_list" ]; then
+        param_list+="-w $wf_proto_list"
+    fi
+
+    if [ -n "$svc_proto_list" ]; then
+        param_list+=" -s $svc_proto_list"
+    fi
+
+    $LANGUAGE_PATH/bin/skull-idl-gen.py -p $PROTO_FOLDER_NAME \
+        -o $COMMON_FILE_LOCATION/src/skull_protos.h \
+        $param_list
+}
+
+function action_cpp_service_api_gen()
+{
     # 1. generate protobuf source code for workflows
     (
         cd $SKULL_SERVICE_IDL_FOLDER
         mkdir -p $PROTO_FOLDER
 
-        for idl in ${api_list[*]}; do
+        for idl in ./*.proto; do
             protoc --cpp_out=$PROTO_FOLDER $idl
         done
     )
 
     # 2. generate idls
-    local api_name_list=""
-    for api_file in ${api_list[*]}; do
-        api_name_list+=`basename $api_file`
-        api_name_list+="|"
-    done
-
-    $LANGUAGE_PATH/bin/skull-idl-gen.py -m service -p $PROTO_FOLDER_NAME \
-        -h $COMMON_FILE_LOCATION/src/skull_srv_api_proto.h \
-        -s $COMMON_FILE_LOCATION/src/skull_srv_api_proto.c \
-        -l $api_name_list
-
+    _generate_protos
     return 0
 }

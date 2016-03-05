@@ -67,7 +67,7 @@ static skull_static_config_t* g_static_config = NULL;\n\
 static\n\
 skull_static_config_t* _skull_static_config_create()\n\
 {\n\
-    return calloc(1, sizeof(skull_static_config_t));\n\
+    return (skull_static_config_t*)calloc(1, sizeof(skull_static_config_t));\n\
 }\n\
 \n\
 static\n\

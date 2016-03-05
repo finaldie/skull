@@ -1,6 +1,10 @@
 #ifndef SKULL_MODULE_H
 #define SKULL_MODULE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <skull/txn.h>
 #include <skull/txndata.h>
 #include <skull/config.h>
@@ -15,6 +19,10 @@ typedef struct skull_module_t {
     void   (*pack)    (void* ud, skull_txn_t* txn, skull_txndata_t* txndata);
     void   (*release) (void* ud);
 } skull_module_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

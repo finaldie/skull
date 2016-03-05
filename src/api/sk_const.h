@@ -22,7 +22,10 @@ struct sk_const_t;
 #define SK_MODULE_REGISTER_FUNCNAME          "skull_module_register"
 #define SK_SERVICE_REGISTER_FUNCNAME         "skull_service_register"
 
-#define SK_USER_LIBNAME_FORMAT               "libskull-user-%s.so"
+#define SK_USER_LIBNAME_FORMAT               "libskull%s-api.so"
+#define SK_USER_PREFIX1                      "/usr/local/lib"
+#define SK_USER_PREFIX2                      "/usr/lib"
+#define SK_USER_LIBNAME_MAX                  1024
 
 // scheduler
 #define SK_SCHED_PULL_NUM                    65535

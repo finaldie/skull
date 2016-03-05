@@ -1,6 +1,10 @@
 #ifndef SKULL_EP_H
 #define SKULL_EP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <netinet/in.h>
 
@@ -45,6 +49,10 @@ typedef void (*skull_ep_cb_t) (skull_service_t*, skull_ep_ret_t,
 skull_ep_status_t
 skull_ep_send(skull_service_t*, const skull_ep_handler_t handler,
               const void* data, size_t count, skull_ep_cb_t cb, void* ud);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

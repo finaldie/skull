@@ -1,6 +1,10 @@
 #ifndef SKULL_C_SERVICE_H
 #define SKULL_C_SERVICE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <skull/txn.h>
 
@@ -86,6 +90,10 @@ int skull_service_job_create(skull_service_t*   svc,
                              void*              ud,
                              skull_job_udfree_t udfree,
                              int                bio_idx);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

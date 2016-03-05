@@ -10,7 +10,6 @@ extern "C" {
 #include <skull/txn.h>
 #include <skull/txndata.h>
 #include <skull/config.h>
-#include <skull/idl.h>
 #include <skull/service.h>
 #include <skull/ep.h>
 #include <skull/module_loader.h>

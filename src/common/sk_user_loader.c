@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <dlfcn.h>
 
 #include "flibs/fhash.h"
@@ -23,16 +24,28 @@ int sk_userlib_load(const char* filename)
         return 0;
     }
 
+    // 1. Open usr api library
     dlerror();
     char* error = NULL;
 
-    void* handler = dlopen(filename, RTLD_NOW);
+    char fullname[SK_USER_LIBNAME_MAX];
+    memset(fullname, 0, SK_USER_LIBNAME_MAX);
+    snprintf(fullname, SK_USER_LIBNAME_MAX, "%s/%s", SK_USER_PREFIX1, filename);
+
+    void* handler = dlopen(fullname, RTLD_NOW);
     if (!handler) {
-        sk_print("error: cannot open %s: %s\n", filename, dlerror());
-        return 1;
+        sk_print("error: cannot open %s: %s\n", fullname, dlerror());
+
+        memset(fullname, 0, SK_USER_LIBNAME_MAX);
+        snprintf(fullname, SK_USER_LIBNAME_MAX, "%s/%s", SK_USER_PREFIX2, filename);
+        handler = dlopen(fullname, RTLD_NOW);
+        if (!handler) {
+            sk_print("error: cannot open %s: %s\n", fullname, dlerror());
+            return 1;
+        }
     }
 
-    // 1. Register module
+    // 2. Find module loader
     lib_register module_register = NULL;
     *(void**)(&module_register) = dlsym(handler, SK_MODULE_REGISTER_FUNCNAME);
     if ((error = dlerror()) != NULL) {
@@ -41,7 +54,7 @@ int sk_userlib_load(const char* filename)
         return 1;
     }
 
-    // 2. Run user module register
+    // 2.1 Run user module register
     module_register();
 
     // 3. Register service

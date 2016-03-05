@@ -111,7 +111,7 @@ void sk_service_loader_register(const char* type, sk_service_loader_t loader)
     sk_service_loader_t* sloader = sk_sloader_tbl_get(type);
     if (sloader) return;
 
-    sloader = calloc(1, sizeof(sloader));
+    sloader = calloc(1, sizeof(*sloader));
     *sloader = loader;
 
     sk_sloader_tbl_set(type, sloader);

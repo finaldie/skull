@@ -13,8 +13,8 @@
 #define SK_MODULE_RELEASE_FUNCNAME "module_release"
 
 #define SK_MODULE_CONFIG_NAME "config.yaml"
-#define SK_MODULE_PREFIX_NAME "libskullcpp-modules-"
-#define SK_MODULE_CONF_PREFIX_NAME "skullcpp-modules-"
+#define SK_MODULE_PREFIX_NAME "libskull-modules-"
+#define SK_MODULE_CONF_PREFIX_NAME "skull-modules-"
 
 static
 const char* _module_name(const char* short_name, char* fullname, size_t sz)

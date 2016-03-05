@@ -1,12 +1,16 @@
 #ifndef SKULL_UNITTEST_H
 #define SKULL_UNITTEST_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "skull/module_loader.h"
-#include "skull/service_loader.h"
-#include "skull/service.h"
+#include <skull/module_loader.h>
+#include <skull/service_loader.h>
+#include <skull/service.h>
 
 // Basic assersion macros
 #define SKULL_CUNIT_ASSERT(expression) \
@@ -72,6 +76,10 @@ void skullut_service_destroy(skullut_service_t*);
 void skullut_service_run(skullut_service_t* ut_service, const char* api,
                         const void* req_msg, size_t req_sz,
                         skullut_service_api_validator, void* ud);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

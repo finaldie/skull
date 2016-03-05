@@ -10,8 +10,8 @@
 
 #define SKULL_SRV_REG_NAME "skullcpp_service_register"
 
-#define SKULL_SRV_PREFIX_NAME "libskullcpp-services-"
-#define SKULL_SRV_CONF_PREFIX_NAME "skullcpp-services-"
+#define SKULL_SRV_PREFIX_NAME "libskull-services-"
+#define SKULL_SRV_CONF_PREFIX_NAME "skull-services-"
 
 static
 const char* _srv_name (const char* short_name, char* fullname, size_t sz)

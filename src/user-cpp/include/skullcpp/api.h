@@ -5,6 +5,7 @@
 #include <skullcpp/txn.h>
 #include <skullcpp/txndata.h>
 #include <skullcpp/service.h>
+#include <skullcpp/service_loader.h>
 #include <skullcpp/ep.h>
 
 #endif

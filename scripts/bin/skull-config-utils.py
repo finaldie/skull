@@ -224,7 +224,7 @@ def _process_add_module():
         module_list = workflow_frame['modules']
         if _module_valid(module_list, module_name, type):
             workflow_frame['modules'].append(module_name + ":" + type)
-        else
+        else:
             print "Error: there is already a module with different type"
             raise
 

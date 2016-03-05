@@ -57,6 +57,7 @@ install: prepare
 	cp -r $(LOCAL_LIB_DIR)/* $(SKULL_LIB_DIR)
 	cp -r $(LOCAL_ETC_DIR)/* $(SKULL_ETC_DIR)
 	cp -r $(LOCAL_SHARE_DIR)/* $(SKULL_SHARE_DIR)
+	cp $(SKULL_CPP_LIB) $(SKULL_UT_LIB) $(prefix)/lib
 
 prepare:
 	test -d $(SKULL_BIN_DIR) || mkdir -p $(SKULL_BIN_DIR)

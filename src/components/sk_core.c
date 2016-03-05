@@ -365,8 +365,8 @@ void _sk_init_user_loaders(sk_core_t* core)
         // 1. generate user library name
         char mlibname[SK_MODULE_NAME_MAX_LEN];
         memset(mlibname, 0, SK_MODULE_NAME_MAX_LEN);
-
         snprintf(mlibname, SK_MODULE_NAME_MAX_LEN, SK_USER_LIBNAME_FORMAT, lang);
+        sk_print("Loading user api layer: %s\n", mlibname);
 
         // 2. load module and service loader
         int ret = sk_userlib_load(mlibname);

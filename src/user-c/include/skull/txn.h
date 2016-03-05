@@ -1,6 +1,10 @@
 #ifndef SKULL_TXN_H
 #define SKULL_TXN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 
 typedef struct _skull_txn_t skull_txn_t;
@@ -19,6 +23,10 @@ skull_txn_status_t skull_txn_status(skull_txn_t* txn);
 void* skull_txn_data(skull_txn_t* skull_txn);
 
 void skull_txn_setdata(skull_txn_t* skull_txn, const void* data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

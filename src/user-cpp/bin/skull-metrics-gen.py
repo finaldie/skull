@@ -96,8 +96,8 @@ double _skull_%s_%s_dynamic_get(const char* fmt, ...)\n\
     return skull_metric_get(full_name);\n\
 }\n\n"
 
-METRICS_INIT_CONTENT = "    .%s = { .inc = _skull_%s_%s_inc, .get =  _skull_%s_%s_get},\n"
-METRICS_DYN_INIT_CONTENT = "    .%s = { .inc = _skull_%s_%s_dynamic_inc, .get =  _skull_%s_%s_dynamic_get},\n"
+METRICS_INIT_CONTENT = "    {_skull_%s_%s_inc, _skull_%s_%s_get},\n"
+METRICS_DYN_INIT_CONTENT = "    {_skull_%s_%s_dynamic_inc, _skull_%s_%s_dynamic_get},\n"
 
 ############################## Internal APIs ############################
 def load_yaml_config():
@@ -205,9 +205,9 @@ def gen_c_source_metrics(scope_name, metrics_obj):
     # 2.2 assemble static metris api
     for name in metrics_map:
         if type == "static":
-            content += METRICS_INIT_CONTENT % (name, scope_name, name, scope_name, name)
+            content += METRICS_INIT_CONTENT % (scope_name, name, scope_name, name)
         else:
-            content += METRICS_DYN_INIT_CONTENT % (name, scope_name, name, scope_name, name)
+            content += METRICS_DYN_INIT_CONTENT % (scope_name, name, scope_name, name)
 
     # 2.3 end of the metrics
     content += "};\n\n"

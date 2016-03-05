@@ -13,17 +13,18 @@ DEPS_LIBS += \
     -lskullcpp-api
 
 TEST_DEPS_LIBS += \
-    $(DEPS_LIBS) \
+    -lprotobuf \
+    -lskull-common-cpp \
     -lskull-unittest-c \
     -lskull-unittest-cpp
 
 # Objs and deployment related items
 SRCS = \
     src/module.cpp \
-    src/config.c
+    src/config.cpp
 
 TEST_SRCS = \
-    tests/test_module.c
+    tests/test_module.cpp
 
 # valgrind suppresion file
 #  note: if the suppresion file is exist, then need to append

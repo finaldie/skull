@@ -111,7 +111,7 @@ void sk_module_loader_register(const char* type, sk_module_loader_t loader)
     sk_module_loader_t* mloader = sk_mloader_tbl_get(type);
     if (mloader) return;
 
-    mloader = calloc(1, sizeof(mloader));
+    mloader = calloc(1, sizeof(*mloader));
     *mloader = loader;
 
     sk_mloader_tbl_set(type, mloader);

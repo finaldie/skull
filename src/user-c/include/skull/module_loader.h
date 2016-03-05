@@ -1,6 +1,10 @@
 #ifndef SKULL_MODULE_LOADER_H
 #define SKULL_MODULE_LOADER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "skull/module.h"
 
 typedef struct skull_module_loader_t {
@@ -16,6 +20,10 @@ typedef struct skull_module_loader_t {
 
 void skull_module_register_loader(const char* type,
                                   skull_module_loader_t loader);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

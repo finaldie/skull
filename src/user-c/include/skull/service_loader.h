@@ -1,6 +1,10 @@
 #ifndef SKULL_SERVICE_LOADER_H
 #define SKULL_SERVICE_LOADER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <skull/service.h>
 
 typedef struct skull_service_opt_t {
@@ -26,6 +30,10 @@ typedef struct skull_service_loader_t {
 
 void skull_service_loader_register(const char* type,
                                    skull_service_loader_t loader);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

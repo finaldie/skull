@@ -197,4 +197,12 @@ void ServiceApiRespData::deserializeMsg(const void* data, size_t sz) {
     }
 }
 
+const google::protobuf::Message& ServiceApiRespData::get() const {
+    return *this->msg_;
+}
+
+google::protobuf::Message& ServiceApiRespData::get() {
+    return *this->msg_;
+}
+
 } // End of namespace
