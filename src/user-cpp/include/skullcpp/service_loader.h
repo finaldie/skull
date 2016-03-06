@@ -26,12 +26,14 @@ typedef struct ServiceEntry {
     ServiceApi** apis;
 } ServiceEntry;
 
-#define SERVICE_REGISTER(entry) \
-    ServiceEntry* skullcpp_service_register() { \
-        return entry; \
-    }
-
 } // End of nsmespace
+
+#define SKULLCPP_SERVICE_REGISTER(entry) \
+    extern "C" { \
+        skullcpp::ServiceEntry* skullcpp_service_register() { \
+            return entry; \
+        } \
+    }
 
 #endif
 

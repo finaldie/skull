@@ -59,6 +59,7 @@ int sk_service_load(sk_service_t* service, const char* conf_name)
     const char* type = sk_service_type(service);
     sk_service_loader_t* loader = sk_sloader_tbl_get(type);
     if (!loader) {
+        sk_print("cannot find service loader, type: %s\n", type);
         return 1;
     }
 

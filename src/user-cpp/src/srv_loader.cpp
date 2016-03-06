@@ -104,7 +104,7 @@ skull_service_loader_t svc_getloader()
     return loader;
 }
 
-// Service Loader
+// Service Loader Register
 void skullcpp_service_loader_register()
 {
     skull_service_loader_register("cpp", svc_getloader());

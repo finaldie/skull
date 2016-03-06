@@ -47,7 +47,10 @@ int _srv_close (sk_service_t* service, void* ud)
 {
     skull_service_loader_t* loader = ud;
     sk_service_opt_t* opt = sk_service_opt(service);
-    return loader->close(opt->srv_data);
+    int ret = loader->close(opt->srv_data);
+    free(opt->srv_data);
+
+    return ret;
 }
 
 static

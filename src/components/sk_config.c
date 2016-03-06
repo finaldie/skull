@@ -381,7 +381,7 @@ void _load_service(const char* service_name, sk_cfg_node_t* node,
         } else if (0 == strcmp(key, "apis")) {
             _load_service_apis(child, service_name, service_cfg);
         } else if (0 == strcmp(key, "type")) {
-            service_cfg->type = strdup(key);
+            service_cfg->type = strdup(sk_config_getstring(child));
         }
     }
 
