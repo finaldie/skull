@@ -107,12 +107,13 @@ static
 int _module_close(skull_module_t* module)
 {
     module_data_t* md = (module_data_t*)module->ud;
-    void* handler = md->handler;
+    //void* handler = md->handler;
     skull_config_destroy(md->config);
 
     free(md);
     free(module);
-    return dlclose(handler);
+    //return dlclose(handler);
+    return 0;
 }
 
 static

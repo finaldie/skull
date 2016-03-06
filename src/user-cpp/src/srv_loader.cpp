@@ -72,11 +72,12 @@ static
 int _srv_close (skull_service_opt_t* opt)
 {
     skullcpp::srvdata_t* srv_data = (skullcpp::srvdata_t*)opt->ud;
-    void* handler = srv_data->handler;
+    //void* handler = srv_data->handler;
     skull_config_destroy(srv_data->config);
 
     free(srv_data);
-    return dlclose(handler);
+    //return dlclose(handler);
+    return 0;
 }
 
 static

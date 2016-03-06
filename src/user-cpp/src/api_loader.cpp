@@ -27,10 +27,10 @@ void skull_unload_api()
     // 2. Unregister service loader
     skullcpp_service_loader_unregister();
 
-    // 3. TODO: Shutdown the protobuf library correctly. Problem: if there are
+    // 3. Shutdown the protobuf library correctly. Problem: if there are
     //  some dynamic libs used protobuf, if we dlclose them before we calling
-    //  the `ShutdownProtobufLibrary`, our program will crash. Possibly, we can
-    //  delay the `dlclose` after we calling the `Shutdown` api.
-    //google::protobuf::ShutdownProtobufLibrary();
+    //  the `ShutdownProtobufLibrary`, our program will crash.
+    //  Workaround, we ignore the `dlclose`, then we calling the `Shutdown` api.
+    google::protobuf::ShutdownProtobufLibrary();
 }
 

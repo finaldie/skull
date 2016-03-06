@@ -85,7 +85,10 @@ void sk_userlib_unload()
     while ((user_api = fhash_str_next(&iter))) {
         sk_print("Unload user lib %s\n", iter.key);
         user_api->unload();
-        dlclose(user_api->handler);
+
+        // Close handler may cause some issues, e.g. crash on calling
+        //  `protobuf::shutdown` api
+        //dlclose(user_api->handler);
         free(user_api);
     }
 
