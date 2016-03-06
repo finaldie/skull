@@ -83,8 +83,8 @@ public:
     ServiceApiRespData(skull_service_t* svc, const char* apiName, bool storeBack);
     ServiceApiRespData(const char* svcName, const char* apiName,
                        const void* data, size_t sz);
-    ServiceApiRespData(const char* svcName, const char* apiName,
-                       void* data, size_t sz);
+    ServiceApiRespData(skull_service_t* svc, const char* apiName,
+                       const void* data, size_t sz);
     ~ServiceApiRespData();
 
 public:

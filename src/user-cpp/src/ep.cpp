@@ -22,7 +22,7 @@ void EPClient::setPort(in_port_t port) {
     this->port_ = port;
 }
 
-void EPClient::setIP(std::string& ip) {
+void EPClient::setIP(const std::string& ip) {
     this->ip_ = ip;
 }
 
@@ -32,6 +32,10 @@ void EPClient::setTimeout(int timeout) {
 
 void EPClient::setUnpack(unpack unpackFunc) {
     this->unpack_ = unpackFunc;
+}
+
+void EPClient::setRelease(release releaseFunc) {
+    this->release_ = releaseFunc;
 }
 
 typedef struct EpCbData {
@@ -78,8 +82,7 @@ void rawEpCb(skull_service_t* rawSvc, skull_ep_ret_t rawRet,
     const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)rawApiReq;
     const std::string& apiName = rawData->apiName;
     ServiceApiReqData apiReq(rawData);
-    ServiceApiRespData apiResp(rawData->svcName.c_str(), apiName.c_str(),
-                               rawApiResp, rawApiRespSz);
+    ServiceApiRespData apiResp(rawSvc, apiName.c_str(), rawApiResp, rawApiRespSz);
 
     epData->cb(svc, ret, response, len, ud, apiReq.get(), apiResp.get());
 }
@@ -92,6 +95,8 @@ EPClient::Status EPClient::send(Service& svc, const void* data, size_t dataSz,
 
     skull_service_t* rawSvc = svc.getRawService();
     skull_ep_handler_t ep_handler;
+    memset(&ep_handler, 0, sizeof(ep_handler));
+
     if (this->type_ == TCP) {
         ep_handler.type = SKULL_EP_TCP;
     } else if (this->type_ == UDP) {

@@ -76,7 +76,7 @@ public:
 public:
     void setType(Type type);
     void setPort(in_port_t port);
-    void setIP(std::string& ip);
+    void setIP(const std::string& ip);
     void setTimeout(int timeout);
     void setUnpack(unpack unpackFunc);
     void setRelease(release releaseFunc);

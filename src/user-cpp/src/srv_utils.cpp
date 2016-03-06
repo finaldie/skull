@@ -144,11 +144,11 @@ ServiceApiRespData::ServiceApiRespData(const char* svcName,
     deserializeMsg(data, sz);
 }
 
-ServiceApiRespData::ServiceApiRespData(const char* svcName,
+ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
                                        const char* apiName,
-                                       void* data, size_t sz) {
-    this->svc_       = NULL;
-    this->descName_  = std::string(svcName) + "-" + apiName + "_resp.proto";
+                                       const void* data, size_t sz) {
+    this->svc_       = svc;
+    this->descName_  = std::string(skull_service_name(svc)) + "-" + apiName + "_resp.proto";
     this->storeBack_ = true;
     this->msg_       = NULL;
 
