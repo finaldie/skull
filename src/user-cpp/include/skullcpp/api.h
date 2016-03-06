@@ -1,6 +1,8 @@
 #ifndef SKULLCPP_API_H
 #define SKULLCPP_API_H
 
+#include <skull/api.h>
+
 #include <skullcpp/metrics_utils.h>
 #include <skullcpp/txn.h>
 #include <skullcpp/txndata.h>
