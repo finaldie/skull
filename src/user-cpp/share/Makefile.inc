@@ -58,8 +58,8 @@ SKULL_BIN_LD = $(CC) $(SKULL_BIN_LDFLAGS)
 	$(SKULL_CC) -c $< -o $@
 
 # Objs, user need to fill the `SRCS` and `TEST_SRCS` variable
-OBJS = $(patsubst %.cpp,%.o,$(SRCS))
-TEST_OBJS = $(patsubst %.cpp,%.o,$(TEST_SRCS))
+OBJS = $(patsubst %.cc, %.o, $(patsubst %.cpp, %.o, $(SRCS)))
+TEST_OBJS = $(patsubst %.cpp, %.o, $(TEST_SRCS))
 
 # bin/lib Name
 DIRNAME ?= $(shell basename $(shell pwd))

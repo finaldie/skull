@@ -142,6 +142,7 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
 
         int ret = flist_push(workflow->modules, mcfg);
         SK_ASSERT(!ret);
+        free(tmp);
     }
 }
 

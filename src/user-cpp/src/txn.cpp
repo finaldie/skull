@@ -49,8 +49,12 @@ Txn::~Txn() {
 google::protobuf::Message& Txn::data() {
     // 1. Create a new message according to idl name
     const char* idlName = skull_txn_idlname(this->txn_);
-    const Descriptor* desc =
-        DescriptorPool::generated_pool()->FindMessageTypeByName(idlName);
+    std::string protoFileName = std::string(idlName) + ".proto";
+
+    const FileDescriptor* fileDesc =
+        DescriptorPool::generated_pool()->FindFileByName(protoFileName);
+    const Descriptor* desc = fileDesc->message_type(0);
+
     const Message* new_msg =
         MessageFactory::generated_factory()->GetPrototype(desc);
 

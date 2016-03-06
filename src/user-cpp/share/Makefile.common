@@ -14,7 +14,7 @@ TEST_DEPS_LIBS += \
     -lskull-unittest-cpp
 
 # Source files
-SRCS = $(shell find src -name "*.cpp")
+SRCS = $(shell find src -name "*.c*")
 
 # Source files of UT
 TEST_SRCS = $(shell find tests -name "*.cpp")
