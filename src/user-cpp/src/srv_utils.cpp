@@ -28,7 +28,7 @@ ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const char* apiName) 
     this->svc_      = svc;
     this->svcName_  = std::string(skull_service_name(svc));
     this->apiName_  = std::string(apiName);
-    this->descName_ = this->svcName_ + "." + apiName + "_req";
+    this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
     this->msg_      = NULL;
     memset(&this->rawData_, 0, sizeof(this->rawData_));
     this->destroyMsg_ = true;
@@ -44,7 +44,7 @@ ServiceApiReqData::ServiceApiReqData(const ServiceApiReqRawData* rawData) {
     this->svc_ = NULL;
     this->svcName_ = rawData->svcName;
     this->apiName_ = rawData->apiName;
-    this->descName_ = rawData->svcName + "." + this->apiName_ + "_req";
+    this->descName_ = rawData->svcName + "-" + this->apiName_ + "_req.proto";
     this->msg_ = NULL;
     this->rawData_  = *rawData;
     this->destroyMsg_ = true;
@@ -57,7 +57,7 @@ ServiceApiReqData::ServiceApiReqData(const char* svcName, const char* apiName,
     this->svc_ = NULL;
     this->svcName_ = std::string(svcName);
     this->apiName_ = std::string(apiName);
-    this->descName_ = this->svcName_ + "." + apiName + "_req";
+    this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
     this->msg_ = &(google::protobuf::Message&)msg;
 
     memset(&this->rawData_, 0, sizeof(this->rawData_));
@@ -70,7 +70,7 @@ ServiceApiReqData::ServiceApiReqData(const skullmock_task_t* task) {
 
     this->svcName_ = std::string(task->service->name);
     this->apiName_ = std::string(task->api_name);
-    this->descName_ = this->svcName_ + "." + this->apiName_ + "_req";
+    this->descName_ = this->svcName_ + "-" + this->apiName_ + "_req.proto";
     this->msg_ = NULL;
     this->destroyMsg_ = true;
 
@@ -88,8 +88,9 @@ void ServiceApiReqData::deserializeMsg(const void* data, size_t sz) {
         return;
     }
 
-    const Descriptor* desc =
-        DescriptorPool::generated_pool()->FindMessageTypeByName(this->descName_);
+    const FileDescriptor* fileDesc =
+        DescriptorPool::generated_pool()->FindFileByName(this->descName_);
+    const Descriptor* desc = fileDesc->message_type(0);
 
     const Message* new_msg =
         MessageFactory::generated_factory()->GetPrototype(desc);
@@ -127,7 +128,7 @@ ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
                                        const char* apiName,
                                        bool storeBack) {
     this->svc_       = svc;
-    this->descName_  = std::string(skull_service_name(svc)) + "." + apiName + "_resp";
+    this->descName_  = std::string(skull_service_name(svc)) + "-" + apiName + "_resp.proto";
     this->storeBack_ = storeBack;
     this->msg_       = NULL;
 
@@ -140,7 +141,7 @@ ServiceApiRespData::ServiceApiRespData(const char* svcName,
                                        const char* apiName,
                                        const void* data, size_t sz) {
     this->svc_       = NULL;
-    this->descName_  = std::string(svcName) + "." + apiName + "_resp";
+    this->descName_  = std::string(svcName) + "-" + apiName + "_resp.proto";
     this->storeBack_ = false;
     this->msg_       = NULL;
 
@@ -151,7 +152,7 @@ ServiceApiRespData::ServiceApiRespData(const char* svcName,
                                        const char* apiName,
                                        void* data, size_t sz) {
     this->svc_       = NULL;
-    this->descName_  = std::string(svcName) + "." + apiName + "_resp";
+    this->descName_  = std::string(svcName) + "-" + apiName + "_resp.proto";
     this->storeBack_ = true;
     this->msg_       = NULL;
 
@@ -183,8 +184,9 @@ void ServiceApiRespData::deserializeMsg(const void* data, size_t sz) {
         return;
     }
 
-    const Descriptor* desc =
-        DescriptorPool::generated_pool()->FindMessageTypeByName(this->descName_);
+    const FileDescriptor* fileDesc =
+        DescriptorPool::generated_pool()->FindFileByName(this->descName_);
+    const Descriptor* desc = fileDesc->message_type(0);
 
     const Message* new_msg =
         MessageFactory::generated_factory()->GetPrototype(desc);

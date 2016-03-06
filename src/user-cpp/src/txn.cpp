@@ -51,6 +51,7 @@ google::protobuf::Message& Txn::data() {
     const char* idlName = skull_txn_idlname(this->txn_);
     std::string protoFileName = std::string(idlName) + ".proto";
 
+    // 1.1 Find the top 1 Message Descriptor
     const FileDescriptor* fileDesc =
         DescriptorPool::generated_pool()->FindFileByName(protoFileName);
     const Descriptor* desc = fileDesc->message_type(0);

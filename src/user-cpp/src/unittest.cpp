@@ -131,6 +131,7 @@ void UTModule::setTxnSharedData(const google::protobuf::Message& data) {
     skullut_module_setdata(this->utModule_, rawData);
 }
 
+// The detail implementation is refer to txn.cpp
 google::protobuf::Message& UTModule::getTxnSharedData() {
     if (this->msg_) {
         delete this->msg_;
@@ -138,8 +139,12 @@ google::protobuf::Message& UTModule::getTxnSharedData() {
     }
 
     const std::string& idlName = this->idlName_;
-    const Descriptor* desc =
-        DescriptorPool::generated_pool()->FindMessageTypeByName(idlName);
+    std::string protoFileName = idlName + ".proto";
+
+    const FileDescriptor* fileDesc =
+        DescriptorPool::generated_pool()->FindFileByName(protoFileName);
+    const Descriptor* desc = fileDesc->message_type(0);
+
     const Message* new_msg =
         MessageFactory::generated_factory()->GetPrototype(desc);
     this->msg_ = new_msg->New();
