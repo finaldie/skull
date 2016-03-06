@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 #include <google/protobuf/descriptor.h>
 
 #include "srv_utils.h"
@@ -30,7 +29,6 @@ ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const char* apiName) 
     this->apiName_  = std::string(apiName);
     this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
     this->msg_      = NULL;
-    memset(&this->rawData_, 0, sizeof(this->rawData_));
     this->destroyMsg_ = true;
 
     size_t sz  = 0;
@@ -59,8 +57,6 @@ ServiceApiReqData::ServiceApiReqData(const char* svcName, const char* apiName,
     this->apiName_ = std::string(apiName);
     this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
     this->msg_ = &(google::protobuf::Message&)msg;
-
-    memset(&this->rawData_, 0, sizeof(this->rawData_));
     this->rawData_.cb = cb;
     this->destroyMsg_ = false;
 }

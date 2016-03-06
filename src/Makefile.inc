@@ -5,7 +5,7 @@ STD = -std=c99
 WARN = -Wall
 EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter
 EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
-EXTRA += -Wconversion
+EXTRA += -Wconversion -fno-omit-frame-pointer
 OTHER = -pipe -g -ggdb3 -fPIC
 SHARED = -shared
 LDFLAGS += -rdynamic -Wl,-E

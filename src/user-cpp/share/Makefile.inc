@@ -10,7 +10,7 @@ EXTRA = -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal
 EXTRA += -Winline -Wdisabled-optimization
 # It's better to use `-fstack-protector-strong`, but most of environment do not
 # have gcc 4.9, so use `-fstack-protector` first
-EXTRA += -fstack-protector
+EXTRA += -fstack-protector -fno-omit-frame-pointer
 
 # Enable the following line to build a strong program
 EXTRA += -pedantic -Wpadded -Wconversion

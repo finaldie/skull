@@ -28,15 +28,18 @@ Txn::~Txn() {
     TxnSharedRawData* rawData = (TxnSharedRawData*)skull_txn_data(this->txn_);
 
     if (!this->destroyRawData_) {
-        void* idlData = NULL;
-        int sz = this->msg_->ByteSize();
-        if (sz) {
-            idlData = calloc(1, (size_t)sz);
-            bool r = this->msg_->SerializeToArray(idlData, sz);
-            assert(r);
-        }
+        // Fill back the data when msg_ has be used before
+        if (this->msg_) {
+            void* idlData = NULL;
+            int sz = this->msg_->ByteSize();
+            if (sz) {
+                idlData = calloc(1, (size_t)sz);
+                bool r = this->msg_->SerializeToArray(idlData, sz);
+                assert(r);
+            }
 
-        rawData->reset(idlData, (size_t)sz);
+            rawData->reset(idlData, (size_t)sz);
+        }
     } else {
         delete rawData;
         skull_txn_setdata(this->txn_, NULL);

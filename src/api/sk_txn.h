@@ -73,9 +73,9 @@ typedef int (*sk_txn_task_cb) ();
 typedef struct sk_txn_taskdata_t {
     const sk_txn_task_t* owner;
     const char* api_name;
-    const void* request;
+    const void* request;    // user responsible for release this data
     size_t      request_sz;
-    void *      response;
+    void *      response;   // user responsible for release this data
     size_t      response_sz;
     void*       user_data;
     struct sk_module_t* caller_module;

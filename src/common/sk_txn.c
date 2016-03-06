@@ -78,9 +78,8 @@ void _sk_txn_task_destroy(sk_txn_task_t* task)
         return;
     }
 
-    // Must release the request data if have, or it will be a mem leak
-    free((void*)task->task_data.request);
-    free(task->task_data.response);
+    // Notes: here we won't release the task_data.request/response,
+    //  the responsibility is from user
     free(task);
 }
 

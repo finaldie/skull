@@ -23,8 +23,8 @@ public:
     Service::ApiCB cb;
 
 public:
-    ServiceApiReqRawData() {};
-    ~ServiceApiReqRawData() {};
+    ServiceApiReqRawData() : data(NULL), sz(0), cb(NULL) {}
+    ~ServiceApiReqRawData() {}
 };
 
 class ServiceApiReqData {
