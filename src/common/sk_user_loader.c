@@ -7,9 +7,14 @@
 #include "api/sk_const.h"
 #include "api/sk_loader.h"
 
+typedef struct sk_user_api_t {
+    void* handler;
+    void (*load) ();
+    void (*unload) ();
+} sk_user_api_t;
+
 static fhash* user_libs = NULL;
 
-typedef void (*lib_register) ();
 
 int sk_userlib_load(const char* filename)
 {
@@ -45,43 +50,43 @@ int sk_userlib_load(const char* filename)
         }
     }
 
-    // 2. Find module loader
-    lib_register module_register = NULL;
-    *(void**)(&module_register) = dlsym(handler, SK_MODULE_REGISTER_FUNCNAME);
+    sk_user_api_t* user_api = calloc(1, sizeof(*user_api));
+    user_api->handler = handler;
+
+    // 2. Find api loader
+    *(void**)(&user_api->load) = dlsym(handler, SK_API_LOAD_FUNCNAME);
     if ((error = dlerror()) != NULL) {
-        sk_print("Error: cannot open user lib %s:%s, reason: %s\n",
-                 filename, SK_MODULE_REGISTER_FUNCNAME, error);
+        sk_print("Error: cannot setup user 'load' api %s:%s, reason: %s\n",
+                 filename, SK_API_LOAD_FUNCNAME, error);
         return 1;
     }
 
-    // 2.1 Run user module register
-    module_register();
-
-    // 3. Register service
-    lib_register service_register = NULL;
-    *(void**)(&service_register) = dlsym(handler, SK_SERVICE_REGISTER_FUNCNAME);
+    // 3. Find api unloader
+    *(void**)(&user_api->unload) = dlsym(handler, SK_API_UNLOAD_FUNCNAME);
     if ((error = dlerror()) != NULL) {
-        sk_print("Error: cannot open user lib %s:%s, reason: %s\n",
-                 filename, SK_SERVICE_REGISTER_FUNCNAME, error);
+        sk_print("Error: cannot setup user 'unload' api %s:%s, reason: %s\n",
+                 filename, SK_API_UNLOAD_FUNCNAME, error);
         return 1;
     }
 
-    // 4. Run user module register
-    service_register();
+    // 4. Add to userlibs table
+    fhash_str_set(user_libs, filename, user_api);
 
-    // 5. Add to userlibs table
-    fhash_str_set(user_libs, filename, handler);
+    // 5. Run api loader
+    user_api->load();
     return 0;
 }
 
 void sk_userlib_unload()
 {
     fhash_str_iter iter = fhash_str_iter_new(user_libs);
-    void* handler = NULL;
+    sk_user_api_t* user_api = NULL;
 
-    while ((handler = fhash_str_next(&iter))) {
+    while ((user_api = fhash_str_next(&iter))) {
         sk_print("Unload user lib %s\n", iter.key);
-        dlclose(handler);
+        user_api->unload();
+        dlclose(user_api->handler);
+        free(user_api);
     }
 
     fhash_str_iter_release(&iter);

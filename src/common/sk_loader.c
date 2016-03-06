@@ -48,6 +48,12 @@ void sk_mloader_tbl_set(const char* type, sk_module_loader_t* loader)
     fhash_str_set(mloader_tbl->tbl, type, loader);
 }
 
+static
+sk_module_loader_t* sk_mloader_tbl_del(const char* type)
+{
+    return fhash_str_del(mloader_tbl->tbl, type);
+}
+
 sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
                             const char* conf_name)
 {
@@ -117,3 +123,8 @@ void sk_module_loader_register(const char* type, sk_module_loader_t loader)
     sk_mloader_tbl_set(type, mloader);
 }
 
+sk_module_loader_t* sk_module_loader_unregister(const char* type)
+{
+    if (!type) return NULL;
+    return sk_mloader_tbl_del(type);
+}

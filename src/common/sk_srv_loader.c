@@ -48,6 +48,12 @@ void sk_sloader_tbl_set(const char* type, sk_service_loader_t* loader)
     fhash_str_set(sloader_tbl->tbl, type, loader);
 }
 
+static
+sk_service_loader_t* sk_sloader_tbl_del(const char* type)
+{
+    return fhash_str_del(sloader_tbl->tbl, type);
+}
+
 int sk_service_load(sk_service_t* service, const char* conf_name)
 {
     const char* type = sk_service_type(service);
@@ -115,4 +121,10 @@ void sk_service_loader_register(const char* type, sk_service_loader_t loader)
     *sloader = loader;
 
     sk_sloader_tbl_set(type, sloader);
+}
+
+sk_service_loader_t* sk_service_loader_unregister(const char* type)
+{
+    if (!type) return NULL;
+    return sk_sloader_tbl_del(type);
 }

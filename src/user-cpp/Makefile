@@ -30,8 +30,8 @@ SKULL_UT_LIB := libskull-unittest-cpp.so
 DEPS_LDFLAGS = -L../../deps/flibs/lib
 
 SKULL_LIBS = \
-    -lprotobuf \
-    -ldl
+    -ldl \
+    -lprotobuf
 
 SKULL_OBJS = \
     src/ep.o \
@@ -44,7 +44,8 @@ SKULL_OBJS = \
     src/srv_utils.o \
     src/txn.o \
     src/txndata.o \
-    src/txn_idldata.o
+    src/txn_idldata.o \
+    src/api_loader.o
 
 SKULL_UT_OBJS = \
     src/unittest.o

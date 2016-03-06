@@ -81,3 +81,12 @@ void skull_service_loader_register(const char* type,
 
     sk_service_loader_register(type, sk_loader);
 }
+
+void skull_service_loader_unregister(const char* type)
+{
+    sk_service_loader_t* loader = sk_service_loader_unregister(type);
+    if (!loader) return;
+
+    free(loader->ud);
+    free(loader);
+}

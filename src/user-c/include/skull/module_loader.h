@@ -18,8 +18,9 @@ typedef struct skull_module_loader_t {
     int             (*close)       (skull_module_t* module);
 } skull_module_loader_t;
 
-void skull_module_register_loader(const char* type,
+void skull_module_loader_register(const char* type,
                                   skull_module_loader_t loader);
+void skull_module_loader_unregister(const char* type);
 
 #ifdef __cplusplus
 }

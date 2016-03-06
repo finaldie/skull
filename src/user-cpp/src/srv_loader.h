@@ -24,11 +24,8 @@ typedef struct srvdata_t {
 
 } // End of namespace
 
-// Public Register API
-extern "C" {
-void skull_service_register();
-}
-
+void skullcpp_service_loader_register();
+void skullcpp_service_loader_unregister();
 skull_service_loader_t svc_getloader();
 
 #endif

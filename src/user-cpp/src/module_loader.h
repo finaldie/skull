@@ -16,11 +16,8 @@ typedef struct module_data_t {
     void   (*release) ();
 } module_data_t;
 
-// Public Register API
-extern "C" {
-void skull_module_register();
-}
-
+void skullcpp_module_loader_register();
+void skullcpp_module_loader_unregister();
 skull_module_loader_t module_getloader();
 
 #endif

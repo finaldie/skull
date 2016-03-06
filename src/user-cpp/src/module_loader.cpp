@@ -139,9 +139,14 @@ skull_module_loader_t module_getloader() {
     return loader;
 }
 
-// Module Loader
-void skull_module_register()
+// Module Loader Register
+void skullcpp_module_loader_register()
 {
     skull_module_loader_t loader = module_getloader();
-    skull_module_register_loader("cpp", loader);
+    skull_module_loader_register("cpp", loader);
+}
+
+void skullcpp_module_loader_unregister()
+{
+    skull_module_loader_unregister("cpp");
 }

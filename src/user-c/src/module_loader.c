@@ -75,7 +75,7 @@ int _module_load_config(sk_module_t* module, const char* filename, void* ud)
     return loader->load_config(u_module, filename);
 }
 
-void skull_module_register_loader(const char* type, skull_module_loader_t loader)
+void skull_module_loader_register(const char* type, skull_module_loader_t loader)
 {
     skull_module_loader_t* uloader = calloc(1, sizeof(*uloader));
     *uloader = loader;
@@ -90,5 +90,14 @@ void skull_module_register_loader(const char* type, skull_module_loader_t loader
     };
 
     sk_module_loader_register(type, sk_module_loader);
+}
+
+void skull_module_loader_unregister(const char* type)
+{
+    sk_module_loader_t* loader = sk_module_loader_unregister(type);
+    if (!loader) return;
+
+    free(loader->ud);
+    free(loader);
 }
 

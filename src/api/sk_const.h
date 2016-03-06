@@ -19,8 +19,8 @@ struct sk_const_t;
 #define SK_MODULE_NAME_MAX_LEN               1024
 #define SK_SERVICE_NAME_MAX_LEN              1024
 
-#define SK_MODULE_REGISTER_FUNCNAME          "skull_module_register"
-#define SK_SERVICE_REGISTER_FUNCNAME         "skull_service_register"
+#define SK_API_LOAD_FUNCNAME                 "skull_load_api"
+#define SK_API_UNLOAD_FUNCNAME               "skull_unload_api"
 
 #define SK_USER_LIBNAME_FORMAT               "libskull%s-api.so"
 #define SK_USER_PREFIX1                      "/usr/local/lib"

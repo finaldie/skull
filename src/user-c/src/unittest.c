@@ -41,7 +41,7 @@ skullut_module_t* skullut_module_create(const char* module_name,
                                         const char* type,
                                         skull_module_loader_t loader)
 {
-    skull_module_register_loader(type, loader);
+    skull_module_loader_register(type, loader);
 
     skullut_module_t* env = calloc(1, sizeof(*env));
     env->module_cfg.name = module_name;

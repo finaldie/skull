@@ -37,6 +37,7 @@ sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
 void sk_module_unload(sk_module_t* module);
 
 void sk_module_loader_register(const char* type, sk_module_loader_t loader);
+sk_module_loader_t* sk_module_loader_unregister(const char* type);
 
 // =============================================================================
 
@@ -72,6 +73,7 @@ int sk_service_load(sk_service_t* srv, const char* user_config_name);
 void sk_service_unload(sk_service_t* service);
 
 void sk_service_loader_register(const char* type, sk_service_loader_t loader);
+sk_service_loader_t* sk_service_loader_unregister(const char* type);
 
 /******************************************************************************/
 int sk_userlib_load(const char* libname);

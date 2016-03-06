@@ -30,6 +30,7 @@ typedef struct skull_service_loader_t {
 
 void skull_service_loader_register(const char* type,
                                    skull_service_loader_t loader);
+void skull_service_loader_unregister(const char* type);
 
 #ifdef __cplusplus
 }
