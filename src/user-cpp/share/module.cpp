@@ -10,7 +10,7 @@
 
 extern "C" {
 void module_init(skull_config_t* config);
-void module_release(void* user_data);
+void module_release();
 size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz);
 int module_run(skullcpp::Txn& txn);
 void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata);
