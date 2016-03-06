@@ -4,6 +4,7 @@
 
 #include "flibs/flog.h"
 
+#include "api/sk_const.h"
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_config_loader.h"
@@ -121,12 +122,15 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
 
         sk_module_cfg_t* mcfg = calloc(1, sizeof(*mcfg));
         const char* raw = child->data.value;
-        char* tmp = strdup(raw);
+
+        char tmp[SK_CONFIG_VALUE_MAXLEN];
+        strncpy(tmp, raw, SK_CONFIG_VALUE_MAXLEN);
+        char* tmp1 = tmp;
 
         // Format: 'name:type'
         char* token = NULL;
         int i = 0;
-        while ((token = strsep(&tmp, ":")) && i < 2) {
+        while ((token = strsep(&tmp1, ":")) && i < 2) {
             if (i == 0) {
                 // fill name
                 mcfg->name = strdup(token);
@@ -142,7 +146,6 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
 
         int ret = flist_push(workflow->modules, mcfg);
         SK_ASSERT(!ret);
-        free(tmp);
     }
 }
 
@@ -537,10 +540,10 @@ void sk_config_print(sk_config_t* config)
         sk_print("\tconcurrent: %d\n", workflow->concurrent);
         sk_print("\tmodules: ");
 
-        char* module_name = NULL;
+        sk_module_cfg_t* mcfg = NULL;
         flist_iter name_iter = flist_new_iter(workflow->modules);
-        while ((module_name = flist_each(&name_iter))) {
-            sk_rawprint("%s ", module_name);
+        while ((mcfg = flist_each(&name_iter))) {
+            sk_rawprint("%s:%s ", mcfg->name, mcfg->type);
         }
 
         sk_rawprint("\n");

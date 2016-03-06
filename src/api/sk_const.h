@@ -43,6 +43,7 @@ struct sk_const_t;
 #define SK_CONFIG_LOGNAME_LEN                1024
 
 #define SK_CONFIG_NO_PORT                    (-1)
+#define SK_CONFIG_VALUE_MAXLEN               256
 
 // ep pool
 #define SK_EP_POOL_MAX                       (1024)
