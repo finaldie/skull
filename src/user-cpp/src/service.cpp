@@ -29,7 +29,7 @@ const void* Service::get() const {
     return skull_service_data_const(this->svc);
 }
 
-int Service::createJob(uint32_t delayed, Job job, void *ud, int bioIdx) {
+int Service::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) {
     return 0;
 }
 

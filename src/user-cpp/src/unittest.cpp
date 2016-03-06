@@ -29,15 +29,24 @@ UTModule::UTModule(const std::string& moduleName, const std::string& idlName,
 }
 
 UTModule::~UTModule() {
+    // 1. Destroy msg
     if (this->msg_) {
         delete this->msg_;
         this->msg_ = NULL;
     }
 
+    // 2. Destroy rawData
     TxnSharedRawData* rawData =
         (TxnSharedRawData*)skullut_module_data(this->utModule_);
     delete rawData;
 
+    // 3. Destroy mock services
+    MockSvcs::iterator it = this->mockSvcs_.begin();
+    for (; it != this->mockSvcs_.end(); it++) {
+        delete it->second;
+    }
+
+    // 4.
     skullut_module_destroy(this->utModule_);
 }
 
@@ -45,65 +54,94 @@ bool UTModule::run() {
     return skullut_module_run(this->utModule_);
 }
 
-class MockSvcData {
-private:
-    std::map<std::string, UTModule::ServiceApi*> apis_;
-
-public:
-    MockSvcData(UTModule::ServiceApi** apis) {
-        for (int i = 0; apis[i] != NULL; i++) {
-            this->apis_.insert(std::make_pair(std::string(apis[i]->name), apis[i]));
-        }
-    }
-
-    ~MockSvcData() {}
-
-    const UTModule::ServiceApi* getApi(const char* apiName) const {
-        std::map<std::string, UTModule::ServiceApi*>::const_iterator it;
-
-        it = this->apis_.find(apiName);
-        if (it != this->apis_.end()) {
-            return it->second;
-        } else {
-            return NULL;
-        }
-    }
-};
-
 // Fill the task.response
 static
 void _iocall(const char* apiName, skullmock_task_t* task, void* ud) {
-    MockSvcData* mockSvcData = (MockSvcData*)ud;
-    const UTModule::ServiceApi* svcApi = mockSvcData->getApi(apiName);
+    UTModule* utModule = (UTModule*)ud;
+    std::string svcName(task->service->name);
 
     // prepare apiReq and apiResp
     ServiceApiReqData apiReq(task);
-    ServiceApiRespData apiResp(task->service->name, task->api_name, task->response,
-                               task->response_sz);
-    google::protobuf::Message& respMsg = apiResp.get();
-
-    svcApi->iocall(apiReq.get(), respMsg);
+    const google::protobuf::Message* respMsg = utModule->popServiceCall(svcName, apiName);
+    if (respMsg) {
+        respMsg->PrintDebugString();
+    }
 
     // Fill task.response
-    task->response_sz = (size_t)respMsg.ByteSize();
+    if (!respMsg) {
+        return;
+    }
+
+    task->response_sz = (size_t)respMsg->ByteSize();
     task->response = calloc(1, task->response_sz);
-    respMsg.SerializeToArray(task->response, (int)task->response_sz);
+    respMsg->SerializeToArray(task->response, (int)task->response_sz);
 }
 
 static
 void _release(void* ud) {
-    MockSvcData* mockSvcData = (MockSvcData*)ud;
-    delete(mockSvcData);
 }
 
-bool UTModule::addService(const std::string& svcName, ServiceApi** apis) {
-    skullmock_svc_t mockSvc;
-    mockSvc.name = svcName.c_str();
-    mockSvc.ud   = NULL;
-    mockSvc.iocall  = _iocall;
-    mockSvc.release = _release;
+const google::protobuf::Message* UTModule::popServiceCall(
+        const std::string& svcName,
+        const std::string& apiName) {
+    MockApiCall* apis = NULL;
+    MockSvcs::iterator it = this->mockSvcs_.find(svcName);
 
-    skullut_module_mocksrv_add(this->utModule_, mockSvc);
+    if (it == this->mockSvcs_.end()) {
+        return NULL;
+    } else {
+        apis = it->second;
+    }
+
+    MockApiCall::iterator ait = apis->find(apiName);
+    if (ait == apis->end()) {
+        return NULL;
+    } else {
+        ApiResponses& responses = ait->second;
+        size_t idx = responses.idx++;
+
+        if (idx < responses.queue.size()) {
+            return responses.queue.at(idx);
+        } else {
+            return NULL;
+        }
+    }
+}
+
+bool UTModule::pushServiceCall(const std::string& svcName,
+                               const std::string& apiName,
+                               const google::protobuf::Message& response)
+{
+    // 1. Find or create a mock service
+    MockApiCall* apis = NULL;
+    MockSvcs::iterator it = this->mockSvcs_.find(svcName);
+
+    if (it == this->mockSvcs_.end()) {
+        skullmock_svc_t mockSvc;
+        mockSvc.name = svcName.c_str();
+        mockSvc.ud   = this;
+        mockSvc.iocall  = _iocall;
+        mockSvc.release = _release;
+        skullut_module_mocksrv_add(this->utModule_, mockSvc);
+
+        apis = new MockApiCall();
+        this->mockSvcs_.insert(std::make_pair(svcName, apis));
+    } else {
+        apis = it->second;
+    }
+
+    // 2. Find or create a api
+    MockApiCall::iterator ait = apis->find(apiName);
+    if (ait != apis->end()) {
+        ApiResponses& responses = ait->second;
+        responses.queue.push_back(&response);
+    } else {
+        ApiResponses responses;
+        responses.queue.push_back(&response);
+
+        apis->insert(std::make_pair(apiName, responses));
+    }
+
     return true;
 }
 

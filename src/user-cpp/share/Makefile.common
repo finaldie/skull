@@ -10,8 +10,9 @@ DEPS_LIBS += \
     -lskullcpp-api
 
 TEST_DEPS_LIBS += \
+    -lskull-unittest-cpp \
     -lskull-unittest-c \
-    -lskull-unittest-cpp
+    -lprotobuf
 
 # Source files
 SRCS = $(shell find src -name "*.c*")

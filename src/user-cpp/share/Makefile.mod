@@ -8,15 +8,15 @@ INC = \
 DEPS_LDFLAGS += -L../../common/cpp/lib
 
 DEPS_LIBS += \
-    -lprotobuf \
     -lskull-common-cpp \
-    -lskullcpp-api
+    -lskullcpp-api \
+    -lprotobuf
 
 TEST_DEPS_LIBS += \
-    -lprotobuf \
     -lskull-common-cpp \
-    -lskull-unittest-c \
-    -lskull-unittest-cpp
+    -lskull-unittest-cpp \
+    -lprotobuf \
+    -lskull-unittest-c
 
 # Objs and deployment related items
 SRCS = \

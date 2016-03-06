@@ -48,7 +48,16 @@ SKULL_OBJS = \
     src/api_loader.o
 
 SKULL_UT_OBJS = \
-    src/unittest.o
+    src/unittest.o \
+    src/module_loader.o \
+    src/module_executor.o \
+    src/srv_loader.o \
+    src/srv_executor.o \
+    src/srv_utils.o \
+    src/service.o \
+    src/txn.o \
+    src/txn_idldata.o \
+    src/txndata.o
 
 all: $(SKULL_CPP_LIB) $(SKULL_UT_LIB)
 

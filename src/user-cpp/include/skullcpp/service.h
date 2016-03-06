@@ -35,10 +35,7 @@ public:
     ~Service();
 
 public:
-    int createJob(uint32_t delayed,
-                  Job job,
-                  void*,
-                  int bioIdx);
+    int createJob(Job job, void* ud, uint32_t delayed, int bioIdx);
 
 public:
     void set(const void* data);

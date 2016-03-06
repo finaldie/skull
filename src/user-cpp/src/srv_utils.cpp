@@ -71,7 +71,8 @@ ServiceApiReqData::ServiceApiReqData(const skullmock_task_t* task) {
     this->cb_       = NULL;
     this->destroyMsg_ = true;
 
-    deserializeMsg(task->request, task->request_sz);
+    const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)task->request;
+    deserializeMsg(rawData->data, rawData->sz);
 }
 
 ServiceApiReqData::~ServiceApiReqData() {

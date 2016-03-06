@@ -1,6 +1,7 @@
 # The utility Makefile be included by other module Makefiles
 
 debug ?= false
+CC ?= g++
 
 # Compiling flags
 STD = -std=c++11

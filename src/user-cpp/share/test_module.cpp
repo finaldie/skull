@@ -1,11 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <skull/unittest.h>
-#include "skull_txn_sharedata.h"
-
-// After you add a service, uncomment the following line
-//#include "skull_srv_api_proto.h"
+#include <skullcpp/unittest.h>
+#include "skull_protos.h"
 
 /**
  * Basic Unit Test Rules for skull module:
@@ -20,35 +17,26 @@ static
 void test_example()
 {
     // 1. create a ut env
-    skullut_module_t* env = skullut_module_create("test", "example",
-                                                  "tests/test_config.yaml");
+    skullcpp::UTModule env("test", "example", "tests/test_config.yaml");
 
     // 2. set the global txn share data before execution
     // notes: A module needs a serialized txn data, so after we call the api
     //  'skullut_module_data_reset', the 'example' structure will be useless
-    Skull__Example example = SKULL__EXAMPLE__INIT;
-    example.data.len = 5;
-    example.data.data = calloc(1, 5);
-    memcpy(example.data.data, "hello", 5);
+    skull::example example;
+    example.set_data("hello");
 
     // 2.1 reset the ut env's share data
-    skullut_module_data_reset(env, &example);
-
-    // 2.2 release the example's allocated memory
-    free(example.data.data);
+    env.setTxnSharedData(example);
 
     // 3. execute this env, and assert the expectation results
     // 3.1 assert the module return code is 0
-    int ret = skullut_module_run(env);
+    bool ret = env.run();
     SKULL_CUNIT_ASSERT(ret == 0);
 
     // 3.2 assert the txn share data is "hello"
-    Skull__Example* new_example = skullut_module_data(env);
-    SKULL_CUNIT_ASSERT(0 == strncmp((const char*)new_example->data.data, "hello", 5));
-
-    // 4. test done, clean up and destroy the ut env
-    skullut_module_data_release(new_example);
-    skullut_module_destroy(env);
+    const skull::example new_example = (const skull::example&)env.getTxnSharedData();
+    SKULL_CUNIT_ASSERT(new_example.data() == "hello");
+    SKULL_CUNIT_ASSERT(new_example.data() == example.data());
 }
 
 int main(int argc, char** argv)

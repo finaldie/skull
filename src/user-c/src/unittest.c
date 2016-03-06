@@ -372,10 +372,51 @@ int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
     return 0;
 }
 
+int skull_service_apidata_set(skull_service_t* svc, int type,
+                              const void* data, size_t sz)
+{
+    sk_txn_taskdata_t* taskdata = svc->task;
+    if (!taskdata) {
+        return 1;
+    }
+
+    if (type == SKULL_API_REQ) {
+        taskdata->request    = data;
+        taskdata->request_sz = sz;
+    } else {
+        taskdata->response   = (void*)data;
+        taskdata->response_sz = sz;
+    }
+
+    return 0;
+}
+
+void* skull_service_apidata(skull_service_t* svc, int type, size_t* sz)
+{
+    sk_txn_taskdata_t* taskdata = svc->task;
+    if (!taskdata) {
+        return NULL;
+    }
+
+    if (type == SKULL_API_REQ) {
+        if (sz) *sz = taskdata->request_sz;
+        return (void*)taskdata->request;
+    } else {
+        if (sz) *sz = taskdata->response_sz;
+        return taskdata->response;
+    }
+}
+
 // Mock API for sk_service
 const char* sk_service_name(const sk_service_t* service)
 {
     return ((fake_service_t*)service)->name;
+}
+
+const char* skull_service_name(skull_service_t* service)
+{
+    skullut_service_t* ut_service = (skullut_service_t*)service->service;
+    return ut_service->service->name;
 }
 
 sk_service_opt_t* sk_service_opt(sk_service_t* service)
