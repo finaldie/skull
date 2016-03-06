@@ -53,3 +53,15 @@ int  skull_srv_iocall  (skull_service_t* srv, const char* api_name,
     return 0;
 }
 
+void skull_srv_iocomplete(skull_service_t* srv, const char* api_name, void* data)
+{
+    // 1. Release api request data
+    ServiceApiReqRawData* apiReq =
+        (ServiceApiReqRawData*)skull_service_apidata(srv, SKULL_API_REQ, NULL);
+    delete apiReq;
+
+    // 2. Release api response data
+    void* apiResp = skull_service_apidata(srv, SKULL_API_RESP, NULL);
+    free(apiResp);
+}
+

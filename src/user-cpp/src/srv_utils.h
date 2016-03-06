@@ -1,6 +1,7 @@
 #ifndef SKULLCPP_SVC_UTILS_H
 #define SKULLCPP_SVC_UTILS_H
 
+#include <stdlib.h>
 #include <google/protobuf/message.h>
 
 #include <string>
@@ -24,7 +25,11 @@ public:
 
 public:
     ServiceApiReqRawData() : data(NULL), sz(0), cb(NULL) {}
-    ~ServiceApiReqRawData() {}
+    ~ServiceApiReqRawData() {
+        if (this->data && this->sz) {
+            free(this->data);
+        }
+    }
 };
 
 class ServiceApiReqData {
@@ -35,7 +40,7 @@ private:
     std::string      descName_;
     google::protobuf::Message* msg_;
 
-    ServiceApiReqRawData rawData_;
+    Service::ApiCB   cb_;
     bool destroyMsg_;
 
 #if __WORDSIZE == 64

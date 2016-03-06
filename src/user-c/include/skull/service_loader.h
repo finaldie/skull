@@ -14,6 +14,7 @@ typedef struct skull_service_opt_t {
     void (*release) (skull_service_t*, void* ud);
 
     int  (*iocall)  (skull_service_t*, const char* api_name, void* ud);
+    void (*iocomplete) (skull_service_t*, const char* api_name, void* ud);
 } skull_service_opt_t;
 
 typedef struct skull_service_loader_t {

@@ -88,6 +88,18 @@ int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
                                   task_data->request, task_data->request_sz,
                                   task_data->response, task_data->response_sz);
 
+    // Invoke iocomplete to do the cleanup job
+    skull_service_opt_t* opt = sdata;
+    skull_service_t skull_service = {
+        .service = srv,
+        .txn     = txn,
+        .task    = task_data,
+        .freezed = 0
+    };
+
+    opt->iocomplete(&skull_service, api_name, opt->ud);
+
+    // Release the skull_txn
     skull_txn_release(&skull_txn, txn);
     return ret;
 }

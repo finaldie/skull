@@ -29,6 +29,7 @@ ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const char* apiName) 
     this->apiName_  = std::string(apiName);
     this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
     this->msg_      = NULL;
+    this->cb_       = NULL;
     this->destroyMsg_ = true;
 
     size_t sz  = 0;
@@ -39,12 +40,12 @@ ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const char* apiName) 
 }
 
 ServiceApiReqData::ServiceApiReqData(const ServiceApiReqRawData* rawData) {
-    this->svc_ = NULL;
-    this->svcName_ = rawData->svcName;
-    this->apiName_ = rawData->apiName;
+    this->svc_      = NULL;
+    this->svcName_  = rawData->svcName;
+    this->apiName_  = rawData->apiName;
     this->descName_ = rawData->svcName + "-" + this->apiName_ + "_req.proto";
-    this->msg_ = NULL;
-    this->rawData_  = *rawData;
+    this->msg_      = NULL;
+    this->cb_       = NULL;
     this->destroyMsg_ = true;
 
     deserializeMsg(rawData->data, rawData->sz);
@@ -52,22 +53,22 @@ ServiceApiReqData::ServiceApiReqData(const ServiceApiReqRawData* rawData) {
 
 ServiceApiReqData::ServiceApiReqData(const char* svcName, const char* apiName,
                     const google::protobuf::Message& msg, Service::ApiCB cb) {
-    this->svc_ = NULL;
-    this->svcName_ = std::string(svcName);
-    this->apiName_ = std::string(apiName);
+    this->svc_      = NULL;
+    this->svcName_  = std::string(svcName);
+    this->apiName_  = std::string(apiName);
     this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
-    this->msg_ = &(google::protobuf::Message&)msg;
-    this->rawData_.cb = cb;
+    this->msg_      = &(google::protobuf::Message&)msg;
+    this->cb_       = cb;
     this->destroyMsg_ = false;
 }
 
 ServiceApiReqData::ServiceApiReqData(const skullmock_task_t* task) {
-    this->svc_ = NULL;
-
-    this->svcName_ = std::string(task->service->name);
-    this->apiName_ = std::string(task->api_name);
+    this->svc_      = NULL;
+    this->svcName_  = std::string(task->service->name);
+    this->apiName_  = std::string(task->api_name);
     this->descName_ = this->svcName_ + "-" + this->apiName_ + "_req.proto";
-    this->msg_ = NULL;
+    this->msg_      = NULL;
+    this->cb_       = NULL;
     this->destroyMsg_ = true;
 
     deserializeMsg(task->request, task->request_sz);
@@ -113,7 +114,7 @@ ServiceApiReqRawData* ServiceApiReqData::serialize(size_t& sz) {
 
     rawData->svcName = this->svcName_;
     rawData->apiName = this->apiName_;
-    rawData->cb = this->rawData_.cb;
+    rawData->cb = this->cb_;
 
     sz = sizeof(*rawData);
     return rawData;
