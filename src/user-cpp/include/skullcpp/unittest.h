@@ -6,9 +6,7 @@
 
 #include <string>
 #include <google/protobuf/message.h>
-#include <skullcpp/service_loader.h>
 
-#include <skull/service.h>
 #include <skull/unittest.h>
 
 namespace skullcpp {
@@ -56,7 +54,6 @@ public:
 public:
     const std::string& svcName();
 };
-
 
 } // End of namespace
 
