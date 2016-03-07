@@ -5,14 +5,14 @@
 #include <iostream>
 #include <google/protobuf/message.h>
 
-#include <skull/api.h>
 #include <skullcpp/api.h>
 #include "skull_metrics.h"
 #include "skull_protos.h"
 #include "config.h"
 
+// ====================== Service Init/Release =================================
 static
-void skull_service_init(skullcpp::Service& service, skull_config_t* config)
+void skull_service_init(skullcpp::Service& service, const skull_config_t* config)
 {
     printf("skull service init\n");
 
@@ -76,8 +76,7 @@ void skull_service_getdata(skullcpp::Service& service,
     std::cout << "ep status: " << st << std::endl;
 }
 
-// ====================== Service APIs Calls End ===============================
-
+// ====================== Register Service =====================================
 static
 skullcpp::ServiceApi api_get = {"get", skull_service_getdata};
 

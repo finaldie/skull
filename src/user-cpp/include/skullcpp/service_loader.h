@@ -20,7 +20,7 @@ typedef struct ServiceApi {
 } ServiceApi;
 
 typedef struct ServiceEntry {
-    void (*init)    (Service&, skull_config_t*);
+    void (*init)    (Service&, const skull_config_t*);
     void (*release) (Service&);
 
     ServiceApi** apis;

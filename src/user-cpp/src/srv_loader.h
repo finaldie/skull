@@ -16,7 +16,7 @@ typedef struct srvdata_t {
     ServiceEntry* entry;
 
     // config, it only support 1D format (key: value)
-    skull_config_t* config;
+    const skull_config_t* config;
 
     // user layer register api
     ServiceEntry* (*reg) ();
