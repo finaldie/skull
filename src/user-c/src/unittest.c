@@ -441,6 +441,16 @@ const sk_service_api_t* sk_service_api(const sk_service_t* svc, const char* api)
     return NULL;
 }
 
+int skull_service_job_create(skull_service_t*   svc,
+                             uint32_t           delayed,
+                             skull_job_t        timer,
+                             void*              ud,
+                             skull_job_udfree_t udfree,
+                             int                bio_idx)
+{
+    return 0;
+}
+
 // Mock API for skull_ep_send. Return ok directly, since we don't need to mock
 // network, only mock the api response is enough
 skull_ep_status_t

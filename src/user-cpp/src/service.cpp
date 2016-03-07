@@ -29,10 +29,6 @@ const void* Service::get() const {
     return skull_service_data_const(this->svc);
 }
 
-int Service::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) {
-    return 0;
-}
-
 static
 int _skull_svc_api_callback(skull_txn_t* sk_txn, const char* apiName,
                             const void* request, size_t req_sz,

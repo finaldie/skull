@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "skullcpp/ep.h"
+#include "skullcpp/service.h"
 
 namespace skullcpp {
 
@@ -37,6 +38,11 @@ void EPClient::setRelease(release releaseFunc) {
 EPClient::Status EPClient::send(Service& svc, const void* data, size_t dataSz,
                 epCb cb, void* ud) {
     return OK;
+}
+
+/***************************** Service Mock APIs ******************************/
+int Service::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) {
+    return 0;
 }
 
 } // End of namespace

@@ -39,6 +39,7 @@ SKULL_OBJS = \
     src/module_executor.o \
     src/module_loader.o \
     src/service.o \
+    src/service_helper.o \
     src/srv_executor.o \
     src/srv_loader.o \
     src/srv_utils.o \
