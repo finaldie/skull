@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <skull/unittest.h>
-#include "skull_srv_api_proto.h"
+#include <skullcpp/unittest.h>
+#include "skull_protos.h"
 
 /**
  * Basic Unit Test Rules for skull service:
@@ -14,24 +14,21 @@
  */
 
 static
-void api_get_validator(const void* request, const void* response, void* ud)
-{
-    printf("api_get_validator: assertion done\n");
-}
-
-static
 void test_example()
 {
     // 1. create a ut service env
-    skullut_service_t* ut_service = skullut_service_create("s1",
-                                                    "tests/test_config.yaml");
+    skullcpp::UTService utSvc("s1", "tests/test_config.yaml");
 
     // 2. construct api request message
-    S1__GetReq req = S1__GET_REQ__INIT;
-    skullut_service_run(ut_service, "get", &req, api_get_validator, NULL);
+    s1::get_resp apiResp;
+    s1::get_req apiReq;
+    apiReq.set_name("hello api");
 
-    // 3. clean up
-    skullut_service_destroy(ut_service);
+    // 3. Run service
+    utSvc.run("get", apiReq, apiResp);
+
+    // 4. validate api response data
+    SKULL_CUNIT_ASSERT(apiResp.response() == "Hi new bie");
 }
 
 int main(int argc, char** argv)
