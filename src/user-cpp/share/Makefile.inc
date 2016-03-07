@@ -1,7 +1,7 @@
 # The utility Makefile be included by other module Makefiles
 
 debug ?= false
-CC ?= g++
+CXX ?= g++
 
 # Compiling flags
 STD = -std=c++11
@@ -40,16 +40,16 @@ DEPS_LDFLAGS += \
 
 # Skull cc and ld
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(BASIC) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
-SKULL_CC = $(CC) $(SKULL_CFLAGS)
+SKULL_CC = $(CXX) $(SKULL_CFLAGS)
 
 SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(BASIC) $(MACRO) $(OPT) $(OTHER) $(INC)
-SKULL_TP_CC = $(CC) $(SKULL_TP_CFLAGS)
+SKULL_TP_CC = $(CXX) $(SKULL_TP_CFLAGS)
 
 SKULL_LDFLAGS = $(LDFLAGS) $(SHARED) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_LD = $(CC) $(SKULL_LDFLAGS)
+SKULL_LD = $(CXX) $(SKULL_LDFLAGS)
 
 SKULL_BIN_LDFLAGS = $(LDFLAGS) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_BIN_LD = $(CC) $(SKULL_BIN_LDFLAGS)
+SKULL_BIN_LD = $(CXX) $(SKULL_BIN_LDFLAGS)
 
 # Obj compiling
 %.pb.o: %.pb.cc

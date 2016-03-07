@@ -1,8 +1,8 @@
-language: c
+#language: c
 
-compiler:
-    - clang
-    - gcc
+env:
+    - CC=gcc CXX=g++
+    - CC=clang CXX=clang++
 
 before_install:
     - uname -a

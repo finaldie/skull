@@ -7,5 +7,5 @@
 package skull.service.TPL_PKG_NAME;
 
 message TPL_MSG_NAME {
-
+    optional string response = 1;
 }

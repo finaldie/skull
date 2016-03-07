@@ -20,8 +20,8 @@ void test_example()
     skullcpp::UTService utSvc("s1", "tests/test_config.yaml");
 
     // 2. construct api request message
-    s1::get_resp apiResp;
-    s1::get_req apiReq;
+    skull::service::s1::get_resp apiResp;
+    skull::service::s1::get_req apiReq;
     apiReq.set_name("hello api");
 
     // 3. Run service

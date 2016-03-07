@@ -16,7 +16,7 @@ SKULL_LIB_DIR := $(SKULL_LANG_PATH)/lib
 SKULL_ETC_DIR := $(SKULL_LANG_PATH)/etc
 SKULL_SHARE_DIR := $(SKULL_LANG_PATH)/share
 
-CC ?= g++
+CXX ?= g++
 STD = -std=c++11
 INC += \
     -Iinclude \
@@ -84,10 +84,10 @@ clean:
 .PHONY: install prepare
 
 %.o : %.cpp
-	$(SKULL_CC) -c $< -o $@
+	$(SKULL_CXX) -c $< -o $@
 
 $(SKULL_CPP_LIB): $(SKULL_OBJS)
-	$(SKULL_LD) -o $@ $^ $(SKULL_LIBS)
+	$(SKULL_CXX_LD) -o $@ $^ $(SKULL_LIBS)
 
 $(SKULL_UT_LIB): $(SKULL_UT_OBJS)
-	$(SKULL_UTLD) -o $(SKULL_UT_LIB) $(SKULL_UT_OBJS) $(SKULL_LIBS)
+	$(SKULL_CXX_UTLD) -o $(SKULL_UT_LIB) $(SKULL_UT_OBJS) $(SKULL_LIBS)
