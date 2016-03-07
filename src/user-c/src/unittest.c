@@ -104,6 +104,7 @@ void skullut_module_destroy(skullut_module_t* env)
     flist_delete(env->tasks);
 
     free(env->workflow_cfg);
+    skull_module_loader_unregister(env->module_cfg.type);
     free(env);
 }
 
@@ -145,9 +146,7 @@ int skullut_module_run(skullut_module_t* env)
 
         // 4. clean up
         skull_txn_release(&skull_txn, env->txn);
-
-        free((void*)task->request);
-        free(task->response);
+        mock_svc->iocomplete(task, mock_svc->ud);
         free(task);
     }
 
@@ -314,6 +313,8 @@ void skullut_service_destroy(skullut_service_t* ut_service)
     sk_service_unload((sk_service_t*)fake_service);
 
     sk_srv_data_destroy(fake_service->data);
+    skull_service_loader_unregister(fake_service->type);
+
     free(fake_service);
     free(ut_service);
 }

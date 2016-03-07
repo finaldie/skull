@@ -16,6 +16,18 @@ namespace skullcpp {
 
 using namespace google::protobuf;
 
+static
+void _release_apirawdata(const void* request, const void* response)
+{
+    // 1. Release api request data
+    ServiceApiReqRawData* apiReq =
+        (ServiceApiReqRawData*)request;
+    delete apiReq;
+
+    // 2. Release api response data
+    free((void*)response);
+}
+
 UTModule::UTModule(const std::string& moduleName, const std::string& idlName,
                    const std::string& configName) {
     // 1. Create skullut_module env
@@ -48,6 +60,7 @@ UTModule::~UTModule() {
 
     // 4.
     skullut_module_destroy(this->utModule_);
+    google::protobuf::ShutdownProtobufLibrary();
 }
 
 bool UTModule::run() {
@@ -63,9 +76,6 @@ void _iocall(const char* apiName, skullmock_task_t* task, void* ud) {
     // prepare apiReq and apiResp
     ServiceApiReqData apiReq(task);
     const google::protobuf::Message* respMsg = utModule->popServiceCall(svcName, apiName);
-    if (respMsg) {
-        respMsg->PrintDebugString();
-    }
 
     // Fill task.response
     if (!respMsg) {
@@ -75,6 +85,11 @@ void _iocall(const char* apiName, skullmock_task_t* task, void* ud) {
     task->response_sz = (size_t)respMsg->ByteSize();
     task->response = calloc(1, task->response_sz);
     respMsg->SerializeToArray(task->response, (int)task->response_sz);
+}
+
+static
+void _iocomplete(skullmock_task_t* task, void* ud) {
+    _release_apirawdata(task->request, task->response);
 }
 
 static
@@ -118,10 +133,11 @@ bool UTModule::pushServiceCall(const std::string& svcName,
 
     if (it == this->mockSvcs_.end()) {
         skullmock_svc_t mockSvc;
-        mockSvc.name = svcName.c_str();
-        mockSvc.ud   = this;
-        mockSvc.iocall  = _iocall;
-        mockSvc.release = _release;
+        mockSvc.name       = svcName.c_str();
+        mockSvc.ud         = this;
+        mockSvc.iocall     = _iocall;
+        mockSvc.iocomplete = _iocomplete;
+        mockSvc.release    = _release;
         skullut_module_mocksrv_add(this->utModule_, mockSvc);
 
         apis = new MockApiCall();
@@ -215,6 +231,7 @@ UTService::UTService(const std::string& svcName, const std::string& config) {
 
 UTService::~UTService() {
     skullut_service_destroy(this->utService_);
+    google::protobuf::ShutdownProtobufLibrary();
 }
 
 class ServiceAPIData {
@@ -234,12 +251,16 @@ public:
 static
 void _api_validator(const void* req, size_t req_sz,
                     const void* resp, size_t resp_sz, void* ud) {
+    // 1. Fill up the response message
     ServiceAPIData* apiData = (ServiceAPIData*)ud;
     ServiceApiRespData apiResp(apiData->service_.svcName().c_str(),
                                apiData->apiName_.c_str(),
                                resp, resp_sz);
 
     apiData->uResp_.CopyFrom(apiResp.get());
+
+    // 2. Clean up api raw data
+    _release_apirawdata(req, resp);
 }
 
 void UTService::run(const std::string& apiName,

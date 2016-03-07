@@ -57,7 +57,8 @@ SKULL_UT_OBJS = \
     src/service.o \
     src/txn.o \
     src/txn_idldata.o \
-    src/txndata.o
+    src/txndata.o \
+    src/unittest_mockapis.o
 
 all: $(SKULL_CPP_LIB) $(SKULL_UT_LIB)
 

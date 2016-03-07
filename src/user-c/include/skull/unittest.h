@@ -45,6 +45,7 @@ typedef struct skullmock_svc_t {
     void* ud;
 
     void (*iocall)  (const char* api_name, struct skullmock_task_t*, void* ud);
+    void (*iocomplete) (struct skullmock_task_t*, void* ud);
     void (*release) (void* ud);
 } skullmock_svc_t;
 
