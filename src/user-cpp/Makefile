@@ -37,7 +37,7 @@ SKULL_OBJS = \
     src/ep.o \
     src/metrics_utils.o \
     src/module_executor.o \
-    src/module_loader.o \
+    src/mod_loader.o \
     src/service.o \
     src/service_helper.o \
     src/srv_executor.o \
@@ -50,7 +50,7 @@ SKULL_OBJS = \
 
 SKULL_UT_OBJS = \
     src/unittest.o \
-    src/module_loader.o \
+    src/mod_loader.o \
     src/module_executor.o \
     src/srv_loader.o \
     src/srv_executor.o \

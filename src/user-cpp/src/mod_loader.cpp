@@ -3,18 +3,14 @@
 #include <dlfcn.h>
 
 #include "skull/api.h"
+#include "skullcpp/module_loader.h"
 #include "module_executor.h"
-#include "module_loader.h"
+#include "mod_loader.h"
 
-#define SK_MODULE_INIT_FUNCNAME    "module_init"
-#define SK_MODULE_RUN_FUNCNAME     "module_run"
-#define SK_MODULE_UNPACK_FUNCNAME  "module_unpack"
-#define SK_MODULE_PACK_FUNCNAME    "module_pack"
-#define SK_MODULE_RELEASE_FUNCNAME "module_release"
+#define SKULL_MODULE_REG_NAME "skullcpp_module_register"
 
-#define SK_MODULE_CONFIG_NAME "config.yaml"
-#define SK_MODULE_PREFIX_NAME "libskull-modules-"
-#define SK_MODULE_CONF_PREFIX_NAME "skull-modules-"
+#define SKULL_MODULE_PREFIX_NAME "libskull-modules-"
+#define SKULL_MODULE_CONF_PREFIX_NAME "skull-modules-"
 
 static
 const char* _module_name(const char* short_name, char* fullname, size_t sz)
@@ -22,7 +18,7 @@ const char* _module_name(const char* short_name, char* fullname, size_t sz)
     memset(fullname, 0, sz);
 
     // The full name format: lib/libskull-modules-%s.so
-    snprintf(fullname, sz, "lib/" SK_MODULE_PREFIX_NAME "%s.so", short_name);
+    snprintf(fullname, sz, "lib/" SKULL_MODULE_PREFIX_NAME "%s.so", short_name);
     return fullname;
 }
 
@@ -32,7 +28,7 @@ const char* _module_conf_name(const char* short_name, char* confname, size_t sz)
     memset(confname, 0, sz);
 
     // The full name format: lib/libskull-modules-%s.so
-    snprintf(confname, sz, "etc/" SK_MODULE_CONF_PREFIX_NAME "%s.yaml",
+    snprintf(confname, sz, "etc/" SKULL_MODULE_CONF_PREFIX_NAME "%s.yaml",
              short_name);
     return confname;
 }
@@ -51,53 +47,26 @@ skull_module_t* _module_open(const char* filename)
     }
 
     // 2. create module and its private data
-    module_data_t* md = (module_data_t*)calloc(1, sizeof(*md));
+    skullcpp::module_data_t* md = (skullcpp::module_data_t*)calloc(1, sizeof(*md));
     md->handler = handler;
 
     skull_module_t* module = (skull_module_t*)calloc(1, sizeof(*module));
     module->ud = md;
 
-    // 3. load module func
-    // 3.1 load init
-    *(void**)(&md->init) = dlsym(handler, SK_MODULE_INIT_FUNCNAME);
+    // 3. load module entry
+    *(void**)(&md->reg) = dlsym(handler, SKULL_MODULE_REG_NAME);
     if ((error = dlerror()) != NULL) {
         fprintf(stderr, "error: load %s failed: %s\n",
-                SK_MODULE_INIT_FUNCNAME, error);
+                SKULL_MODULE_REG_NAME, error);
         return NULL;
     }
-    module->init = skull_module_init;
 
-    // 3.2 load run
-    *(void**)(&md->run) = dlsym(handler, SK_MODULE_RUN_FUNCNAME);
-    if ((error = dlerror()) != NULL) {
-        fprintf(stderr, "error: load %s failed: %s\n",
-                SK_MODULE_RUN_FUNCNAME, error);
-        return NULL;
-    }
-    module->run = skull_module_run;
+    md->entry = md->reg();
 
-    // 3.3 load unpack
-    *(void**)(&md->unpack) = dlsym(handler, SK_MODULE_UNPACK_FUNCNAME);
-    if ((error = dlerror()) != NULL) {
-        fprintf(stderr, "warning: load %s failed: %s\n",
-                 SK_MODULE_UNPACK_FUNCNAME, error);
-    }
-    module->unpack = skull_module_unpack;
-
-    // 3.4 load pack
-    *(void**)(&md->pack) = dlsym(handler, SK_MODULE_PACK_FUNCNAME);
-    if ((error = dlerror()) != NULL) {
-        fprintf(stderr, "warning: load %s failed: %s\n",
-                 SK_MODULE_PACK_FUNCNAME, error);
-    }
-    module->pack = skull_module_pack;
-
-    // 3.5 load release
-    *(void**)(&md->release) = dlsym(handler, SK_MODULE_RELEASE_FUNCNAME);
-    if ((error = dlerror()) != NULL) {
-        fprintf(stderr, "warning: load %s failed: %s\n",
-                 SK_MODULE_RELEASE_FUNCNAME, error);
-    }
+    module->init    = skull_module_init;
+    module->run     = skull_module_run;
+    module->unpack  = skull_module_unpack;
+    module->pack    = skull_module_pack;
     module->release = skull_module_release;
 
     return module;
@@ -106,7 +75,7 @@ skull_module_t* _module_open(const char* filename)
 static
 int _module_close(skull_module_t* module)
 {
-    module_data_t* md = (module_data_t*)module->ud;
+    skullcpp::module_data_t* md = (skullcpp::module_data_t*)module->ud;
     //void* handler = md->handler;
     skull_config_destroy(md->config);
 
@@ -124,7 +93,7 @@ int _module_load_config(skull_module_t* module, const char* filename)
         return 1;
     }
 
-    module_data_t* md = (module_data_t*)module->ud;
+    skullcpp::module_data_t* md = (skullcpp::module_data_t*)module->ud;
     md->config = skull_config_create(filename);
     return 0;
 }

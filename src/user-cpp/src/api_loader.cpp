@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <google/protobuf/message.h>
 
-#include "module_loader.h"
+#include "mod_loader.h"
 #include "srv_loader.h"
 
 // API Layer Register function names

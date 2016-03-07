@@ -3,7 +3,7 @@
 #include <skull/txn.h>
 
 #include "txn_idldata.h"
-#include "module_loader.h"
+#include "mod_loader.h"
 #include "module_executor.h"
 
 using namespace skullcpp;
@@ -11,13 +11,17 @@ using namespace skullcpp;
 void   skull_module_init   (void* md)
 {
     module_data_t* mdata = (module_data_t*)md;
-    mdata->init(mdata->config);
+    ModuleEntry* entry = mdata->entry;
+
+    entry->init(mdata->config);
 }
 
 void   skull_module_release(void* md)
 {
     module_data_t* mdata = (module_data_t*)md;
-    mdata->release();
+    ModuleEntry* entry = mdata->entry;
+
+    entry->release();
 }
 
 int    skull_module_run    (void* md, skull_txn_t* txn)
@@ -27,7 +31,9 @@ int    skull_module_run    (void* md, skull_txn_t* txn)
 
     // 2. run module
     module_data_t* mdata = (module_data_t*)md;
-    int ret = mdata->run(uTxn);
+    ModuleEntry* entry = mdata->entry;
+
+    int ret = entry->run(uTxn);
     return ret;
 }
 
@@ -39,7 +45,9 @@ size_t skull_module_unpack (void* md, skull_txn_t* txn,
 
     // 2. run unpack
     module_data_t* mdata = (module_data_t*)md;
-    size_t consumed_sz = mdata->unpack(uTxn, data, data_len);
+    ModuleEntry* entry = mdata->entry;
+
+    size_t consumed_sz = entry->unpack(uTxn, data, data_len);
     return consumed_sz;
 }
 
@@ -52,5 +60,7 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
 
     // 2. run pack
     module_data_t* mdata = (module_data_t*)md;
-    mdata->pack(uTxn, uTxnData);
+    ModuleEntry* entry = mdata->entry;
+
+    entry->pack(uTxn, uTxnData);
 }

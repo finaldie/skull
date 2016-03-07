@@ -5,7 +5,7 @@
 #include <map>
 #include <google/protobuf/descriptor.h>
 
-#include "module_loader.h"
+#include "mod_loader.h"
 #include "srv_loader.h"
 #include "srv_utils.h"
 #include "txn_idldata.h"
