@@ -1,9 +1,9 @@
 // This is created by framework
 // Notes:
-//  - Do not change the package and top message name
 //  - Top message is the main message structure we use, if you want to define
 //     some sub-messages, write them after the top message
-//  - Do not use 'requried' field
+//  - Do not recommend to use 'requried' field, if you really want to use it,
+//     make sure it be filled
 
 package skull.service.TPL_PKG_NAME;
 

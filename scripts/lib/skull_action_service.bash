@@ -410,7 +410,8 @@ function _action_service_api_add()
 
     local service_path="$SKULL_PROJ_ROOT/src/services/$service"
     local srv_idl_folder=$service_path/idl
-    local template=$SKULL_ROOT/share/skull/template.proto
+    local template_req=$SKULL_ROOT/share/skull/service_req.proto
+    local template_resp=$SKULL_ROOT/share/skull/service_resp.proto
     local tpl_suffix="proto"
 
     local idl_req_name=${service}-${idl_name}_req
@@ -419,10 +420,10 @@ function _action_service_api_add()
     local srv_idl_resp=$srv_idl_folder/$idl_resp_name.$tpl_suffix
 
     # Generate request proto
-    sed "s/TPL_PKG_NAME/$service/g; s/TPL_MSG_NAME/${idl_name}_req/g" $template > $srv_idl_req
+    sed "s/TPL_PKG_NAME/$service/g; s/TPL_MSG_NAME/${idl_name}_req/g" $template_req > $srv_idl_req
 
     # Generate response proto
-    sed "s/TPL_PKG_NAME/$service/g; s/TPL_MSG_NAME/${idl_name}_resp/g" $template > $srv_idl_resp
+    sed "s/TPL_PKG_NAME/$service/g; s/TPL_MSG_NAME/${idl_name}_resp/g" $template_resp > $srv_idl_resp
 
     # Update skull config
     local service_local_yml=$service_path/.skull-service.yml

@@ -162,7 +162,10 @@ def _process_gen_workflow_idl():
         content += "// Notes:\n"
         content += "//  - The top message is the main message structure we use,\n"
         content += "//     if you want to define some sub-messages, write then\n"
-        content += "//     after top message\n\n"
+        content += "//     after top message\n"
+        content += "//  - Do not recommend to use 'required' field, if you really\n"
+        content += "//     want to use it, make sure to fill it before use it\n"
+        content += "\n"
         content += "package skull.workflow;\n\n"
         content += "message %s {\n" % idl_name
         content += "    required bytes data = 1;\n"
