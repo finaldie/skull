@@ -60,7 +60,6 @@ UTModule::~UTModule() {
 
     // 4.
     skullut_module_destroy(this->utModule_);
-    google::protobuf::ShutdownProtobufLibrary();
 }
 
 bool UTModule::run() {
@@ -231,7 +230,6 @@ UTService::UTService(const std::string& svcName, const std::string& config) {
 
 UTService::~UTService() {
     skullut_service_destroy(this->utService_);
-    google::protobuf::ShutdownProtobufLibrary();
 }
 
 class ServiceAPIData {
@@ -282,5 +280,14 @@ void UTService::run(const std::string& apiName,
 const std::string& UTService::svcName() {
     return this->svcName_;
 }
+
+/**************************** Global Static Cleaner ***************************/
+struct GlobalStaticCleaner {
+    GlobalStaticCleaner() {}
+
+    ~GlobalStaticCleaner() {
+        google::protobuf::ShutdownProtobufLibrary();
+    }
+} GlobalStaticCleaner;
 
 } // End of namespace

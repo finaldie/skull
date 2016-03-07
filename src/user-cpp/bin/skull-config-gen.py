@@ -97,6 +97,7 @@ const skull_static_config_t* skull_static_config()\n\
 void skull_static_config_destroy()\n\
 {\n\
     _skull_static_config_destroy(g_static_config);\n\
+    g_static_config = NULL;\n\
 }\n\
 "
 
