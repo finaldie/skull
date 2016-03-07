@@ -3,8 +3,9 @@
 //  - Do not change the package and top message name
 //  - Top message is the main message structure we use, if you want to define
 //     some sub-messages, write them after the top message
+//  - Do not use 'requried' field
 
-package skull.TPL_PKG_NAME;
+package skull.service.TPL_PKG_NAME;
 
 message TPL_MSG_NAME {
 

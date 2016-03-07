@@ -163,7 +163,7 @@ def _process_gen_workflow_idl():
         content += "//  - The top message is the main message structure we use,\n"
         content += "//     if you want to define some sub-messages, write then\n"
         content += "//     after top message\n\n"
-        content += "package skull;\n\n"
+        content += "package skull.workflow;\n\n"
         content += "message %s {\n" % idl_name
         content += "    required bytes data = 1;\n"
         content += "}\n"

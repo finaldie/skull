@@ -17,10 +17,14 @@ HEADER_CONTENT_START = "\
 #ifndef SKULLCPP_PROTOS_H\n\
 #define SKULLCPP_PROTOS_H\n\
 \n\
+#pragma GCC diagnostic push\n\
+#pragma GCC diagnostic ignored \"-Wpadded\"\n\
+\n\
 "
 
 HEADER_CONTENT_END = "\
 \n\
+#pragma GCC diagnostic pop\n\
 #endif\n\n\
 "
 
