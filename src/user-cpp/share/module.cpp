@@ -70,8 +70,7 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 }
 
 /******************************** Register Module *****************************/
-static
-skullcpp::ModuleEntry module_entry = {
+static skullcpp::ModuleEntry module_entry = {
     module_init,
     module_release,
     module_run,
