@@ -18,7 +18,7 @@ typedef enum skull_ep_type_t {
 typedef enum skull_ep_status_t {
     SKULL_EP_OK          = 0,
     SKULL_EP_ERROR       = 1,
-    SKULL_EP_TIMEOUT     = 2,
+    SKULL_EP_TIMEOUT     = 2
 } skull_ep_status_t;
 
 typedef struct skull_ep_ret_t {
