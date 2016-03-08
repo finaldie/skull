@@ -4,7 +4,7 @@ debug ?= false
 CXX ?= g++
 
 # Compiling flags
-STD = -std=c++11
+STD = -std=c++0x
 WARN = -Wall -Werror
 BASIC = -fPIC
 EXTRA = -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal
