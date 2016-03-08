@@ -9,7 +9,14 @@
 namespace skullcpp {
 
 EPClient::EPClient() : unpack_(NULL), release_(NULL), type_(TCP), timeout_(0),
-    port_(0) {}
+    port_(0) {
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
+}
 
 EPClient::~EPClient() {
 }

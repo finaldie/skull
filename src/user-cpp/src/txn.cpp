@@ -15,6 +15,13 @@ Txn::Txn(skull_txn_t* sk_txn) {
     this->txn_ = sk_txn;
     this->msg_ = NULL;
     this->destroyRawData_ = false;
+
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
 }
 
 Txn::Txn(skull_txn_t* sk_txn, bool destroyRawData) {

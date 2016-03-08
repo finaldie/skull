@@ -37,6 +37,13 @@ ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const char* apiName) 
         (ServiceApiReqRawData*)skull_service_apidata(this->svc_, SKULL_API_REQ,  &sz);
 
     deserializeMsg(raw->data, raw->sz);
+
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
 }
 
 ServiceApiReqData::ServiceApiReqData(const ServiceApiReqRawData* rawData) {
@@ -49,6 +56,13 @@ ServiceApiReqData::ServiceApiReqData(const ServiceApiReqRawData* rawData) {
     this->destroyMsg_ = true;
 
     deserializeMsg(rawData->data, rawData->sz);
+
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
 }
 
 ServiceApiReqData::ServiceApiReqData(const char* svcName, const char* apiName,
@@ -60,6 +74,13 @@ ServiceApiReqData::ServiceApiReqData(const char* svcName, const char* apiName,
     this->msg_      = &(google::protobuf::Message&)msg;
     this->cb_       = cb;
     this->destroyMsg_ = false;
+
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
 }
 
 ServiceApiReqData::ServiceApiReqData(const skullmock_task_t* task) {
@@ -73,6 +94,13 @@ ServiceApiReqData::ServiceApiReqData(const skullmock_task_t* task) {
 
     const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)task->request;
     deserializeMsg(rawData->data, rawData->sz);
+
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
 }
 
 ServiceApiReqData::~ServiceApiReqData() {
@@ -133,6 +161,13 @@ ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
     size_t sz = 0;
     const void* data = skull_service_apidata(svc, SKULL_API_RESP, &sz);
     deserializeMsg(data, sz);
+
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
 }
 
 ServiceApiRespData::ServiceApiRespData(const char* svcName,
@@ -144,6 +179,13 @@ ServiceApiRespData::ServiceApiRespData(const char* svcName,
     this->msg_       = NULL;
 
     deserializeMsg(data, sz);
+
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
 }
 
 ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
@@ -155,6 +197,13 @@ ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
     this->msg_       = NULL;
 
     deserializeMsg(data, sz);
+
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
 }
 
 ServiceApiRespData::~ServiceApiRespData() {
