@@ -11,7 +11,10 @@ metrics:
 	mv config/sk_metrics.h src/api
 	mv config/sk_metrics.c src/common
 
-.PHONY: flibs protos metrics
+api-cpp:
+	cd src/user-cpp && $(MAKE) $(MAKE_FLAGS)
+
+.PHONY: flibs protos metrics api-cpp
 
 # install targets
 install-core:
@@ -20,6 +23,9 @@ install-core:
 install-api:
 	cd src/user-c && $(MAKE) install
 
+install-api-cpp:
+	cd src/user-cpp && $(MAKE) install
+
 install-others:
 	test -d $(prefix)/etc/skull || mkdir -p $(prefix)/etc/skull
 	cp ChangeLog.md $(prefix)/etc/skull
@@ -27,7 +33,7 @@ install-others:
 install-scripts:
 	cd scripts && $(MAKE) install
 
-.PHONY: install-core install-api install-others install-scripts
+.PHONY: install-core install-api intall-api-cpp install-others install-scripts
 
 # clean targets
 
@@ -37,4 +43,7 @@ clean-flibs:
 clean-protos:
 	cd src && $(MAKE) $@
 
-.PHONY: clean-flibs clean-protos
+clean-api-cpp:
+	cd src/user-cpp && $(MAKE) clean
+
+.PHONY: clean-flibs clean-protos clean-api-cpp

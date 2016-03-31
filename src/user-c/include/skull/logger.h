@@ -1,6 +1,10 @@
 #ifndef SKULL_LOGGER_H
 #define SKULL_LOGGER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <skull/logger_private.h>
 
 //  logging helper macros
@@ -37,6 +41,10 @@
         skull_log(SKULL_LOG_PREFIX " FATAL - {%s} " fmt "; solution: %s", \
                   code, ##__VA_ARGS__); \
     }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

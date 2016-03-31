@@ -30,7 +30,7 @@ skull_config_t* skull_config_create(const char* config_file_name)
     return config;
 }
 
-void skull_config_destroy(skull_config_t* config)
+void skull_config_destroy(const skull_config_t* config)
 {
     if (!config) {
         return;
@@ -38,7 +38,7 @@ void skull_config_destroy(skull_config_t* config)
 
     free((void*)config->config_file_name);
     sk_config_delete(config->config);
-    free(config);
+    free((void*)config);
 }
 
 int    skull_config_getint    (const skull_config_t* config, const char* key_name,

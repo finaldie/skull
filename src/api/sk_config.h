@@ -9,8 +9,12 @@
 #include "flibs/fhash.h"
 #include "api/sk_const.h"
 #include "api/sk_types.h"
-#include "api/sk_module.h"
 #include "api/sk_service_data.h"
+
+typedef struct sk_module_cfg_t {
+    const char* name;
+    const char* type;
+} sk_module_cfg_t;
 
 typedef struct sk_workflow_cfg_t {
     uint32_t concurrent   :1;
@@ -21,7 +25,7 @@ typedef struct sk_workflow_cfg_t {
     int port;
 
     const char* idl_name; // workflow idl name
-    flist* modules;       // module name list
+    flist* modules;       // sk_module_cfg_t list
 } sk_workflow_cfg_t;
 
 typedef enum sk_srv_api_access_mode_t {
@@ -34,6 +38,8 @@ typedef struct sk_srv_api_cfg_t {
 } sk_srv_api_cfg_t;
 
 typedef struct sk_service_cfg_t {
+    // type of service (cpp, ...)
+    const char* type;
     bool enable;
 
     // padding 3 bytes
@@ -71,6 +77,9 @@ typedef struct sk_config_t {
 #if __WORDSIZE == 64
     int    _padding;
 #endif
+
+    // Supportted languages, value: char*
+    flist* langs;
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);

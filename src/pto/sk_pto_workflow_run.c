@@ -35,7 +35,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
-    SK_LOG_SETCOOKIE("module.%s", module->name);
+    SK_LOG_SETCOOKIE("module.%s", module->cfg->name);
     SK_ENV_POS = SK_ENV_POS_MODULE;
 
     // Run the module
@@ -47,8 +47,10 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     SK_ENV_POS = SK_ENV_POS_CORE;
 
     if (ret) {
-        sk_print("module (%s) encounter error\n", module->name);
-        SK_LOG_ERROR(SK_ENV_LOGGER, "module (%s) encounter error", module->name);
+        sk_print("module (%s) encounter error\n", module->cfg->name);
+        SK_LOG_ERROR(SK_ENV_LOGGER,
+            "module (%s) encounter error", module->cfg->name);
+
         sk_txn_setstate(txn, SK_TXN_ERROR);
     }
 
@@ -62,16 +64,18 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
         }
 
         sk_print("txn pending, waiting for service io calls, module %s\n",
-                 module->name);
+                 module->cfg->name);
         SK_LOG_TRACE(SK_ENV_LOGGER, "txn pending, waiting for service calls, "
-                     "module %s", module->name);
+                     "module %s", module->cfg->name);
         return 0;
     }
 
     if (ret) {
-        sk_print("module (%s) encounter error, goto pack directly\n", module->name);
+        sk_print("module (%s) encounter error, goto pack directly\n",
+                 module->cfg->name);
+
         SK_LOG_ERROR(SK_ENV_LOGGER,
-            "module (%s) encounter error, goto pack directly", module->name);
+            "module (%s) encounter error, goto pack directly", module->cfg->name);
         return _run(sched, src, entity, txn, proto_msg);
     }
 
@@ -102,7 +106,7 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
     }
 
     // 2. pack the data, and send the response if needed
-    SK_LOG_SETCOOKIE("module.%s", last_module->name);
+    SK_LOG_SETCOOKIE("module.%s", last_module->cfg->name);
     last_module->pack(last_module->md, txn);
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 

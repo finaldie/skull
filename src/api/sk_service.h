@@ -13,10 +13,6 @@ typedef struct sk_service_t sk_service_t;
 
 typedef void (*sk_service_job) (sk_service_t*, sk_obj_t* ud, int valid);
 
-typedef enum sk_service_type_t {
-    SK_C_SERVICE_TYPE = 0
-} sk_service_type_t;
-
 // service status
 typedef enum sk_srv_status_t {
     SK_SRV_STATUS_OK               = 0,
@@ -108,7 +104,6 @@ void sk_service_destroy(sk_service_t*);
 
 void sk_service_setopt(sk_service_t*, const sk_service_opt_t opt);
 sk_service_opt_t* sk_service_opt(sk_service_t*);
-void sk_service_settype(sk_service_t*, sk_service_type_t type);
 
 const sk_service_api_t* sk_service_api(const sk_service_t*,
                                        const char* api_name);
@@ -122,7 +117,7 @@ void sk_service_start(sk_service_t*);
 void sk_service_stop(sk_service_t*);
 
 const char* sk_service_name(const sk_service_t*);
-sk_service_type_t sk_service_type(const sk_service_t*);
+const char* sk_service_type(const sk_service_t*);
 const sk_service_cfg_t* sk_service_config(const sk_service_t*);
 
 // APIs for master

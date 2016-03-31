@@ -6,10 +6,7 @@
 
 struct _skull_txn_t {
     sk_txn_t* txn;
-
-    // protobuf message related data
-    ProtobufCMessage* idl;
-    const ProtobufCMessageDescriptor* descriptor;
+    const char* idl_name;   // workflow idl proto name
 };
 
 struct skull_txndata_t {

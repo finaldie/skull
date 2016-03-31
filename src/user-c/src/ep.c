@@ -6,7 +6,6 @@
 #include "api/sk_env.h"
 #include "api/sk_ep_pool.h"
 #include "api/sk_service.h"
-#include "idl_internal.h"
 #include "srv_types.h"
 #include "skull/ep.h"
 
@@ -49,62 +48,26 @@ void _ep_cb(sk_ep_ret_t ret, const void* response, size_t len, void* ud)
     // TODO: Tricky here, should manually convert the fields one by one
     memcpy(&skull_ret, &ret, sizeof(ret));
 
-    // 2. Restore the request
-    char req_proto_name[SKULL_SRV_PROTO_MAXLEN];
-    snprintf(req_proto_name, SKULL_SRV_PROTO_MAXLEN, "%s.%s_req",
-             sk_service_name(service->service), task_data->api_name);
-
-    const ProtobufCMessageDescriptor* req_desc =
-        skull_srv_idl_descriptor(req_proto_name);
-
-    ProtobufCMessage* req_msg = NULL;
-    req_msg = protobuf_c_message_unpack(
-            req_desc, NULL, task_data->request_sz, task_data->request);
-
-    // restore the response
-    char resp_proto_name[SKULL_SRV_PROTO_MAXLEN];
-    snprintf(resp_proto_name, SKULL_SRV_PROTO_MAXLEN, "%s.%s_resp",
-             sk_service_name(service->service), task_data->api_name);
-
-    const ProtobufCMessageDescriptor* resp_desc =
-        skull_srv_idl_descriptor(resp_proto_name);
-
-    ProtobufCMessage* resp_msg = NULL;
-    resp_msg = protobuf_c_message_unpack(
-            resp_desc, NULL, task_data->response_sz, task_data->response);
-
     skull_service_t new_svc = *service;
     new_svc.freezed = 1;
 
-    job->cb(&new_svc, skull_ret, response, len, job->ud, req_msg, resp_msg);
+    if (!task_data) {
+        job->cb(&new_svc, skull_ret, response, len, job->ud,
+            NULL, 0, NULL, 0);
+    } else {
+        job->cb(&new_svc, skull_ret, response, len, job->ud,
+            task_data->request, task_data->request_sz,
+            task_data->response, task_data->response_sz);
 
-    // fill api callback response pb message
-    task_data->response_sz = protobuf_c_message_get_packed_size(resp_msg);
-    void* serialized_resp = NULL;
-
-    if (task_data->response_sz) {
-        serialized_resp = calloc(1, task_data->response_sz);
-        size_t packed_sz = protobuf_c_message_pack(resp_msg, serialized_resp);
-        SK_ASSERT(task_data->response_sz == packed_sz);
-    }
-
-    free(task_data->response);
-    task_data->response = serialized_resp;
-
-    // 3. clean up the req and resp
-    protobuf_c_message_free_unpacked(req_msg, NULL);
-    protobuf_c_message_free_unpacked(resp_msg, NULL);
-
-    // 4. Reduce pending tasks counts
-    if (service->task) {
-        job->service.task->pendings--;
+        // 4. Reduce pending tasks counts
+        task_data->pendings--;
         sk_print("service task pending cnt: %u\n", service->task->pendings);
     }
 
     // 5. Try to call api callback
-    if (service->txn && service->task) {
-        sk_service_api_complete(service->service, service->txn, service->task,
-                            service->task->api_name);
+    if (service->txn) {
+        sk_service_api_complete(service->service, service->txn,
+                                service->task, service->task->api_name);
     }
 }
 

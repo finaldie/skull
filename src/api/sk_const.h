@@ -19,6 +19,14 @@ struct sk_const_t;
 #define SK_MODULE_NAME_MAX_LEN               1024
 #define SK_SERVICE_NAME_MAX_LEN              1024
 
+#define SK_API_LOAD_FUNCNAME                 "skull_load_api"
+#define SK_API_UNLOAD_FUNCNAME               "skull_unload_api"
+
+#define SK_USER_LIBNAME_FORMAT               "libskull%s-api.so"
+#define SK_USER_PREFIX1                      "/usr/local/lib"
+#define SK_USER_PREFIX2                      "/usr/lib"
+#define SK_USER_LIBNAME_MAX                  1024
+
 // scheduler
 #define SK_SCHED_PULL_NUM                    65535
 #define SK_SCHED_MAX_IO_BRIDGE               48
@@ -35,6 +43,7 @@ struct sk_const_t;
 #define SK_CONFIG_LOGNAME_LEN                1024
 
 #define SK_CONFIG_NO_PORT                    (-1)
+#define SK_CONFIG_VALUE_MAXLEN               256
 
 // ep pool
 #define SK_EP_POOL_MAX                       (1024)

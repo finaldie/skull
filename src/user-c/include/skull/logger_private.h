@@ -1,6 +1,10 @@
 #ifndef SKULL_LOGGER_PRIVATE_H
 #define SKULL_LOGGER_PRIVATE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -21,6 +25,10 @@ bool skull_log_enable_info();
 bool skull_log_enable_warn();
 bool skull_log_enable_error();
 bool skull_log_enable_fatal();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

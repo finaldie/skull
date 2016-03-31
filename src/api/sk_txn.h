@@ -45,7 +45,7 @@ int sk_txn_is_last_module(const sk_txn_t* txn);
 unsigned long long sk_txn_alivetime(const sk_txn_t* txn);
 
 // set user data
-void sk_txn_setudata(sk_txn_t* txn, void* data);
+void sk_txn_setudata(sk_txn_t* txn, const void* data);
 
 // get user data
 void* sk_txn_udata(const sk_txn_t* txn);
@@ -73,9 +73,9 @@ typedef int (*sk_txn_task_cb) ();
 typedef struct sk_txn_taskdata_t {
     const sk_txn_task_t* owner;
     const char* api_name;
-    const void* request;         // serialized pb-c message data
+    const void* request;    // user responsible for release this data
     size_t      request_sz;
-    void *      response;        // serialized pb-c message data
+    void *      response;   // user responsible for release this data
     size_t      response_sz;
     void*       user_data;
     struct sk_module_t* caller_module;

@@ -1,6 +1,10 @@
 #ifndef SKULL_EP_H
 #define SKULL_EP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <netinet/in.h>
 
@@ -14,7 +18,7 @@ typedef enum skull_ep_type_t {
 typedef enum skull_ep_status_t {
     SKULL_EP_OK          = 0,
     SKULL_EP_ERROR       = 1,
-    SKULL_EP_TIMEOUT     = 2,
+    SKULL_EP_TIMEOUT     = 2
 } skull_ep_status_t;
 
 typedef struct skull_ep_ret_t {
@@ -39,12 +43,16 @@ typedef struct skull_ep_handler_t {
 
 typedef void (*skull_ep_cb_t) (skull_service_t*, skull_ep_ret_t,
                                const void* response, size_t len, void* ud,
-                               const void* api_req, void* api_resp);
+                               const void* api_req, size_t api_req_sz,
+                               void* api_resp, size_t api_resp_sz);
 
 skull_ep_status_t
 skull_ep_send(skull_service_t*, const skull_ep_handler_t handler,
-              const void* data, size_t count,
-              const skull_ep_cb_t cb, void* ud);
+              const void* data, size_t count, skull_ep_cb_t cb, void* ud);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

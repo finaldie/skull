@@ -78,9 +78,8 @@ void _sk_txn_task_destroy(sk_txn_task_t* task)
         return;
     }
 
-    // Must release the request data if have, or it will be a mem leak
-    free((void*)task->task_data.request);
-    free(task->task_data.response);
+    // Notes: here we won't release the task_data.request/response,
+    //  the responsibility is from user
     free(task);
 }
 
@@ -213,9 +212,9 @@ unsigned long long sk_txn_alivetime(const sk_txn_t* txn)
     return ftime_gettime() - txn->start_time;
 }
 
-void sk_txn_setudata(sk_txn_t* txn, void* data)
+void sk_txn_setudata(sk_txn_t* txn, const void* data)
 {
-    txn->udata = data;
+    txn->udata = (void*)data;
 }
 
 void* sk_txn_udata(const sk_txn_t* txn)
