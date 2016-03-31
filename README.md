@@ -122,6 +122,4 @@ skull.core.t.worker.worker-0.response: 1.000000
 skull.core.t.worker.worker-0.request: 2.000000
 ```
 
-## Frequent Questions
-
 [1]: https://github.com/finaldie/skull-admin-c

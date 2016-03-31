@@ -1,3 +1,8 @@
+* 2016-03-30 0.7.4
+  * User
+    * **New:** Build a C++ api layer on top of C api layer
+  * Script
+    * **Enhancement:** Generate more user friendly service proto
 * 2016-01-27 0.7.3
   * Core
     * **New:** `EndPoint` support UDP protocol
