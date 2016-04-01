@@ -6,7 +6,6 @@
 #include <google/protobuf/message.h>
 
 #include <skullcpp/api.h>
-#include "skull_metrics.h"
 #include "skull_protos.h"
 #include "config.h"
 
