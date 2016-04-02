@@ -13,10 +13,12 @@ typedef enum sk_queue_mode_t {
 } sk_queue_mode_t;
 
 typedef enum sk_queue_state_t {
-    SK_QUEUE_STATE_IDLE = 0,
-    SK_QUEUE_STATE_LOCK = 1,    // for exlusive queue
-    SK_QUEUE_STATE_READ = 2,    // for read-write queue
-    SK_QUEUE_STATE_WRITE = 3    // for reqd-write queue
+    SK_QUEUE_STATE_INIT    = 0,
+    SK_QUEUE_STATE_DESTROY = 1,
+    SK_QUEUE_STATE_IDLE    = 2,
+    SK_QUEUE_STATE_LOCK    = 3,    // for exlusive queue
+    SK_QUEUE_STATE_READ    = 4,    // for read-write queue
+    SK_QUEUE_STATE_WRITE   = 5     // for reqd-write queue
 } sk_queue_state_t;
 
 typedef enum sk_queue_elem_type_t {

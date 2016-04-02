@@ -319,11 +319,14 @@ const sk_service_api_t* sk_service_api(const sk_service_t* service,
 
 void sk_service_start(sk_service_t* service)
 {
+    sk_queue_setstate(service->pending_tasks, SK_QUEUE_STATE_INIT);
     service->opt.init(service, service->opt.srv_data);
+    sk_queue_setstate(service->pending_tasks, SK_QUEUE_STATE_IDLE);
 }
 
 void sk_service_stop(sk_service_t* service)
 {
+    sk_queue_setstate(service->pending_tasks, SK_QUEUE_STATE_DESTROY);
     service->opt.release(service, service->opt.srv_data);
 }
 
@@ -461,8 +464,8 @@ sk_srv_status_t sk_service_run_iocall(sk_service_t* service,
     int ret = service->opt.iocall(service, txn, user_srv_data, taskdata,
                                    api_name, io_st);
     if (ret) {
-        SK_LOG_ERROR(SK_ENV_LOGGER, "service: task failed, service_name: %s \
-                     api_name: %s", service->name, api_name);
+        SK_LOG_ERROR(SK_ENV_LOGGER, "service: task failed, service_name: %s "
+                     "api_name: %s", service->name, api_name);
         status = SK_SRV_STATUS_TASK_FAILED;
     }
 
@@ -521,12 +524,14 @@ void* sk_service_data(sk_service_t* service)
     sk_queue_state_t state = sk_queue_state(service->pending_tasks);
 
     switch (state) {
+    case SK_QUEUE_STATE_INIT:
+    case SK_QUEUE_STATE_DESTROY:
     case SK_QUEUE_STATE_WRITE:
         return sk_srv_data_get(service->data);
     case SK_QUEUE_STATE_IDLE:
     case SK_QUEUE_STATE_READ:
-        SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot get mutable data when \
-                     idle or reading data, please correct your logic",
+        SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot get mutable data when "
+                     "idle or reading data, please correct your logic",
                      service->name);
         SK_ASSERT(0);
         return NULL;
@@ -551,13 +556,15 @@ void sk_service_data_set(sk_service_t* service, const void* data)
     sk_queue_state_t state = sk_queue_state(service->pending_tasks);
 
     switch (state) {
+    case SK_QUEUE_STATE_INIT:
+    case SK_QUEUE_STATE_DESTROY:
     case SK_QUEUE_STATE_WRITE:
         sk_srv_data_set(service->data, data);
         break;
     case SK_QUEUE_STATE_IDLE:
     case SK_QUEUE_STATE_READ:
-        SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot set data when \
-                     idle or reading data, please correct your logic",
+        SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot set data when "
+                     "idle or reading data, please correct your logic",
                      service->name);
         SK_ASSERT(0);
     case SK_QUEUE_STATE_LOCK:
