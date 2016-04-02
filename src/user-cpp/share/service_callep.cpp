@@ -53,7 +53,7 @@ void _ep_cb(skullcpp::Service&, skullcpp::EPClient::Ret ret,
 
 // ====================== Service APIs Calls ===================================
 static
-void skull_service_getdata(skullcpp::Service& service,
+void skull_service_getdata(const skullcpp::Service& service,
                            const google::protobuf::Message& request,
                            google::protobuf::Message& response)
 {
@@ -76,9 +76,9 @@ void skull_service_getdata(skullcpp::Service& service,
 }
 
 // ====================== Register Service =====================================
-static skullcpp::ServiceApi api_get = {"get", skull_service_getdata};
+static skullcpp::ServiceReadApi api_get = {"get", skull_service_getdata};
 
-static skullcpp::ServiceApi* api_tbl[] = {
+static skullcpp::ServiceReadApi* api_read_tbl[] = {
     &api_get,
     NULL
 };
@@ -86,7 +86,8 @@ static skullcpp::ServiceApi* api_tbl[] = {
 static skullcpp::ServiceEntry service_entry = {
     skull_service_init,
     skull_service_release,
-    api_tbl
+    api_read_tbl,
+    NULL
 };
 
 SKULLCPP_SERVICE_REGISTER(&service_entry)

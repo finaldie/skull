@@ -82,7 +82,7 @@ public:
     void setRelease(release releaseFunc);
 
 public:
-    Status send(Service&, const void* data, size_t dataSz, epCb cb, void* ud);
+    Status send(const Service&, const void* data, size_t dataSz, epCb cb, void* ud);
 };
 
 } // End of namespace

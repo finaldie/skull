@@ -94,7 +94,7 @@ void rawEpCb(skull_service_t* rawSvc, skull_ep_ret_t rawRet,
     epData->cb(svc, ret, response, len, ud, apiReq.get(), apiResp.get());
 }
 
-EPClient::Status EPClient::send(Service& svc, const void* data, size_t dataSz,
+EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dataSz,
                 epCb cb, void* ud) {
     if (!data || !dataSz) {
         return ERROR;

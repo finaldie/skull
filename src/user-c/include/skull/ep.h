@@ -47,7 +47,7 @@ typedef void (*skull_ep_cb_t) (skull_service_t*, skull_ep_ret_t,
                                void* api_resp, size_t api_resp_sz);
 
 skull_ep_status_t
-skull_ep_send(skull_service_t*, const skull_ep_handler_t handler,
+skull_ep_send(const skull_service_t*, const skull_ep_handler_t handler,
               const void* data, size_t count, skull_ep_cb_t cb, void* ud);
 
 #ifdef __cplusplus

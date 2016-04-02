@@ -11,19 +11,28 @@ namespace skullcpp {
 // Notes:
 //  - request proto name is 'service-name_req'
 //  - response proto name is 'service-name_resp'
-typedef struct ServiceApi {
+typedef struct ServiceReadApi {
+    const char* name;
+
+    void (*iocall) (const Service&,
+                    const google::protobuf::Message& request,
+                    google::protobuf::Message& response);
+} ServiceReadApi;
+
+typedef struct ServiceWriteApi {
     const char* name;
 
     void (*iocall) (Service&,
                     const google::protobuf::Message& request,
                     google::protobuf::Message& response);
-} ServiceApi;
+} ServiceWriteApi;
 
 typedef struct ServiceEntry {
     void (*init)    (Service&, const skull_config_t*);
     void (*release) (Service&);
 
-    ServiceApi** apis;
+    ServiceReadApi**  rApis;
+    ServiceWriteApi** wApis;
 } ServiceEntry;
 
 } // End of nsmespace

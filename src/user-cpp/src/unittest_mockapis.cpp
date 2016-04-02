@@ -42,7 +42,7 @@ void EPClient::setRelease(release releaseFunc) {
     this->release_ = releaseFunc;
 }
 
-EPClient::Status EPClient::send(Service& svc, const void* data, size_t dataSz,
+EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dataSz,
                 epCb cb, void* ud) {
     return OK;
 }

@@ -72,7 +72,7 @@ void _ep_cb(sk_ep_ret_t ret, const void* response, size_t len, void* ud)
 }
 
 static
-ep_job_t* _ep_job_create(skull_service_t* service,
+ep_job_t* _ep_job_create(const skull_service_t* service,
                          const skull_ep_handler_t* handler,
                          skull_ep_cb_t cb, const void* ud,
                          sk_ep_handler_t* sk_handler)
@@ -95,7 +95,7 @@ ep_job_t* _ep_job_create(skull_service_t* service,
 }
 
 skull_ep_status_t
-skull_ep_send(skull_service_t* service, const skull_ep_handler_t handler,
+skull_ep_send(const skull_service_t* service, const skull_ep_handler_t handler,
               const void* data, size_t count,
               skull_ep_cb_t cb, void* ud)
 {

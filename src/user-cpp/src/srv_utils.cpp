@@ -7,22 +7,6 @@ namespace skullcpp {
 
 using namespace google::protobuf;
 
-ServiceApi* findApi(ServiceApi** apis, const char* api_name) {
-    if (!apis || !api_name) {
-        return NULL;
-    }
-
-    for (int i = 0; apis[i] != NULL; i++) {
-        ServiceApi* api = apis[i];
-
-        if (0 == strcmp(api->name, api_name)) {
-            return api;
-        }
-    }
-
-    return NULL;
-}
-
 ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const char* apiName) {
     this->svc_      = svc;
     this->svcName_  = std::string(skull_service_name(svc));
@@ -216,11 +200,14 @@ ServiceApiRespData::~ServiceApiRespData() {
         }
 
         int newSz = this->msg_->ByteSize();
-        void* newData = calloc(1, (size_t)newSz);
-        bool r = this->msg_->SerializeToArray(newData, newSz);
-        assert(r);
+        if (newSz) {
+            void* newData = calloc(1, (size_t)newSz);
+            bool r = this->msg_->SerializeToArray(newData, newSz);
+            assert(r);
 
-        skull_service_apidata_set(this->svc_, SKULL_API_RESP, newData, (size_t)newSz);
+            skull_service_apidata_set(this->svc_, SKULL_API_RESP,
+                                      newData, (size_t)newSz);
+        }
     }
 
     delete this->msg_;

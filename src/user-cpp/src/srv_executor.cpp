@@ -40,17 +40,28 @@ int  skull_srv_iocall  (skull_service_t* srv, const char* api_name,
     srvdata_t* srv_data = (srvdata_t*)data;
     ServiceEntry* entry = srv_data->entry;
 
-    ServiceApi* api = findApi(entry->apis, api_name);
-    if (!api) {
-        return 1;
+    ServiceReadApi* rApi = FindApi<ServiceReadApi>(entry->rApis, api_name);
+    if (rApi) {
+        Service svc(srv);
+        ServiceApiReqData  apiReq(srv, api_name);
+        ServiceApiRespData apiResp(srv, api_name, true);
+
+        rApi->iocall(svc, apiReq.get(), apiResp.get());
+        return 0;
     }
 
-    Service svc(srv);
-    ServiceApiReqData  apiReq(srv, api_name);
-    ServiceApiRespData apiResp(srv, api_name, true);
+    ServiceWriteApi* wApi = FindApi<ServiceWriteApi>(entry->wApis, api_name);
+    if (wApi) {
+        Service svc(srv);
+        ServiceApiReqData  apiReq(srv, api_name);
+        ServiceApiRespData apiResp(srv, api_name, true);
 
-    api->iocall(svc, apiReq.get(), apiResp.get());
-    return 0;
+        rApi->iocall(svc, apiReq.get(), apiResp.get());
+        return 0;
+    }
+
+    // Cannot find any read/write api to execute
+    return 1;
 }
 
 void skull_srv_iocomplete(skull_service_t* srv, const char* api_name, void* data)
