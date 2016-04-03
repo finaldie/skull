@@ -114,7 +114,7 @@ void rawEpCb(skull_service_t* rawSvc, skull_ep_ret_t rawRet,
     // Be called from service job
     if (!rawApiReqSz && !rawApiRespSz) {
         ServiceApiDataImp apiDataImp;
-        epData->cb(svc, ret, response, len, ud, apiDataImp);
+        epData->cb(svc, ret, response, len, epData->ud, apiDataImp);
     } else { // Be called from a normal service api
         const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)rawApiReq;
         const std::string& apiName = rawData->apiName;
@@ -122,7 +122,7 @@ void rawEpCb(skull_service_t* rawSvc, skull_ep_ret_t rawRet,
         ServiceApiRespData apiResp(rawSvc, apiName.c_str(), rawApiResp, rawApiRespSz);
         ServiceApiDataImp apiDataImp(&apiReq, &apiResp);
 
-        epData->cb(svc, ret, response, len, ud, apiDataImp);
+        epData->cb(svc, ret, response, len, epData->ud, apiDataImp);
     }
 }
 

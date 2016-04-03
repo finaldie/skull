@@ -98,6 +98,8 @@ void _timer_cb (sk_service_t* sk_svc, sk_obj_t* ud, int valid)
 
     if (valid) {
         skull_service_t service = jobdata->svc;
+        service.txn     = NULL;
+        service.task    = NULL;
         service.freezed = 0;
 
         jobdata->job(&service, jobdata->ud);
