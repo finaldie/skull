@@ -35,7 +35,6 @@ SKULL_LIBS = \
 
 SKULL_OBJS = \
     src/ep.o \
-    src/metrics_utils.o \
     src/module_executor.o \
     src/mod_loader.o \
     src/service.o \
