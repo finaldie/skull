@@ -3,3 +3,6 @@ src/config.*
 
 # module lib folder
 lib/*
+
+# compiled file for ycm
+.ycm_extra_conf.pyc

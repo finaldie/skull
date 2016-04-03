@@ -1,10 +1,9 @@
-# protobuf-c files
+# protobuf files
 *.pb.*
 
 # generated metrics source files
 src/skull_metrics.*
 
 # generated idl header files
-src/skull_txn_sharedata.*
-src/skull_srv_api_proto.*
+src/skull_protos.h
 src/protos/*
