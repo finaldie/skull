@@ -225,10 +225,8 @@ function _action_service_add()
     _run_lang_action $language $SKULL_LANG_SERVICE_ADD $service
 
     # 5. Add service into main config
-    local service_local_yml="$service_path/.skull-service.yml"
     $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
-        -a add -s $service -b true -d $data_mode -i "$service_local_yml" \
-        -l $language
+        -a add -s $service -b true -d $data_mode -l $language
 
     # 6. add common folder
     _run_lang_action $language $SKULL_LANG_COMMON_CREATE
@@ -365,20 +363,6 @@ function _action_service_api_gen()
     echo "service api generated, run 'skull build' to re-compile the project"
 }
 
-function __validate_api_access_mode()
-{
-    local access_mode=$1
-    local valid_access_modes=('read' 'write')
-
-    for mode in ${valid_access_modes[*]}; do
-        if [ "$mode" = "$access_mode" ]; then
-            return 0
-        fi
-    done
-
-    return 1
-}
-
 function _action_service_api_add()
 {
     local service=$(_current_service)
@@ -393,18 +377,6 @@ function _action_service_api_add()
 
         if $(_check_name "$idl_name"); then
             break;
-        fi
-    done
-
-    local access_mode=""
-    while true; do
-        read -p "service api access_mode: (read|write) " access_mode
-
-        if $(__validate_api_access_mode "$access_mode"); then
-            break;
-        else
-            echo "Error: Unknown service api access mode: $access_mode, use" \
-                "read or write" >&2
         fi
     done
 
@@ -425,12 +397,6 @@ function _action_service_api_add()
     # Generate response proto
     sed "s/TPL_PKG_NAME/$service/g; s/TPL_MSG_NAME/${idl_name}_resp/g" $template_resp > $srv_idl_resp
 
-    # Update skull config
-    local service_local_yml=$service_path/.skull-service.yml
-    $SKULL_ROOT/bin/skull-config-utils.py -m service \
-        -c $SKULL_CONFIG_FILE -a add_api \
-        -s $service -n $idl_name -d $access_mode -i $service_local_yml
-
     echo "$idl_req_name added"
     echo "$idl_resp_name added"
     echo "service api $idl_name added successfully"
@@ -445,6 +411,8 @@ function _action_service_import()
 
     local service="$1"
     local service_path="$SKULL_PROJ_ROOT/src/services/$service"
+    local data_mode="rw-pr"
+    local language=""
 
     # 1. Whether the service folder exist
     if [ ! -d "$service_path" ]; then
@@ -461,16 +429,25 @@ function _action_service_import()
         exit 0
     fi
 
-    # 3. load service/.info to import it into skull-config
-    local service_local_yml="$service_path/.skull-service.yml"
+    # 3. Get service data mode
+    while true; do
+        read -p "data mode? (rw-pr | rw-pw) " data_mode
 
-    if [ ! -f "$service_local_yml" ]; then
-        echo "Error: no '.skull-service.yml' file in service $service, abort to import service" >&2
-        exit 1;
-    fi
+        if $(__validate_data_mode "$data_mode"); then
+            break;
+        else
+            echo "Fatal: Unknown service data mode: $data_mode, use" \
+                "rw-pr or rw-pw" >&2
+        fi
+    done
 
-    $SKULL_ROOT/bin/skull-config-utils.py -m service \
-        -c $SKULL_CONFIG_FILE -a import -s $service -i "$service_local_yml"
+    # 4. Get service language
+    language=$(_service_language)
+
+    # 5. Add service into skull-config
+    $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
+        -a add -s $service -b true -d $data_mode -l $language
+
     if [ $? = 0 ]; then
         echo "Import service successfully"
         exit 0

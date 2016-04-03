@@ -9,13 +9,28 @@
 
 using namespace skullcpp;
 
+template<class T>
+void _register_svc_api(skull_service_t* srv, T* apis, skull_service_api_type_t type) {
+    if (!apis) return;
+
+    for (int i = 0; apis[i].name != NULL; i++) {
+        T* api = &apis[i];
+
+        skull_service_api_register(srv, api->name, type);
+    }
+}
+
 void skull_srv_init (skull_service_t* srv, void* data)
 {
     srvdata_t* srv_data = (srvdata_t*)data;
     ServiceEntry* entry = srv_data->entry;
 
-    Service svc(srv);
+    // 1. Register service apis
+    _register_svc_api(srv, entry->rApis, SKULL_SVC_API_READ);
+    _register_svc_api(srv, entry->wApis, SKULL_SVC_API_WRITE);
 
+    // 2. Execute user-init
+    Service svc(srv);
     entry->init(svc, srv_data->config);
 }
 

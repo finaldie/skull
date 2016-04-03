@@ -43,7 +43,7 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     SKULL_LOG_INFO("2", "module_unpack(test): data sz:%zu", data_sz);
 
     // deserialize data to transcation data
-    skull::example& example = (skull::example&)txn.data();
+    skull::workflow::example& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
     return data_sz;
 }
@@ -51,7 +51,7 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 static
 int module_run(skullcpp::Txn& txn)
 {
-    skull::example& example = (skull::example&)txn.data();
+    skull::workflow::example& example = (skull::workflow::example&)txn.data();
 
     printf("receive data: %s\n", example.data().c_str());
     SKULL_LOG_INFO("3", "receive data: %s", example.data().c_str());
@@ -61,7 +61,7 @@ int module_run(skullcpp::Txn& txn)
 static
 void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {
-    skull::example& example = (skull::example&)txn.data();
+    skull::workflow::example& example = (skull::workflow::example&)txn.data();
 
     skull_metrics_module.response.inc(1);
     printf("module_pack(test): data sz:%zu\n", example.data().length());

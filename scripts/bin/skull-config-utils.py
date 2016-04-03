@@ -262,10 +262,9 @@ def process_service_actions():
             _process_add_service()
         elif action == "show":
             _process_show_service()
-        elif action == "add_api":
-            _process_add_service_api()
-        elif action == "import":
-            _process_import_service()
+        else:
+            print "Fatal: Unknown service action: %s" % action
+            raise
 
     except Exception, e:
         print "Fatal: process_service_actions: " + str(e)
@@ -327,7 +326,7 @@ def _process_add_service():
     global config_name
 
     try:
-        opts, args = getopt.getopt(sys.argv[7:], 's:b:d:i:l:')
+        opts, args = getopt.getopt(sys.argv[7:], 's:b:d:l:')
         service_name = ""
         service_enable = True
         service_data_mode = ""
@@ -341,8 +340,6 @@ def _process_add_service():
                 service_enable = value
             elif op == "-d":
                 service_data_mode = value
-            elif op == "-i":
-                service_yml_config = value
             elif op == "-l":
                 service_language = value
 
@@ -355,114 +352,15 @@ def _process_add_service():
         service_obj = {
             'type'     : service_language,
             'enable'   : service_enable,
-            'data_mode': service_data_mode,
-            'apis'     : {}
+            'data_mode': service_data_mode
         }
 
         services[service_name] = service_obj;
 
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
-        # update service local yml config
-        service_yml_obj = {}
-        service_yml_obj['service'] = service_obj
-        yaml.dump(service_yml_obj, file(service_yml_config, 'w'))
-
     except Exception, e:
         print "Fatal: _process_add_service: " + str(e)
-        raise
-
-def _process_add_service_api():
-    global yaml_obj
-    global config_name
-
-    try:
-        opts, args = getopt.getopt(sys.argv[7:], 's:n:d:i:')
-        service_name = ""
-        api_name = ""
-        api_access_mode = ""
-        service_yml_config = ""
-
-        for op, value in opts:
-            if op == "-s":
-                service_name = value
-            elif op == "-n":
-                api_name = value
-            elif op == "-d":
-                api_access_mode = value
-            elif op == "-i":
-                service_yml_config = value
-
-        if yaml_obj['services'] is None:
-            yaml_obj['services'] = {}
-
-        # Now add a service api into service dict
-        services = yaml_obj['services']
-
-        service = services[service_name]
-        if service is None:
-            print "Fatal: service %s section is empty" % service_name
-            raise
-
-        if service['apis'] is None:
-            service['apis'] = {}
-
-        apis = service['apis']
-        apis[api_name] = {
-            'mode': api_access_mode
-        }
-
-        yaml.dump(yaml_obj, file(config_name, 'w'))
-
-        # Update service local yml config
-        service_yml_obj = _load_yaml_config(service_yml_config)
-        if service_yml_obj is None:
-            service_yml_obj = {}
-
-        if service_yml_obj['service'] is None:
-            service_yml_obj['service'] = {}
-
-        service_yml_obj['service'] = service
-        yaml.dump(service_yml_obj, file(service_yml_config, 'w'))
-
-    except Exception as e:
-        print "Fatal: _process_add_service_api: " + str(e)
-        raise
-
-def _process_import_service():
-    global yaml_obj
-    global config_name
-
-    try:
-        opts, args = getopt.getopt(sys.argv[7:], 's:i:')
-        service_name = ""
-        service_yml_config = ""
-
-        for op, value in opts:
-            if op == "-s":
-                service_name = value
-            elif op == "-i":
-                service_yml_config = value
-
-        service_yml_obj = _load_yaml_config(service_yml_config)
-        service_obj = service_yml_obj['service']
-
-        if service_obj == None:
-            print "Error: no service defined in %s" % service_yml_config
-            sys.exit(1)
-
-        # If service dict do not exist, create it
-        if yaml_obj['services'] is None:
-            yaml_obj['services'] = {}
-
-        # Now add a service item into services dict
-        services = yaml_obj['services']
-        services[service_name] = service_obj
-
-        yaml.dump(yaml_obj, file(config_name, 'w'))
-
-    except Exception as e:
-        print "Fatal: _process_add_service_api: " + str(e)
         raise
 
 ################################################################################
@@ -472,12 +370,11 @@ def usage():
     print "  skull-config-utils.py -m workflow -c $yaml_file -a add -C $concurrent -i $idl_name -p $port"
     print "  skull-config-utils.py -m workflow -c $yaml_file -a gen_idl -n $idl_name -p $idl_path"
 
-    print "  skull-config-utils.py -m module -c $yaml_file -a add -M $module_name -i $workflow_index"
+    print "  skull-config-utils.py -m module   -c $yaml_file -a add -M $module_name -i $workflow_index"
 
-    print "  skull-config-utils.py -m service -c $yaml_file -a show"
-    print "  skull-config-utils.py -m service -c $yaml_file -a exist -s $service_name"
-    print "  skull-config-utils.py -m service -c $yaml_file -a add -s $service_name -b $enabled -d $data_mode"
-    print "  skull-config-utils.py -m service -c $yaml_file -a add_api -s $service_name -n $api_name -d $access_mode"
+    print "  skull-config-utils.py -m service  -c $yaml_file -a show"
+    print "  skull-config-utils.py -m service  -c $yaml_file -a exist -s $service_name"
+    print "  skull-config-utils.py -m service  -c $yaml_file -a add -s $service_name -b $enabled -d $data_mode -l language"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

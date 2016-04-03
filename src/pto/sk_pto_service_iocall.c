@@ -48,17 +48,15 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     const sk_service_api_t* srv_api = sk_service_api(service, api_name);
     SK_ASSERT(srv_cfg && srv_api);
 
-    const sk_srv_api_cfg_t* api_cfg = srv_api->cfg;
-
     // 3. queue a specific service call
     // 3.1 construct the service task
     sk_srv_task_t task;
     memset(&task, 0, sizeof(task));
 
-    SK_ASSERT(api_cfg->access_mode == SK_SRV_API_READ ||
-              api_cfg->access_mode == SK_SRV_API_WRITE);
+    SK_ASSERT(srv_api->type == SK_SRV_API_READ ||
+              srv_api->type == SK_SRV_API_WRITE);
 
-    if (api_cfg->access_mode == SK_SRV_API_READ) {
+    if (srv_api->type == SK_SRV_API_READ) {
         task.base.type = SK_QUEUE_ELEM_READ;
     } else {
         task.base.type = SK_QUEUE_ELEM_WRITE;

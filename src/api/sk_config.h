@@ -28,15 +28,6 @@ typedef struct sk_workflow_cfg_t {
     flist* modules;       // sk_module_cfg_t list
 } sk_workflow_cfg_t;
 
-typedef enum sk_srv_api_access_mode_t {
-    SK_SRV_API_READ       = 0,
-    SK_SRV_API_WRITE      = 1,
-} sk_srv_api_access_mode_t;
-
-typedef struct sk_srv_api_cfg_t {
-    sk_srv_api_access_mode_t access_mode;
-} sk_srv_api_cfg_t;
-
 typedef struct sk_service_cfg_t {
     // type of service (cpp, ...)
     const char* type;
@@ -47,7 +38,6 @@ typedef struct sk_service_cfg_t {
     short __padding2;
 
     sk_srv_data_mode_t data_mode;
-    fhash* apis; // key: api name; value: api_cfg_t
 } sk_service_cfg_t;
 
 typedef struct sk_config_t {

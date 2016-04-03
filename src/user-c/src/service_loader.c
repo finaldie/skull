@@ -5,7 +5,9 @@
 #include "api/sk_utils.h"
 #include "api/sk_loader.h"
 #include "api/sk_txn.h"
+#include "api/sk_service.h"
 #include "srv_executor.h"
+#include "srv_types.h"
 #include "skull/service_loader.h"
 
 static
@@ -93,3 +95,18 @@ void skull_service_loader_unregister(const char* type)
     free(loader->ud);
     free(loader);
 }
+
+void skull_service_api_register(skull_service_t* service, const char* api_name,
+                                skull_service_api_type_t type)
+{
+    sk_service_t* svc = service->service;
+    sk_service_api_type_t itype = SK_SRV_API_READ;
+    if (type == SKULL_SVC_API_READ) {
+        itype = SK_SRV_API_READ;
+    } else {
+        itype = SK_SRV_API_WRITE;
+    }
+
+    sk_service_api_register(svc, api_name, itype);
+}
+

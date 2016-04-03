@@ -46,7 +46,7 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     SKULL_LOG_INFO("2", "module_unpack(test): data sz:%zu", data_sz);
 
     // deserialize data to transcation data
-    skull::example& example = (skull::example&)txn.data();
+    skull::workflow::example& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
     return data_sz;
 }
@@ -57,21 +57,21 @@ int svc_api_callback(skullcpp::Txn& txn, const std::string& apiName,
                      const google::protobuf::Message& response)
 {
     std::cout << "svc_api_callback.... apiName: " << apiName << std::endl;
-    std::cout << "svc_api_callback.... request: " << ((s1::get_req&)request).name() << std::endl;
-    std::cout << "svc_api_callback.... response: " << ((s1::get_resp&)response).response() << std::endl;
+    std::cout << "svc_api_callback.... request: " << ((skull::service::s1::get_req&)request).name() << std::endl;
+    std::cout << "svc_api_callback.... response: " << ((skull::service::s1::get_resp&)response).response() << std::endl;
     return 0;
 }
 
 static
 int module_run(skullcpp::Txn& txn)
 {
-    skull::example& example = (skull::example&)txn.data();
+    skull::workflow::example& example = (skull::workflow::example&)txn.data();
 
     printf("receive data: %s\n", example.data().c_str());
     SKULL_LOG_INFO("3", "receive data: %s", example.data().c_str());
 
     // Call service
-    s1::get_req req;
+    skull::service::s1::get_req req;
     req.set_name("hello service");
     skullcpp::Service::Status ret = skullcpp::ServiceCall(txn, "s1", "get",
                                                           req, svc_api_callback,
@@ -83,7 +83,7 @@ int module_run(skullcpp::Txn& txn)
 static
 void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {
-    skull::example& example = (skull::example&)txn.data();
+    skull::workflow::example& example = (skull::workflow::example&)txn.data();
 
     skull_metrics_module.response.inc(1);
     printf("module_pack(test): data sz:%zu\n", example.data().length());

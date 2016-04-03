@@ -93,9 +93,14 @@ typedef struct sk_service_opt_t {
                                 uint64_t task_id, const char* api_name);
 } sk_service_opt_t;
 
+typedef enum sk_service_api_type_t {
+    SK_SRV_API_READ  = 0,
+    SK_SRV_API_WRITE = 1
+} sk_service_api_type_t;
+
 typedef struct sk_service_api_t {
-    sk_srv_api_cfg_t* cfg;
-    char name[sizeof(void*)];
+    sk_service_api_type_t type;
+    char name[sizeof(sk_service_api_type_t)];
 } sk_service_api_t;
 
 sk_service_t* sk_service_create(const char* service_name,
@@ -107,6 +112,9 @@ sk_service_opt_t* sk_service_opt(sk_service_t*);
 
 const sk_service_api_t* sk_service_api(const sk_service_t*,
                                        const char* api_name);
+
+void sk_service_api_register(sk_service_t*, const char* api_name,
+                             sk_service_api_type_t);
 
 void sk_service_api_complete(const sk_service_t* service,
                              const sk_txn_t* txn,

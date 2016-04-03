@@ -33,6 +33,14 @@ void skull_service_loader_register(const char* type,
                                    skull_service_loader_t loader);
 void skull_service_loader_unregister(const char* type);
 
+typedef enum skull_service_api_type_t {
+    SKULL_SVC_API_READ  = 0,
+    SKULL_SVC_API_WRITE = 1
+} skull_service_api_type_t;
+
+void skull_service_api_register(skull_service_t*, const char* api_name,
+                                skull_service_api_type_t type);
+
 #ifdef __cplusplus
 }
 #endif

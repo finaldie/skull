@@ -36,15 +36,13 @@ void skull_service_getdata(const skullcpp::Service& service,
 }
 
 // ====================== Register Service =====================================
-static skullcpp::ServiceReadApi api_get = {"get", skull_service_getdata};
-
-static skullcpp::ServiceReadApi* api_read_tbl[] = {
-    &api_get,
-    NULL
+static skullcpp::ServiceReadApi api_read_tbl[] = {
+    {"get", skull_service_getdata},
+    {NULL, NULL}
 };
 
-static skullcpp::ServiceWriteApi* api_write_tbl[] = {
-    NULL
+static skullcpp::ServiceWriteApi api_write_tbl[] = {
+    {NULL, NULL}
 };
 
 static skullcpp::ServiceEntry service_entry = {

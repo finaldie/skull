@@ -93,35 +93,6 @@ void _sk_service_data_create(sk_service_t* service, sk_srv_data_mode_t mode)
 }
 
 static
-fhash* _create_apis(const sk_service_cfg_t* cfg)
-{
-    fhash* api_cfgs = cfg->apis;
-    fhash* apis = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
-
-    fhash_str_iter api_iter = fhash_str_iter_new(api_cfgs);
-    sk_srv_api_cfg_t* api_cfg = NULL;
-
-    while ((api_cfg = fhash_str_next(&api_iter))) {
-        const char* api_name = api_iter.key;
-
-        size_t api_name_len = strlen(api_name);
-        size_t extra_len = 0;
-        if (api_name_len >= sizeof(void*)) {
-            extra_len = api_name_len - sizeof(void*) + 1;
-        }
-
-        sk_service_api_t* api = calloc(1, sizeof(*api) + extra_len);
-        api->cfg = api_cfg;
-        strncpy(api->name, api_name, api_name_len);
-
-        fhash_str_set(apis, api_name, api);
-    }
-    fhash_str_iter_release(&api_iter);
-
-    return apis;
-}
-
-static
 void _destroy_apis(fhash* apis)
 {
     fhash_str_iter api_iter = fhash_str_iter_new(apis);
@@ -281,7 +252,7 @@ sk_service_t* sk_service_create(const char* service_name,
     sk_service_t* service = calloc(1, sizeof(*service));
     service->name = service_name;
     service->cfg  = cfg;
-    service->apis = _create_apis(service->cfg);
+    service->apis = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
     _sk_service_data_create(service, cfg->data_mode);
 
@@ -315,6 +286,28 @@ const sk_service_api_t* sk_service_api(const sk_service_t* service,
                                        const char* api_name)
 {
     return fhash_str_get(service->apis, api_name);
+}
+
+void sk_service_api_register(sk_service_t* service, const char* api_name,
+                             sk_service_api_type_t type)
+{
+    if (fhash_str_get(service->apis, api_name)) {
+        sk_print("service(%s) api: %s has already been registered\n",
+                 service->name, api_name);
+        return;
+    }
+
+    size_t api_name_len = strlen(api_name);
+    size_t extra_len = 0;
+    if (api_name_len >= sizeof(sk_service_api_type_t)) {
+        extra_len = api_name_len - sizeof(sk_service_api_type_t) + 1;
+    }
+
+    sk_service_api_t* api = calloc(1, sizeof(*api) + extra_len);
+    api->type = type;
+    strncpy(api->name, api_name, api_name_len);
+
+    fhash_str_set(service->apis, api_name, api);
 }
 
 void sk_service_start(sk_service_t* service)
