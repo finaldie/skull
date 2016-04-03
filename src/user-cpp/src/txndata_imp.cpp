@@ -1,15 +1,16 @@
 #include "skullcpp/txndata.h"
+#include "txndata_imp.h"
 
 namespace skullcpp {
 
-TxnData::TxnData(skull_txndata_t* txndata) {
+TxnDataImp::TxnDataImp(skull_txndata_t* txndata) {
     this->txndata = txndata;
 }
 
-TxnData::~TxnData() {
+TxnDataImp::~TxnDataImp() {
 }
 
-void TxnData::append(const void* data, size_t sz) {
+void TxnDataImp::append(const void* data, size_t sz) {
     skull_txndata_output_append(this->txndata, data, sz);
 }
 

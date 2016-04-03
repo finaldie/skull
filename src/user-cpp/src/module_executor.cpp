@@ -4,6 +4,7 @@
 
 #include "txn_idldata.h"
 #include "mod_loader.h"
+#include "txndata_imp.h"
 #include "module_executor.h"
 
 using namespace skullcpp;
@@ -56,7 +57,7 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
 {
     // 1. Create txn and txndata
     skullcpp::Txn uTxn(txn, true);
-    skullcpp::TxnData uTxnData(txndata);
+    skullcpp::TxnDataImp uTxnData(txndata);
 
     // 2. run pack
     module_data_t* mdata = (module_data_t*)md;

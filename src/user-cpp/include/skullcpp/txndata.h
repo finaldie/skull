@@ -8,14 +8,16 @@ namespace skullcpp {
 
 class TxnData {
 private:
-    skull_txndata_t* txndata;
+    // Make noncopyable
+    TxnData(const TxnData&);
+    const TxnData& operator=(const TxnData&);
 
 public:
-    TxnData(skull_txndata_t*);
-    ~TxnData();
+    TxnData() {};
+    virtual ~TxnData() {};
 
 public:
-    void append(const void* data, size_t sz);
+    virtual void append(const void* data, size_t sz) = 0;
 };
 
 } // End of namespace
