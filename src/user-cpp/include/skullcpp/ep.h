@@ -16,6 +16,11 @@
 namespace skullcpp {
 
 class EPClient {
+private:
+    // Make noncopyable
+    EPClient(const EPClient&);
+    const EPClient& operator=(const EPClient&);
+
 public:
     typedef enum Type {
         TCP = 0,
