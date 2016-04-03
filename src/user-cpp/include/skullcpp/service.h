@@ -14,26 +14,25 @@ namespace skullcpp {
 
 class Service {
 private:
-    skull_service_t* svc;
+    // Make noncopyable
+    Service(const Service& svc);
+    const Service& operator=(const Service& svc);
 
 public:
     typedef void (*Job) (Service&, void* ud);
 
 public:
-    Service(skull_service_t*);
-    ~Service();
+    Service() {};
+    virtual ~Service() {};
 
 public:
-    int createJob(Job job, void* ud, uint32_t delayed, int bioIdx);
+    virtual int createJob(Job job, void* ud, uint32_t delayed, int bioIdx) = 0;
 
 public:
-    void set(const void* data);
+    virtual void set(const void* data) = 0;
 
-    void* get();
-    const void* get() const;
-
-public:
-    skull_service_t* getRawService() const;
+    virtual void* get() = 0;
+    virtual const void* get() const = 0;
 };
 
 } // End of namespace

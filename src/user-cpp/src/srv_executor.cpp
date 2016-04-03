@@ -4,6 +4,7 @@
 #include "skullcpp/service.h"
 #include "srv_loader.h"
 #include "srv_utils.h"
+#include "service_imp.h"
 
 #include "srv_executor.h"
 
@@ -30,7 +31,7 @@ void skull_srv_init (skull_service_t* srv, void* data)
     _register_svc_api(srv, entry->wApis, SKULL_SVC_API_WRITE);
 
     // 2. Execute user-init
-    Service svc(srv);
+    ServiceImp svc(srv);
     entry->init(svc, srv_data->config);
 }
 
@@ -39,7 +40,7 @@ void skull_srv_release (skull_service_t* srv, void* data)
     srvdata_t* srv_data = (srvdata_t*)data;
     ServiceEntry* entry = srv_data->entry;
 
-    Service svc(srv);
+    ServiceImp svc(srv);
 
     entry->release(svc);
 }
@@ -57,7 +58,7 @@ int  skull_srv_iocall  (skull_service_t* srv, const char* api_name,
 
     ServiceReadApi* rApi = FindApi<ServiceReadApi>(entry->rApis, api_name);
     if (rApi) {
-        Service svc(srv);
+        ServiceImp svc(srv);
         ServiceApiReqData  apiReq(srv, api_name);
         ServiceApiRespData apiResp(srv, api_name, true);
 
@@ -67,7 +68,7 @@ int  skull_srv_iocall  (skull_service_t* srv, const char* api_name,
 
     ServiceWriteApi* wApi = FindApi<ServiceWriteApi>(entry->wApis, api_name);
     if (wApi) {
-        Service svc(srv);
+        ServiceImp svc(srv);
         ServiceApiReqData  apiReq(srv, api_name);
         ServiceApiRespData apiResp(srv, api_name, true);
 

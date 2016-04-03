@@ -4,6 +4,7 @@
 #include <skull/ep.h>
 
 #include "srv_utils.h"
+#include "service_imp.h"
 #include <skullcpp/ep.h>
 
 namespace skullcpp {
@@ -83,7 +84,7 @@ void rawEpCb(skull_service_t* rawSvc, skull_ep_ret_t rawRet,
         return;
     }
 
-    Service svc(rawSvc);
+    ServiceImp svc(rawSvc);
     EPClient::Ret ret(rawRet);
 
     const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)rawApiReq;
@@ -100,7 +101,8 @@ EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dat
         return ERROR;
     }
 
-    skull_service_t* rawSvc = svc.getRawService();
+    const ServiceImp& svcImp = (const ServiceImp&)svc;
+    skull_service_t* rawSvc = svcImp.getRawService();
     skull_ep_handler_t ep_handler;
     memset(&ep_handler, 0, sizeof(ep_handler));
 

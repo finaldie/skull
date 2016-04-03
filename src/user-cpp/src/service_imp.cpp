@@ -6,30 +6,31 @@
 
 #include "srv_loader.h"
 #include "srv_utils.h"
+#include "service_imp.h"
 #include "skullcpp/service.h"
 
 namespace skullcpp {
 
-Service::Service(skull_service_t* svc) {
+ServiceImp::ServiceImp(skull_service_t* svc) {
     this->svc = svc;
 }
 
-Service::~Service() {
+ServiceImp::~ServiceImp() {
 }
 
-void Service::set(const void* data) {
+void ServiceImp::set(const void* data) {
     skull_service_data_set(this->svc, data);
 }
 
-void* Service::get() {
+void* ServiceImp::get() {
     return skull_service_data(this->svc);
 }
 
-const void* Service::get() const {
+const void* ServiceImp::get() const {
     return skull_service_data_const(this->svc);
 }
 
-skull_service_t* Service::getRawService() const {
+skull_service_t* ServiceImp::getRawService() const {
     return this->svc;
 }
 

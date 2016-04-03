@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "service_imp.h"
 #include "skullcpp/service.h"
 
 namespace skullcpp {
@@ -21,7 +22,7 @@ void _job_triggered(skull_service_t* svc, void* ud)
 {
     ServiceJobData* jobdata = (ServiceJobData*)ud;
     if (jobdata) {
-        skullcpp::Service service(svc);
+        skullcpp::ServiceImp service(svc);
 
         jobdata->job(service, jobdata->ud);
     }
@@ -34,7 +35,7 @@ void _release_jobdata(void* ud)
     delete jobdata;
 }
 
-int Service::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) {
+int ServiceImp::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) {
     ServiceJobData* jobdata = new ServiceJobData(job, ud);
 
     return skull_service_job_create(this->svc, delayed, _job_triggered, jobdata,

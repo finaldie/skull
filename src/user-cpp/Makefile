@@ -37,7 +37,7 @@ SKULL_OBJS = \
     src/ep.o \
     src/module_executor.o \
     src/mod_loader.o \
-    src/service.o \
+    src/service_imp.o \
     src/service_helper.o \
     src/srv_executor.o \
     src/srv_loader.o \
@@ -54,7 +54,7 @@ SKULL_UT_OBJS = \
     src/srv_loader.o \
     src/srv_executor.o \
     src/srv_utils.o \
-    src/service.o \
+    src/service_imp.o \
     src/txn.o \
     src/txn_idldata.o \
     src/txndata.o \

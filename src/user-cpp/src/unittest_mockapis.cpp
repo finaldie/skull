@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "skullcpp/ep.h"
 #include "skullcpp/service.h"
+#include "service_imp.h"
 
 namespace skullcpp {
 
@@ -48,7 +49,7 @@ EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dat
 }
 
 /***************************** Service Mock APIs ******************************/
-int Service::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) {
+int ServiceImp::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) {
     return 0;
 }
 
