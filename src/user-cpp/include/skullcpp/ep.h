@@ -15,11 +15,16 @@
 
 namespace skullcpp {
 
+class EPClientImpl;
+
 class EPClient {
 private:
     // Make noncopyable
     EPClient(const EPClient&);
     const EPClient& operator=(const EPClient&);
+
+private:
+    EPClientImpl* impl_;
 
 public:
     typedef enum Type {
@@ -57,22 +62,6 @@ public:
 
     typedef size_t (*unpack) (void* ud, const void* data, size_t len);
     typedef void   (*release)(void* ud);
-
-
-private:
-    std::string ip_;
-    unpack      unpack_;
-    release     release_;
-    Type        type_;
-    int         timeout_;
-    in_port_t   port_;
-
-#if __WORDSIZE == 64
-    uint32_t __padding :16;
-    uint32_t __padding1;
-#else
-    uint32_t __padding :16;
-#endif
 
 public:
     EPClient();

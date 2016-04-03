@@ -9,41 +9,65 @@
 
 namespace skullcpp {
 
-EPClient::EPClient() : unpack_(NULL), release_(NULL), type_(TCP), timeout_(0),
-    port_(0) {
+class EPClientImpl {
+public:
+    std::string       ip_;
+    EPClient::unpack  unpack_;
+    EPClient::release release_;
+    EPClient::Type    type_;
+    int               timeout_;
+    in_port_t         port_;
+
 #if __WORDSIZE == 64
-    (void)__padding;
-    (void)__padding1;
+    uint32_t __padding :16;
+    uint32_t __padding1;
 #else
-    (void)__padding;
+    uint32_t __padding :16;
 #endif
+
+public:
+    EPClientImpl() : unpack_(NULL), release_(NULL), type_(EPClient::TCP),
+        timeout_(0), port_(0) {
+#if __WORDSIZE == 64
+        (void)__padding;
+        (void)__padding1;
+#else
+        (void)__padding;
+#endif
+    }
+
+    ~EPClientImpl() {}
+};
+
+EPClient::EPClient() : impl_(new EPClientImpl) {
 }
 
 EPClient::~EPClient() {
+    delete this->impl_;
 }
 
 void EPClient::setType(Type type) {
-    this->type_ = type;
+    this->impl_->type_ = type;
 }
 
 void EPClient::setPort(in_port_t port) {
-    this->port_ = port;
+    this->impl_->port_ = port;
 }
 
 void EPClient::setIP(const std::string& ip) {
-    this->ip_ = ip;
+    this->impl_->ip_ = ip;
 }
 
 void EPClient::setTimeout(int timeout) {
-    this->timeout_ = timeout;
+    this->impl_->timeout_ = timeout;
 }
 
 void EPClient::setUnpack(unpack unpackFunc) {
-    this->unpack_ = unpackFunc;
+    this->impl_->unpack_ = unpackFunc;
 }
 
 void EPClient::setRelease(release releaseFunc) {
-    this->release_ = releaseFunc;
+    this->impl_->release_ = releaseFunc;
 }
 
 typedef struct EpCbData {
@@ -106,25 +130,25 @@ EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dat
     skull_ep_handler_t ep_handler;
     memset(&ep_handler, 0, sizeof(ep_handler));
 
-    if (this->type_ == TCP) {
+    if (this->impl_->type_ == TCP) {
         ep_handler.type = SKULL_EP_TCP;
-    } else if (this->type_ == UDP) {
+    } else if (this->impl_->type_ == UDP) {
         ep_handler.type = SKULL_EP_UDP;
     } else {
         assert(0);
     }
 
-    ep_handler.port = this->port_;
-    ep_handler.ip   = this->ip_.c_str();
-    ep_handler.timeout = this->timeout_;
+    ep_handler.port = this->impl_->port_;
+    ep_handler.ip   = this->impl_->ip_.c_str();
+    ep_handler.timeout = this->impl_->timeout_;
     ep_handler.unpack  = rawUnpackCb;
     ep_handler.release = rawReleaseCb;
 
     EpCbData* epCbData = new EpCbData;
-    epCbData->unpack = this->unpack_;
+    epCbData->unpack = this->impl_->unpack_;
     epCbData->cb = cb;
     epCbData->ud = ud;
-    epCbData->release = this->release_;
+    epCbData->release = this->impl_->release_;
 
     skull_ep_status_t st = skull_ep_send(rawSvc, ep_handler, data, dataSz,
                                          rawEpCb, epCbData);
