@@ -34,7 +34,7 @@ public:
 
     std::string    svcName;
     std::string    apiName;
-    Service::ApiCB cb;
+    Txn::ApiCB     cb;
 
 public:
     ServiceApiReqRawData() : data(NULL), sz(0), cb(NULL) {}
@@ -53,7 +53,7 @@ private:
     std::string      descName_;
     google::protobuf::Message* msg_;
 
-    Service::ApiCB   cb_;
+    Txn::ApiCB       cb_;
     bool destroyMsg_;
 
 #if __WORDSIZE == 64
@@ -70,7 +70,7 @@ public:
     ServiceApiReqData(skull_service_t* svc, const char* apiName);
     ServiceApiReqData(const ServiceApiReqRawData* rawData);
     ServiceApiReqData(const char* svcName, const char* apiName, const google::protobuf::Message& msg,
-                      Service::ApiCB cb);
+                      Txn::ApiCB cb);
     ServiceApiReqData(const skullmock_task_t*);
 
     ~ServiceApiReqData();

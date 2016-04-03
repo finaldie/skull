@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <string>
+#include <iostream>
+
 #include "skullcpp/api.h"
 #include "skull_metrics.h"
 #include "skull_protos.h"
@@ -49,12 +52,32 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 }
 
 static
+int svc_api_callback(skullcpp::Txn& txn, const std::string& apiName,
+                     const google::protobuf::Message& request,
+                     const google::protobuf::Message& response)
+{
+    std::cout << "svc_api_callback.... apiName: " << apiName << std::endl;
+    std::cout << "svc_api_callback.... request: " << ((skull::service::s1::get_req&)request).name() << std::endl;
+    std::cout << "svc_api_callback.... response: " << ((skull::service::s1::get_resp&)response).response() << std::endl;
+    return 0;
+}
+
+static
 int module_run(skullcpp::Txn& txn)
 {
     skull::workflow::example& example = (skull::workflow::example&)txn.data();
 
     printf("receive data: %s\n", example.data().c_str());
     SKULL_LOG_INFO("3", "receive data: %s", example.data().c_str());
+
+    // Call service
+    skull::service::s1::get_req req;
+    req.set_name("hello service");
+
+    skullcpp::Txn::IOStatus ret =
+        txn.serviceCall("s1", "get", req, svc_api_callback, 0);
+
+    std::cout << "ServiceCall ret: " << ret << std::endl;
     return 0;
 }
 

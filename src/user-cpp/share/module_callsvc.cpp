@@ -73,9 +73,9 @@ int module_run(skullcpp::Txn& txn)
     // Call service
     skull::service::s1::get_req req;
     req.set_name("hello service");
-    skullcpp::Service::Status ret = skullcpp::ServiceCall(txn, "s1", "get",
-                                                          req, svc_api_callback,
-                                                          0);
+    skullcpp::Txn::IOStatus ret =
+        txn.serviceCall("s1", "get", req, svc_api_callback, 0);
+
     std::cout << "ServiceCall ret: " << ret << std::endl;
     return 0;
 }

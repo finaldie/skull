@@ -50,7 +50,7 @@ ServiceApiReqData::ServiceApiReqData(const ServiceApiReqRawData* rawData) {
 }
 
 ServiceApiReqData::ServiceApiReqData(const char* svcName, const char* apiName,
-                    const google::protobuf::Message& msg, Service::ApiCB cb) {
+                    const google::protobuf::Message& msg, Txn::ApiCB cb) {
     this->svc_      = NULL;
     this->svcName_  = std::string(svcName);
     this->apiName_  = std::string(apiName);

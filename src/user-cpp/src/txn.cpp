@@ -5,6 +5,7 @@
 #include "skull/txn.h"
 
 #include "txn_idldata.h"
+#include "srv_utils.h"
 #include "skullcpp/txn.h"
 
 namespace skullcpp {
@@ -96,6 +97,53 @@ Txn::Status Txn::status() {
         return Txn::TXN_OK;
     } else {
         return Txn::TXN_ERROR;
+    }
+}
+
+static
+int _skull_svc_api_callback(skull_txn_t* sk_txn, const char* apiName,
+                            const void* request, size_t req_sz,
+                            const void* response, size_t resp_sz) {
+    Txn txn(sk_txn);
+    const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)request;
+    ServiceApiReqData apiReq(rawData);
+    ServiceApiRespData apiResp(rawData->svcName.c_str(), apiName, response, resp_sz);
+
+    return rawData->cb(txn, std::string(apiName), apiReq.get(), apiResp.get());
+}
+
+Txn::IOStatus Txn::serviceCall (const char* serviceName,
+                                const char* apiName,
+                                const google::protobuf::Message& request,
+                                ApiCB cb,
+                                int bioIdx) {
+    // 1. Construct raw req data
+    ServiceApiReqData apiReq(serviceName, apiName, request, cb);
+    size_t dataSz = 0;
+    ServiceApiReqRawData* rawReqData = apiReq.serialize(dataSz);
+
+    // 2. Send service call to core
+    skull_service_ret_t ret =
+        skull_service_async_call(this->txn(), serviceName, apiName, rawReqData,
+            dataSz, _skull_svc_api_callback, bioIdx);
+
+    if (ret != SKULL_SERVICE_OK) {
+        delete rawReqData;
+    }
+
+    // 3. Return status code
+    switch (ret) {
+    case SKULL_SERVICE_OK:
+        return Txn::IOStatus::OK;
+    case SKULL_SERVICE_ERROR_SRVNAME:
+        return Txn::IOStatus::ERROR_SRVNAME;
+    case SKULL_SERVICE_ERROR_APINAME:
+        return Txn::IOStatus::ERROR_APINAME;
+    case SKULL_SERVICE_ERROR_BIO:
+        return Txn::IOStatus::ERROR_BIO;
+    default:
+        assert(0);
+        return Txn::IOStatus::OK;
     }
 }
 
