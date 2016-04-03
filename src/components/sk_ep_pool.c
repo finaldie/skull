@@ -763,7 +763,7 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     server_addr.sin_port = htons(handler->port);
     server_addr.sin_addr.s_addr = inet_addr(handler->ip);
 
-    int ret= connect(fd, (struct sockaddr *)(&server_addr),
+    int ret = connect(fd, (struct sockaddr *)(&server_addr),
                      sizeof(struct sockaddr));
     if (ret != 0) {
         return -1;

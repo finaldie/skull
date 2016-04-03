@@ -55,10 +55,13 @@ public:
         }
     } Ret;
 
-    typedef void (*epCb)(Service&, Ret ret, const void* response, size_t len,
-                         void* ud,
-                         const google::protobuf::Message& apiRequest,
-                         google::protobuf::Message& apiResponse);
+    // Case 1: Be called from a service api call, then user can get api req and
+    //          resp from 'apiData'
+    // Case 2: Be called from a service job, then the 'apiData' is useless,
+    //          and DO NOT try to use it
+    typedef void (*epCb)(const Service&, Ret ret,
+                         const void* response, size_t len, void* ud,
+                         ServiceApiData& apiData);
 
     typedef size_t (*unpack) (void* ud, const void* data, size_t len);
     typedef void   (*release)(void* ud);

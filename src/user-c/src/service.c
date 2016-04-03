@@ -66,10 +66,6 @@ void* skull_service_data (skull_service_t* service)
 
 const void* skull_service_data_const (skull_service_t* service)
 {
-    if (service->freezed) {
-        return NULL;
-    }
-
     sk_service_t* sk_srv = service->service;
     SK_ASSERT(sk_srv);
     return sk_service_data_const(sk_srv);

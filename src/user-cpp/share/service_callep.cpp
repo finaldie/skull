@@ -40,15 +40,15 @@ void _ep_release(void* ud)
 }
 
 static
-void _ep_cb(skullcpp::Service&, skullcpp::EPClient::Ret ret,
+void _ep_cb(const skullcpp::Service&, skullcpp::EPClient::Ret ret,
             const void* response, size_t len, void* ud,
-            const google::protobuf::Message& apiRequest,
-            google::protobuf::Message& apiResponse)
+            skullcpp::ServiceApiData& apiData)
 {
     std::cout << "in _ep_cb data len: " << len << std::endl;
-    apiRequest.PrintDebugString();
-    std::string rawResponse = ((s1::get_resp&)apiResponse).response();
-    ((s1::get_resp&)apiResponse).set_response(rawResponse + " , plus ep");
+    apiData.request().PrintDebugString();
+
+    std::string rawResponse = ((skull::service::s1::get_resp&)apiData.response()).response();
+    ((skull::service::s1::get_resp&)apiData.response()).set_response(rawResponse + " , plus ep");
 }
 
 // ====================== Service APIs Calls ===================================
@@ -60,8 +60,8 @@ void skull_service_getdata(const skullcpp::Service& service,
     printf("skull service api: getdata\n");
     SKULL_LOG_INFO("svc.test.get-1", "service get data");
 
-    std::cout << "api req: " << ((s1::get_req&)request).name() << std::endl;
-    ((s1::get_resp&)response).set_response("Hi new bie");
+    std::cout << "api req: " << ((skull::service::s1::get_req&)request).name() << std::endl;
+    ((skull::service::s1::get_resp&)response).set_response("Hi new bie");
 
     skullcpp::EPClient epClient;
     epClient.setType(skullcpp::EPClient::TCP);
@@ -76,11 +76,9 @@ void skull_service_getdata(const skullcpp::Service& service,
 }
 
 // ====================== Register Service =====================================
-static skullcpp::ServiceReadApi api_get = {"get", skull_service_getdata};
-
-static skullcpp::ServiceReadApi* api_read_tbl[] = {
-    &api_get,
-    NULL
+static skullcpp::ServiceReadApi api_read_tbl[] = {
+    {"get", skull_service_getdata},
+    {NULL, NULL}
 };
 
 static skullcpp::ServiceEntry service_entry = {

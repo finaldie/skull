@@ -36,7 +36,7 @@ EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dat
 }
 
 /***************************** Service Mock APIs ******************************/
-int ServiceImp::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) {
+int ServiceImp::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) const {
     return 0;
 }
 

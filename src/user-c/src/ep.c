@@ -38,7 +38,7 @@ void _ep_cb(sk_ep_ret_t ret, const void* response, size_t len, void* ud)
 {
     sk_print("prepare to run ep callback\n");
 
-    // 1. Call user callback
+    // 1. Prepare
     ep_job_t* job = ud;
     skull_ep_ret_t skull_ret;
 
@@ -48,9 +48,16 @@ void _ep_cb(sk_ep_ret_t ret, const void* response, size_t len, void* ud)
     // TODO: Tricky here, should manually convert the fields one by one
     memcpy(&skull_ret, &ret, sizeof(ret));
 
+    // Q: Why we have to make the service data un-mutable?
+    // A: Here we passed a skull_service into user level, but we cannot modify
+    //  the service data due to the callback function may be ran in parallel,
+    //  some in workers, some in bio, so to be safety, we have to make sure about
+    //  the user cannot use a mutable service structure, so that's why we set
+    //  the 'new_svc.freezed = 1'
     skull_service_t new_svc = *service;
     new_svc.freezed = 1;
 
+    // 2. Call user callback
     if (!task_data) {
         job->cb(&new_svc, skull_ret, response, len, job->ud,
             NULL, 0, NULL, 0);
@@ -59,12 +66,12 @@ void _ep_cb(sk_ep_ret_t ret, const void* response, size_t len, void* ud)
             task_data->request, task_data->request_sz,
             task_data->response, task_data->response_sz);
 
-        // 4. Reduce pending tasks counts
+        // Reduce pending tasks counts
         task_data->pendings--;
         sk_print("service task pending cnt: %u\n", service->task->pendings);
     }
 
-    // 5. Try to call api callback
+    // 3. Try to call api callback
     if (service->txn) {
         sk_service_api_complete(service->service, service->txn,
                                 service->task, service->task->api_name);
@@ -110,9 +117,8 @@ skull_ep_send(const skull_service_t* service, const skull_ep_handler_t handler,
     sk_ep_status_t ret = sk_ep_send(SK_ENV_EP, ett, sk_handler, data, count, _ep_cb, job);
     if (ret == SK_EP_OK && service->task) {
         service->task->pendings++;
+        sk_print("service task pending cnt: %u\n", service->task->pendings);
     }
-
-    sk_print("service task pending cnt: %u\n", service->task->pendings);
 
     switch (ret) {
     case SK_EP_OK:          return SKULL_EP_OK;
