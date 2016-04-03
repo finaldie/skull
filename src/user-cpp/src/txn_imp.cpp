@@ -6,13 +6,14 @@
 
 #include "txn_idldata.h"
 #include "srv_utils.h"
+#include "txn_imp.h"
 #include "skullcpp/txn.h"
 
 namespace skullcpp {
 
 using namespace google::protobuf;
 
-Txn::Txn(skull_txn_t* sk_txn) {
+TxnImp::TxnImp(skull_txn_t* sk_txn) {
     this->txn_ = sk_txn;
     this->msg_ = NULL;
     this->destroyRawData_ = false;
@@ -25,13 +26,13 @@ Txn::Txn(skull_txn_t* sk_txn) {
 #endif
 }
 
-Txn::Txn(skull_txn_t* sk_txn, bool destroyRawData) {
+TxnImp::TxnImp(skull_txn_t* sk_txn, bool destroyRawData) {
     this->txn_ = sk_txn;
     this->msg_ = NULL;
     this->destroyRawData_ = destroyRawData;
 }
 
-Txn::~Txn() {
+TxnImp::~TxnImp() {
     // 1. Serialize msg back to binary data
     TxnSharedRawData* rawData = (TxnSharedRawData*)skull_txn_data(this->txn_);
 
@@ -57,7 +58,7 @@ Txn::~Txn() {
     delete this->msg_;
 }
 
-google::protobuf::Message& Txn::data() {
+google::protobuf::Message& TxnImp::data() {
     // 1. Create a new message according to idl name
     const char* idlName = skull_txn_idlname(this->txn_);
     std::string protoFileName = std::string(idlName) + ".proto";
@@ -90,7 +91,7 @@ google::protobuf::Message& Txn::data() {
     return *this->msg_;
 }
 
-Txn::Status Txn::status() {
+Txn::Status TxnImp::status() {
     skull_txn_status_t st = skull_txn_status(this->txn_);
 
     if (st == SKULL_TXN_OK) {
@@ -104,7 +105,7 @@ static
 int _skull_svc_api_callback(skull_txn_t* sk_txn, const char* apiName,
                             const void* request, size_t req_sz,
                             const void* response, size_t resp_sz) {
-    Txn txn(sk_txn);
+    TxnImp txn(sk_txn);
     const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)request;
     ServiceApiReqData apiReq(rawData);
     ServiceApiRespData apiResp(rawData->svcName.c_str(), apiName, response, resp_sz);
@@ -112,7 +113,7 @@ int _skull_svc_api_callback(skull_txn_t* sk_txn, const char* apiName,
     return rawData->cb(txn, std::string(apiName), apiReq.get(), apiResp.get());
 }
 
-Txn::IOStatus Txn::serviceCall (const char* serviceName,
+Txn::IOStatus TxnImp::serviceCall (const char* serviceName,
                                 const char* apiName,
                                 const google::protobuf::Message& request,
                                 ApiCB cb,
@@ -147,7 +148,7 @@ Txn::IOStatus Txn::serviceCall (const char* serviceName,
     }
 }
 
-skull_txn_t* Txn::txn() {
+skull_txn_t* TxnImp::txn() {
     return this->txn_;
 }
 

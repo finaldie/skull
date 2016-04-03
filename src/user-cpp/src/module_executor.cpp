@@ -5,6 +5,7 @@
 #include "txn_idldata.h"
 #include "mod_loader.h"
 #include "txndata_imp.h"
+#include "txn_imp.h"
 #include "module_executor.h"
 
 using namespace skullcpp;
@@ -28,7 +29,7 @@ void   skull_module_release(void* md)
 int    skull_module_run    (void* md, skull_txn_t* txn)
 {
     // 1. deserialize the binary data to user layer structure
-    skullcpp::Txn uTxn(txn);
+    skullcpp::TxnImp uTxn(txn);
 
     // 2. run module
     module_data_t* mdata = (module_data_t*)md;
@@ -42,7 +43,7 @@ size_t skull_module_unpack (void* md, skull_txn_t* txn,
                             const void* data, size_t data_len)
 {
     // 1. prepare a fresh new user layer idl structure
-    skullcpp::Txn uTxn(txn);
+    skullcpp::TxnImp uTxn(txn);
 
     // 2. run unpack
     module_data_t* mdata = (module_data_t*)md;
@@ -56,7 +57,7 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
                             skull_txndata_t* txndata)
 {
     // 1. Create txn and txndata
-    skullcpp::Txn uTxn(txn, true);
+    skullcpp::TxnImp uTxn(txn, true);
     skullcpp::TxnDataImp uTxnData(txndata);
 
     // 2. run pack

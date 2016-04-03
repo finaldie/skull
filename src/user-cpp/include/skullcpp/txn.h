@@ -11,20 +11,11 @@
 
 namespace skullcpp {
 
-class Service;
-
 class Txn {
 private:
-    google::protobuf::Message* msg_;
-    skull_txn_t* txn_;
-    bool destroyRawData_;
-
-#if __WORDSIZE == 64
-    uint32_t __padding :24;
-    uint32_t __padding1;
-#else
-    uint32_t __padding :24;
-#endif
+    // Make noncopyable
+    Txn(const Txn&);
+    const Txn* operator=(const Txn&);
 
 public:
     typedef enum Status {
@@ -44,12 +35,12 @@ public:
                           const google::protobuf::Message& response);
 
 public:
-    Txn(skull_txn_t*);
-    Txn(skull_txn_t*, bool destroyRawData);
-    ~Txn();
+    Txn() {};
+    virtual ~Txn() {};
 
-    google::protobuf::Message& data();
-    Status status();
+public:
+    virtual google::protobuf::Message& data() = 0;
+    virtual Status status() = 0;
 
     /**
      * Invoke a service async call
@@ -68,14 +59,11 @@ public:
      *         - ERROR_APINAME
      *         - ERROR_BIO
      */
-    IOStatus serviceCall (const char* serviceName,
+    virtual IOStatus serviceCall (const char* serviceName,
                           const char* apiName,
                           const google::protobuf::Message& request,
                           ApiCB cb,
-                          int bio_idx);
-
-public:
-    skull_txn_t* txn();
+                          int bio_idx) = 0;
 };
 
 } // End of namespace
