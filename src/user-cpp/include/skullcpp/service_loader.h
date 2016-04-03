@@ -31,8 +31,8 @@ typedef struct ServiceEntry {
     void (*init)    (Service&, const skull_config_t*);
     void (*release) (Service&);
 
-    ServiceReadApi**  rApis;
-    ServiceWriteApi** wApis;
+    ServiceReadApi*  rApis;
+    ServiceWriteApi* wApis;
 } ServiceEntry;
 
 } // End of nsmespace

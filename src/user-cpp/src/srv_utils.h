@@ -13,11 +13,11 @@
 namespace skullcpp {
 
 template<class T>
-T* FindApi(T** apis, const char* api_name) {
+T* FindApi(T* apis, const char* api_name) {
     if (!apis || !api_name) return NULL;
 
-    for (int i = 0; apis[i] != NULL; i++) {
-        T* api = apis[i];
+    for (int i = 0; apis[i].name != NULL; i++) {
+        T* api = &apis[i];
 
         if (0 == strcmp(api->name, api_name)) {
             return api;
