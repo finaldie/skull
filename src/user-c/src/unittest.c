@@ -435,6 +435,12 @@ const char* sk_service_type(const sk_service_t* service)
     return ((fake_service_t*)service)->type;
 }
 
+void sk_service_api_register(sk_service_t* service, const char* api_name,
+                             sk_service_api_type_t type)
+{
+    return;
+}
+
 // No one use it, just return NULL
 const sk_service_api_t* sk_service_api(const sk_service_t* svc, const char* api)
 {
