@@ -334,7 +334,7 @@ void skullut_service_run(skullut_service_t* ut_service, const char* api_name,
     taskdata.request_sz = req_sz;
 
     skull_service_t skull_service = {
-        .service = (sk_service_t*)ut_service,
+        .service = (sk_service_t*)fake_service,
         .task    = &taskdata,
         .freezed = 0
     };
@@ -416,8 +416,8 @@ const char* sk_service_name(const sk_service_t* service)
 
 const char* skull_service_name(skull_service_t* service)
 {
-    skullut_service_t* ut_service = (skullut_service_t*)service->service;
-    return ut_service->service->name;
+    fake_service_t* fake_service = (fake_service_t*)service->service;
+    return fake_service->name;
 }
 
 sk_service_opt_t* sk_service_opt(sk_service_t* service)

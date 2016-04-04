@@ -2,14 +2,16 @@
 #include "skullcpp/ep.h"
 #include "skullcpp/service.h"
 #include "service_imp.h"
+#include "ep_imp.h"
 
 namespace skullcpp {
 
 /***************************** EPClient Mock APIs *****************************/
-EPClient::EPClient() {
+EPClient::EPClient() : impl_(new EPClientImpl) {
 }
 
 EPClient::~EPClient() {
+    delete this->impl_;
 }
 
 void EPClient::setType(Type type) {
@@ -28,10 +30,15 @@ void EPClient::setUnpack(unpack unpackFunc) {
 }
 
 void EPClient::setRelease(release releaseFunc) {
+    this->impl_->release_ = releaseFunc;
 }
 
 EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dataSz,
                 epCb cb, void* ud) {
+    if (this->impl_->release_) {
+        this->impl_->release_(ud);
+    }
+
     return OK;
 }
 
