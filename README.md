@@ -37,32 +37,21 @@ After you installed skull into your system, you can run the following steps to
 create your skull project.
 
 ### Create a skull project
-[![skull demo](http://g.recordit.co/6yGrVG7i0s.gif)]()
+[![skull demo 1](http://g.recordit.co/6yGrVG7i0s.gif)]()
 
 **notes:** By default, the new module with a example code which is used for echo-back message
 
 ### Play with skull
-```console
-telnet localhost 7758
-Trying ::1...
-Trying 127.0.0.1...
-Connected to localhost.
-Escape character is '^]'.
-hello skull
-hello skull
-have fun :)
-have fun :)
-
-```
+[![skull demo 2](http://g.recordit.co/vSON9N6nuV.gif)]()
 
 ## How to Create a Service
 The following is the example of adding a service **s1**, and then add a api **get** for it.
 ```console
 bash $> skull service -add
 service name? s1
-which language the service belongs to? (c) c
+which language the service belongs to? (cpp) cpp
 data mode? (rw-pr | rw-pw) rw-pr
-notice: the common/c folder has already exist, ignore it
+notice: the common/cpp folder has already exist, ignore it
 service [s1] added successfully
 bash $> cd src/services/s1
 bash $> skull service --api-add
