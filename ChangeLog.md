@@ -1,3 +1,20 @@
+* 2016-04-06 0.7.5
+  * Core
+    * **Fix:** Fix service.data_set cannot work in init/release period
+    * **Enhancement:** Remove api section from main config
+    * **Enhancement:** Split ServiceApi to ServiceReadApi and ServiceWriteApi
+    * **Enhancement:** Refactor service registration api
+  * User
+    * **Fix:** Fix crash issue in unittest-c
+    * **Fix:** Fix EPClient potential crash issue
+    * **Fix:** Fix memleak and crash issue when run service unittest
+    * **Enhancement:** Move skullcpp::ServiceCall to Txn.serviceCall
+    * **Enhancement:** Remove skullcpp metrics_util.h
+    * **Enhancement:** Make cpp APIs noncopyable
+    * **Enhancement:** Refactor skullcpp::EPClient APIs, make it more user friendly and flexible
+    * **Enhancement:** Refactor Service::createJob API, make it more user friendly and flexible
+  * Script
+    * **Enhancement:** Update gitigore files
 * 2016-03-30 0.7.4
   * User
     * **New:** Build a C++ api layer on top of C api layer
