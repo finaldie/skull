@@ -46,7 +46,7 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     SKULL_LOG_INFO("2", "module_unpack(test): data sz:%zu", data_sz);
 
     // deserialize data to transcation data
-    skull::workflow::example& example = (skull::workflow::example&)txn.data();
+    auto& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
     return data_sz;
 }
@@ -56,16 +56,19 @@ int svc_api_callback(skullcpp::Txn& txn, const std::string& apiName,
                      const google::protobuf::Message& request,
                      const google::protobuf::Message& response)
 {
+    const auto& apiReq  = (skull::service::s1::get_req&)request;
+    const auto& apiResp = (skull::service::s1::get_resp&)response;
+
     std::cout << "svc_api_callback.... apiName: " << apiName << std::endl;
-    std::cout << "svc_api_callback.... request: " << ((skull::service::s1::get_req&)request).name() << std::endl;
-    std::cout << "svc_api_callback.... response: " << ((skull::service::s1::get_resp&)response).response() << std::endl;
+    std::cout << "svc_api_callback.... request: " << apiReq.name() << std::endl;
+    std::cout << "svc_api_callback.... response: " << apiResp.response() << std::endl;
     return 0;
 }
 
 static
 int module_run(skullcpp::Txn& txn)
 {
-    skull::workflow::example& example = (skull::workflow::example&)txn.data();
+    auto& example = (skull::workflow::example&)txn.data();
 
     printf("receive data: %s\n", example.data().c_str());
     SKULL_LOG_INFO("3", "receive data: %s", example.data().c_str());
@@ -83,7 +86,7 @@ int module_run(skullcpp::Txn& txn)
 static
 void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {
-    skull::workflow::example& example = (skull::workflow::example&)txn.data();
+    auto& example = (skull::workflow::example&)txn.data();
 
     skull_metrics_module.response.inc(1);
     printf("module_pack(test): data sz:%zu\n", example.data().length());

@@ -27,7 +27,7 @@ void skull_service_release(skullcpp::Service& service)
 }
 
 static
-size_t _ep_unpack(void* ud, const void* data, size_t len)
+size_t _ep_unpack(const void* data, size_t len)
 {
     std::cout << "ep received data len: " << len << std::endl;
     return len;
@@ -40,15 +40,16 @@ void _ep_release(void* ud)
 }
 
 static
-void _ep_cb(const skullcpp::Service&, skullcpp::EPClient::Ret ret,
-            const void* response, size_t len, void* ud,
-            skullcpp::ServiceApiData& apiData)
+void _ep_cb(const skullcpp::Service&, skullcpp::EPClientRet& ret)
 {
-    std::cout << "in _ep_cb data len: " << len << std::endl;
-    apiData.request().PrintDebugString();
+    std::cout << "in _ep_cb data len: " << ret.responseSize() << std::endl;
 
-    std::string rawResponse = ((skull::service::s1::get_resp&)apiData.response()).response();
-    ((skull::service::s1::get_resp&)apiData.response()).set_response(rawResponse + " , plus ep");
+    auto& apiData = ret.apiData();
+    apiData.request().PrintDebugString();
+    auto& apiResp = (skull::service::s1::get_resp&)apiData.response();
+
+    const std::string& rawResponse = apiResp.response();
+    apiResp.set_response(rawResponse + " , plus ep");
 }
 
 // ====================== Service APIs Calls ===================================
@@ -60,18 +61,21 @@ void skull_service_getdata(const skullcpp::Service& service,
     printf("skull service api: getdata\n");
     SKULL_LOG_INFO("svc.test.get-1", "service get data");
 
-    std::cout << "api req: " << ((skull::service::s1::get_req&)request).name() << std::endl;
-    ((skull::service::s1::get_resp&)response).set_response("Hi new bie");
+    const auto& apiReq = (skull::service::s1::get_req&)request;
+    auto& apiResp = (skull::service::s1::get_resp&)response;
+
+    std::cout << "api req: " << apiReq.name() << std::endl;
+    apiResp.set_response("Hi new bie");
 
     skullcpp::EPClient epClient;
     epClient.setType(skullcpp::EPClient::TCP);
     epClient.setIP("127.0.0.1");
     epClient.setPort(7760);
     epClient.setTimeout(50);
-    epClient.setUnpack(_ep_unpack);
-    epClient.setRelease(_ep_release);
+    epClient.setUnpack(skull_BindEp(_ep_unpack));
 
-    skullcpp::EPClient::Status st = epClient.send(service, "hello ep", 9, _ep_cb, NULL);
+    skullcpp::EPClient::Status st =
+        epClient.send(service, "hello ep", 9, skull_BindEp(_ep_cb));
     std::cout << "ep status: " << st << std::endl;
 }
 

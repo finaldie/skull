@@ -34,7 +34,7 @@ void test_example()
     SKULL_CUNIT_ASSERT(ret == 0);
 
     // 3.2 assert the txn share data is "hello"
-    const skull::workflow::example new_example =
+    const auto& new_example =
         (const skull::workflow::example&)env.getTxnSharedData();
     SKULL_CUNIT_ASSERT(new_example.data() == "hello");
     SKULL_CUNIT_ASSERT(new_example.data() == example.data());

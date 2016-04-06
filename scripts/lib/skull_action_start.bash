@@ -16,4 +16,7 @@ function action_start_usage()
     echo "usage:"
     echo "  skull start"
     echo "  skull start --memcheck"
+    echo "  skull start --gdb"
+    echo "  skull start --strace"
+    echo "  skull start --massif"
 }

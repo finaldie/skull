@@ -34,8 +34,7 @@ void skull_service_getdata(const skullcpp::Service& service,
     printf("skull service api: getdata\n");
     SKULL_LOG_INFO("svc.test.get-1", "service get data");
 
-    skull::service::s1::get_resp& apiResp =
-        (skull::service::s1::get_resp&)response;
+    auto& apiResp = (skull::service::s1::get_resp&)response;
     apiResp.set_response("Hi new bie");
 }
 
