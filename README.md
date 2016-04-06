@@ -37,15 +37,7 @@ After you installed skull into your system, you can run the following steps to
 create your skull project.
 
 ### Create a skull project
-```shell
-skull create project
-cd project
-skull workflow -add # then input $concurrent, $idl_name, $port
-skull module -add # then input $module_name, $workflow_index and $language
-skull build
-skull deploy
-skull start
-```
+[![skull demo](http://g.recordit.co/6yGrVG7i0s.gif)]()
 
 **notes:** By default, the new module with a example code which is used for echo-back message
 
