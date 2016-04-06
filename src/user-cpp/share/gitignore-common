@@ -1,3 +1,32 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
 # protobuf files
 *.pb.*
 
@@ -7,3 +36,6 @@ src/skull_metrics.*
 # generated idl header files
 src/skull_protos.h
 src/protos/*
+
+# compiled file for ycm
+.ycm_extra_conf.pyc
