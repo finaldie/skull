@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/finaldie/skull.svg?branch=master)](https://travis-ci.org/finaldie/skull)
+[![GitHub license](https://img.shields.io/github/license/finaldie/skull.svg)]()
 
 skull
 =====
