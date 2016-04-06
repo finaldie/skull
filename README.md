@@ -122,4 +122,10 @@ skull.core.t.worker.worker-0.response: 1.000000
 skull.core.t.worker.worker-0.request: 2.000000
 ```
 
+# Existing Services
+Name                  | Description |
+----------------------|-------------|
+[Async DNS Client][2] | Example service, to show how to write a basic async DNS client |
+
 [1]: https://github.com/finaldie/skull-admin-c
+[2]: https://github.com/finaldie/skull-service-dns
