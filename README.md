@@ -74,7 +74,6 @@ service [s1] added successfully
 bash $> cd src/services/s1
 bash $> skull service --api-add
 service api name: get
-service api access_mode: (read|write) read
 s1-get_req added
 s1-get_resp added
 service api get added successfully
