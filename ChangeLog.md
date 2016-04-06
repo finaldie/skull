@@ -1,3 +1,42 @@
+* 2016-04-06 0.7.5
+  * Core
+    * **Fix:** Fix service.data_set cannot work in init/release period
+    * **Enhancement:** Remove api section from main config
+    * **Enhancement:** Split ServiceApi to ServiceReadApi and ServiceWriteApi
+    * **Enhancement:** Refactor service registration api
+  * User
+    * **Fix:** Fix crash issue in unittest-c
+    * **Fix:** Fix EPClient potential crash issue
+    * **Fix:** Fix memleak and crash issue when run service unittest
+    * **Enhancement:** Move skullcpp::ServiceCall to Txn.serviceCall
+    * **Enhancement:** Remove skullcpp metrics_util.h
+    * **Enhancement:** Make cpp APIs noncopyable
+    * **Enhancement:** Refactor skullcpp::EPClient APIs, make it more user friendly and flexible
+    * **Enhancement:** Refactor Service::createJob API, make it more user friendly and flexible
+  * Script
+    * **Enhancement:** Update gitigore files
+* 2016-03-30 0.7.4
+  * User
+    * **New:** Build a C++ api layer on top of C api layer
+  * Script
+    * **Enhancement:** Generate more user friendly service proto
+* 2016-01-27 0.7.3
+  * Core
+    * **New:** `EndPoint` support UDP protocol
+    * **Enhancement:** service job accept 0 delayed task, which would be scheduled immediately
+    * **Enhancement:** `EndPoint` can be called recursively
+  * Scripts:
+    * **Fix:** Fix incorrect generating service proto api header script
+* 2016-01-19 0.7.2
+  * Core
+    * **New:** Add `EndPoint` component and related api
+    * **Enhancement:** Upgrade `flibs` to 0.8.11
+* 2016-01-04 0.7.1
+  * Core
+    * **New:** Make workflow cancelable
+    * **Fix:** Service iocall/timer memleak
+    * **Fix:** Invalid memory issue when clean up timers during shutdown
+    * **Fix:** Service api call chain crash issue
 * 2016-01-03 0.6.6
   * Core
     * **New:** Add `last` admin command to show the latest snapshot

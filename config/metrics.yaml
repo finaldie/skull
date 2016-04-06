@@ -31,6 +31,18 @@ global:
             desc: How many timers be emitted
         srv_timer_complete:
             desc: How many timers be completed
+        ep_create:
+            desc: How many endpoint be created
+        ep_send:
+            desc: How many requests be sent by endpoint
+        ep_recv:
+            desc: How many response be received by endpoint
+        ep_ok:
+            desc: How many ep transactions succeed
+        ep_timeout:
+            desc: How many ep transactions timed out
+        ep_error:
+            desc: How many ep transactions encounter error
 
 worker:
     mode: thread
@@ -65,4 +77,16 @@ worker:
             desc: How many timers be emitted
         srv_timer_complete:
             desc: How many timers be completed
+        ep_create:
+            desc: How many endpoint be created
+        ep_send:
+            desc: How many requests be sent by endpoint
+        ep_recv:
+            desc: How many response be received by endpoint
+        ep_ok:
+            desc: How many ep transactions succeed
+        ep_timeout:
+            desc: How many ep transactions timed out
+        ep_error:
+            desc: How many ep transactions encounter error
 

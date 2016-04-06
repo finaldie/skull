@@ -1,8 +1,0 @@
-# protobuf-c files
-*.pb-c.*
-
-# generated metrics source files
-src/common/c/src/skull_metrics.*
-
-# generated idl source files
-src/common/c/src/skull_idl.*

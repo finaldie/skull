@@ -12,6 +12,7 @@
 #include "api/sk_txn.h"
 
 struct sk_txn_task_t {
+    uint64_t id;
     // record the time of start and end
     unsigned long long start;
     unsigned long long end;   // If end is non-zero, means the task is done
@@ -50,16 +51,23 @@ struct sk_txn_t {
 
 // Internal APIs
 static
-sk_txn_task_t* _sk_txn_task_create(sk_txn_taskdata_t* task_data)
+sk_txn_task_t* _sk_txn_task_create(
+    sk_txn_t* txn, sk_txn_taskdata_t* task_data)
 {
+    uint64_t task_id = txn->latest_taskid++;
+
     sk_txn_task_t* task = calloc(1, sizeof(*task));
+    task->id    = task_id;
     task->start = ftime_gettime();
+
     if (task_data) {
         task->task_data = *task_data;
     }
 
     task->status = SK_TXN_TASK_RUNNING;
 
+    // update the taskdata owner
+    task->task_data.owner = task;
     return task;
 }
 
@@ -70,8 +78,8 @@ void _sk_txn_task_destroy(sk_txn_task_t* task)
         return;
     }
 
-    // Must release the request data if have, or it will be a mem leak
-    free((void*)task->task_data.request);
+    // Notes: here we won't release the task_data.request/response,
+    //  the responsibility is from user
     free(task);
 }
 
@@ -127,7 +135,7 @@ void sk_txn_destroy(sk_txn_t* txn)
     free(txn);
 }
 
-const void* sk_txn_input(sk_txn_t* txn, size_t* sz)
+const void* sk_txn_input(const sk_txn_t* txn, size_t* sz)
 {
     *sz = txn->input_sz;
     return txn->input;
@@ -161,18 +169,18 @@ void sk_txn_output_append(sk_txn_t* txn, const void* data, size_t sz)
     SK_ASSERT(!ret);
 }
 
-const void* sk_txn_output(sk_txn_t* txn, size_t* sz)
+const void* sk_txn_output(const sk_txn_t* txn, size_t* sz)
 {
     *sz = fmbuf_used(txn->output);
     return fmbuf_head(txn->output);
 }
 
-struct sk_workflow_t* sk_txn_workflow(sk_txn_t* txn)
+struct sk_workflow_t* sk_txn_workflow(const sk_txn_t* txn)
 {
     return txn->workflow;
 }
 
-struct sk_entity_t* sk_txn_entity(sk_txn_t* txn)
+struct sk_entity_t* sk_txn_entity(const sk_txn_t* txn)
 {
     return txn->entity;
 }
@@ -184,52 +192,67 @@ struct sk_module_t* sk_txn_next_module(sk_txn_t* txn)
     return module;
 }
 
-struct sk_module_t* sk_txn_current_module(sk_txn_t* txn)
+struct sk_module_t* sk_txn_current_module(const sk_txn_t* txn)
 {
     return txn->current;
 }
 
-int sk_txn_is_first_module(sk_txn_t* txn)
+int sk_txn_is_first_module(const sk_txn_t* txn)
 {
     return txn->current == sk_workflow_first_module(txn->workflow);
 }
 
-int sk_txn_is_last_module(sk_txn_t* txn)
+int sk_txn_is_last_module(const sk_txn_t* txn)
 {
     return txn->current == sk_workflow_last_module(txn->workflow);
 }
 
-unsigned long long sk_txn_alivetime(sk_txn_t* txn)
+unsigned long long sk_txn_alivetime(const sk_txn_t* txn)
 {
     return ftime_gettime() - txn->start_time;
 }
 
-void sk_txn_setudata(sk_txn_t* txn, void* data)
+void sk_txn_setudata(sk_txn_t* txn, const void* data)
 {
-    txn->udata = data;
+    txn->udata = (void*)data;
 }
 
-void* sk_txn_udata(sk_txn_t* txn)
+void* sk_txn_udata(const sk_txn_t* txn)
 {
     return txn->udata;
 }
 
-bool sk_txn_module_complete(sk_txn_t* txn)
+bool sk_txn_module_complete(const sk_txn_t* txn)
 {
     return !txn->pending_tasks;
 }
 
+bool sk_txn_alltask_complete(const sk_txn_t* txn)
+{
+    return txn->complete_tasks == txn->total_tasks;
+}
+
 // =============================================================================
+uint64_t sk_txn_task_id(const sk_txn_task_t* task)
+{
+    return task->id;
+}
+
 uint64_t sk_txn_task_add(sk_txn_t* txn, sk_txn_taskdata_t* task_data)
 {
-    sk_txn_task_t* task = _sk_txn_task_create(task_data);
-    uint64_t task_id = txn->latest_taskid++;
-    fhash_u64_set(txn->task_tbl, task_id, task);
+    sk_txn_task_t* task = _sk_txn_task_create(txn, task_data);
+    fhash_u64_set(txn->task_tbl, task->id, task);
+
     txn->total_tasks++;
     txn->pending_tasks += task_data->cb ? 1 : 0;
 
     SK_ASSERT(txn->complete_tasks < txn->total_tasks);
-    return task_id;
+    return task->id;
+}
+
+int sk_txn_task_done(const sk_txn_taskdata_t* task)
+{
+    return task->pendings > 0 ? 0 : 1;
 }
 
 void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
@@ -242,6 +265,7 @@ void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
 
     task->end = ftime_gettime();
     task->status = status;
+
     txn->complete_tasks++;
     txn->pending_tasks -= task->task_data.cb ? 1 : 0;
 }
@@ -289,6 +313,12 @@ unsigned long long sk_txn_task_livetime(sk_txn_t* txn, uint64_t task_id)
 
 void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
 {
+    // Do a basic checking first, txn's state cannot be reset when its value =
+    //  SK_TXN_DESTROYED
+    if (txn->state == SK_TXN_DESTROYED) {
+        SK_ASSERT(state == SK_TXN_DESTROYED);
+    }
+
     txn->state = state;
 
     if (state == SK_TXN_UNPACKED) {
@@ -299,7 +329,7 @@ void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
     }
 }
 
-sk_txn_state_t sk_txn_state(sk_txn_t* txn)
+sk_txn_state_t sk_txn_state(const sk_txn_t* txn)
 {
     return txn->state;
 }

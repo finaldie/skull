@@ -35,7 +35,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
-    SK_LOG_SETCOOKIE("module.%s", module->name);
+    SK_LOG_SETCOOKIE("module.%s", module->cfg->name);
     SK_ENV_POS = SK_ENV_POS_MODULE;
 
     // Run the module
@@ -47,8 +47,11 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     SK_ENV_POS = SK_ENV_POS_CORE;
 
     if (ret) {
-        SK_ASSERT_MSG(!ret, "un-implemented code path\n");
-        return 1;
+        sk_print("module (%s) encounter error\n", module->cfg->name);
+        SK_LOG_ERROR(SK_ENV_LOGGER,
+            "module (%s) encounter error", module->cfg->name);
+
+        sk_txn_setstate(txn, SK_TXN_ERROR);
     }
 
     // 2. Check whether the module is completed, if not, means there are
@@ -56,13 +59,24 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     //    completed, the master will re-schedule the 'workflow_run' protocol
     //    again
     if (!sk_txn_module_complete(txn)) {
-        sk_txn_setstate(txn, SK_TXN_PENDING);
+        if (!ret) {
+            sk_txn_setstate(txn, SK_TXN_PENDING);
+        }
 
         sk_print("txn pending, waiting for service io calls, module %s\n",
-                 module->name);
+                 module->cfg->name);
         SK_LOG_TRACE(SK_ENV_LOGGER, "txn pending, waiting for service calls, "
-                     "module %s", module->name);
+                     "module %s", module->cfg->name);
         return 0;
+    }
+
+    if (ret) {
+        sk_print("module (%s) encounter error, goto pack directly\n",
+                 module->cfg->name);
+
+        SK_LOG_ERROR(SK_ENV_LOGGER,
+            "module (%s) encounter error, goto pack directly", module->cfg->name);
+        return _run(sched, src, entity, txn, proto_msg);
     }
 
     // 3. check whether is the last module:
@@ -92,7 +106,7 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
     }
 
     // 2. pack the data, and send the response if needed
-    SK_LOG_SETCOOKIE("module.%s", last_module->name);
+    SK_LOG_SETCOOKIE("module.%s", last_module->cfg->name);
     last_module->pack(last_module->md, txn);
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
@@ -123,9 +137,6 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
 // Every time pick up the next module in the workflow module list, then execute
 // the its `run` method. If reach the last module of the workflow, then will
 // execute the `pack` method
-//
-// TODO: should check the _module_run return value, if non-zero should cancel
-// the workflow
 static
 int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
          void* proto_msg)
@@ -158,6 +169,10 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
         sk_txn_setstate(txn, SK_TXN_DESTROYED);
         sk_txn_safe_destroy(txn);
         break;
+    }
+    case SK_TXN_ERROR: {
+        sk_print("txn - ERROR: txn error\n");
+        return _module_pack(sched, src, entity, txn, proto_msg);
     }
     case SK_TXN_DESTROYED: {
         sk_print("txn - DESTROYED: txn destroy\n");

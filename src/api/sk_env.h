@@ -17,6 +17,7 @@
 #define SK_ENV_MON          (sk_thread_env()->engine->mon)
 #define SK_ENV_TMSVC        (sk_thread_env()->engine->timer_svc)
 #define SK_ENV_MASTER_SCHED (SK_ENV_CORE->master->sched)
+#define SK_ENV_EP           (sk_thread_env()->engine->ep_pool)
 #define SK_ENV_POS          (sk_thread_env()->pos)
 
 typedef enum sk_env_pos_t {

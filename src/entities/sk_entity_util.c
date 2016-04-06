@@ -46,7 +46,7 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     }
 
     // 3. try to unpack the user data
-    SK_LOG_SETCOOKIE("module.%s", first_module->name);
+    SK_LOG_SETCOOKIE("module.%s", first_module->cfg->name);
     const void* data = fevbuff_rawget(evbuff);
     size_t consumed =
         first_module->unpack(first_module->md, txn, data, (size_t)bytes);
@@ -96,7 +96,7 @@ void sk_entity_safe_destroy(sk_entity_t* entity)
     }
 }
 
-sk_sched_t* sk_entity_sched(sk_entity_t* entity)
+sk_sched_t* sk_entity_sched(const sk_entity_t* entity)
 {
     if (!entity) return NULL;
 

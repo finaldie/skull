@@ -4,6 +4,7 @@
 
 #include "flibs/flog.h"
 
+#include "api/sk_const.h"
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 #include "api/sk_config_loader.h"
@@ -21,9 +22,11 @@ sk_workflow_cfg_t* _create_workflow_cfg()
 static
 void _delete_workflow_cfg(sk_workflow_cfg_t* workflow)
 {
-    char* module_name = NULL;
-    while ((module_name = flist_pop(workflow->modules))) {
-        free(module_name);
+    sk_module_cfg_t* mcfg = NULL;
+    while ((mcfg = flist_pop(workflow->modules))) {
+        free((void*)mcfg->name);
+        free((void*)mcfg->type);
+        free(mcfg);
     }
     flist_delete(workflow->modules);
 
@@ -37,7 +40,6 @@ sk_service_cfg_t* _service_cfg_item_create()
     sk_service_cfg_t* cfg = calloc(1, sizeof(*cfg));
     cfg->enable = false;
     cfg->data_mode = SK_SRV_DATA_MODE_RW_PR;
-    cfg->apis = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
     return cfg;
 }
@@ -49,17 +51,7 @@ void _service_cfg_item_destroy(sk_service_cfg_t* cfg)
         return;
     }
 
-    // destroy api items
-    fhash_str_iter api_iter = fhash_str_iter_new(cfg->apis);
-    sk_srv_api_cfg_t* api_cfg_item = NULL;
-
-    while ((api_cfg_item = fhash_str_next(&api_iter))) {
-        free(api_cfg_item);
-    }
-
-    fhash_str_iter_release(&api_iter);
-
-    fhash_str_delete(cfg->apis);
+    free((void*)cfg->type);
     free(cfg);
 }
 
@@ -69,15 +61,16 @@ sk_config_t* _create_config()
     sk_config_t* config = calloc(1, sizeof(*config));
     config->workflows = flist_create();
     config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    config->langs     = flist_create();
     return config;
 }
 
 static
 void _delete_config(sk_config_t* config)
 {
+    // destroy workflow
     sk_workflow_cfg_t* workflow = NULL;
 
-    // destroy workflow
     while ((workflow = flist_pop(config->workflows))) {
         _delete_workflow_cfg(workflow);
     }
@@ -92,6 +85,13 @@ void _delete_config(sk_config_t* config)
     }
     fhash_str_iter_release(&srv_iter);
     fhash_str_delete(config->services);
+
+    // destroy langs
+    char* lang = NULL;
+    while ((lang = flist_pop(config->langs))) {
+        free(lang);
+    }
+    flist_delete(config->langs);
 
     free(config);
 }
@@ -109,7 +109,31 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
     while ((child = flist_each(&iter))) {
         SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
 
-        int ret = flist_push(workflow->modules, strdup(child->data.value));
+        sk_module_cfg_t* mcfg = calloc(1, sizeof(*mcfg));
+        const char* raw = child->data.value;
+
+        char tmp[SK_CONFIG_VALUE_MAXLEN];
+        strncpy(tmp, raw, SK_CONFIG_VALUE_MAXLEN);
+        char* tmp1 = tmp;
+
+        // Format: 'name:type'
+        char* token = NULL;
+        int i = 0;
+        while ((token = strsep(&tmp1, ":")) && i < 2) {
+            if (i == 0) {
+                // fill name
+                mcfg->name = strdup(token);
+            } else {
+                mcfg->type = strdup(token);
+            }
+
+            i++;
+        }
+
+        SK_ASSERT_MSG(i == 2, "Invalid module format, correct it. "
+                      "Format: 'name:type', content: %s\n", raw);
+
+        int ret = flist_push(workflow->modules, mcfg);
         SK_ASSERT(!ret);
     }
 }
@@ -238,88 +262,9 @@ void _load_service_data_mode(const sk_cfg_node_t* child, sk_service_cfg_t* cfg)
 }
 
 static
-void _load_service_api(const sk_cfg_node_t* node, const char* service_name,
-                       const char* api_name, sk_service_cfg_t* cfg)
-{
-    SK_ASSERT_MSG(node->type == SK_CFG_NODE_MAPPING,
-                  "service %s api item config must be a mapping\n",
-                  service_name);
-
-    // Create a api cfg structure
-    sk_srv_api_cfg_t* api_cfg = calloc(1, sizeof(*api_cfg));
-
-    // Parse and fill api cfg
-    fhash_str_iter iter = fhash_str_iter_new(node->data.mapping);
-    sk_cfg_node_t* child = NULL;
-
-    while ((child = fhash_str_next(&iter))) {
-        const char* key = iter.key;
-        bool mode_exist = false;
-
-        if (0 == strcmp(key, "mode")) {
-            mode_exist = true;
-            const char* value = sk_config_getstring(child);
-
-            if (0 == strcmp(value, "read")) {
-                api_cfg->access_mode = SK_SRV_API_READ;
-            } else if (0 == strcmp(value, "write")) {
-                api_cfg->access_mode = SK_SRV_API_WRITE;
-            } else {
-                sk_print_err("Fatal: unknown service '%s' api '%s' access mode "
-                             "'%s', use read or write\n",
-                             service_name, api_name, value);
-                exit(1);
-            }
-        } else {
-            sk_print_err("Fatal: unknown service '%s' api '%s' cfg field "
-                         "'%s'\n", service_name, api_name, key);
-            exit(1);
-        }
-
-        if (!mode_exist) {
-            sk_print_err("Fatal: service '%s' api '%s' cfg missing mode "
-                         "field\n", service_name, api_name);
-            exit(1);
-        }
-    }
-
-    fhash_str_iter_release(&iter);
-
-    // Add api cfg item to apis table
-    fhash_str_set(cfg->apis, api_name, api_cfg);
-}
-
-static
-void _load_service_apis(const sk_cfg_node_t* node, const char* service_name,
-                        sk_service_cfg_t* cfg)
-{
-    SK_ASSERT_MSG(node->type == SK_CFG_NODE_MAPPING,
-                  "service api item config must be a mapping\n");
-
-    fhash_str_iter iter = fhash_str_iter_new(node->data.mapping);
-    sk_cfg_node_t* child = NULL;
-
-    while ((child = fhash_str_next(&iter))) {
-        const char* api_name = iter.key;
-        _load_service_api(child, service_name, api_name, cfg);
-    }
-
-    fhash_str_iter_release(&iter);
-}
-
-static
 bool _validate_service_cfg(const char* service_name,
                            const sk_service_cfg_t* service_cfg)
 {
-    fhash_str_iter api_iter = fhash_str_iter_new(service_cfg->apis);
-    const sk_srv_api_cfg_t* api_cfg = NULL;
-
-    while ((api_cfg = fhash_str_next(&api_iter))) {
-        //const char* api_name = api_iter.key;
-        //sk_print("validating api config: %s\n", api_name);
-    }
-    fhash_str_iter_release(&api_iter);
-
     return true;
 }
 
@@ -343,8 +288,8 @@ void _load_service(const char* service_name, sk_cfg_node_t* node,
         } else if (0 == strcmp(key, "data_mode")) {
             data_mode_exist = true;
             _load_service_data_mode(child, service_cfg);
-        } else if (0 == strcmp(key, "apis")) {
-            _load_service_apis(child, service_name, service_cfg);
+        } else if (0 == strcmp(key, "type")) {
+            service_cfg->type = strdup(sk_config_getstring(child));
         }
     }
 
@@ -400,6 +345,24 @@ void _load_bios(sk_cfg_node_t* node, sk_config_t* config)
 }
 
 static
+void _load_langs(sk_cfg_node_t* node, sk_config_t* config)
+{
+    if (node->type != SK_CFG_NODE_ARRAY) {
+        sk_print("Not a valid language item, won't load it\n");
+        return;
+    }
+
+    sk_cfg_node_t* child = NULL;
+    flist_iter iter = flist_new_iter(node->data.array);
+    while ((child = flist_each(&iter))) {
+        SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
+
+        int ret = flist_push(config->langs, strdup(child->data.value));
+        SK_ASSERT(!ret);
+    }
+}
+
+static
 void _load_config(sk_cfg_node_t* root, sk_config_t* config)
 {
     SK_ASSERT_MSG(root->type == SK_CFG_NODE_MAPPING,
@@ -439,6 +402,11 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         // load bio(s)
         if (0 == strcmp(key, "bio")) {
             _load_bios(child, config);
+        }
+
+        // load languages
+        if (0 == strcmp(key, "languages")) {
+            _load_langs(child, config);
         }
     }
 
@@ -480,10 +448,10 @@ void sk_config_print(sk_config_t* config)
         sk_print("\tconcurrent: %d\n", workflow->concurrent);
         sk_print("\tmodules: ");
 
-        char* module_name = NULL;
+        sk_module_cfg_t* mcfg = NULL;
         flist_iter name_iter = flist_new_iter(workflow->modules);
-        while ((module_name = flist_each(&name_iter))) {
-            sk_rawprint("%s ", module_name);
+        while ((mcfg = flist_each(&name_iter))) {
+            sk_rawprint("%s:%s ", mcfg->name, mcfg->type);
         }
 
         sk_rawprint("\n");

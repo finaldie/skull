@@ -32,6 +32,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     const char* service_name  = iocall_msg->service_name;
     const char* api_name      = iocall_msg->api_name;
     int         bidx          = iocall_msg->bio_idx;
+    sk_txn_taskdata_t* taskdata = (sk_txn_taskdata_t*) (uintptr_t) iocall_msg->txn_task;
 
     sk_srv_status_t srv_status   = SK_SRV_STATUS_OK;
     sk_srv_io_status_t io_status = SK_SRV_IO_STATUS_OK;
@@ -47,17 +48,15 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     const sk_service_api_t* srv_api = sk_service_api(service, api_name);
     SK_ASSERT(srv_cfg && srv_api);
 
-    const sk_srv_api_cfg_t* api_cfg = srv_api->cfg;
-
     // 3. queue a specific service call
     // 3.1 construct the service task
     sk_srv_task_t task;
     memset(&task, 0, sizeof(task));
 
-    SK_ASSERT(api_cfg->access_mode == SK_SRV_API_READ ||
-              api_cfg->access_mode == SK_SRV_API_WRITE);
+    SK_ASSERT(srv_api->type == SK_SRV_API_READ ||
+              srv_api->type == SK_SRV_API_WRITE);
 
-    if (api_cfg->access_mode == SK_SRV_API_READ) {
+    if (srv_api->type == SK_SRV_API_READ) {
         task.base.type = SK_QUEUE_ELEM_READ;
     } else {
         task.base.type = SK_QUEUE_ELEM_WRITE;
@@ -71,6 +70,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     task.data.api.txn     = txn;
     task.data.api.name    = srv_api->name;
     task.data.api.task_id = task_id;
+    task.data.api.txn_task = taskdata;
 
     // 3.2 push task to service
     int ret = 0;

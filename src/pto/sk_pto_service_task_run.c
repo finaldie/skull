@@ -16,7 +16,7 @@
 /**
  * @desc Run a service task
  *
- * @note This method will run in the worker thread
+ * @note This method will run in the worker/bio thread
  */
 static
 int _run(sk_sched_t* sched, sk_sched_t* src /*master*/,
@@ -30,11 +30,11 @@ int _run(sk_sched_t* sched, sk_sched_t* src /*master*/,
 
     // 1. unpack the parameters
     ServiceTaskRun* task_run_msg = proto_msg;
-    uint64_t task_id         = task_run_msg->task_id;
     const char* service_name = task_run_msg->service_name;
     const char* api_name     = task_run_msg->api_name;
-    uint32_t io_status       = task_run_msg->io_status;
+    uint32_t    io_status    = task_run_msg->io_status;
     sk_sched_t* api_caller   = (sk_sched_t*) (uintptr_t) task_run_msg->src;
+    sk_txn_taskdata_t* taskdata = (sk_txn_taskdata_t*) (uintptr_t) task_run_msg->taskdata;
     SK_ASSERT(io_status < SK_SRV_IO_STATUS_MAX);
 
     sk_srv_status_t srv_status = SK_SRV_STATUS_OK;
@@ -52,7 +52,8 @@ int _run(sk_sched_t* sched, sk_sched_t* src /*master*/,
     SK_ENV_POS = SK_ENV_POS_SERVICE;
 
     srv_status =
-        sk_service_run_iocall(service, txn, task_id, api_name, io_status);
+        sk_service_run_iocall(service, txn, taskdata, api_name, io_status);
+    SK_ASSERT(srv_status == SK_SRV_STATUS_OK);
 
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     SK_ENV_POS = SK_ENV_POS_CORE;
@@ -63,20 +64,23 @@ int _run(sk_sched_t* sched, sk_sched_t* src /*master*/,
         ret = 1;
     }
 
+    // 4. check task done or not
+    int task_done = sk_txn_task_done(taskdata);
     sk_txn_task_status_t txn_status =
-        srv_status == SK_SRV_STATUS_OK ? SK_TXN_TASK_DONE : SK_TXN_TASK_ERROR;
+        task_done ? SK_TXN_TASK_DONE : SK_TXN_TASK_PENDING;
 
-    // 4. schedule it back and run api callback
+    // 5. schedule it back and run api callback
     ServiceTaskCb task_cb_msg = SERVICE_TASK_CB__INIT;
-    task_cb_msg.task_id       = task_id;
+    task_cb_msg.taskdata      = (uint64_t) (uintptr_t) taskdata;
     task_cb_msg.service_name  = (char*) service_name;
     task_cb_msg.api_name = (char*) sk_service_api(service, api_name)->name;
     task_cb_msg.task_status   = (uint32_t) txn_status;
+    task_cb_msg.svc_task_done = 1;
 
     sk_sched_send(SK_ENV_SCHED, api_caller, entity, txn,
                   SK_PTO_SVC_TASK_CB, &task_cb_msg, 0);
 
-    // 5. update metrics
+    // 7. update metrics
     sk_metrics_worker.srv_iocall_execute.inc(1);
     sk_metrics_global.srv_iocall_execute.inc(1);
 

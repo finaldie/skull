@@ -22,6 +22,7 @@
 #define ADMIN_CMD_STATUS        "status"
 
 static sk_module_t _sk_admin_module;
+static sk_module_cfg_t _sk_admin_module_cfg;
 
 typedef struct sk_admin_data_t {
     int   ignore;
@@ -228,7 +229,7 @@ sk_workflow_cfg_t* sk_admin_workflowcfg_create(int port)
     cfg->idl_name     = NULL;
     cfg->modules      = flist_create();
 
-    flist_push(cfg->modules, _sk_admin_module.name);
+    flist_push(cfg->modules, &_sk_admin_module_cfg);
 
     return cfg;
 }
@@ -341,10 +342,15 @@ pack_done:
 }
 
 static
+sk_module_cfg_t _sk_admin_module_cfg = {
+    .name = "Admin",
+    .type = "Native"
+};
+
+static
 sk_module_t _sk_admin_module = {
     .md   = NULL,
-    .name = "Admin",
-    .type = SK_C_MODULE_TYPE,
+    .cfg  = &_sk_admin_module_cfg,
 
     .init    = _admin_init,
     .run     = _admin_run,

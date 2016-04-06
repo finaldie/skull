@@ -92,6 +92,8 @@ sk_engine_t* sk_engine_create(sk_engine_type_t type, int flags)
     engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr, flags);
     engine->mon        = sk_mon_create();
     engine->timer_svc  = sk_timersvc_create(engine->evlp);
+    engine->ep_pool    = sk_ep_pool_create(engine->evlp, engine->timer_svc,
+                                           SK_EP_POOL_MAX);
 
     return engine;
 }
@@ -103,8 +105,9 @@ void sk_engine_destroy(sk_engine_t* engine)
     }
 
     sk_sched_destroy(engine->sched);
-    sk_entity_mgr_destroy(engine->entity_mgr);
+    sk_ep_pool_destroy(engine->ep_pool);
     sk_timersvc_destroy(engine->timer_svc);
+    sk_entity_mgr_destroy(engine->entity_mgr);
     sk_eventloop_destroy(engine->evlp);
     sk_mon_destroy(engine->mon);
     free(engine);
@@ -166,5 +169,6 @@ int sk_engine_wait(sk_engine_t* engine)
 
 void sk_engine_link(sk_engine_t* src, sk_engine_t* dst)
 {
-    sk_sched_setup_bridge(src->sched, dst->sched);
+    int ret = sk_sched_setup_bridge(src->sched, dst->sched);
+    SK_ASSERT(!ret);
 }

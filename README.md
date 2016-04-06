@@ -5,12 +5,15 @@ skull
 
 Fast to start-up, easy to maintain, high productivity serving framework.
 
+## Releases
+[Changelog](ChangeLog.md)
+
 ## How to Build
 Use Ubuntu14.04 as an example.
 
 ### Install dependencies
 ```console
-apt-get install valgrind libyaml-dev python-yaml libprotobuf-c0 libprotobuf-c0-dev protobuf-c-compiler
+apt-get install valgrind libyaml-dev python-yaml libprotobuf-dev libprotobuf-c0 libprotobuf-c0-dev protobuf-c-compiler libprotobuf-dev
 
 git clone git@github.com:finaldie/skull.git
 cd skull
@@ -71,7 +74,6 @@ service [s1] added successfully
 bash $> cd src/services/s1
 bash $> skull service --api-add
 service api name: get
-service api access_mode: (read|write) read
 s1-get_req added
 s1-get_resp added
 service api get added successfully
@@ -119,6 +121,10 @@ skull.core.t.worker.worker-0.response: 1.000000
 skull.core.t.worker.worker-0.request: 2.000000
 ```
 
-## Frequent Questions
+# Existing Services
+Name                  | Description |
+----------------------|-------------|
+[Async DNS Client][2] | Example service, to show how to write a basic async DNS client |
 
 [1]: https://github.com/finaldie/skull-admin-c
+[2]: https://github.com/finaldie/skull-service-dns

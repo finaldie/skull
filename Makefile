@@ -3,7 +3,7 @@ prefix ?= /usr/local
 
 MAKE_FLAGS += "--no-print-directory"
 
-all: core
+all: core api-cpp
 
 dep: flibs protos metrics
 
@@ -16,9 +16,9 @@ check:
 valgrind-check:
 	cd tests && $(MAKE) $@
 
-install: install-core install-scripts install-api install-others
+install: install-core install-scripts install-api install-api-cpp install-others
 
-clean:
+clean: clean-api-cpp
 	cd src && $(MAKE) $@
 
 clean-dep: clean-flibs clean-protos

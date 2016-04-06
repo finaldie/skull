@@ -5,57 +5,126 @@
 #include "api/sk_const.h"
 #include "api/sk_loader.h"
 
-extern sk_module_loader_t sk_c_module_loader;
+typedef struct sk_mloader_tbl_t {
+    fhash* tbl;
+} sk_mloader_tbl_t;
 
-static sk_module_loader_t* sk_module_loaders[] = {
-    &sk_c_module_loader,       // array index is SK_C_MODULE_TYPE
-    NULL
-};
+static sk_mloader_tbl_t* mloader_tbl = NULL;
 
-sk_module_t* sk_module_load(const char* short_name, const char* conf_name)
+static
+sk_mloader_tbl_t* sk_mloader_tbl_create()
 {
-    for (int i = 0; sk_module_loaders[i] != NULL; i++) {
-        sk_module_loader_t* loader = sk_module_loaders[i];
+    sk_mloader_tbl_t* tbl = calloc(1, sizeof(*tbl));
+    tbl->tbl = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
-        char fullname[SK_MODULE_NAME_MAX_LEN] = {0};
-        loader->name(short_name, fullname, SK_MODULE_NAME_MAX_LEN);
-        sk_print("try to load module: %s, type: %d - %s\n",
-                 short_name, loader->type, fullname);
+    return tbl;
+}
 
-        sk_module_t* module = loader->open(fullname);
-        if (!module) {
-            continue;
-        }
+static
+void sk_mloader_tbl_destroy(sk_mloader_tbl_t* tbl)
+{
+    if (!tbl) return;
 
-        // We successfully load a module, now init other attributes
-        //  the short_name is the config value, feel free to use it
-        module->type = loader->type;
-        module->name = short_name;
+    // Destroy module loader tbl
+    fhash_str_iter iter = fhash_str_iter_new(tbl->tbl);
+    sk_module_loader_t* mloader = NULL;
 
-        // load config
-        char real_confname[SK_MODULE_NAME_MAX_LEN] = {0};
-        if (!conf_name) {
-            conf_name = loader->conf_name(short_name, real_confname,
-                                          SK_MODULE_NAME_MAX_LEN);
-        }
-        sk_print("module config name: %s\n", conf_name);
+    while ((mloader = fhash_str_next(&iter))) {
+        free(mloader);
+    }
+    fhash_str_iter_release(&iter);
+    fhash_str_delete(tbl->tbl);
+}
 
-        int ret = loader->load_config(module, conf_name);
-        if (ret) {
-            sk_print("module config %s load failed\n", conf_name);
-            return NULL;
-        }
+static
+sk_module_loader_t* sk_mloader_tbl_get(const char* type)
+{
+    return fhash_str_get(mloader_tbl->tbl, type);
+}
 
-        sk_print("load module{%s:%d} successfully\n", short_name, module->type);
-        return module;
+static
+void sk_mloader_tbl_set(const char* type, sk_module_loader_t* loader)
+{
+    fhash_str_set(mloader_tbl->tbl, type, loader);
+}
+
+static
+sk_module_loader_t* sk_mloader_tbl_del(const char* type)
+{
+    return fhash_str_del(mloader_tbl->tbl, type);
+}
+
+sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
+                            const char* conf_name)
+{
+    const char* type = cfg->type;
+    const char* name = cfg->name;
+
+    sk_module_loader_t* loader = sk_mloader_tbl_get(type);
+    if (!loader) {
+        return NULL;
     }
 
-    return NULL;
+    char fullname[SK_MODULE_NAME_MAX_LEN] = {0};
+    loader->name(name, fullname, SK_MODULE_NAME_MAX_LEN, loader->ud);
+    sk_print("try to load module: %s, type: %s - %s\n",
+             name, type, fullname);
+
+    sk_module_t* module = loader->open(fullname, loader->ud);
+    if (!module) {
+        return NULL;
+    }
+
+    // We successfully load a module, now init other attributes
+    //  the 'name' is the config value, feel free to use it
+    module->cfg = cfg;
+
+    // load config
+    char real_confname[SK_MODULE_NAME_MAX_LEN] = {0};
+    if (!conf_name) {
+        conf_name = loader->conf_name(name, real_confname,
+                                      SK_MODULE_NAME_MAX_LEN, loader->ud);
+    }
+    sk_print("module config name: %s\n", conf_name);
+
+    int ret = loader->load_config(module, conf_name, loader->ud);
+    if (ret) {
+        sk_print("module config %s load failed\n", conf_name);
+        return NULL;
+    }
+
+    sk_print("load module{%s:%s} successfully\n", name, type);
+    return module;
 }
 
 void sk_module_unload(sk_module_t* module)
 {
-    int ret = sk_module_loaders[module->type]->close(module);
+    const sk_module_cfg_t* cfg = module->cfg;
+    const char* type = cfg->type;
+    sk_module_loader_t* loader = sk_mloader_tbl_get(type);
+    SK_ASSERT_MSG(loader, "cannot find loader. type: %s\n", type);
+
+    int ret = loader->close(module, loader->ud);
     SK_ASSERT_MSG(!ret, "module unload failed: ret = %d\n", ret);
 }
 
+void sk_module_loader_register(const char* type, sk_module_loader_t loader)
+{
+    if (!mloader_tbl) {
+        mloader_tbl = sk_mloader_tbl_create();
+    }
+
+    sk_module_loader_t* mloader = sk_mloader_tbl_get(type);
+    if (mloader) return;
+
+    mloader = calloc(1, sizeof(*mloader));
+    *mloader = loader;
+
+    sk_mloader_tbl_set(type, mloader);
+}
+
+sk_module_loader_t* sk_module_loader_unregister(const char* type)
+{
+    if (!type) return NULL;
+    return sk_mloader_tbl_del(type);
+}

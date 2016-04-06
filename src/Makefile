@@ -1,35 +1,4 @@
-debug ?= false
-
-# compiling flags
-STD = -std=c99
-WARN = -Wall
-EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter
-EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
-EXTRA += -Wconversion
-OTHER = -pipe -g -ggdb3 -fPIC
-SHARED = -shared
-LDFLAGS += -rdynamic -Wl,-E
-MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE
-INC = \
-    -I. \
-    -I../deps/flibs/include \
-    -Iuser-c/include/ \
-    -isystem./pto/idls
-
-ifeq ($(debug), false)
-OPT = -O2
-EXTRA += -fstack-protector
-else
-EXTRA += -fstack-protector-all
-MACRO += -DSK_DEBUG -O0 -finstrument-functions
-endif
-
-# linking flags
-DEPS_LDFLAGS = -L../deps/flibs/lib
-SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
-SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
-SKULL_LDFLAGS = $(LDFLAGS) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_UTLDFLAGS = $(LDFLAGS) $(SHARED) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
+include Makefile.inc
 
 # dependency library list
 SKULL_LIBS = \
@@ -46,12 +15,6 @@ SKULL_LIBS = \
     -ldl \
     -lrt
 
-# CC and LD
-SKULL_CC = $(CC) $(SKULL_CFLAGS)
-SKULL_TP_CC = $(CC) $(SKULL_TP_CFLAGS)
-SKULL_LD = $(CC) $(SKULL_LDFLAGS)
-SKULL_UTLD = $(CC) $(SKULL_UTLDFLAGS)
-
 # prefix
 prefix ?= /usr/local
 
@@ -65,6 +28,7 @@ SKULL_UTLIB_C = libskull-unittest-c.so
 COMMON_OBJS = \
     common/sk_loader.o \
     common/sk_srv_loader.o \
+    common/sk_user_loader.o \
     common/sk_utils.o \
     common/sk_io.o \
     common/sk_eventloop.o \
@@ -101,7 +65,8 @@ COMPONENTS_OBJS = \
     components/sk_config.o \
     components/sk_engine.o \
     components/sk_service.o \
-    components/sk_admin.o
+    components/sk_admin.o \
+    components/sk_ep_pool.o
 
 PTO_OBJS = \
     pto/sk_pto.o \
@@ -132,15 +97,15 @@ PTO_IDLS_OBJS = \
 USER_C_OBJS = \
     user-c/src/logger_private.o \
     user-c/src/metrics_utils.o \
-    user-c/src/loader.o \
+    user-c/src/module_loader.o \
     user-c/src/txn.o \
-    user-c/src/idl.o \
+    user-c/src/txn_utils.o \
     user-c/src/config.o \
     user-c/src/module_executor.o \
-    user-c/src/srv_loader.o \
+    user-c/src/service_loader.o \
     user-c/src/srv_executor.o \
-    user-c/src/srv_utils.o \
-    user-c/src/service.o
+    user-c/src/service.o \
+    user-c/src/ep.o
 
 SKULL_MAIN_OBJ = main.o
 
@@ -168,12 +133,11 @@ PROTO_IDLS = \
 UT_OBJS = \
     user-c/src/unittest.o \
     user-c/src/module_executor.o \
-    user-c/src/loader.o \
-    user-c/src/srv_loader.o \
+    user-c/src/module_loader.o \
+    user-c/src/service_loader.o \
     user-c/src/srv_executor.o \
-    user-c/src/srv_utils.o \
-    user-c/src/idl.o \
     user-c/src/txn.o \
+    user-c/src/txn_utils.o \
     user-c/src/config.o \
     common/sk_utils.o \
     common/sk_loader.o \

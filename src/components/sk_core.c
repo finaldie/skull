@@ -115,9 +115,9 @@ void _sk_setup_workflows(sk_core_t* core)
 
         // set up modules
         flist_iter name_iter = flist_new_iter(workflow_cfg->modules);
-        char* module_name = NULL;
-        while ((module_name = flist_each(&name_iter))) {
-            sk_print("loading module: %s\n", module_name);
+        sk_module_cfg_t* module_cfg = NULL;
+        while ((module_cfg = flist_each(&name_iter))) {
+            sk_print("loading module: %s\n", module_cfg->name);
 
             // 1. check whether has loaded
             // 2. Load the module
@@ -126,32 +126,32 @@ void _sk_setup_workflows(sk_core_t* core)
             //    twice
 
             // 1.
-            if (fhash_str_get(core->unique_modules, module_name)) {
+            if (fhash_str_get(core->unique_modules, module_cfg->name)) {
                 sk_print("we have already loaded this module(%s), skip it\n",
-                         module_name);
+                         module_cfg->name);
                 continue;
             }
 
             // 2.
-            sk_module_t* module = sk_module_load(module_name, NULL);
+            sk_module_t* module = sk_module_load(module_cfg, NULL);
             if (module) {
-                sk_print("load module [%s] successful\n", module_name);
+                sk_print("load module [%s] successful\n", module_cfg->name);
                 SK_LOG_INFO(core->logger, "load module [%s] successful",
-                          module_name);
+                          module_cfg->name);
             } else {
-                sk_print("load module [%s] failed\n", module_name);
+                sk_print("load module [%s] failed\n", module_cfg->name);
                 SK_LOG_FATAL(core->logger, "load module [%s] failed",
-                             module_name);
+                             module_cfg->name);
                 exit(1);
             }
 
             // 3.
             int ret = sk_workflow_add_module(workflow, module);
             SK_ASSERT_MSG(!ret, "add module {%s} to workflow failed\n",
-                          module_name);
+                          module_cfg->name);
 
             // 4.
-            fhash_str_set(core->unique_modules, module_name, module);
+            fhash_str_set(core->unique_modules, module_cfg->name, module);
         }
 
         // store this workflow to sk_core::workflows
@@ -196,10 +196,10 @@ void _sk_module_init(sk_core_t* core)
     sk_module_t* module = NULL;
 
     while ((module = fhash_str_next(&iter))) {
-        sk_print("module [%s] init...\n", module->name);
-        SK_LOG_INFO(core->logger, "module [%s] init...", module->name);
+        sk_print("module [%s] init...\n", module->cfg->name);
+        SK_LOG_INFO(core->logger, "module [%s] init...", module->cfg->name);
 
-        SK_LOG_SETCOOKIE("module.%s", module->name);
+        SK_LOG_SETCOOKIE("module.%s", module->cfg->name);
         module->init(module->md);
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
@@ -214,10 +214,10 @@ void _sk_module_destroy(sk_core_t* core)
     sk_module_t* module = NULL;
 
     while ((module = fhash_str_next(&iter))) {
-        SK_LOG_INFO(core->logger, "Module %s is destroying", module->name);
+        SK_LOG_INFO(core->logger, "Module %s is destroying", module->cfg->name);
 
         // 1. release module user layer data
-        SK_LOG_SETCOOKIE("module.%s", module->name);
+        SK_LOG_SETCOOKIE("module.%s", module->cfg->name);
         module->release(module->md);
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
@@ -353,6 +353,30 @@ void _sk_engines_destroy(sk_core_t* core)
     sk_engine_destroy(core->master);
 }
 
+static
+void _sk_init_user_loaders(sk_core_t* core)
+{
+    sk_config_t* cfg = core->config;
+    flist* user_langs = cfg->langs;
+    const char* lang = NULL;
+
+    flist_iter iter = flist_new_iter(user_langs);
+    while ((lang = flist_each(&iter))) {
+        // 1. generate user library name
+        char mlibname[SK_MODULE_NAME_MAX_LEN];
+        memset(mlibname, 0, SK_MODULE_NAME_MAX_LEN);
+        snprintf(mlibname, SK_MODULE_NAME_MAX_LEN, SK_USER_LIBNAME_FORMAT, lang);
+        sk_print("Loading user api layer: %s\n", mlibname);
+
+        // 2. load module and service loader
+        int ret = sk_userlib_load(mlibname);
+        if (ret) {
+            SK_LOG_FATAL(core->logger, "Load user lib %s failed", mlibname);
+            exit(1);
+        }
+    }
+}
+
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
@@ -378,19 +402,22 @@ void sk_core_init(sk_core_t* core)
              "================= skull engine initializing =================");
     sk_print("================= skull engine initializing =================\n");
 
-    // 5. init global monitor
+    // 5. loader user loaders
+    _sk_init_user_loaders(core);
+
+    // 6. init global monitor
     _sk_init_moniter(core);
 
-    // 6. init engines
+    // 7. init engines
     _sk_setup_engines(core);
 
-    // 7. init admin
+    // 8. init admin
     _sk_init_admin(core);
 
-    // 8. load services
+    // 9. load services
     _sk_setup_services(core);
 
-    // 9. load workflows and related triggers
+    // 10. load workflows and related triggers
     _sk_setup_workflows(core);
 }
 
@@ -553,7 +580,10 @@ void sk_core_destroy(sk_core_t* core)
     // 9. destroy working dir string
     free((void*)core->working_dir);
 
-    // 10. destroy loggers
+    // 10. destroy user lib loaders
+    sk_userlib_unload();
+
+    // 11. destroy loggers
     sk_print("=================== skull engine stopped ====================\n");
     SK_LOG_INFO(core->logger,
              "=================== skull engine stopped ====================");
