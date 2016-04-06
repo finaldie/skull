@@ -5,6 +5,8 @@
 #include <google/protobuf/message.h>
 
 #include <string>
+#include <memory>
+#include <functional>
 
 #include <skull/config.h>
 #include <skull/service.h>
@@ -19,7 +21,7 @@ private:
     const Service& operator=(const Service& svc);
 
 public:
-    typedef void (*Job) (Service&, void* ud);
+    typedef std::function<void (Service&)> Job;
 
 public:
     Service() {};
@@ -29,17 +31,20 @@ public:
     /**
      * Create a service job
      *
-     * @param job      Job callback function
-     * @param ud       user data
      * @param delayed  unit milliseconds
      * @param bio_idx  background io idx
      *                  - (-1)  : random pick up one
      *                  - (0)   : do not use bio
      *                  - (> 0) : use the idx of bio
+     * @param job      Job callback function
      *
      * @return 0 on success, 1 on failure
      */
-    virtual int createJob(Job job, void* ud, uint32_t delayed, int bioIdx) const = 0;
+    virtual int createJob(uint32_t delayed, int bioIdx, Job) const = 0;
+
+// Use this macro to make a Service::Job easily
+#define skull_BindSvc(f, ...) \
+    std::bind(f, std::placeholders::_1, ##__VA_ARGS__)
 
 public:
     virtual void set(const void* data) = 0;

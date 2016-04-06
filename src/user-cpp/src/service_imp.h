@@ -17,7 +17,7 @@ public:
     virtual ~ServiceImp();
 
 public:
-    int createJob(Job job, void* ud, uint32_t delayed, int bioIdx) const;
+    int createJob(uint32_t delayed, int bioIdx, Job job) const;
 
 public:
     void set(const void* data);

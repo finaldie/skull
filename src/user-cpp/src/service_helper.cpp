@@ -5,17 +5,14 @@
 
 namespace skullcpp {
 
-typedef struct ServiceJobData {
-    skullcpp::Service::Job job;
-    void* ud;
+class ServiceJobData {
+public:
+    skullcpp::Service::Job job_;
 
-    ServiceJobData(skullcpp::Service::Job job, void* ud) {
-        this->job = job;
-        this->ud  = ud;
-    }
-
+public:
+    ServiceJobData(skullcpp::Service::Job job) : job_(job) {}
     ~ServiceJobData() {}
-} ServiceJobData;
+};
 
 static
 void _job_triggered(skull_service_t* svc, void* ud)
@@ -24,7 +21,7 @@ void _job_triggered(skull_service_t* svc, void* ud)
     if (jobdata) {
         skullcpp::ServiceImp service(svc);
 
-        jobdata->job(service, jobdata->ud);
+        jobdata->job_(service);
     }
 }
 
@@ -35,8 +32,8 @@ void _release_jobdata(void* ud)
     delete jobdata;
 }
 
-int ServiceImp::createJob(Job job, void* ud, uint32_t delayed, int bioIdx) const {
-    ServiceJobData* jobdata = new ServiceJobData(job, ud);
+int ServiceImp::createJob(uint32_t delayed, int bioIdx, Job job) const {
+    ServiceJobData* jobdata = new ServiceJobData(job);
 
     return skull_service_job_create(this->svc, delayed, _job_triggered, jobdata,
                                     _release_jobdata, bioIdx);
