@@ -29,16 +29,8 @@ void EPClient::setTimeout(int timeout) {
 void EPClient::setUnpack(unpack unpackFunc) {
 }
 
-void EPClient::setRelease(release releaseFunc) {
-    this->impl_->release_ = releaseFunc;
-}
-
-EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dataSz,
-                epCb cb, void* ud) {
-    if (this->impl_->release_) {
-        this->impl_->release_(ud);
-    }
-
+EPClient::Status EPClient::send(const Service& svc, const void* data,
+                                size_t dataSz, epCb cb) {
     return OK;
 }
 

@@ -49,11 +49,6 @@ public:
 };
 
 class ServiceApiData {
-private:
-    // Make noncopyable
-    ServiceApiData(const ServiceApiData&);
-    const ServiceApiData& operator=(const ServiceApiData&);
-
 public:
     ServiceApiData() {}
     virtual ~ServiceApiData() {}

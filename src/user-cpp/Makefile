@@ -35,6 +35,7 @@ SKULL_LIBS = \
 
 SKULL_OBJS = \
     src/ep.o \
+    src/ep_imp.o \
     src/module_executor.o \
     src/mod_loader.o \
     src/service_imp.o \

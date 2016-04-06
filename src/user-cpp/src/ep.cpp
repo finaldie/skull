@@ -37,15 +37,9 @@ void EPClient::setUnpack(unpack unpackFunc) {
     this->impl_->unpack_ = unpackFunc;
 }
 
-void EPClient::setRelease(release releaseFunc) {
-    this->impl_->release_ = releaseFunc;
-}
-
 typedef struct EpCbData {
     EPClient::unpack  unpack;
     EPClient::epCb    cb;
-    EPClient::release release;
-    void* ud;
 } EpCbData;
 
 static
@@ -53,7 +47,7 @@ size_t rawUnpackCb(void* ud, const void* data, size_t len) {
     EpCbData* epData = (EpCbData*)ud;
 
     if (epData->unpack) {
-        return epData->unpack(ud, data, len);
+        return epData->unpack(data, len);
     } else {
         return len;
     }
@@ -62,10 +56,6 @@ size_t rawUnpackCb(void* ud, const void* data, size_t len) {
 static
 void rawReleaseCb(void* ud) {
     EpCbData* epData = (EpCbData*)ud;
-    if (epData->release) {
-        epData->release(epData->ud);
-    }
-
     delete epData;
 }
 
@@ -80,25 +70,27 @@ void rawEpCb(skull_service_t* rawSvc, skull_ep_ret_t rawRet,
     }
 
     ServiceImp svc(rawSvc);
-    EPClient::Ret ret(rawRet);
 
     // Be called from service job
     if (!rawApiReqSz && !rawApiRespSz) {
         ServiceApiDataImp apiDataImp;
-        epData->cb(svc, ret, response, len, epData->ud, apiDataImp);
+        EPClientRetImp ret(rawRet, response, len, apiDataImp);
+
+        epData->cb(svc, ret);
     } else { // Be called from a normal service api
         const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)rawApiReq;
         const std::string& apiName = rawData->apiName;
         ServiceApiReqData apiReq(rawData);
         ServiceApiRespData apiResp(rawSvc, apiName.c_str(), rawApiResp, rawApiRespSz);
         ServiceApiDataImp apiDataImp(&apiReq, &apiResp);
+        EPClientRetImp ret(rawRet, response, len, apiDataImp);
 
-        epData->cb(svc, ret, response, len, epData->ud, apiDataImp);
+        epData->cb(svc, ret);
     }
 }
 
-EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dataSz,
-                epCb cb, void* ud) {
+EPClient::Status EPClient::send(const Service& svc, const void* data,
+                                size_t dataSz, epCb cb) {
     if (!data || !dataSz) {
         return ERROR;
     }
@@ -125,8 +117,6 @@ EPClient::Status EPClient::send(const Service& svc, const void* data, size_t dat
     EpCbData* epCbData = new EpCbData;
     epCbData->unpack = this->impl_->unpack_;
     epCbData->cb = cb;
-    epCbData->ud = ud;
-    epCbData->release = this->impl_->release_;
 
     skull_ep_status_t st = skull_ep_send(rawSvc, ep_handler, data, dataSz,
                                          rawEpCb, epCbData);
