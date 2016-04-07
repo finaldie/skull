@@ -4,7 +4,7 @@
 skull
 =====
 
-Fast to start-up, easy to maintain, high productivity serving framework.
+Skull is a fast to start-up, easy to maintain, high productivity serving framework.
 
 ## Releases
 [Changelog](ChangeLog.md)
@@ -22,15 +22,13 @@ git submodule update --init --recursive
 make dep
 ```
 
-### Build
+### Build and Install
 ```console
 make -j4
-```
-
-### Install Skull and its related Scripts
-```console
 make install
 ```
+
+**Notes:** `make install` may need `sudo` access
 
 ## A Quick Demo
 After you installed skull into your system, you can run the following steps to
@@ -39,7 +37,7 @@ create your skull project.
 ### Create a skull project
 [![skull demo 1](http://g.recordit.co/6yGrVG7i0s.gif)]()
 
-**notes:** By default, the new module with a example code which is used for echo-back message
+**Notes:** By default, the new module with a example code which is used for echo-back message
 
 ### Play with skull
 [![skull demo 2](http://g.recordit.co/vSON9N6nuV.gif)]()
