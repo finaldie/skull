@@ -485,7 +485,7 @@ void sk_core_start(sk_core_t* core)
     }
 
     // 7. update core status
-    core->status = SK_CORE_SERVING;
+    core->status = SK_CORE_RUNNING;
 
     // 8. start master engine
     SK_LOG_INFO(core->logger,
