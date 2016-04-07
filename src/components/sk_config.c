@@ -62,6 +62,7 @@ sk_config_t* _create_config()
     config->workflows = flist_create();
     config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     config->langs     = flist_create();
+    config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
     return config;
 }
 
@@ -407,6 +408,14 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         // load languages
         if (0 == strcmp(key, "languages")) {
             _load_langs(child, config);
+        }
+
+        // load command port
+        if (0 == strcmp(key, "command_port")) {
+            int port = sk_config_getint(child);
+            SK_ASSERT_MSG(port > 0 && port <= 65535, "port[%d] should be "
+                              "in (0, 65535]\n", port);
+            config->command_port = port;
         }
     }
 
