@@ -1,10 +1,50 @@
 [![Build Status](https://travis-ci.org/finaldie/skull.svg?branch=master)](https://travis-ci.org/finaldie/skull)
 [![GitHub license](https://img.shields.io/github/license/finaldie/skull.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Linux-blue.svg)]()
 
-skull
+Skull
 =====
+A fast to start, easy to maintain, high productivity serving framework<br>
 
-Skull is a fast to start-up, easy to maintain, high productivity serving framework.
+- [Introduction](#Introduction)
+ - [Concept of Module](#Concept of Module)
+ - [Concept of Workflow](#Concept of Workflow)
+ - [Concept of Service](#Concept of Service)
+- [Releases](#Releases)
+- [How to Build](#How to Build)
+ - [Install Dependencies](#Install Dependencies)
+ - [Build and Install](#Build and Install)
+- [A Quick Demo](#A Quick Demo)
+ - [Create a skull project](#Create a skull project)
+ - [Play with skull](#Play with skull)
+- [How to Create a Service](#How to Create a Service)
+- [How to Check Metrics](#How to Check Metrics)
+- [Existing Services](#Existing Services)
+
+## Introduction
+Skull provides the following features:
+* Modular development
+* Project management
+* Processize
+* Lockfree Environment
+* Native Monitoring
+* Native Async Network IO
+* Native Background IO
+* Native Timer
+* Multi-language Support
+* Service Shareable
+
+It's based on [Google Protobuf][3] and [flibs][4], target to _Linux_ platform. And _Skull_ is compose of 3 components: **skull-core**, **skull-user-api** and **skull-project-management-scripts**, besides of that logically there are also 3 major concepts in _Skull_: **Workflow**, **Module** and **Service**. Before using _Skull_, let's understand the core concepts first.
+
+### Concept of Module
+_Module_ is a independent logic set, it defined what kind of data/things we should do in this step.
+
+### Concept of Workflow
+_Workflow_ is more like a *transcation rules*, *oriented automator* or *pipeline*, it controls how the transcation works, execute the modules one by one until be finished. Multiple modules can be chosed to join in a workflow, and there also can be multiple workflows in _Skull_.
+Each _Workflow_ has its own _SharedData_, every _Module_ belongs to this _Workflow_ can read/write it.
+
+### Concept of Service
+_Service_ is designed for managing the data, and provide a group of APIs to access the data. _Module_ can use these APIs to access/consume the data, then decide what you want to do. Also the _Service_ is shareable, it's highly recommended you to share your _Service_ to other *skull projects*, to make the world better.
 
 ## Releases
 [Changelog](ChangeLog.md)
@@ -12,7 +52,7 @@ Skull is a fast to start-up, easy to maintain, high productivity serving framewo
 ## How to Build
 Use Ubuntu14.04 as an example.
 
-### Install dependencies
+### Install Dependencies
 ```console
 apt-get install valgrind libyaml-dev python-yaml libprotobuf-dev libprotobuf-c0 libprotobuf-c0-dev protobuf-c-compiler libprotobuf-dev
 
@@ -108,3 +148,5 @@ Name                  | Description |
 
 [1]: https://github.com/finaldie/skull-admin-c
 [2]: https://github.com/finaldie/skull-service-dns
+[3]: https://developers.google.com/protocol-buffers/
+[4]: https://github.com/finaldie/final_libs
