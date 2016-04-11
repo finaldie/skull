@@ -32,7 +32,7 @@ void _sk_init_admin(sk_core_t* core)
     SK_LOG_INFO(core->logger, "Init admin module");
 
     core->triggers     = core->triggers ? core->triggers : flist_create();
-    core->admin_wf_cfg = sk_admin_workflowcfg_create(7759);
+    core->admin_wf_cfg = sk_admin_workflowcfg_create(core->config->command_port);
     core->admin_wf     = sk_workflow_create(core->admin_wf_cfg);
 
     sk_module_t* admin_module = sk_admin_module();
@@ -485,7 +485,7 @@ void sk_core_start(sk_core_t* core)
     }
 
     // 7. update core status
-    core->status = SK_CORE_SERVING;
+    core->status = SK_CORE_RUNNING;
 
     // 8. start master engine
     SK_LOG_INFO(core->logger,

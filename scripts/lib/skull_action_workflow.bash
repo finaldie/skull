@@ -72,14 +72,14 @@ function _action_workflow_add()
     local yn_port=true
 
     # 2. set the concurrent
-    read -p "Whether allow concurrent? (y/n) " yn_concurrent
+    read -p "Allow concurrent? (y/n) " yn_concurrent
     if [ ! "$yn_concurrent" = "y" ]; then
         concurrent=0
     fi
 
     # 3. set idl
     while true; do
-        read -p "input the idl name: " idl
+        read -p "Input the IDL name: " idl
 
         if [ -z "$idl" ]; then
             echo "Error: please input a non-empty idl name" >&2
@@ -90,13 +90,13 @@ function _action_workflow_add()
 
     # 4. set trigger
     ## 4.1 set the stdin
-    read -p "Data source: stdin? (y/n) " yn_stdin
+    read -p "Input Data Source: stdin? (y/n) " yn_stdin
 
     if [ "$yn_stdin" = "y" ]; then
         enable_stdin=1
     else
         ## 4.2 set the port
-        read -p "Data source: Network? (y/n) " yn_port
+        read -p "Input Data Source: Network? (y/n) " yn_port
 
         if [ "$yn_port" = "y" ]; then
             while true; do

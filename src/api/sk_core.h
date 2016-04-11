@@ -15,7 +15,7 @@
 typedef enum sk_core_status_t {
     SK_CORE_INIT       = 0,
     SK_CORE_STARTING   = 1,
-    SK_CORE_SERVING    = 2,
+    SK_CORE_RUNNING    = 2,
     SK_CORE_STOPPING   = 3,
     SK_CORE_DESTROYING = 4
 } sk_core_status_t;

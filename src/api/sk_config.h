@@ -64,12 +64,11 @@ typedef struct sk_config_t {
     // number of bio(s)
     int    bio_cnt;
 
-#if __WORDSIZE == 64
-    int    _padding;
-#endif
+    int    command_port;
 
     // Supportted languages, value: char*
     flist* langs;
+
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);
