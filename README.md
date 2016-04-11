@@ -7,9 +7,9 @@ Skull
 A fast to start, easy to maintain, high productivity serving framework<br>
 
 - [Introduction](#Introduction)
- - [Concept of Module](#Concept of Module)
- - [Concept of Workflow](#Concept of Workflow)
- - [Concept of Service](#Concept of Service)
+ - [Module](#Module)
+ - [Workflow](#Workflow)
+ - [Service](#Service)
 - [Releases](#Releases)
 - [How to Build](#How to Build)
  - [Install Dependencies](#Install Dependencies)
@@ -36,14 +36,14 @@ Skull provides the following features:
 
 It's based on [Google Protobuf][3] and [flibs][4], target to _Linux_ platform. And _Skull_ is compose of 3 components: **skull-core**, **skull-user-api** and **skull-project-management-scripts**, besides of that logically there are also 3 major concepts in _Skull_: **Workflow**, **Module** and **Service**. Before using _Skull_, let's understand the core concepts first.
 
-### Concept of Module
-_Module_ is a independent logic set, it defined what kind of data/things we should do in this step.
+### Module
+_Module_ is a independent logic set, it defines what kind of data/things we should use/do in this step.
 
-### Concept of Workflow
+### Workflow
 _Workflow_ is more like a *transcation rules*, *oriented automator* or *pipeline*, it controls how the transcation works, execute the modules one by one until be finished. Multiple modules can be chosed to join in a workflow, and there also can be multiple workflows in _Skull_.
 Each _Workflow_ has its own _SharedData_, every _Module_ belongs to this _Workflow_ can read/write it.
 
-### Concept of Service
+### Service
 _Service_ is designed for managing the data, and provide a group of APIs to access the data. _Module_ can use these APIs to access/consume the data, then decide what you want to do. Also the _Service_ is shareable, it's highly recommended you to share your _Service_ to other *skull projects*, to make the world better.
 
 ## Releases
@@ -150,3 +150,6 @@ Name                  | Description |
 [2]: https://github.com/finaldie/skull-service-dns
 [3]: https://developers.google.com/protocol-buffers/
 [4]: https://github.com/finaldie/final_libs
+
+# Contribution
+Fork the repo, then apply your fixes/features via a PR. Any question, open a issue directly :)
