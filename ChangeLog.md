@@ -1,3 +1,9 @@
+* 2016-04-11 0.8.1
+  * Core
+    * **Enhancement:** Command port can be configurable
+    * **Enhancement:** Server Status changes, SERVING change to RUNNING
+  * Script
+    * **Enhancement:** Refine some prompts
 * 2016-04-06 0.7.5
   * Core
     * **Fix:** Fix service.data_set cannot work in init/release period
