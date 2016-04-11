@@ -5,9 +5,19 @@
 
 function action_start()
 {
-    deploy_dir=$SKULL_PROJ_ROOT/run
+    local deploy_dir=""
+    if [ $# = 0 ]; then
+        deploy_dir=$SKULL_PROJ_ROOT/run
+    else
+        deploy_dir="$1"
+    fi
 
-    cd $deploy_dir
+    if [ ! -d "$deploy_dir" ]; then
+        echo "Error: target dir do not exist: $deploy_dir" >&2
+        exit 1
+    fi
+
+    cd $SKULL_PROJ_ROOT
     exec ./bin/skull-start.sh -c $deploy_dir/skull-config.yaml $@
 }
 

@@ -152,4 +152,4 @@ Name                  | Description |
 [4]: https://github.com/finaldie/final_libs
 
 # Contribution
-Fork the repo, then apply your fixes/features via a PR. Any question, open a issue directly :)
+Fork the repo, then apply your fixes/features via a PR. Any question, open an issue directly :)
