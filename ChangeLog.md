@@ -1,3 +1,6 @@
+* 2016-04-11 0.8.2
+  * Script
+    * **Enhancement:** Support deploying to a specific absolute path
 * 2016-04-11 0.8.1
   * Core
     * **Enhancement:** Command port can be configurable
