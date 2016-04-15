@@ -7,9 +7,9 @@ protos:
 	cd src && $(MAKE) $@
 
 metrics:
-	cd config && ../scripts/tools/sk-metrics-gen.py -c metrics.yaml
-	mv config/sk_metrics.h src/api
-	mv config/sk_metrics.c src/common
+	cd scripts/config && ../tools/sk-metrics-gen.py -c metrics.yaml
+	mv scripts/config/sk_metrics.h src/api
+	mv scripts/config/sk_metrics.c src/common
 
 api-cpp:
 	cd src/user-cpp && $(MAKE) $(MAKE_FLAGS)
