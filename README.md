@@ -34,7 +34,7 @@ Skull provides the following features:
 * Multi-language Support
 * Service Shareable
 
-It's based on [Google Protobuf][3] and [flibs][4], target to _Linux_ platform. And _Skull_ is compose of 3 components: **skull-core**, **skull-user-api** and **skull-project-management-scripts**, besides of that logically there are also 3 major concepts in _Skull_: **Workflow**, **Module** and **Service**. Before using _Skull_, let's understand the core concepts first.
+It's based on [Google Protobuf][3] and [Flibs][4], target to _Linux_ platform. And _Skull_ is compose of 3 components: **skull-core**, **skull-user-api** and **skull-project-management-scripts**, besides of that logically there are also 3 major concepts in _Skull_: **Workflow**, **Module** and **Service**. Before using _Skull_, let's understand the core concepts first.
 
 ### Module
 _Module_ is a independent logic set, it defines what kind of data/things we should use/do in this step.
