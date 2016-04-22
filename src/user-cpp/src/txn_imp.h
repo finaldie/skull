@@ -32,11 +32,11 @@ public:
      * @param serivce_name
      * @param apiName
      * @param request       request protobuf message
-     * @param cb            api callback function
      * @param bio_idx       background io index
      *                      - (-1)  : random pick up a background io to run
      *                      - (0)   : do not use background io
      *                      - (> 0) : run on the index of background io
+     * @param cb            api callback function
      *
      * @return - OK
      *         - ERROR_SRVNAME
@@ -46,8 +46,8 @@ public:
     IOStatus serviceCall (const char* serviceName,
                           const char* apiName,
                           const google::protobuf::Message& request,
-                          ApiCB cb,
-                          int bio_idx);
+                          int bio_idx,
+                          ApiCB cb);
 
 public:
     skull_txn_t* txn();
