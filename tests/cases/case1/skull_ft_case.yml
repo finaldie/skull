@@ -1,0 +1,10 @@
+pre-run:
+    - echo "pre-run"
+    - ${COMMON}/create_project
+
+run:
+    - echo "run"
+
+verify:
+    - echo "verify"
+
