@@ -288,7 +288,7 @@ def _process_show_service():
         print " - data_mode: %s" % service_item['data_mode']
         print " - apis:"
 
-        service_apis = service_item['apis']
+        service_apis = service_item.get("apis")
         if service_apis is None:
             continue
 
