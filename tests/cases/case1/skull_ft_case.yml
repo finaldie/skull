@@ -1,3 +1,5 @@
+description: Basic test case, create a default project/workflow/module/service, then verify there is no errors during creation and building
+
 pre-run:
     - echo "pre-run"
     - ${COMMON}/create_project
@@ -5,11 +7,13 @@ pre-run:
     - ${COMMON}/create_module -n test -i 0 -l cpp
     - ${COMMON}/create_service -n s1 -l cpp -m rw-pr
     - ${COMMON}/create_service_api -s s1 -n get
+    - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
 
 run:
     - echo "run"
-    - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
 
 verify:
     - echo "verify"
 
+post-verify:
+    - echo "post-verify"
