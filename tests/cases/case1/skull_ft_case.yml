@@ -3,6 +3,7 @@ pre-run:
     - ${COMMON}/create_project
     - ${COMMON}/create_workflow -c y -I example -i n -n y -p 7758
     - ${COMMON}/create_module -n test -i 0 -l cpp
+    - ${COMMON}/create_service -n s1 -l cpp -m rw-pr
 
 run:
     - echo "run"
