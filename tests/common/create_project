@@ -60,5 +60,5 @@ function run()
 
 # ----------------- main ------------------
 init
-parse_and_run
+parse_and_run $@
 
