@@ -8,6 +8,7 @@ pre-run:
 
 run:
     - echo "run"
+    - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
 
 verify:
     - echo "verify"
