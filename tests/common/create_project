@@ -17,8 +17,8 @@ function parse_and_run()
 {
     # parse the command args
     local args=`getopt -a \
-        -o h \
-        -l help \
+        -o n:h \
+        -l name:,help \
         -n "create_project" -- "$@"`
 
     if [ $? != 0 ]; then
@@ -29,8 +29,14 @@ function parse_and_run()
 
     eval set -- "$args"
 
+    local proj_name="$SKULL_PROJ_NAME"
+
     while true; do
         case "$1" in
+            -n|--name)
+                proj_name=$2
+                shift 2;
+                ;;
             -h|--help)
                 shift
                 usage
@@ -50,12 +56,14 @@ function parse_and_run()
     done
 
     # start to create project
-    run
+    run $proj_name
 }
 
 function run()
 {
-    $SKULL_BIN create project
+    local proj_name="$1"
+
+    $SKULL_BIN create $proj_name
 }
 
 # ----------------- main ------------------
