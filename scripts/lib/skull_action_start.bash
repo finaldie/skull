@@ -36,6 +36,7 @@ function action_start()
     fi
 
     # 4. Start skull engine
+    cd $running_dir
     exec $skullbin -c "$skullconf" $@
 }
 

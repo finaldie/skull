@@ -1,6 +1,8 @@
 #ifndef SK_CORE_H
 #define SK_CORE_H
 
+#include <stdbool.h>
+
 #include "flibs/flist.h"
 #include "flibs/fhash.h"
 
@@ -23,6 +25,14 @@ typedef enum sk_core_status_t {
 // skull core related structures
 typedef struct sk_cmd_args_t {
     const char* config_location;
+    bool daemon;
+
+#if __WORDSIZE == 64
+    int _padding :24;
+    int _padding1;
+#else
+    int _padding :24;
+#endif
 } sk_cmd_args_t;
 
 // Core data structure
