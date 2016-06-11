@@ -26,7 +26,8 @@ script:
 
 after_success: sudo make install
 
-after_script: true
+after_script:
+    - make check
 
 after_failure: true
 
