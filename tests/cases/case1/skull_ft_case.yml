@@ -11,9 +11,11 @@ pre-run:
 
 run:
     - echo "run"
+    - cd project && skull start -D
 
 verify:
     - echo "verify"
 
 post-verify:
     - echo "post-verify"
+    - killall skull-engine

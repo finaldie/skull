@@ -75,7 +75,6 @@ function prepare()
         exit 1
     fi
 
-
     # 4. load the env variables
     . $SKULL_ROOT/lib/skull/skull_env.bash
 
@@ -95,14 +94,14 @@ fi
 
 # 2. Process Commands
 case "$1" in
-    (create|version)
+    (create|version|start)
         prepare false
         entry=$1
         shift
 
         action_$entry $@
         ;;
-    (workflow|module|common|config|service|build|deploy|start)
+    (workflow|module|common|config|service|build|deploy)
         prepare true
         entry=$1
         shift

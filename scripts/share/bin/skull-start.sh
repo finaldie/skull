@@ -9,7 +9,11 @@ usage() {
 }
 
 skull_start() {
-    exec skull-engine -c $skull_config
+    if [ ! $daemon ]; then
+        exec skull-engine -c $skull_config
+    else
+        exec nohup skull-engine -c $skull_config &
+    fi
 }
 
 skull_start_memcheck() {
@@ -46,9 +50,10 @@ memcheck=false
 run_by_gdb=false
 run_by_strace=false
 massif=false
+daemon=false
 
 args=`getopt -a \
-        -o c:h \
+        -o c:Dh \
         -l memcheck,gdb,strace,massif,help \
         -n "skull-start.sh" -- "$@"`
 if [ $? != 0 ]; then
@@ -65,6 +70,10 @@ while true; do
             shift
             skull_config=$1
             shift
+            ;;
+        -D)
+            shift
+            daemon=true
             ;;
         --memcheck)
             shift
