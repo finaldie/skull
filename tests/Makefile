@@ -2,7 +2,14 @@ OUTPUT_FOLDER = ./run
 OUTPUT_LOG = $(OUTPUT_FOLDER)/output
 EXTRA_ARGS =
 EXTRA_TITLE =
+CASE_NAME =
+
 debug = false
+case =
+
+ifneq ($(case),)
+EXTRA_ARGS += -n $(case)
+endif
 
 ifeq ($(debug), true)
 EXTRA_ARGS += -D
