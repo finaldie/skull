@@ -14,4 +14,8 @@ void TxnDataImp::append(const void* data, size_t sz) {
     skull_txndata_output_append(this->txndata, data, sz);
 }
 
+void TxnDataImp::append(const std::string& data) {
+    skull_txndata_output_append(this->txndata, data.c_str(), data.length());
+}
+
 } // End of namespace
