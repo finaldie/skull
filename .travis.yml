@@ -24,11 +24,11 @@ script:
     - make clean
     - make debug=true -j4
     - sudo make install
+    - make check
 
 after_success: true
 
-after_script:
-    - make check
+after_script: true
 
 after_failure: false
 

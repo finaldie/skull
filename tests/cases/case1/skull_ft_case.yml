@@ -24,4 +24,4 @@ verify:
 
 post-verify:
     - echo "post-verify"
-    - killall skull-engine
+    - killall skull-engine || exit 0
