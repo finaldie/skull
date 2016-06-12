@@ -31,3 +31,6 @@ prepare:
 clean:
 	@rm -f $(OUTPUT_LOG)
 
+help:
+	@echo "usage:"
+	@echo " - make [case=CaseName] [debug=true]"
