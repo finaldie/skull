@@ -39,7 +39,7 @@ SUB_DIRS = \
 
 # Required by skull
 build:
-	@for dir in $(SUB_DIRS); do \
+	@set -e; for dir in $(SUB_DIRS); do \
 	    echo -n " - Building $$dir ... "; \
 	    $(MAKE) -C $$dir; \
 	    echo "done"; \
@@ -47,7 +47,7 @@ build:
 
 # Required by skull
 check:
-	@for dir in $(SUB_DIRS); do \
+	@set -e; for dir in $(SUB_DIRS); do \
 	    echo " - Testing $$dir ... "; \
 	    $(MAKE) -C $$dir check; \
 	    echo " - Test $$dir done"; \
@@ -56,7 +56,7 @@ check:
 
 # Required by skull, Only C/C++ language module need to implement it
 valgrind-check:
-	@for dir in $(SUB_DIRS); do \
+	@set -e; for dir in $(SUB_DIRS); do \
 	    echo " - Testing $$dir ... "; \
 	    $(MAKE) -C $$dir valgrind-check; \
 	    echo " - Test $$dir done"; \
@@ -65,7 +65,7 @@ valgrind-check:
 
 # Required by skull
 clean:
-	@for dir in $(SUB_DIRS); do \
+	@set -e; for dir in $(SUB_DIRS); do \
 	    echo -n " - Cleaning $$dir ... "; \
 	    $(MAKE) -C $$dir clean; \
 	    echo "done"; \
@@ -74,7 +74,7 @@ clean:
 
 # Required by skull
 deploy: prepare_deploy
-	@for dir in $(SUB_DIRS); do \
+	@set -e; for dir in $(SUB_DIRS); do \
 	    echo -n " - Deploying $$dir ... "; \
 	    $(MAKE) -C $$dir deploy DEPLOY_DIR=$(DEPLOY_DIR_ROOT); \
 	    echo "done"; \
