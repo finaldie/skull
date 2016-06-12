@@ -66,10 +66,17 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {
     auto& example = (skull::workflow::example&)txn.data();
 
+    if (txn.status() != skullcpp::Txn::TXN_OK) {
+        SKULL_LOG_ERROR("5", "module_pack(test): error status occurred. txn data: %s",
+                        example.data().c_str(), "This error is expected");
+        txndata.append("error");
+        return;
+    }
+
     skull_metrics_module.response.inc(1);
     std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
     SKULL_LOG_INFO("4", "module_pack(test): data sz:%zu", example.data().length());
-    txndata.append(example.data().c_str(), example.data().length());
+    txndata.append(example.data());
 }
 
 /******************************** Register Module *****************************/
