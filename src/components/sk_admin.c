@@ -213,9 +213,10 @@ void _process_status(sk_txn_t* txn)
 
     sk_core_status_t status = sk_core_status(core);
     char status_str[3];
+    memset(status_str, 0, sizeof(status_str));
     snprintf(status_str, 3, "%d\n", status);
 
-    fmbuf_push(admin_data->response, status_str, 3);
+    fmbuf_push(admin_data->response, status_str, 2);
 }
 
 /********************************* Public APIs ********************************/
@@ -312,7 +313,7 @@ size_t _admin_unpack(void* md, struct sk_txn_t* txn,
 
     sk_admin_data_t* admin_data = _sk_admin_data_create();
     // for the empty line, just mark this request can be ignored
-    if (data_sz == 2) {
+    if (ignore) {
         admin_data->ignore = ignore;
         goto unpack_done;
     }
