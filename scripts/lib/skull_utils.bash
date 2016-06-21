@@ -55,10 +55,10 @@ function _get_language_list()
 
 function _check_language()
 {
-    local langs=$1
-    local input_lang=$2
+    local langs=($(_get_language_list))
+    local input_lang=$1
 
-    for lang in "$langs"; do
+    for lang in "${langs[@]}"; do
         if [ "$lang" = "$input_lang" ]; then
             return 0
         fi
@@ -155,9 +155,9 @@ function _current_module_config()
 function _module_language()
 {
     local module=$1
-    local langs=$(_get_language_list)
+    local langs=($(_get_language_list))
 
-    for lang in "$langs"; do
+    for lang in "${langs[@]}"; do
         if $(_run_lang_action $lang $SKULL_LANG_MODULE_VALID $module); then
             echo $lang
         fi
@@ -252,9 +252,9 @@ function _current_service_config()
 function _service_language()
 {
     local service=$1
-    local langs=$(_get_language_list)
+    local langs=($(_get_language_list))
 
-    for lang in "$langs"; do
+    for lang in "${langs[@]}"; do
         if $(_run_lang_action $lang $SKULL_LANG_SERVICE_VALID $service); then
             echo $lang
         fi
@@ -329,9 +329,9 @@ function skull_utils_srv_api_gen()
     fi
 
     # convert api protos to target language source files
-    local langs=$(_get_language_list)
+    local langs=($(_get_language_list))
 
-    for lang in "$langs"; do
+    for lang in "${langs[@]}"; do
         _run_lang_action $lang $SKULL_LANG_SERVICE_API_GEN $api_list
     done
 
