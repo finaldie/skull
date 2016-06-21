@@ -24,7 +24,7 @@ script:
     - make clean
     - make debug=true -j4
     - sudo make install
-    - make check
+    - make check debug=true
 
 after_success: true
 
