@@ -1,4 +1,4 @@
-description: Test a one time timerjob, create a timer job and validate it be triggered correctly (background way)
+description: 'Test repeated timer job (in background thread, repeat times: 5)'
 
 pre-run:
     - echo "pre-run"
@@ -22,7 +22,7 @@ verify:
     - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep "timer job triggered" | grep "bio-1:service.s1"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "timer job triggered" | grep "bio-1:service.s1" | wc -l | grep "5"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'
 
 post-verify:
