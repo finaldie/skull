@@ -17,7 +17,7 @@ static
 void test_example()
 {
     // 1. create a ut env
-    skullcpp::UTModule env("test", "example", "tests/test_config.yaml");
+    skullcpp::UTModule env("{MODULE_NAME}", "example", "tests/test_config.yaml");
 
     // 2. set the global txn share data before execution
     // notes: A module needs a serialized txn data, so after we call the api

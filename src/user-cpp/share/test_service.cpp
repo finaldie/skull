@@ -17,11 +17,11 @@ static
 void test_example()
 {
     // 1. create a ut service env
-    skullcpp::UTService utSvc("s1", "tests/test_config.yaml");
+    skullcpp::UTService utSvc("{SERVICE_NAME}", "tests/test_config.yaml");
 
     // 2. construct api request message
-    skull::service::s1::get_resp apiResp;
-    skull::service::s1::get_req apiReq;
+    skull::service::{SERVICE_NAME}::get_resp apiResp;
+    skull::service::{SERVICE_NAME}::get_req apiReq;
     apiReq.set_name("hello api");
 
     // 3. Run service

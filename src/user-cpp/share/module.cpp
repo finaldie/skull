@@ -13,7 +13,7 @@
 static
 void module_init(const skull_config_t* config)
 {
-    printf("module(test): init\n");
+    printf("module({MODULE_NAME}): init\n");
     SKULL_LOG_TRACE("skull trace log test %d", 1);
     SKULL_LOG_DEBUG("skull debug log test %d", 2);
     SKULL_LOG_INFO("1", "skull info log test %d", 3);
@@ -32,8 +32,8 @@ void module_init(const skull_config_t* config)
 static
 void module_release()
 {
-    printf("module(test): released\n");
-    SKULL_LOG_INFO("5", "module(test): released");
+    printf("module({MODULE_NAME}): released\n");
+    SKULL_LOG_INFO("5", "module({MODULE_NAME}): released");
 
     skull_static_config_destroy();
 }
@@ -42,8 +42,8 @@ static
 size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
     skull_metrics_module.request.inc(1);
-    std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
-    SKULL_LOG_INFO("2", "module_unpack(test): data sz:%zu", data_sz);
+    std::cout << "module_unpack({MODULE_NAME}): data sz: " << data_sz << std::endl;
+    SKULL_LOG_INFO("2", "module_unpack({MODULE_NAME}): data sz:%zu", data_sz);
 
     // deserialize data to transcation data
     auto& example = (skull::workflow::example&)txn.data();
@@ -67,15 +67,15 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
     auto& example = (skull::workflow::example&)txn.data();
 
     if (txn.status() != skullcpp::Txn::TXN_OK) {
-        SKULL_LOG_ERROR("5", "module_pack(test): error status occurred. txn data: %s",
+        SKULL_LOG_ERROR("5", "module_pack({MODULE_NAME}): error status occurred. txn data: %s",
                         example.data().c_str(), "This error is expected");
         txndata.append("error");
         return;
     }
 
     skull_metrics_module.response.inc(1);
-    std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
-    SKULL_LOG_INFO("4", "module_pack(test): data sz:%zu", example.data().length());
+    std::cout << "module_pack({MODULE_NAME}): data sz: " << example.data().length() << std::endl;
+    SKULL_LOG_INFO("4", "module_pack({MODULE_NAME}): data sz:%zu", example.data().length());
     txndata.append(example.data());
 }
 

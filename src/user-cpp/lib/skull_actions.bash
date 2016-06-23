@@ -57,6 +57,9 @@ function action_cpp_module_add()
     cp $LANGUAGE_PATH/share/gitignore-module  $module_path/.gitignore
     cp $LANGUAGE_PATH/share/ycm_extra_conf.py $module_path/.ycm_extra_conf.py
 
+    sed -i "s/{MODULE_NAME}/$module/g" $module_path/src/module.cpp
+    sed -i "s/{MODULE_NAME}/$module/g" $module_path/tests/test_module.cpp
+
     # copy makefile templates
     cp $LANGUAGE_PATH/share/Makefile.mod     $module_path/Makefile
     cp $LANGUAGE_PATH/share/Makefile.inc     $SKULL_MAKEFILE_FOLDER/Makefile.cpp.inc
@@ -209,6 +212,9 @@ function action_cpp_service_add()
     cp $LANGUAGE_PATH/share/test_service.cpp  $srv_path/tests/test_service.cpp
     cp $LANGUAGE_PATH/share/gitignore-service $srv_path/.gitignore
     cp $LANGUAGE_PATH/share/ycm_extra_conf.py $srv_path/.ycm_extra_conf.py
+
+    sed -i "s/{SERVICE_NAME}/$service/g" $srv_path/src/service.cpp
+    sed -i "s/{SERVICE_NAME}/$service/g" $srv_path/tests/test_service.cpp
 
     # copy makefile templates
     cp $LANGUAGE_PATH/share/Makefile.svc      $srv_path/Makefile
