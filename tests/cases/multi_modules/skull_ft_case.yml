@@ -15,7 +15,7 @@ pre-run:
 run:
     - echo "run"
     - cd project && skull start -D
-    - sleep 2
+    - sleep 1
 
 verify:
     - echo "verify"

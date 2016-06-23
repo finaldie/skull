@@ -1,5 +1,4 @@
 OUTPUT_FOLDER = ./run
-OUTPUT_LOG = $(OUTPUT_FOLDER)/output
 EXTRA_ARGS =
 EXTRA_TITLE =
 CASE_NAME =
@@ -18,17 +17,16 @@ endif
 
 check: prepare clean
 	@echo "Skull FT Cases Running ..." $(EXTRA_TITLE)
-	@../deps/skull-ft/src/skull-ft -p ./ $(EXTRA_ARGS) | tee -a $(OUTPUT_LOG)
+	@../deps/skull-ft/src/skull-ft -p ./ $(EXTRA_ARGS)
 
 valgrind-check: prepare clean
-	@echo "Skull FT Cases Running(Valgrind Mode) ..."
-	@../deps/skull-ft/src/skull-ft -p ./
+	@echo "Skull FT Cases Running(Valgrind Mode) ..." $(EXTRA_TITLE)
+	@../deps/skull-ft/src/skull-ft -p ./ $(EXTRA_ARGS)
 
 prepare:
 	@mkdir -p $(OUTPUT_FOLDER)
 
 clean:
-	@rm -f $(OUTPUT_LOG)
 
 help:
 	@echo "usage:"

@@ -17,66 +17,60 @@ DEPLOY_LOG_ROOT := $(DEPLOY_DIR_ROOT)/log
 DEPLOY_ETC_ROOT := $(DEPLOY_DIR_ROOT)/etc
 
 # Get all the sub dirs which have Makefile
-COMMON_DIRS := $(shell find src/common -name Makefile)
-ifneq ($(COMMON_DIRS),)
-    COMMON_DIRS := $(shell dirname $(COMMON_DIRS))
-endif
+COMMONS := $(shell find src/common -name Makefile)
+MODS := $(shell find src/modules -name Makefile)
+SRVS := $(shell find src/services -name Makefile)
 
-MOD_DIRS := $(shell find src/modules -name Makefile)
-ifneq ($(MOD_DIRS),)
-    MOD_DIRS := $(shell dirname $(MOD_DIRS))
-endif
-
-SRV_DIRS := $(shell find src/services -name Makefile)
-ifneq ($(SRV_DIRS),)
-    SRV_DIRS := $(shell dirname $(SRV_DIRS))
-endif
-
-SUB_DIRS = \
-    $(COMMON_DIRS) \
-    $(MOD_DIRS) \
-    $(SRV_DIRS)
+SUBS = \
+    $(COMMONS) \
+    $(MODS) \
+    $(SRVS)
 
 # Required by skull
 build:
-	@set -e; for dir in $(SUB_DIRS); do \
-	    echo -n " - Building $$dir ... "; \
-	    $(MAKE) -C $$dir; \
+	@set -e; for sub in $(SUBS); do \
+	    subdir=`dirname $$sub`; \
+	    echo -n " - Building $$subdir ... "; \
+	    $(MAKE) -C $$subdir; \
 	    echo "done"; \
 	done
 
 # Required by skull
 check:
-	@set -e; for dir in $(SUB_DIRS); do \
-	    echo " - Testing $$dir ... "; \
-	    $(MAKE) -C $$dir check; \
-	    echo " - Test $$dir done"; \
+	@set -e; for sub in $(SUBS); do \
+	    subdir=`dirname $$sub`; \
+	    echo " - Testing $$subdir ... "; \
+	    $(MAKE) -C $$subdir check; \
+	    echo " - Test $$subdir done"; \
 	    echo ""; \
 	done
 
 # Required by skull, Only C/C++ language module need to implement it
 valgrind-check:
-	@set -e; for dir in $(SUB_DIRS); do \
-	    echo " - Testing $$dir ... "; \
-	    $(MAKE) -C $$dir valgrind-check; \
-	    echo " - Test $$dir done"; \
+	@set -e; for sub in $(SUBS); do \
+	    subdir=`dirname $$sub`; \
+	    echo " - Testing $$subdir ... "; \
+	    $(MAKE) -C $$subdir valgrind-check; \
+	    echo " - Test $$subdir done"; \
 	    echo ""; \
 	done
 
 # Required by skull
 clean:
-	@set -e; for dir in $(SUB_DIRS); do \
-	    echo -n " - Cleaning $$dir ... "; \
-	    $(MAKE) -C $$dir clean; \
+	@set -e; for sub in $(SUBS); do \
+	    subdir=`dirname $$sub`; \
+	    echo -n " - Cleaning $$subdir ... "; \
+	    $(MAKE) -C $$subdir clean; \
 	    echo "done"; \
 	done
 	@echo "Project clean done"
 
 # Required by skull
 deploy: prepare_deploy
-	@set -e; for dir in $(SUB_DIRS); do \
-	    echo -n " - Deploying $$dir ... "; \
-	    $(MAKE) -C $$dir deploy DEPLOY_DIR=$(DEPLOY_DIR_ROOT); \
+	@set -e; for sub in $(SUBS); do \
+	    subdir=`dirname $$sub`; \
+	    echo -n " - Deploying $$subdir ... "; \
+	    $(MAKE) -C $$subdir deploy DEPLOY_DIR=$(DEPLOY_DIR_ROOT); \
 	    echo "done"; \
 	done
 
