@@ -1,4 +1,4 @@
-description: Basic test case, create a default project/workflow/module/service, then verify there is no errors during creation and building
+description: Create two modules which attach to the same workflow, then verify they can work one by one
 
 pre-run:
     - echo "pre-run"

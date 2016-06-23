@@ -1,4 +1,4 @@
-description: Test a module callout a service
+description: Test a module callout a service when the api callback return code is non-zero
 
 pre-run:
     - echo "pre-run"

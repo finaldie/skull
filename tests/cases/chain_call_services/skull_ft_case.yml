@@ -1,4 +1,4 @@
-description: Test a module callout a service
+description: create one module, call the service, then when got the response call it again in the callback
 
 pre-run:
     - echo "pre-run"
