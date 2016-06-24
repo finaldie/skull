@@ -30,7 +30,7 @@ function parse_and_run()
     eval set -- "$args"
 
     local port="7760"
-    local data="world"
+    local data="welcome"
 
     while true; do
         case "$1" in
@@ -75,6 +75,7 @@ function run()
         expect -c "
             spawn nohup bash -c \"echo $data | nc -l 127.0.0.1 $port\" &
             send \"\r\"
+            interact
         "
     )
 }
