@@ -60,6 +60,10 @@ public:
     void setType(Type type);
     void setPort(in_port_t port);
     void setIP(const std::string& ip);
+
+    // unit: millisecond
+    // <= 0: means no timeout
+    // >  0: after x milliseconds, the ep call would time out
     void setTimeout(int timeout);
     void setUnpack(unpack unpackFunc);
 

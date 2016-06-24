@@ -32,7 +32,12 @@ typedef struct skull_ep_handler_t {
     uint16_t     _reserved;
 
     const char*  ip;
-    int          timeout; // unit: millisecond
+
+    // unit: millisecond
+    // <= 0: means no timeout
+    // >  0: after x milliseconds, the ep call would time out
+    int          timeout;
+
     int          flags;
 
     // return 0:   The response data has not finished yet

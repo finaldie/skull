@@ -17,8 +17,8 @@ function parse_and_run()
 {
     # parse the command args
     local args=`getopt -a \
-        -o p:d:h \
-        -l port:,data:,help \
+        -o p:d:kh \
+        -l port:,data:stay,help \
         -n "mock_ep" -- "$@"`
 
     if [ $? != 0 ]; then
@@ -30,7 +30,8 @@ function parse_and_run()
     eval set -- "$args"
 
     local port="7760"
-    local data="welcome"
+    local data=""
+    local stay=false
 
     while true; do
         case "$1" in
@@ -41,6 +42,10 @@ function parse_and_run()
             -d|--data)
                 data=$2
                 shift 2;
+                ;;
+            -k|--stay)
+                stay=true
+                shift
                 ;;
             -h|--help)
                 shift
@@ -60,20 +65,34 @@ function parse_and_run()
         esac
     done
 
-    # start to create module
-    run "$port" "$data"
+    # Start mock end point
+    run "$port" $stay "$data"
 }
 
 function run()
 {
     local port="$1"
-    local data="$2"
+    local stay=$2
+    local data="$3"
+
+    local stay_arg=""
+    if $stay; then
+        # append '-i 10000' to make sure nc won't response in a short time
+        stay_arg="-k -i 10000"
+    fi
+
+    local cmd=""
+    if [ ! -z "$data" ]; then
+        cmd="echo $data | nc -l $stay_arg 127.0.0.1 $port"
+    else
+        cmd="nc -l $stay_arg 127.0.0.1 $port"
+    fi
 
     (
         cd $SKULL_PROJ_NAME
 
         expect -c "
-            spawn nohup bash -c \"echo $data | nc -l 127.0.0.1 $port\" &
+            spawn nohup bash -c \"$cmd\" &
             send \"\r\"
             interact
         "
