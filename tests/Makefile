@@ -17,11 +17,11 @@ endif
 
 check: prepare clean
 	@echo "Skull FT Cases Running ..." $(EXTRA_TITLE)
-	@../deps/skull-ft/src/skull-ft -p ./ $(EXTRA_ARGS)
+	@../deps/skull-ft/src/skull-ft -p ./ -l 30 $(EXTRA_ARGS)
 
 valgrind-check: prepare clean
 	@echo "Skull FT Cases Running(Valgrind Mode) ..." $(EXTRA_TITLE)
-	@../deps/skull-ft/src/skull-ft -p ./ $(EXTRA_ARGS)
+	@../deps/skull-ft/src/skull-ft -p ./ -l 30 $(EXTRA_ARGS)
 
 prepare:
 	@mkdir -p $(OUTPUT_FOLDER)
