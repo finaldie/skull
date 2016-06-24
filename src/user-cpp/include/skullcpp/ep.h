@@ -65,6 +65,7 @@ public:
 
 public:
     Status send(const Service&, const void* data, size_t dataSz, epCb cb);
+    Status send(const Service&, const std::string& data, epCb cb);
 };
 
 class EPClientRet {

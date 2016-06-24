@@ -89,6 +89,11 @@ void rawEpCb(skull_service_t* rawSvc, skull_ep_ret_t rawRet,
     }
 }
 
+EPClient::Status EPClient::send(const Service& svc, const std::string& data,
+                                epCb cb) {
+    return send(svc, data.c_str(), data.length(), cb);
+}
+
 EPClient::Status EPClient::send(const Service& svc, const void* data,
                                 size_t dataSz, epCb cb) {
     if (!data || !dataSz) {
