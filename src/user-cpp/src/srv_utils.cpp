@@ -121,9 +121,12 @@ const google::protobuf::Message& ServiceApiReqData::get() const {
 ServiceApiReqRawData* ServiceApiReqData::serialize(size_t& sz) {
     ServiceApiReqRawData* rawData = new ServiceApiReqRawData;
     rawData->sz = (size_t)this->msg_->ByteSize();
-    rawData->data = calloc(1, rawData->sz);
-    bool r = this->msg_->SerializeToArray(rawData->data, (int)rawData->sz);
-    assert(r);
+    if (rawData->sz) {
+        rawData->data = calloc(1, rawData->sz);
+
+        bool r = this->msg_->SerializeToArray(rawData->data, (int)rawData->sz);
+        assert(r);
+    }
 
     rawData->svcName = this->svcName_;
     rawData->apiName = this->apiName_;

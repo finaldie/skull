@@ -14,6 +14,8 @@
 
 namespace skullcpp {
 
+class ServiceData;
+
 class Service {
 private:
     // Make noncopyable
@@ -47,10 +49,10 @@ public:
     std::bind(f, std::placeholders::_1, ##__VA_ARGS__)
 
 public:
-    virtual void set(const void* data) = 0;
+    virtual void set(ServiceData* data) = 0;
 
-    virtual void* get() = 0;
-    virtual const void* get() const = 0;
+    virtual ServiceData* get() = 0;
+    virtual const ServiceData* get() const = 0;
 };
 
 class ServiceApiData {
@@ -64,6 +66,17 @@ public:
     virtual const google::protobuf::Message& request() const = 0;
 
     virtual google::protobuf::Message& response() const = 0;
+};
+
+class ServiceData {
+private:
+    // Make noncopyable
+    ServiceData(const Service& svc);
+    const ServiceData& operator=(const ServiceData&);
+
+public:
+    ServiceData() {}
+    virtual ~ServiceData() {}
 };
 
 } // End of namespace

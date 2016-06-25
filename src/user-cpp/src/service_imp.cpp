@@ -19,16 +19,16 @@ ServiceImp::ServiceImp(skull_service_t* svc) {
 ServiceImp::~ServiceImp() {
 }
 
-void ServiceImp::set(const void* data) {
+void ServiceImp::set(ServiceData* data) {
     skull_service_data_set(this->svc, data);
 }
 
-void* ServiceImp::get() {
-    return skull_service_data(this->svc);
+ServiceData* ServiceImp::get() {
+    return (ServiceData*)skull_service_data(this->svc);
 }
 
-const void* ServiceImp::get() const {
-    return skull_service_data_const(this->svc);
+const ServiceData* ServiceImp::get() const {
+    return (const ServiceData*)skull_service_data_const(this->svc);
 }
 
 skull_service_t* ServiceImp::getRawService() const {

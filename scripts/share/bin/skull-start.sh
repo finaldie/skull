@@ -9,7 +9,7 @@ usage() {
 }
 
 skull_start() {
-    if [ ! $daemon ]; then
+    if ! $daemon; then
         exec skull-engine -c $skull_config
     else
         exec skull-engine -c $skull_config -D > log/stdout.log 2>&1 < /dev/null
