@@ -10,7 +10,7 @@ struct sk_srv_data_t {
     int _padding;
 #endif
 
-    void* data; // User maintain it, user is responisble for destory it
+    void* data; // User maintain it, user is responisble for destroy it
 };
 
 sk_srv_data_t* sk_srv_data_create(sk_srv_data_mode_t mode)

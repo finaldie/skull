@@ -158,7 +158,7 @@ void _load_info_log_tpls(const char* filename, sk_log_tpl_t* tpl)
 }
 
 static
-void _destory_log_tpls(sk_log_tpl_t* tpl)
+void _destroy_log_tpls(sk_log_tpl_t* tpl)
 {
     fhash_int_iter iter = fhash_int_iter_new(tpl->templates);
     _log_tpl_item_t* item = NULL;
@@ -193,7 +193,7 @@ void sk_log_tpl_destroy(sk_log_tpl_t* tpl)
         return;
     }
 
-    _destory_log_tpls(tpl);
+    _destroy_log_tpls(tpl);
 }
 
 const char* sk_log_tpl_msg(sk_log_tpl_t* tpl, int log_id)
