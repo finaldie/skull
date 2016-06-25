@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -13,7 +12,7 @@
 static
 void module_init(const skull_config_t* config)
 {
-    printf("module({MODULE_NAME}): init\n");
+    std::cout << "module({MODULE_NAME}): init" << std::endl;
     SKULL_LOG_TRACE("skull trace log test %d", 1);
     SKULL_LOG_DEBUG("skull debug log test %d", 2);
     SKULL_LOG_INFO("1", "skull info log test %d", 3);
@@ -32,7 +31,7 @@ void module_init(const skull_config_t* config)
 static
 void module_release()
 {
-    printf("module({MODULE_NAME}): released\n");
+    std::cout << "module({MODULE_NAME}): released" << std::endl;
     SKULL_LOG_INFO("5", "module({MODULE_NAME}): released");
 
     skull_static_config_destroy();
@@ -56,7 +55,7 @@ int module_run(skullcpp::Txn& txn)
 {
     auto& example = (skull::workflow::example&)txn.data();
 
-    printf("receive data: %s\n", example.data().c_str());
+    std::cout << "receive data: " << example.data() << std::endl;
     SKULL_LOG_INFO("3", "receive data: %s", example.data().c_str());
     return 0;
 }
