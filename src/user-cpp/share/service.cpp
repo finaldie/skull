@@ -33,6 +33,9 @@ void skull_service_release(skullcpp::Service& service)
  * Service API implementation. For the api which has read access, you can call
  *  `service.get()` to fetch the service data. For the api which has write
  *  access, you can also call the `service.set()` to store your service data.
+ *
+ * @note  DO NOT carry over the service data to another place, the only safe
+ *        place for it is leaving it inside the service api scope
  */
 static
 void skull_service_getdata(const skullcpp::Service& service,
@@ -40,7 +43,7 @@ void skull_service_getdata(const skullcpp::Service& service,
                            google::protobuf::Message& response)
 {
     std::cout << "skull service api: getdata" << std::endl;
-    SKULL_LOG_INFO("svc.test.get-1", "service get data");
+    SKULLCPP_LOG_INFO("svc.test.get-1", "service get data");
 
     auto& apiResp = (skull::service::{SERVICE_NAME}::get_resp&)response;
     apiResp.set_response("Hi new bie");

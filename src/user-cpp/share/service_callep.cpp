@@ -59,7 +59,7 @@ void skull_service_getdata(const skullcpp::Service& service,
                            google::protobuf::Message& response)
 {
     std::cout << "skull service api: getdata" << std::endl;
-    SKULL_LOG_INFO("svc.test.get-1", "service get data");
+    SKULLCPP_LOG_INFO("svc.test.get-1", "service get data");
 
     const auto& apiReq = (skull::service::s1::get_req&)request;
     auto& apiResp = (skull::service::s1::get_resp&)response;
