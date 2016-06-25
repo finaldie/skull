@@ -85,6 +85,7 @@ int module_run(skullcpp::Txn& txn)
                 const google::protobuf::Message&,
                 const google::protobuf::Message&) -> int {
             std::cout << "api set done" << std::endl;
+            SKULLCPP_LOG_INFO("3.cb", "api set done: " << 1);
             return 0;
     });
 
