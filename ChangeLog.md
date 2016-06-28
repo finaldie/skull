@@ -1,3 +1,19 @@
+* 2016-06-28 0.8.3
+  * Core
+    * **Fix:** Endpoint leaking issue
+    * **Fix:** Crash when query service api with writing access
+    * **Fix:** Typos in code
+    * **Enhancement:** Endpoint api support to pass the flags arg
+  * User
+    * **New:** Add skullcpp/logger.h
+    * **Enhancement:** Refine examples
+    * **Enhancement:** Refine service.set/get, automatically destory the data
+  * Script
+    * **New:** Support start a daemon mode skull-engine
+    * **Fix:** Fix main makefile to compatible with more OS releases
+    * **Enhancement:** Correct pass the exit code when run start or build action
+  * Test
+    * **New:** Add 17 FT cases to cover major use cases
 * 2016-04-11 0.8.2
   * Script
     * **Enhancement:** Support deploying to a specific absolute path
