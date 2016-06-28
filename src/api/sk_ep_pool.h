@@ -43,7 +43,7 @@ typedef struct sk_ep_handler_t {
     const char*  ip;
 
     // unit: millisecond
-    // <= 0: means no timeout
+    // <= 0: means no timeout (Only available when 'SK_EP_F_ORPHAN' be set)
     // >  0: after x milliseconds, the ep call would time out
     uint32_t     timeout;
 

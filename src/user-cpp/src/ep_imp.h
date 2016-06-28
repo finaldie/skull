@@ -12,24 +12,15 @@ public:
     EPClient::unpack  unpack_;
     EPClient::Type    type_;
     int               timeout_;
+    int               flags_;
     in_port_t         port_;
 
-#if __WORDSIZE == 64
     uint32_t __padding :16;
-    uint32_t __padding1;
-#else
-    uint32_t __padding :16;
-#endif
 
 public:
     EPClientImpl() : unpack_(NULL), type_(EPClient::TCP),
-        timeout_(0), port_(0) {
-#if __WORDSIZE == 64
+        timeout_(0), flags_(0), port_(0) {
         (void)__padding;
-        (void)__padding1;
-#else
-        (void)__padding;
-#endif
     }
 
     ~EPClientImpl() {}
@@ -37,10 +28,10 @@ public:
 
 class EPClientRetImp : public EPClientRet {
 private:
-    EPClient::Status status_;
-    int latency_;
-    const void* response_;
-    size_t responseSize_;
+    EPClient::Status  status_;
+    int               latency_;
+    const void*       response_;
+    size_t            responseSize_;
     ServiceApiDataImp apiData_;
 
 public:

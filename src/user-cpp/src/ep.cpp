@@ -33,6 +33,10 @@ void EPClient::setTimeout(int timeout) {
     this->impl_->timeout_ = timeout;
 }
 
+void EPClient::setFlags(int flags) {
+    this->impl_->flags_ = flags;
+}
+
 void EPClient::setUnpack(unpack unpackFunc) {
     this->impl_->unpack_ = unpackFunc;
 }
@@ -113,15 +117,16 @@ EPClient::Status EPClient::send(const Service& svc, const void* data,
         assert(0);
     }
 
-    ep_handler.port = this->impl_->port_;
-    ep_handler.ip   = this->impl_->ip_.c_str();
+    ep_handler.port    = this->impl_->port_;
+    ep_handler.ip      = this->impl_->ip_.c_str();
     ep_handler.timeout = this->impl_->timeout_;
+    ep_handler.flags   = this->impl_->flags_;
     ep_handler.unpack  = rawUnpackCb;
     ep_handler.release = rawReleaseCb;
 
     EpCbData* epCbData = new EpCbData;
-    epCbData->unpack = this->impl_->unpack_;
-    epCbData->cb = cb;
+    epCbData->unpack   = this->impl_->unpack_;
+    epCbData->cb       = cb;
 
     skull_ep_status_t st = skull_ep_send(rawSvc, ep_handler, data, dataSz,
                                          rawEpCb, epCbData);
@@ -129,7 +134,7 @@ EPClient::Status EPClient::send(const Service& svc, const void* data,
     case SKULL_EP_OK:      return OK;
     case SKULL_EP_ERROR:   return ERROR;
     case SKULL_EP_TIMEOUT: return TIMEOUT;
-    default: assert(0); return ERROR;
+    default: assert(0);    return ERROR;
     }
 }
 

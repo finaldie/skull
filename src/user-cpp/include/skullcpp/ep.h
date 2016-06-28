@@ -52,6 +52,10 @@ public:
 #define skull_BindEp(f, ...) \
     std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
 
+// Flags
+#define SKULLCPP_EP_F_CONCURRENT 0x1
+#define SKULLCPP_EP_F_ORPHAN     0x2
+
 public:
     EPClient();
     ~EPClient();
@@ -62,9 +66,12 @@ public:
     void setIP(const std::string& ip);
 
     // unit: millisecond
-    // <= 0: means no timeout
+    // <= 0: means no timeout (Only available when 'SKULLCPP_EP_F_ORPHAN' be set)
     // >  0: after x milliseconds, the ep call would time out
     void setTimeout(int timeout);
+
+    // Set value of 'SKULLCPP_EP_F_CONCURRENT' and 'SKULLCPP_EP_F_ORPHAN'
+    void setFlags(int flags);
     void setUnpack(unpack unpackFunc);
 
 public:

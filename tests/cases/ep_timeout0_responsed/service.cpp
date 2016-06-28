@@ -30,13 +30,8 @@ static
 size_t _ep_unpack(const void* data, size_t len)
 {
     std::cout << "ep received data len: " << len << std::endl;
+    SKULLCPP_LOG_INFO("ep_unpack", "ep received data len: " << len);
     return len;
-}
-
-static
-void _ep_release(void* ud)
-{
-    std::cout << "ep released" << std::endl;
 }
 
 static
@@ -76,10 +71,17 @@ void skull_service_getdata(const skullcpp::Service& service,
     epClient.setTimeout(0);
     epClient.setUnpack(skull_BindEp(_ep_unpack));
 
+    // This would be failed
     skullcpp::EPClient::Status st =
         epClient.send(service, "hello ep", skull_BindEp(_ep_cb));
     std::cout << "ep status: " << st << std::endl;
-    SKULL_LOG_INFO("svc.test-get-2", "ep status: %d", st);
+    SKULLCPP_LOG_INFO("svc.test-get-2", "ep status: " << st);
+
+    // Set flag = SKULLCPP_EP_F_ORPHAN, and try again
+    epClient.setFlags(SKULLCPP_EP_F_ORPHAN);
+    st = epClient.send(service, "hello ep", skull_BindEp(_ep_cb));
+    std::cout << "ep status1: " << st << std::endl;
+    SKULLCPP_LOG_INFO("svc.test-get-3", "ep status: " << st);
 }
 
 // ====================== Register Service =====================================
