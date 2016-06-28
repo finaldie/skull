@@ -286,15 +286,6 @@ def _process_show_service():
         print " - type: %s" % service_item['type']
         print " - enable: %s" % service_item['enable']
         print " - data_mode: %s" % service_item['data_mode']
-        print " - apis:"
-
-        service_apis = service_item['apis']
-        if service_apis is None:
-            continue
-
-        for api_name in service_apis:
-            api = service_apis[api_name]
-            print "     - %s -> mode: %s" % (api_name, api['mode'])
 
         # increase the service count
         services_cnt += 1

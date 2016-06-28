@@ -34,7 +34,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
     sk_entity_util_unpack(fev, evbuff, entity);
 }
 
-// send a destroy msg, so that the scheduler will destory it later
+// send a destroy msg, so that the scheduler will destroy it later
 static
 void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {

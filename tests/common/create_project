@@ -1,0 +1,72 @@
+#!/bin/bash
+
+function usage()
+{
+    echo "usage:"
+    echo "  create_project"
+}
+
+function init()
+{
+    BIN_PATH=`dirname $0`
+
+    . $BIN_PATH/env.bash
+}
+
+function parse_and_run()
+{
+    # parse the command args
+    local args=`getopt -a \
+        -o n:h \
+        -l name:,help \
+        -n "create_project" -- "$@"`
+
+    if [ $? != 0 ]; then
+        echo "Error: Invalid parameters" >&2
+        usage >&2
+        exit 1
+    fi
+
+    eval set -- "$args"
+
+    local proj_name="$SKULL_PROJ_NAME"
+
+    while true; do
+        case "$1" in
+            -n|--name)
+                proj_name=$2
+                shift 2;
+                ;;
+            -h|--help)
+                shift
+                usage
+                exit 0
+                ;;
+            --)
+                shift;
+                break;
+                ;;
+            *)
+                echo "Error: Invalid parameters $1" >&2
+                shift
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    # start to create project
+    run $proj_name
+}
+
+function run()
+{
+    local proj_name="$1"
+
+    $SKULL_BIN create $proj_name
+}
+
+# ----------------- main ------------------
+init
+parse_and_run $@
+

@@ -155,7 +155,7 @@ function _action_module_add()
         read -p "which language the module belongs to? ($lang_names) " language
 
         # verify the language valid or not
-        if $(_check_language $langs "$language"); then
+        if $(_check_language "$language"); then
             break;
         fi
     done

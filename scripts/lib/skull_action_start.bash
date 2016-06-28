@@ -5,28 +5,47 @@
 
 function action_start()
 {
-    local deploy_dir=""
-    if [ $# = 0 ]; then
-        deploy_dir=$SKULL_PROJ_ROOT/run
-    else
-        deploy_dir="$1"
+    # 1. Try to get the project root first if already in a project
+    get_proj_root
+
+    # 2. Setup running_dir
+    local running_dir="$SKULL_PROJ_ROOT/run"
+    if [ $# != 0 ]; then
+        if [[ ! "$1" =~ ^- ]]; then
+            running_dir="$1"
+            shift
+        fi
     fi
 
-    if [ ! -d "$deploy_dir" ]; then
-        echo "Error: target dir do not exist: $deploy_dir" >&2
+    if [ ! -d "$running_dir" ]; then
+        echo "Error: target dir does not exist: $running_dir" >&2
         exit 1
     fi
 
-    cd $SKULL_PROJ_ROOT
-    exec ./bin/skull-start.sh -c $deploy_dir/skull-config.yaml $@
+    # 3. Validate the running_dir is a valid skull project
+    local skullbin="$running_dir/bin/skull-start.sh"
+    if [ ! -f "$skullbin" ]; then
+        echo "Error: $skullbin does not exist" >&2
+        exit 1
+    fi
+
+    local skullconf="$running_dir/skull-config.yaml"
+    if [ ! -f "$skullconf" ]; then
+        echo "Error: $skullconf does not exist" >&2
+        exit 1
+    fi
+
+    # 4. Start skull engine
+    cd $running_dir
+    exec $skullbin -c "$skullconf" $@
 }
 
 function action_start_usage()
 {
     echo "usage:"
-    echo "  skull start"
-    echo "  skull start --memcheck"
-    echo "  skull start --gdb"
-    echo "  skull start --strace"
-    echo "  skull start --massif"
+    echo "  skull start [running_dir] [-D]"
+    echo "  skull start [running_dir] --memcheck"
+    echo "  skull start [running_dir] --gdb"
+    echo "  skull start [running_dir] --strace"
+    echo "  skull start [running_dir] --massif"
 }

@@ -26,13 +26,22 @@ typedef struct skull_ep_ret_t {
     int               latency;
 } skull_ep_ret_t;
 
+#define SKULL_EP_F_CONCURRENT 0x1
+#define SKULL_EP_F_ORPHAN     0x2
+
 typedef struct skull_ep_handler_t {
     skull_ep_type_t type;
     in_port_t    port;
     uint16_t     _reserved;
 
     const char*  ip;
-    int          timeout; // unit: millisecond
+
+    // unit: millisecond
+    // <= 0: means no timeout (Only available when 'SKULL_EP_F_ORPHAN' be set)
+    // >  0: after x milliseconds, the ep call would time out
+    int          timeout;
+
+    // Set value of 'SKULL_EP_F_CONCURRENT' and 'SKULL_EP_F_ORPHAN'
     int          flags;
 
     // return 0:   The response data has not finished yet

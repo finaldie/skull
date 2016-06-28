@@ -1,0 +1,30 @@
+description: Test a module callout a service, and call set api first, then call get api
+
+pre-run:
+    - echo "pre-run"
+    - ${COMMON}/create_project
+    - ${COMMON}/create_workflow -c y -I example -i n -n y -p 7758
+    - ${COMMON}/create_module -n test -i 0 -l cpp
+    - ${COMMON}/create_service -n s1 -l cpp -m rw-pr
+    - ${COMMON}/create_service_api -s s1 -n get
+    - ${COMMON}/create_service_api -s s1 -n set
+    - cp ${CASE}/module.cpp ${RUN}/project/src/modules/test/src/
+    - cp ${CASE}/service.cpp ${RUN}/project/src/services/s1/src/
+    - cp ${CASE}/test_service.cpp ${RUN}/project/src/services/s1/tests/
+    - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
+
+run:
+    - echo "run"
+    - cd project && skull start -D
+    - sleep 1
+
+verify:
+    - echo "verify"
+    - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie, hello"
+    - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
+    - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
+    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
+
+post-verify:
+    - echo "post-verify"
+    - killall skull-engine || exit 0

@@ -80,18 +80,14 @@ typedef struct sk_ep_data_t {
     sk_ep_cb_t         cb;
     void*              ud;
     unsigned long long start;
-    const void*        data;
-    size_t             count;
     const sk_entity_t* e;       // sk_txn's entity
 
     sk_timer_t*        conn_timer;
     sk_timer_t*        recv_timer;
 
+    size_t             count;   // size of data (bytes)
     sk_ep_nst_t        status;
-
-#if __WORDSIZE == 64
-    int                _padding;
-#endif
+    char               data[4]; // data for sending
 } sk_ep_data_t;
 
 typedef struct sk_ep_readarg_t {
@@ -851,17 +847,19 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
         SK_LOG_TRACE(SK_ENV_LOGGER, "ep create");
     }
 
+    size_t extra_data_sz = count > 4 ? count - 4 : 0;
     // Create new ep data
-    sk_ep_data_t* ep_data = calloc(1, sizeof(*ep_data));
+    sk_ep_data_t* ep_data = calloc(1, sizeof(*ep_data) + extra_data_sz);
     ep_data->owner   = ep;
     ep_data->handler = *handler;
     ep_data->cb      = cb;
     ep_data->ud      = ud;
     ep_data->start   = start;
-    ep_data->data    = data;
-    ep_data->count   = count;
     ep_data->e       = entity;
+    ep_data->count   = count;
     ep_data->status  = SK_EP_NST_INIT;
+    // Fill the data for async sending
+    memcpy(ep_data->data, data, count);
 
     fdlist_node_t* ep_node = fdlist_make_node(ep_data, sizeof(*ep_data));
     fdlist_push(ep->txns, ep_node);
@@ -925,6 +923,12 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
 
     if (!handler.ip || handler.port == 0) {
         sk_print("sk_ep_send: error -> invalid ip or port\n");
+        SK_METRICS_EP_ERROR();
+        return SK_EP_ERROR;
+    }
+
+    if (handler.timeout <= 0 && !(handler.flags & SK_EP_F_ORPHAN)) {
+        sk_print("Only Orphan ep can set timeout <= 0");
         SK_METRICS_EP_ERROR();
         return SK_EP_ERROR;
     }

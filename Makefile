@@ -5,7 +5,7 @@ MAKE_FLAGS += "--no-print-directory"
 
 all: core api-cpp
 
-dep: flibs protos metrics
+dep: flibs protos metrics skull-ft
 
 core:
 	cd src && $(MAKE)

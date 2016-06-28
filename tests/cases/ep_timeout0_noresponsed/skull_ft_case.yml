@@ -1,0 +1,34 @@
+description: start a mock endpoint which won't response, send an ep call with timeout=0(infinitely wait)
+
+pre-run:
+    - echo "pre-run"
+    - ${COMMON}/create_project
+    - ${COMMON}/create_workflow -c y -I example -i n -n y -p 7758
+    - ${COMMON}/create_module -n test -i 0 -l cpp
+    - ${COMMON}/create_service -n s1 -l cpp -m rw-pr
+    - ${COMMON}/create_service_api -s s1 -n get
+    - cp ${CASE}/module.cpp ${RUN}/project/src/modules/test/src/
+    - cp ${CASE}/service.cpp ${RUN}/project/src/services/s1/src/
+    - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
+
+run:
+    - echo "run"
+    - '${COMMON}/mock_ep -p 7760 -k'
+    - cd project && skull start -D
+    - sleep 1
+
+verify:
+    - echo "verify"
+    - echo "status" | nc 127.0.0.1 7759 | grep "2"
+    - '(echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie" || echo "not match") | grep "not match"'
+    - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
+    - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "svc.test-get-2" | grep "ep status: 1"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "svc.test-get-3" | grep "ep status: 0"'
+    - '(cat ${RUN}/project/run/log/skull.log | grep "svc.test.ep_cb" || echo "not match") | grep "not match"'
+    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
+
+post-verify:
+    - echo "post-verify"
+    - killall skull-engine || exit 0
+    - killall nc || exit 0

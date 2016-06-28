@@ -1,0 +1,94 @@
+#!/bin/bash
+
+function usage()
+{
+    echo "usage:"
+    echo "  create_module -n name -i workflow_idx -l language"
+}
+
+function init()
+{
+    BIN_PATH=`dirname $0`
+
+    . $BIN_PATH/env.bash
+}
+
+function parse_and_run()
+{
+    # parse the command args
+    local args=`getopt -a \
+        -o n:i:l:h \
+        -l name:,workflow_idx:language:,help \
+        -n "create_module" -- "$@"`
+
+    if [ $? != 0 ]; then
+        echo "Error: Invalid parameters" >&2
+        usage >&2
+        exit 1
+    fi
+
+    eval set -- "$args"
+
+    local name="test"
+    local workflow_idx="0"
+    local language="cpp"
+
+    while true; do
+        case "$1" in
+            -n|--name)
+                name=$2
+                shift 2;
+                ;;
+            -i|--workflow_idx)
+                workflow_idx=$2
+                shift 2;
+                ;;
+            -l|--language)
+                language=$2
+                shift 2;
+                ;;
+            -h|--help)
+                shift
+                usage
+                exit 0
+                ;;
+            --)
+                shift;
+                break;
+                ;;
+            *)
+                echo "Error: Invalid parameters $1" >&2
+                shift
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    # start to create module
+    run $name $workflow_idx $language
+}
+
+function run()
+{
+    local name="$1"
+    local workflow_idx="$2"
+    local language="$3"
+
+    (
+        cd $SKULL_PROJ_NAME
+
+        expect -c "
+            spawn skull module -a
+            expect \"module name?\" {send \"$name\r\"}
+            expect \"which workflow you want add it to?\" {send \"$workflow_idx\r\"}
+            expect \"which language the module belongs to?\" {send \"$language\r\"}
+            sleep 1
+            interact
+        "
+    )
+}
+
+# ----------------- main ------------------
+init
+parse_and_run $@

@@ -17,7 +17,7 @@ function action_build()
     # Check whether it is the clean action
     local clean=false
     local args=($@)
-    for arg in ${args[*]}; do
+    for arg in ${args[@]}; do
         if [ "$arg" = "clean" ]; then
             clean=true;
             break;
@@ -53,23 +53,23 @@ function action_build_usage()
 function _action_prepare()
 {
     echo "generate metrics..."
-    action_common --metrics-gen
+    action_common --metrics-gen || exit 1
 
     echo "generate transcation idls..."
-    action_common --idl-gen
+    action_common --idl-gen || exit 1
 
     echo "generate service apis..."
-    action_common --srv-idl-gen
+    action_common --srv-idl-gen || exit 1
 }
 
 function _action_build()
 {
     echo "Building modules/services..."
-    make $@
+    exec make $@
 }
 
 function _action_clean()
 {
     echo "Cleaning ..."
-    make $@
+    exec make $@
 }

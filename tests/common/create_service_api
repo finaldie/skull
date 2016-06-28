@@ -1,0 +1,87 @@
+#!/bin/bash
+
+function usage()
+{
+    echo "usage:"
+    echo "  create_service_api -s service_name -n api_name"
+}
+
+function init()
+{
+    BIN_PATH=`dirname $0`
+
+    . $BIN_PATH/env.bash
+}
+
+function parse_and_run()
+{
+    # parse the command args
+    local args=`getopt -a \
+        -o s:n:h \
+        -l service_name:,api_name:,help \
+        -n "create_service_api" -- "$@"`
+
+    if [ $? != 0 ]; then
+        echo "Error: Invalid parameters" >&2
+        usage >&2
+        exit 1
+    fi
+
+    eval set -- "$args"
+
+    local service_name="s1"
+    local api_name="get"
+
+    while true; do
+        case "$1" in
+            -s|--service_name)
+                service_name=$2
+                shift 2;
+                ;;
+            -n|--api_name)
+                api_name=$2
+                shift 2;
+                ;;
+            -h|--help)
+                shift
+                usage
+                exit 0
+                ;;
+            --)
+                shift;
+                break;
+                ;;
+            *)
+                echo "Error: Invalid parameters $1" >&2
+                shift
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    # start to create service api
+    run $service_name $api_name
+}
+
+function run()
+{
+    local service_name="$1"
+    local api_name="$2"
+
+    (
+        cd $SKULL_PROJ_NAME
+        cd src/services/$service_name
+
+        expect -c "
+            spawn skull service --api-add
+            expect \"service api name:\" {send \"$api_name\r\"}
+            sleep 1
+            interact
+        "
+    )
+}
+
+# ----------------- main ------------------
+init
+parse_and_run $@

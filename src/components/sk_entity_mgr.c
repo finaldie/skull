@@ -109,7 +109,7 @@ sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
         return entity;
     }
 
-    // mark it to inactive and destory the internal data first
+    // mark it to inactive and destroy the internal data first
     sk_entity_mark(entity, SK_ENTITY_INACTIVE);
     sk_entity_destroy(entity);
 

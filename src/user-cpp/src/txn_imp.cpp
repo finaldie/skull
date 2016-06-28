@@ -116,8 +116,8 @@ int _skull_svc_api_callback(skull_txn_t* sk_txn, const char* apiName,
 Txn::IOStatus TxnImp::serviceCall (const char* serviceName,
                                 const char* apiName,
                                 const google::protobuf::Message& request,
-                                ApiCB cb,
-                                int bioIdx) {
+                                int bioIdx,
+                                ApiCB cb) {
     // 1. Construct raw req data
     ServiceApiReqData apiReq(serviceName, apiName, request, cb);
     size_t dataSz = 0;

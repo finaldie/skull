@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include <stdio.h>
 
+#include <iostream>
 #include <string>
 #include <iostream>
 #include <google/protobuf/message.h>
@@ -13,7 +13,7 @@
 static
 void skull_service_init(skullcpp::Service& service, const skull_config_t* config)
 {
-    printf("skull service init\n");
+    std::cout << "skull service init" << std::endl;
 
     // Convert skull_config to skull_static_config
     skull_static_config_convert(config);
@@ -23,7 +23,7 @@ static
 void skull_service_release(skullcpp::Service& service)
 {
     skull_static_config_destroy();
-    printf("skull service release\n");
+    std::cout << "skull service release" << std::endl;
 }
 
 static
@@ -58,8 +58,8 @@ void skull_service_getdata(const skullcpp::Service& service,
                            const google::protobuf::Message& request,
                            google::protobuf::Message& response)
 {
-    printf("skull service api: getdata\n");
-    SKULL_LOG_INFO("svc.test.get-1", "service get data");
+    std::cout << "skull service api: getdata" << std::endl;
+    SKULLCPP_LOG_INFO("svc.test.get-1", "service get data");
 
     const auto& apiReq = (skull::service::s1::get_req&)request;
     auto& apiResp = (skull::service::s1::get_resp&)response;

@@ -213,9 +213,10 @@ void _process_status(sk_txn_t* txn)
 
     sk_core_status_t status = sk_core_status(core);
     char status_str[3];
+    memset(status_str, 0, sizeof(status_str));
     snprintf(status_str, 3, "%d\n", status);
 
-    fmbuf_push(admin_data->response, status_str, 3);
+    fmbuf_push(admin_data->response, status_str, 2);
 }
 
 /********************************* Public APIs ********************************/
@@ -298,23 +299,28 @@ size_t _admin_unpack(void* md, struct sk_txn_t* txn,
     SK_LOG_INFO(SK_ENV_LOGGER,
                 "admin module_unpack: data sz:%zu", data_sz);
 
-    if (data_sz < 2) return 0;
-
     const char* cmd = data;
-    if (0 != strncmp(&cmd[data_sz - 2], "\r\n", 2)) {
+    if (0 != strncmp(&cmd[data_sz - 1], "\n", 1)) {
         return 0;
     }
 
+    size_t tailer_offset = 1;
+    if (data_sz >= 2 && 0 == strncmp(&cmd[data_sz - 2], "\r", 1)) {
+        tailer_offset += 1;
+    }
+
+    int ignore = data_sz - tailer_offset ? 0 : 1;
+
     sk_admin_data_t* admin_data = _sk_admin_data_create();
     // for the empty line, just mark this request can be ignored
-    if (data_sz == 2) {
-        admin_data->ignore = 1;
+    if (ignore) {
+        admin_data->ignore = ignore;
         goto unpack_done;
     }
 
     // store command string, remove the '\r\n', and append '\0'
-    admin_data->command = calloc(1, data_sz - 2 + 1);
-    memcpy(admin_data->command, data, data_sz - 2);
+    admin_data->command = calloc(1, data_sz - tailer_offset + 1);
+    memcpy(admin_data->command, data, data_sz - tailer_offset);
 
 unpack_done:
     sk_txn_setudata(txn, admin_data);

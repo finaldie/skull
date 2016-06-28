@@ -1,0 +1,94 @@
+#!/bin/bash
+
+function usage()
+{
+    echo "usage:"
+    echo "  create_service -n name -l language -m data_mode"
+}
+
+function init()
+{
+    BIN_PATH=`dirname $0`
+
+    . $BIN_PATH/env.bash
+}
+
+function parse_and_run()
+{
+    # parse the command args
+    local args=`getopt -a \
+        -o n:l:m:h \
+        -l name:,language:,data_mode:,help \
+        -n "create_service" -- "$@"`
+
+    if [ $? != 0 ]; then
+        echo "Error: Invalid parameters" >&2
+        usage >&2
+        exit 1
+    fi
+
+    eval set -- "$args"
+
+    local name="test"
+    local language="cpp"
+    local data_mode="rw-pr"
+
+    while true; do
+        case "$1" in
+            -n|--name)
+                name=$2
+                shift 2;
+                ;;
+            -l|--language)
+                language=$2
+                shift 2;
+                ;;
+            -m|--data_mode)
+                data_mode=$2
+                shift 2;
+                ;;
+            -h|--help)
+                shift
+                usage
+                exit 0
+                ;;
+            --)
+                shift;
+                break;
+                ;;
+            *)
+                echo "Error: Invalid parameters $1" >&2
+                shift
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    # start to create service
+    run $name $language $data_mode
+}
+
+function run()
+{
+    local name="$1"
+    local language="$2"
+    local data_mode="$3"
+
+    (
+        cd $SKULL_PROJ_NAME
+
+        expect -c "
+            spawn skull service -a
+            expect \"service name?\" {send \"$name\r\"}
+            expect \"which language the service belongs to?\" {send \"$language\r\"}
+            expect \"data mode? (rw-pr | rw-pw)\" {send \"$data_mode\r\"}
+            sleep 1
+            interact
+        "
+    )
+}
+
+# ----------------- main ------------------
+init
+parse_and_run $@

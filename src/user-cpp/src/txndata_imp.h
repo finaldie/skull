@@ -15,6 +15,7 @@ public:
 
 public:
     void append(const void* data, size_t sz);
+    void append(const std::string& data);
 };
 
 } // End of namespace

@@ -27,9 +27,11 @@ static
 void _release(void* ud)
 {
     if (!ud) return;
-
     ep_job_t* job = ud;
-    job->handler.release(job->ud);
+
+    if (job->handler.release) {
+        job->handler.release(job->ud);
+    }
     free(job);
 }
 
@@ -118,6 +120,10 @@ skull_ep_send(const skull_service_t* service, const skull_ep_handler_t handler,
     if (ret == SK_EP_OK && service->task) {
         service->task->pendings++;
         sk_print("service task pending cnt: %u\n", service->task->pendings);
+    } else if (ret != SK_EP_OK) {
+        if (sk_handler.release) {
+            sk_handler.release(job);
+        }
     }
 
     switch (ret) {

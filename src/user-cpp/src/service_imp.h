@@ -20,10 +20,10 @@ public:
     int createJob(uint32_t delayed, int bioIdx, Job job) const;
 
 public:
-    void set(const void* data);
+    void set(ServiceData* data);
 
-    void* get();
-    const void* get() const;
+    ServiceData* get();
+    const ServiceData* get() const;
 
 public:
     skull_service_t* getRawService() const;

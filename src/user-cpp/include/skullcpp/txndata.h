@@ -2,6 +2,7 @@
 #define SKULLCPP_TXN_DATA_H
 
 #include <stddef.h>
+#include <string>
 #include <skull/txndata.h>
 
 namespace skullcpp {
@@ -18,6 +19,7 @@ public:
 
 public:
     virtual void append(const void* data, size_t sz) = 0;
+    virtual void append(const std::string& data) = 0;
 };
 
 } // End of namespace

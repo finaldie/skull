@@ -43,6 +43,12 @@ void skull_srv_release (skull_service_t* srv, void* data)
     ServiceImp svc(srv);
 
     entry->release(svc);
+
+    auto* svcData = (ServiceData*)skull_service_data(srv);
+    if (svcData) {
+        delete svcData;
+        skull_service_data_set(srv, NULL);
+    }
 }
 
 /**
@@ -72,7 +78,7 @@ int  skull_srv_iocall  (skull_service_t* srv, const char* api_name,
         ServiceApiReqData  apiReq(srv, api_name);
         ServiceApiRespData apiResp(srv, api_name, true);
 
-        rApi->iocall(svc, apiReq.get(), apiResp.get());
+        wApi->iocall(svc, apiReq.get(), apiResp.get());
         return 0;
     }
 
