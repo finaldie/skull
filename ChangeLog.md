@@ -1,3 +1,8 @@
+* 2016-07-06 0.8.4
+  * Core
+    * **New:** Add txn log into skull.log
+    * **Enhancement:** Refine some `sk_txn` apis
+    * **Enhancement:** Downgrade some error logs to trace level in skull.core
 * 2016-06-28 0.8.3
   * Core
     * **Fix:** Endpoint leaking issue
