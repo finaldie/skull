@@ -5,7 +5,7 @@ MAKE_FLAGS += "--no-print-directory"
 
 all: core api-cpp
 
-dep: flibs protos metrics skull-ft
+dep: flibs protos metrics skull-ft jemalloc
 
 core:
 	cd src && $(MAKE)
@@ -21,7 +21,7 @@ install: install-core install-scripts install-api install-api-cpp install-others
 clean: clean-api-cpp
 	cd src && $(MAKE) $@
 
-clean-dep: clean-flibs clean-protos
+clean-dep: clean-flibs clean-protos clean-skull-ft clean-jemalloc
 
 .PHONY: all dep core check valgrind-check install clean clean-dep
 
