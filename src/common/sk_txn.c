@@ -55,6 +55,14 @@ struct sk_txn_t {
     // Store the detail transcations, which is used for writing the
     // transcation log
     sk_mbuf_t*      transcation;
+
+    // If the txn has error occurred, then this field will be set to 1
+    uint32_t        error     : 1;
+    uint32_t        __padding : 31;
+
+#if __WORDSIZE == 64
+    int             __padding1;
+#endif
 };
 
 // Internal APIs
@@ -289,7 +297,7 @@ void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
     txn->pending_tasks -= task->task_data.cb ? 1 : 0;
 }
 
-sk_txn_task_status_t sk_txn_task_status(sk_txn_t* txn, uint64_t task_id)
+sk_txn_task_status_t sk_txn_task_status(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -297,7 +305,7 @@ sk_txn_task_status_t sk_txn_task_status(sk_txn_t* txn, uint64_t task_id)
     return task->status;
 }
 
-sk_txn_taskdata_t* sk_txn_taskdata(sk_txn_t* txn, uint64_t task_id)
+sk_txn_taskdata_t* sk_txn_taskdata(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -305,7 +313,14 @@ sk_txn_taskdata_t* sk_txn_taskdata(sk_txn_t* txn, uint64_t task_id)
     return &task->task_data;
 }
 
-unsigned long long sk_txn_task_lifetime(sk_txn_t* txn, uint64_t task_id)
+unsigned long long sk_txn_task_starttime(const sk_txn_t* txn, uint64_t task_id) {
+    sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
+    SK_ASSERT(task);
+
+    return task->start;
+}
+
+unsigned long long sk_txn_task_lifetime(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -317,7 +332,7 @@ unsigned long long sk_txn_task_lifetime(sk_txn_t* txn, uint64_t task_id)
     return task->end - task->start;
 }
 
-unsigned long long sk_txn_task_livetime(sk_txn_t* txn, uint64_t task_id)
+unsigned long long sk_txn_task_livetime(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -345,12 +360,18 @@ void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
 
         // update the entity ref
         sk_entity_txnadd(txn->entity, txn);
+    } else if (state == SK_TXN_ERROR) {
+        txn->error = 1;
     }
 }
 
 sk_txn_state_t sk_txn_state(const sk_txn_t* txn)
 {
     return txn->state;
+}
+
+bool sk_txn_error(const sk_txn_t* txn) {
+    return txn->error;
 }
 
 void sk_txn_log_add(sk_txn_t* txn, const char* fmt, ...)

@@ -57,6 +57,9 @@ bool sk_txn_alltask_complete(const sk_txn_t* txn);
 void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state);
 sk_txn_state_t sk_txn_state(const sk_txn_t* txn);
 
+// Return whehter txn has error occurred
+bool sk_txn_error(const sk_txn_t*);
+
 /**
  * Async io task APIs
  */
@@ -102,25 +105,27 @@ uint64_t sk_txn_task_add(sk_txn_t*, sk_txn_taskdata_t* task_data);
 // return 0 -> task not complete; 1 -> task complete
 void sk_txn_task_setcomplete(sk_txn_t*, uint64_t task_id, sk_txn_task_status_t);
 
-sk_txn_task_status_t sk_txn_task_status(sk_txn_t*, uint64_t task_id);
-sk_txn_taskdata_t* sk_txn_taskdata(sk_txn_t* txn, uint64_t task_id);
+sk_txn_task_status_t sk_txn_task_status(const sk_txn_t*, uint64_t task_id);
+sk_txn_taskdata_t* sk_txn_taskdata(const sk_txn_t* txn, uint64_t task_id);
 
 uint64_t sk_txn_task_id(const sk_txn_task_t* taskdata);
 int sk_txn_task_done(const sk_txn_taskdata_t* taskdata);
+
+unsigned long long sk_txn_task_starttime(const sk_txn_t*, uint64_t task_id);
 
 /**
  * Get the whole life time of the txn task, unit microsecond
  *
  * @note If the task has not completed, it return 0
  */
-unsigned long long sk_txn_task_lifetime(sk_txn_t*, uint64_t task_id);
+unsigned long long sk_txn_task_lifetime(const sk_txn_t*, uint64_t task_id);
 
 /**
  * Get the whole live time of the txn task, unit microsecond
  *
  * @note If the task has already completed, the result equals to 'lifetime' api
  */
-unsigned long long sk_txn_task_livetime(sk_txn_t*, uint64_t task_id);
+unsigned long long sk_txn_task_livetime(const sk_txn_t*, uint64_t task_id);
 
 /**
  * Add a transcation log

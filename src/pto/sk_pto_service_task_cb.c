@@ -67,7 +67,20 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
         }
     }
 
-    // 5. send a complete protocol back to master
+    // 5. log the task lifetime for debugging purpose
+    unsigned long long task_lifetime = sk_txn_task_lifetime(txn, task_id);
+    SK_LOG_TRACE(SK_ENV_LOGGER, "service: one task id: %d completed, "
+                 "cost %llu usec", (int)task_id, task_lifetime);
+
+    unsigned long long txn_starttime = sk_txn_starttime(txn);
+    unsigned long long txn_alivetime = sk_txn_alivetime(txn);
+    unsigned long long task_starttime = sk_txn_task_starttime(txn, task_id);
+
+    sk_txn_log_add(txn, "; t:%s:%s status: %d start: %llu end: %llu ",
+                   service_name, api_name, sk_txn_task_status(txn, task_id),
+                   task_starttime - txn_starttime, txn_alivetime);
+
+    // 6. send a complete protocol back to master
     ServiceTaskComplete task_complete_msg = SERVICE_TASK_COMPLETE__INIT;
     task_complete_msg.service_name = (char*) service_name;
     task_complete_msg.resume_wf    = taskdata->cb
@@ -77,12 +90,6 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
 
     sk_sched_send(SK_ENV_SCHED, SK_ENV_MASTER_SCHED, entity, txn,
                   SK_PTO_SVC_TASK_COMPLETE, &task_complete_msg, 0);
-
-    // 6. log the task lifetime for debugging purpose
-    unsigned long long task_lifetime = sk_txn_task_lifetime(txn, task_id);
-    SK_LOG_TRACE(SK_ENV_LOGGER, "service: one task id: %d completed, "
-                 "cost %llu usec", (int)task_id, task_lifetime);
-
     return 0;
 }
 

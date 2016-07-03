@@ -102,8 +102,8 @@ static
 void _write_txn_log(const sk_txn_t* txn) {
     unsigned long long alivetime = sk_txn_alivetime(txn);
 
-    SK_LOG_INFO(SK_ENV_LOGGER, "TxnLog: duration: %.3f ms | %s",
-                (double)alivetime / 1000, sk_txn_log(txn));
+    SK_LOG_INFO(SK_ENV_LOGGER, "TxnLog: status: %d duration: %.3f ms | %s",
+        sk_txn_error(txn), (double)alivetime / 1000, sk_txn_log(txn));
 }
 
 static
