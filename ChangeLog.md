@@ -1,3 +1,6 @@
+* 2016-07-07 0.8.5
+  * Core
+    * **New:** Enable `jemalloc` by default
 * 2016-07-06 0.8.4
   * Core
     * **New:** Add txn log into skull.log
