@@ -20,7 +20,7 @@ before_script: true
 
 script:
     - make -j4 dep
-    - make debug=true -j4
+    - make debug=true use_jemalloc=true -j4
     - make clean
     - make -j4
     - sudo make install
