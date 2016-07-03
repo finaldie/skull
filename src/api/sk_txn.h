@@ -25,7 +25,7 @@ typedef struct sk_txn_t sk_txn_t;
 sk_txn_t* sk_txn_create(struct sk_workflow_t* workflow,
                         struct sk_entity_t* entity);
 void sk_txn_destroy(sk_txn_t* txn);
-void sk_txn_safe_destroy(sk_txn_t* txn);
+int sk_txn_safe_destroy(sk_txn_t* txn);
 
 const void* sk_txn_input(const sk_txn_t* txn, size_t* sz);
 void sk_txn_set_input(sk_txn_t* txn, const void* data, size_t sz);
@@ -41,8 +41,9 @@ struct sk_module_t* sk_txn_current_module(const sk_txn_t* txn);
 int sk_txn_is_first_module(const sk_txn_t* txn);
 int sk_txn_is_last_module(const sk_txn_t* txn);
 
-// sk_txn's alive time from it be created
+// sk_txn's alive time from it be created (unit: micro-second)
 unsigned long long sk_txn_alivetime(const sk_txn_t* txn);
+unsigned long long sk_txn_starttime(const sk_txn_t* txn);
 
 // set user data
 void sk_txn_setudata(sk_txn_t* txn, const void* data);
@@ -120,6 +121,16 @@ unsigned long long sk_txn_task_lifetime(sk_txn_t*, uint64_t task_id);
  * @note If the task has already completed, the result equals to 'lifetime' api
  */
 unsigned long long sk_txn_task_livetime(sk_txn_t*, uint64_t task_id);
+
+/**
+ * Add a transcation log
+ */
+void sk_txn_log_add(sk_txn_t*, const char* fmt, ...);
+
+/**
+ * Get full transcation log
+ */
+const char* sk_txn_log(sk_txn_t*);
 
 #endif
 

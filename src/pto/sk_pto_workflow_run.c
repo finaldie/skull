@@ -25,6 +25,8 @@ static
 int _module_run(sk_sched_t* sched, sk_sched_t* src,
                 sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
+    unsigned long long start_time = sk_txn_alivetime(txn);
+
     // 1. run the next module
     sk_module_t* module = sk_txn_next_module(txn);
     if (!module) {
@@ -35,12 +37,17 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
     // before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
-    SK_LOG_SETCOOKIE("module.%s", module->cfg->name);
+    const char* module_name = module->cfg->name;
+    SK_LOG_SETCOOKIE("module.%s", module_name);
     SK_ENV_POS = SK_ENV_POS_MODULE;
 
     // Run the module
     int ret = module->run(module->md, txn);
     sk_print("module execution return code=%d\n", ret);
+
+    unsigned long long alivetime = sk_txn_alivetime(txn);
+    sk_txn_log_add(txn, "m:%s:run start: %llu end: %llu -> ",
+                   module_name, start_time, alivetime);
 
     // after module exit, set back the module name
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
@@ -98,6 +105,7 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
 {
     sk_workflow_t* workflow = sk_txn_workflow(txn);
     sk_module_t* last_module = sk_workflow_last_module(workflow);
+    unsigned long long start_time = sk_txn_alivetime(txn);
 
     // 1. no pack function means no need to send response
     if (!last_module->pack) {
@@ -106,7 +114,8 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
     }
 
     // 2. pack the data, and send the response if needed
-    SK_LOG_SETCOOKIE("module.%s", last_module->cfg->name);
+    const char* module_name = last_module->cfg->name;
+    SK_LOG_SETCOOKIE("module.%s", module_name);
     last_module->pack(last_module->md, txn);
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
@@ -123,12 +132,17 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
         // record metrics
         sk_metrics_worker.response.inc(1);
         sk_metrics_global.response.inc(1);
-
-        unsigned long long alivetime = sk_txn_alivetime(txn);
-        sk_print("txn time: %llu\n", alivetime);
-        sk_metrics_worker.latency.inc((uint32_t)alivetime);
-        sk_metrics_global.latency.inc((uint32_t)alivetime);
     }
+
+    unsigned long long alivetime = sk_txn_alivetime(txn);
+    sk_print("txn time: %llu\n", alivetime);
+    sk_metrics_worker.latency.inc((uint32_t)alivetime);
+    sk_metrics_global.latency.inc((uint32_t)alivetime);
+
+    sk_txn_log_add(txn, "m:%s:pack start: %llu end: %llu",
+                   module_name, start_time, alivetime);
+    SK_LOG_INFO(SK_ENV_LOGGER, "TxnLog: duration: %.3f ms | %s",
+                (double)alivetime / 1000, sk_txn_log(txn));
 
     sk_txn_setstate(txn, SK_TXN_PACKED);
     return _run(sched, src, entity, txn, proto_msg);

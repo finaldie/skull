@@ -50,5 +50,9 @@ struct sk_const_t;
 #define SK_EP_POOL_MAX                       (1024)
 #define SK_EP_KEY_MAX                        (64)
 
+// txn log
+#define SK_TXN_DEFAULT_INIT_SIZE             (256)
+#define SK_TXN_DEFAULT_MAX_SIZE              (2048)
+
 #endif
 
