@@ -66,7 +66,7 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     sk_entity_sethalftxn(entity, NULL);
 
     // 4.1 Add transcation log
-    sk_txn_log_add(txn, "m:%s:unpack start: %llu end: %llu -> ",
+    sk_txn_log_add(txn, "m:%s:unpack start: %llu end: %llu ",
         module_name, sk_txn_starttime(txn), sk_txn_alivetime(txn));
 
     // 5. prepare and send a workflow processing event

@@ -373,7 +373,7 @@ void sk_txn_log_add(sk_txn_t* txn, const char* fmt, ...)
                   content, strlen(content));
 }
 
-const char* sk_txn_log(sk_txn_t* txn)
+const char* sk_txn_log(const sk_txn_t* txn)
 {
     return sk_mbuf_rawget(txn->transcation, 0);
 }

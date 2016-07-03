@@ -130,7 +130,7 @@ void sk_txn_log_add(sk_txn_t*, const char* fmt, ...);
 /**
  * Get full transcation log
  */
-const char* sk_txn_log(sk_txn_t*);
+const char* sk_txn_log(const sk_txn_t*);
 
 #endif
 

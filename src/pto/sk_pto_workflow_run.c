@@ -46,7 +46,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     sk_print("module execution return code=%d\n", ret);
 
     unsigned long long alivetime = sk_txn_alivetime(txn);
-    sk_txn_log_add(txn, "m:%s:run start: %llu end: %llu -> ",
+    sk_txn_log_add(txn, "-> m:%s:run start: %llu end: %llu ",
                    module_name, start_time, alivetime);
 
     // after module exit, set back the module name
@@ -99,6 +99,23 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 }
 
 static
+void _write_txn_log(const sk_txn_t* txn) {
+    unsigned long long alivetime = sk_txn_alivetime(txn);
+
+    SK_LOG_INFO(SK_ENV_LOGGER, "TxnLog: duration: %.3f ms | %s",
+                (double)alivetime / 1000, sk_txn_log(txn));
+}
+
+static
+void _txn_log_and_destroy(sk_txn_t* txn) {
+    if (sk_txn_alltask_complete(txn)) {
+        _write_txn_log(txn);
+    }
+
+    sk_txn_safe_destroy(txn);
+}
+
+static
 int _module_pack(sk_sched_t* sched, sk_sched_t* src,
                  sk_entity_t* entity, sk_txn_t* txn,
                  void* proto_msg)
@@ -139,10 +156,8 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
     sk_metrics_worker.latency.inc((uint32_t)alivetime);
     sk_metrics_global.latency.inc((uint32_t)alivetime);
 
-    sk_txn_log_add(txn, "m:%s:pack start: %llu end: %llu",
+    sk_txn_log_add(txn, "-> m:%s:pack start: %llu end: %llu",
                    module_name, start_time, alivetime);
-    SK_LOG_INFO(SK_ENV_LOGGER, "TxnLog: duration: %.3f ms | %s",
-                (double)alivetime / 1000, sk_txn_log(txn));
 
     sk_txn_setstate(txn, SK_TXN_PACKED);
     return _run(sched, src, entity, txn, proto_msg);
@@ -181,7 +196,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
     case SK_TXN_PACKED: {
         sk_print("txn - PACKED: txn destroy\n");
         sk_txn_setstate(txn, SK_TXN_DESTROYED);
-        sk_txn_safe_destroy(txn);
+        _txn_log_and_destroy(txn);
         break;
     }
     case SK_TXN_ERROR: {
@@ -190,7 +205,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
     }
     case SK_TXN_DESTROYED: {
         sk_print("txn - DESTROYED: txn destroy\n");
-        sk_txn_safe_destroy(txn);
+        _txn_log_and_destroy(txn);
         break;
     }
     default:
