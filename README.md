@@ -68,8 +68,9 @@ make -j4
 make install
 ```
 
-**Notes:** `make install` may need `sudo` access
-**Notes:** If you do not want to enable `jemalloc`, use `make -j4 disable_jemalloc=true` to build it
+**Notes:**
+ * `make install` may need `sudo` access
+ * If you do not want to enable `jemalloc`, use `make -j4 disable_jemalloc=true` to build it
 
 ## A Quick Demo
 After you installed skull into your system, you can run the following steps to

@@ -15,6 +15,11 @@ function action_start()
             running_dir="$1"
             shift
         fi
+    else
+        if [ -z "$SKULL_PROJ_ROOT" ]; then
+            echo "Error: Not in a skull project, cannot start a skull-engine" >&2
+            exit 1
+        fi
     fi
 
     if [ ! -d "$running_dir" ]; then
