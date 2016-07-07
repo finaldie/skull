@@ -42,3 +42,12 @@ SKULL_CXX = $(CXX) $(SKULL_CFLAGS)
 SKULL_TP_CXX = $(CXX) $(SKULL_TP_CFLAGS)
 SKULL_CXX_LD = $(CXX) $(SKULL_LDFLAGS)
 SKULL_CXX_UTLD = $(CXX) $(SKULL_UTLDFLAGS)
+
+# jemalloc
+disable_jemalloc ?= false
+
+ifeq ($(disable_jemalloc), false)
+    JEMALLOC_STATIC := ../deps/jemalloc/lib/libjemalloc_pic.a
+else
+    JEMALLOC_STATIC :=
+endif

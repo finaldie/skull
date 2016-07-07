@@ -22,7 +22,7 @@ script:
     - make -j4 dep
     - make debug=true -j4
     - make clean
-    - make -j4
+    - make -j4 disable_jemalloc=true
     - sudo make install
     - make check debug=true
 

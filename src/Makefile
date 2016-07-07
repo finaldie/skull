@@ -10,6 +10,7 @@ SKULL_LIBS = \
     -lfmbuf \
     -lflist \
     -lftime \
+    $(JEMALLOC_STATIC) \
     -lprotobuf-c \
     -pthread \
     -ldl \
