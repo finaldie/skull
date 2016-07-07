@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "flibs/flist.h"
 #include "flibs/fmbuf.h"
@@ -9,6 +10,8 @@
 #include "api/sk_sched.h"
 #include "api/sk_entity.h"
 #include "api/sk_utils.h"
+#include "api/sk_mbuf.h"
+#include "api/sk_const.h"
 #include "api/sk_txn.h"
 
 struct sk_txn_task_t {
@@ -41,12 +44,25 @@ struct sk_txn_t {
     int             total_tasks;
     int             complete_tasks;
 
+    // Unit: micro-second
     unsigned long long  start_time;
 
     sk_txn_state_t  state;
 
     int             pending_tasks;
     void*           udata;
+
+    // Store the detail transcations, which is used for writing the
+    // transcation log
+    sk_mbuf_t*      transcation;
+
+    // If the txn has error occurred, then this field will be set to 1
+    uint32_t        error     : 1;
+    uint32_t        __padding : 31;
+
+#if __WORDSIZE == 64
+    int             __padding1;
+#endif
 };
 
 // Internal APIs
@@ -95,23 +111,26 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
     txn->latest_taskid = 0;
     txn->start_time    = ftime_gettime();
     txn->state         = SK_TXN_INIT;
+    txn->transcation   = sk_mbuf_create(SK_TXN_DEFAULT_INIT_SIZE,
+                                        SK_TXN_DEFAULT_MAX_SIZE);
 
     return txn;
 }
 
-void sk_txn_safe_destroy(sk_txn_t* txn)
+int sk_txn_safe_destroy(sk_txn_t* txn)
 {
     if (!txn) {
-        return;
+        return 1;
     }
 
     if (txn->complete_tasks < txn->total_tasks) {
         sk_print("sk_txn_safe_destroy: complete_tasks(%d) < total_tasks(%d), "
                  "won't destroy\n", txn->complete_tasks, txn->total_tasks);
-        return;
+        return 1;
     }
 
     sk_txn_destroy(txn);
+    return 0;
 }
 
 void sk_txn_destroy(sk_txn_t* txn)
@@ -132,6 +151,10 @@ void sk_txn_destroy(sk_txn_t* txn)
     }
 
     fhash_u64_delete(txn->task_tbl);
+
+    // Release the transcations
+    sk_mbuf_destroy(txn->transcation);
+
     free(txn);
 }
 
@@ -207,6 +230,10 @@ int sk_txn_is_last_module(const sk_txn_t* txn)
     return txn->current == sk_workflow_last_module(txn->workflow);
 }
 
+unsigned long long sk_txn_starttime(const sk_txn_t* txn) {
+    return txn->start_time;
+}
+
 unsigned long long sk_txn_alivetime(const sk_txn_t* txn)
 {
     return ftime_gettime() - txn->start_time;
@@ -270,7 +297,7 @@ void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
     txn->pending_tasks -= task->task_data.cb ? 1 : 0;
 }
 
-sk_txn_task_status_t sk_txn_task_status(sk_txn_t* txn, uint64_t task_id)
+sk_txn_task_status_t sk_txn_task_status(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -278,7 +305,7 @@ sk_txn_task_status_t sk_txn_task_status(sk_txn_t* txn, uint64_t task_id)
     return task->status;
 }
 
-sk_txn_taskdata_t* sk_txn_taskdata(sk_txn_t* txn, uint64_t task_id)
+sk_txn_taskdata_t* sk_txn_taskdata(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -286,7 +313,14 @@ sk_txn_taskdata_t* sk_txn_taskdata(sk_txn_t* txn, uint64_t task_id)
     return &task->task_data;
 }
 
-unsigned long long sk_txn_task_lifetime(sk_txn_t* txn, uint64_t task_id)
+unsigned long long sk_txn_task_starttime(const sk_txn_t* txn, uint64_t task_id) {
+    sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
+    SK_ASSERT(task);
+
+    return task->start;
+}
+
+unsigned long long sk_txn_task_lifetime(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -298,7 +332,7 @@ unsigned long long sk_txn_task_lifetime(sk_txn_t* txn, uint64_t task_id)
     return task->end - task->start;
 }
 
-unsigned long long sk_txn_task_livetime(sk_txn_t* txn, uint64_t task_id)
+unsigned long long sk_txn_task_livetime(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -326,6 +360,8 @@ void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
 
         // update the entity ref
         sk_entity_txnadd(txn->entity, txn);
+    } else if (state == SK_TXN_ERROR) {
+        txn->error = 1;
     }
 }
 
@@ -334,3 +370,31 @@ sk_txn_state_t sk_txn_state(const sk_txn_t* txn)
     return txn->state;
 }
 
+bool sk_txn_error(const sk_txn_t* txn) {
+    return txn->error;
+}
+
+void sk_txn_log_add(sk_txn_t* txn, const char* fmt, ...)
+{
+    if (!fmt) return;
+
+    // Format raw txn log
+    char content[SK_TXN_DEFAULT_MAX_SIZE];
+    memset(content, 0, SK_TXN_DEFAULT_MAX_SIZE);
+
+    va_list ap;
+    va_start(ap, fmt);
+    int r = vsnprintf(content, SK_TXN_DEFAULT_MAX_SIZE, fmt, ap);
+    SK_ASSERT_MSG(r > 0, "Format txn log failed: fmt: %s\n", fmt);
+    va_end(ap);
+
+    // Push txn log full content to internal buffer
+    int ret = sk_mbuf_push(txn->transcation, content, strlen(content));
+    SK_ASSERT_MSG(!ret, "Add txn log failed: content: %s, size: %zu\n",
+                  content, strlen(content));
+}
+
+const char* sk_txn_log(const sk_txn_t* txn)
+{
+    return sk_mbuf_rawget(txn->transcation, 0);
+}

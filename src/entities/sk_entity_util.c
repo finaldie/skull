@@ -46,7 +46,8 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     }
 
     // 3. try to unpack the user data
-    SK_LOG_SETCOOKIE("module.%s", first_module->cfg->name);
+    const char* module_name = first_module->cfg->name;
+    SK_LOG_SETCOOKIE("module.%s", module_name);
     const void* data = fevbuff_rawget(evbuff);
     size_t consumed =
         first_module->unpack(first_module->md, txn, data, (size_t)bytes);
@@ -63,6 +64,10 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     sk_txn_set_input(txn, data, (size_t)bytes);
     sk_txn_setstate(txn, SK_TXN_UNPACKED);
     sk_entity_sethalftxn(entity, NULL);
+
+    // 4.1 Add transcation log
+    sk_txn_log_add(txn, "m:%s:unpack start: %llu end: %llu ",
+        module_name, sk_txn_starttime(txn), sk_txn_alivetime(txn));
 
     // 5. prepare and send a workflow processing event
     sk_sched_send(sched, sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
