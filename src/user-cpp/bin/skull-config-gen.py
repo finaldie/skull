@@ -129,12 +129,15 @@ def _generate_header_item(name, value):
     # assemble config item
     if type(value) is int:
         content += "    int %s;\n" % name
+    elif type(value) is bool:
+        content += "    bool %s;\n" % name
     elif type(value) is float:
         content += "    double %s;\n" % name
     elif type(value) is str:
         content += "    char* %s;\n" % name
     else:
-        print "unsupported name: %s, type: %s" % (name, type(value))
+        print "Error: Unsupported name: %s, type: %s" % (name, type(value))
+        sys.exit(1)
 
     return content
 
@@ -167,12 +170,15 @@ def _generate_convertor_source_item(name, value):
     # assemble config item
     if type(value) is int:
         content += "    new_config->%s = skull_config_getint(config, \"%s\", 0);\n" % (name, name)
+    elif type(value) is bool:
+        content += "    new_config->%s = skull_config_getint(config, \"%s\", 0);\n" % (name, name)
     elif type(value) is float:
         content += "    new_config->%s = skull_config_getdouble(config, \"%s\", 0.0f);\n" % (name, name)
     elif type(value) is str:
         content += "    new_config->%s = (char*)skull_config_getstring(config, \"%s\");\n" % (name, name)
     else:
-        print "unsupported name: %s, type: %s" % (name, type(value))
+        print "Error: Unsupported name: %s, type: %s" % (name, type(value))
+        sys.exit(1)
 
     return content
 

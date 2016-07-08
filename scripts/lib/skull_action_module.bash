@@ -119,7 +119,7 @@ function _action_module_add()
     local module=""
     local workflow_idx=0
     local language=""
-    local langs=$(_get_language_list)
+    local langs=($(_get_language_list))
     local lang_names=`echo ${langs[*]} | sed 's/ /|/g'`
     local total_workflows=`action_workflow_show | tail -1 | awk '{print $2}'`
 
@@ -177,7 +177,7 @@ function _action_module_config_gen()
 {
     local module=$(_current_module)
     if [ -z "$module" ]; then
-        echo "Error: not in a module" >&2
+        echo "Error: not in a module, pwd=`pwd`" >&2
         exit 1
     fi
 
@@ -188,7 +188,7 @@ function _action_module_config_gen()
     fi
 
     # now, run the config generator
-    _run_module_action $SKULL_LANG_GEN_CONFIG $module_config
+    _run_module_action $module $SKULL_LANG_GEN_CONFIG $module_config
 }
 
 function _action_module_config_cat()

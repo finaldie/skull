@@ -1,0 +1,29 @@
+description: Regression test for skull-service-dns
+
+pre-run:
+    - echo "pre-run"
+    - ${COMMON}/create_project
+    - ${COMMON}/create_workflow -c y -I example -i n -n y -p 7758
+    - ${COMMON}/create_module -n test -i 0 -l cpp
+    - cd ${RUN}/project/src/services && git clone git@github.com:finaldie/skull-service-dns.git dns
+    - ${COMMON}/service_import -n dns -m rw-pr
+    - cp ${CASE}/module.cpp ${RUN}/project/src/modules/test/src/
+    - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
+
+run:
+    - echo "run"
+    - cd project && skull start -D
+    - sleep 1
+
+verify:
+    - echo "verify"
+    - echo "hello skull" | nc 127.0.0.1 7758 -i 1 | grep "hello skull"
+    - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
+    - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello skull"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "module_pack(test): data sz:12"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "query reponse: ip ="'
+    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
+
+post-verify:
+    - echo "post-verify"
+      #- killall skull-engine || exit 0

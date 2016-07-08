@@ -187,14 +187,9 @@ function _run_lang_action()
 # return the output of the corresponding output of that action
 function _run_module_action()
 {
-    local action=$1
-    shift
-
-    local module=$(_current_module)
-    if [ -z "$module" ]; then
-        echo "Error: not in a module, please switch to a module folder first" >&2
-        return 1
-    fi
+    local module=$1
+    local action=$2
+    shift 2
 
     local module_lang=$(_module_language $module)
     if [ -z "$module_lang" ]; then
@@ -267,14 +262,9 @@ function _service_language()
 # return the output of the corresponding output of that action
 function _run_service_action()
 {
-    local action=$1
-    shift
-
-    local service=$(_current_service)
-    if [ -z "$service" ]; then
-        echo "Error: not in a service, please switch to a service folder first" >&2
-        return 1
-    fi
+    local service=$1
+    local action=$2
+    shift 2
 
     local service_lang=$(_service_language $service)
     if [ -z "$service_lang" ]; then
@@ -283,6 +273,16 @@ function _run_service_action()
     fi
 
     _run_lang_action $service_lang $action $@
+}
+
+# Generate service config code files
+function utils_service_config_gen()
+{
+    local service=$1
+    shift 1
+
+    local svc_config=$(_current_service_config $service)
+    _run_service_action $service $SKULL_LANG_GEN_CONFIG $svc_config
 }
 
 function _utils_srv_api_copy()

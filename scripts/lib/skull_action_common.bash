@@ -63,9 +63,9 @@ function action_common_usage()
 function _action_metrics_gen()
 {
     local metrics_config=$SKULL_PROJ_ROOT/config/metrics.yaml
-    local langs=$(_get_language_list)
+    local langs=($(_get_language_list))
 
-    for language in $langs; do
+    for language in ${langs[@]}; do
         if [ -d "$SKULL_PROJ_ROOT/src/common/$language" ]; then
             echo " - generating $language metrcis..."
             action_${language}_gen_metrics $metrics_config
@@ -80,9 +80,9 @@ function _action_metrics_dump()
 
 function _action_idl_gen()
 {
-    local langs=$(_get_language_list)
+    local langs=($(_get_language_list))
 
-    for language in $langs; do
+    for language in ${langs[@]}; do
         action_${language}_gen_idl $SKULL_CONFIG_FILE
     done
 }

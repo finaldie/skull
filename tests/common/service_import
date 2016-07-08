@@ -1,0 +1,91 @@
+#!/bin/bash
+
+function usage()
+{
+    echo "usage:"
+    echo "  service_import -n service_name -m data_mode"
+}
+
+function init()
+{
+    BIN_PATH=`dirname $0`
+
+    . $BIN_PATH/env.bash
+}
+
+function parse_and_run()
+{
+    # parse the command args
+    local args=`getopt -a \
+        -o n:m:h \
+        -l name:,data_mode:,help \
+        -n "service_import" -- "$@"`
+
+    if [ $? != 0 ]; then
+        echo "Error: Invalid parameters" >&2
+        usage >&2
+        exit 1
+    fi
+
+    eval set -- "$args"
+
+    local service_name=""
+    local data_mode="rw-pr"
+
+    while true; do
+        case "$1" in
+            -n|--name)
+                service_name=$2
+                shift 2;
+                ;;
+            -m|--data_mode)
+                data_mode=$2
+                shift 2;
+                ;;
+            -h|--help)
+                shift
+                usage
+                exit 0
+                ;;
+            --)
+                shift;
+                break;
+                ;;
+            *)
+                echo "Error: Invalid parameters $1" >&2
+                shift
+                usage >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    if [ -z "$service_name" ]; then
+        echo "Error: Empty service name"
+        exit 1
+    fi
+
+    # start to import a service
+    run $service_name $data_mode
+}
+
+function run()
+{
+    local service_name="$1"
+    local data_mode="$2"
+
+    (
+        cd $SKULL_PROJ_NAME
+
+        expect -c "
+            spawn skull service --import $service_name
+            expect \"data mode? (rw-pr | rw-pw)\" {send \"$data_mode\r\"}
+            sleep 1
+            interact
+        "
+    )
+}
+
+# ----------------- main ------------------
+init
+parse_and_run $@
