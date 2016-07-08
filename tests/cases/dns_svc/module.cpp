@@ -41,7 +41,7 @@ static
 size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
     skull_metrics_module.request.inc(1);
-    printf("module_unpack(test): data sz:%zu\n", data_sz);
+    std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
     SKULL_LOG_INFO("2", "module_unpack(test): data sz:%zu", data_sz);
 
     // deserialize data to transcation data
@@ -79,7 +79,7 @@ int module_run(skullcpp::Txn& txn)
 {
     skull::workflow::example& example = (skull::workflow::example&)txn.data();
 
-    printf("receive data: %s\n", example.data().c_str());
+    std::cout << "receive data: " << example.data() << std::endl;
     SKULL_LOG_INFO("3", "receive data: %s", example.data().c_str());
 
     // Call dns service
@@ -99,7 +99,7 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
     skull::workflow::example& example = (skull::workflow::example&)txn.data();
 
     skull_metrics_module.response.inc(1);
-    printf("module_pack(test): data sz:%zu\n", example.data().length());
+    std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
     SKULL_LOG_INFO("4", "module_pack(test): data sz:%zu", example.data().length());
     txndata.append(example.data().c_str(), example.data().length());
 }
