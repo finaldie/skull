@@ -5,7 +5,7 @@ pre-run:
     - ${COMMON}/create_project
     - ${COMMON}/create_workflow -c y -I example -i n -n y -p 7758
     - ${COMMON}/create_module -n test -i 0 -l cpp
-    - cd ${RUN}/project/src/services && git clone git@github.com:finaldie/skull-service-dns.git dns
+    - 'cd ${RUN}/project/src/services && git clone git://github.com/finaldie/skull-service-dns.git dns'
     - ${COMMON}/service_import -n dns -m rw-pr
     - cp ${CASE}/module.cpp ${RUN}/project/src/modules/test/src/
     - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
