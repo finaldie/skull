@@ -6,7 +6,7 @@
 function action_common()
 {
     # parse the command args
-    local args=`getopt -a -o h -l metrics-gen,metrics-dump,idl-gen,srv-idl-gen,help \
+    local args=`getopt -a -o h -l config-gen,metrics-gen,metrics-dump,idl-gen,srv-idl-gen,help \
         -n "skull_action_common.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -33,6 +33,10 @@ function action_common()
             --srv-idl-gen)
                 shift
                 _action_srv_idl_gen
+                ;;
+            --config-gen)
+                shift
+                _action_config_gen
                 ;;
             -h|--help)
                 shift
@@ -90,4 +94,19 @@ function _action_idl_gen()
 function _action_srv_idl_gen()
 {
     skull_utils_srv_api_gen
+}
+
+function _action_config_gen()
+{
+    # 1. Generate modules config
+    for module in $(_module_list); do
+        echo " - Generating module [$module] config..."
+        utils_module_config_gen $module
+    done
+
+    # 2. Generate services config
+    for service in $(utils_service_list); do
+        echo " - Generating service [$service] config..."
+        utils_service_config_gen $service
+    done
 }

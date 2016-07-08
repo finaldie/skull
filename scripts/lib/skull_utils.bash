@@ -168,7 +168,7 @@ function _module_language()
 
 function _module_list()
 {
-    ls $SKULL_PROJ_ROOT/src/modules;
+    ls -1 $SKULL_PROJ_ROOT/src/modules;
 }
 
 # param action_name
@@ -198,6 +198,16 @@ function _run_module_action()
     fi
 
     _run_lang_action $module_lang $action $@
+}
+
+# Generate module config code files
+function utils_module_config_gen()
+{
+    local module=$1
+    shift 1
+
+    local module_config=$(_current_module_config $module)
+    _run_module_action $module $SKULL_LANG_GEN_CONFIG $module_config
 }
 
 # verify a name must be in [0-9a-zA-Z_]
@@ -256,6 +266,11 @@ function _service_language()
     done
 
     echo ""
+}
+
+function utils_service_list()
+{
+    ls -1 $SKULL_PROJ_ROOT/src/services;
 }
 
 # param action_name
