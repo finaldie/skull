@@ -1,3 +1,14 @@
+* 2016-07-11 0.8.6
+  * Core
+    * **New:** Add a new api `sk_config_getbool`
+  * User
+    * **Enhancement:** Refactor cpp config generator
+    * **Enhancement:** Make cpp apis more strictly
+  * Script
+    * **Fix:** Fix skull-start errors when run outside a skull project
+    * **Enhancement:** Re-generate all the configs before building
+  * Test
+    * **New:** Add FT case for `dns-service` regression test
 * 2016-07-07 0.8.5
   * Core
     * **New:** Enable `jemalloc` by default
