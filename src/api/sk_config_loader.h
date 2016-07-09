@@ -36,6 +36,7 @@ void sk_config_delete(sk_cfg_node_t* root);
 void sk_config_dump(sk_cfg_node_t* root);
 
 // Util APIs
+int sk_config_getbool(sk_cfg_node_t* node);
 int sk_config_getint(sk_cfg_node_t* node);
 double sk_config_getdouble(sk_cfg_node_t* node);
 const char* sk_config_getstring(sk_cfg_node_t* node);

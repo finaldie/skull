@@ -20,12 +20,12 @@ void module_init(const skull_config_t* config)
     SKULLCPP_LOG_ERROR("1", "skull error log test " << 5, "ignore, this is test");
     SKULLCPP_LOG_FATAL("1", "skull fatal log test " << 5, "ignore, this is test");
 
-    // Convert skull_config to skull_static_config
-    skull_static_config_convert(config);
+    // Load skull_config to skullcpp::Config
+    skullcpp::Config::instance().load(config);
 
-    SKULLCPP_LOG_DEBUG("config test_item: " << skull_static_config()->test_item);
-    SKULLCPP_LOG_DEBUG("config test_rate: " << skull_static_config()->test_rate);
-    SKULLCPP_LOG_DEBUG("config test_name: " << skull_static_config()->test_name);
+    SKULLCPP_LOG_DEBUG("config test_item: " << skullcpp::Config::instance().test_item());
+    SKULLCPP_LOG_DEBUG("config test_rate: " << skullcpp::Config::instance().test_rate());
+    SKULLCPP_LOG_DEBUG("config test_name: " << skullcpp::Config::instance().test_name());
 }
 
 static
@@ -33,8 +33,6 @@ void module_release()
 {
     std::cout << "module({MODULE_NAME}): released" << std::endl;
     SKULLCPP_LOG_INFO("5", "module({MODULE_NAME}): released");
-
-    skull_static_config_destroy();
 }
 
 static

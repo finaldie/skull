@@ -14,7 +14,10 @@ EXTRA += -Winline -Wdisabled-optimization
 EXTRA += -fstack-protector -fno-omit-frame-pointer
 
 # Enable the following line to build a strong program
-EXTRA += -pedantic -Wpadded -Wconversion
+EXTRA += -pedantic -Wconversion
+
+# Enable compiling checking the padded issue
+# EXTRA += -Wpadded
 
 SHARED = -shared
 MACRO = -D_POSIX_C_SOURCE=200809L

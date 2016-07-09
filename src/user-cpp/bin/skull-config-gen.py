@@ -6,115 +6,58 @@ import getopt
 import string
 import pprint
 import yaml
+import hashlib
 
 # global variables
 yaml_obj = None
 config_name = ""
 header_name = ""
-source_name = ""
 
 # static
-HEADER_NO_CFG_ITEM = "\
-    char* _nothing;\n\
-"
-
-SOURCE_NO_CFG_ITEM = "\
-    new_config->_nothing = \"there is no config item\";\n\
-"
 
 HEADER_CONTENT_START = "\
-#ifndef SKULL_STATIC_CONFIG_H\n\
-#define SKULL_STATIC_CONFIG_H\n\
+#ifndef SKULLCPP_CONFIG_H\n\
+#define SKULLCPP_CONFIG_H\n\
 \n\
 #include <skull/config.h>\n\
+#include <string>\n\
 \n\
-#pragma pack(4)\n\
-typedef struct skull_static_config_t {\
+namespace skullcpp {\n\
+\n\
+class Config {\n\
+private:\n\
+    // Make noncopyable\n\
+    Config(const Config&);\n\
+    Config& operator=(const Config&);\n\
+\n\
+public:\n\
+    static Config& instance() {\n\
+        static Config _instance_%s;\n\
+        return _instance_%s;\n\
+    }\n\
 \n"
 
 HEADER_CONTENT_END = "\
-} skull_static_config_t;\n\
-#pragma pack(4)\n\
+};\n\
 \n\
-// return the const static pointer to the static config obj\n\
-const skull_static_config_t* skull_static_config();\n\
-\n\
-/**\n\
- * Convert raw skull config obj to static config obj and\n\
- * it will free the old static config obj if exist\n\
- *\n\
- * @note This is not a thread-safe api, it only can be called\n\
- *             multiple times in UT environment\n\
- * @return none, but if skull_config_getxxx api failed, it will\n\
- *               print message to stderr and exit with '1'.\n\
- */\n\
-void skull_static_config_convert(const skull_config_t* config);\n\
-\n\
-void skull_static_config_destroy();\n\
+} // End of namespace\n\
 \n\
 #endif\n\n"
 
-SOURCE_CONTENT_START = "\
-#include <stdlib.h>\n\
-#include \"config.h\"\n\
-\n\
-"
+CONSTRUCTOR_SECTION_START = "\
+private:\n\
+    ~Config() {}\n\
+    Config()"
 
-SOURCE_CONTENT_STATIC_CONFIG = "\
-static skull_static_config_t* g_static_config = NULL;\n\
-\n\
-// Internal APIs\n\
-static\n\
-skull_static_config_t* _skull_static_config_create()\n\
-{\n\
-    return (skull_static_config_t*)calloc(1, sizeof(skull_static_config_t));\n\
-}\n\
-\n\
-static\n\
-void _skull_static_config_destroy(skull_static_config_t* config)\n\
-{\n\
-    if (!config) {\n\
-        return;\n\
-    }\n\
-\n\
-    free(config);\n\
-}\n\
-\n\
-static\n\
-void _skull_static_config_reset(skull_static_config_t* config)\n\
-{\n\
-   skull_static_config_t* old = g_static_config;\n\
-   g_static_config = config;\n\
-   _skull_static_config_destroy(old);\n\
-}\n\
-\n\
-// Public APIs\n\
-const skull_static_config_t* skull_static_config()\n\
-{\n\
-    return g_static_config;\n\
-}\n\
-\n\
-void skull_static_config_destroy()\n\
-{\n\
-    _skull_static_config_destroy(g_static_config);\n\
-    g_static_config = NULL;\n\
-}\n\
-"
+CONSTRUCTOR_SECTION_END = " {}\n\n"
 
-SOURCE_CONTENT_CONVERTOR_START = "\
-void skull_static_config_convert(const skull_config_t* config)\n\
-{\n\
-    skull_static_config_t* new_config = _skull_static_config_create();\n\
-"
+LOAD_START = "\
+public:\n\
+    void load(const skull_config_t* config) {\n"
 
-SOURCE_CONTENT_CONVERTOR_END = "\
-\n\
-    _skull_static_config_reset(new_config);\n\
-}\n\
-"
+LOAD_END = "    }\n\n"
 
-SOURCE_CONTENT_END = ""
-
+# ==============================================================================
 def load_yaml_config():
     global yaml_obj
     global config_name
@@ -122,40 +65,135 @@ def load_yaml_config():
     yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
-def _generate_header_item(name, value):
-    #print "name: %s, value: %s(%s)" % (name, value, type(value))
-    content = ""
+def _generate_constructor():
+    content = CONSTRUCTOR_SECTION_START
 
-    # assemble config item
-    if type(value) is int:
-        content += "    int %s;\n" % name
-    elif type(value) is bool:
-        content += "    bool %s;\n" % name
-    elif type(value) is float:
-        content += "    double %s;\n" % name
-    elif type(value) is str:
-        content += "    char* %s;\n" % name
-    else:
-        print "Error: Unsupported name: %s, type: %s" % (name, type(value))
-        sys.exit(1)
+    if yaml_obj is None:
+        content += CONSTRUCTOR_SECTION_END
+        return content
+
+    content += " :\n"
+    first_one = True
+    for name in yaml_obj:
+        value = yaml_obj[name]
+
+        # Skip string type
+        if type(value) is str:
+            continue
+
+        if first_one:
+            first_one = False
+            content += "        "
+        else:
+            content += "        ,"
+
+        if type(value) is int:
+            content += "%s_(0)\n" % name
+        elif type(value) is bool:
+            content += "%s_(false)\n" % name
+        elif type(value) is float:
+            content += "%s_(0.0f)\n" % name
+        else:
+            print "Error: Unsupported type, name: %s, type: %s" % (name, type(value))
+            sys.exit(1)
+
+    content += "   " + CONSTRUCTOR_SECTION_END
+    return content
+
+def _generate_loading_api():
+    content = LOAD_START
+
+    if yaml_obj is None:
+        content += LOAD_END
+        return content
+
+    for name in yaml_obj:
+        value = yaml_obj[name]
+
+        if type(value) is int:
+            content += "        %s_ = skull_config_getint(config, \"%s\", 0);\n" % (name, name)
+        elif type(value) is bool:
+            content += "        %s_ = skull_config_getbool(config, \"%s\", 0);\n" % (name, name)
+        elif type(value) is float:
+            content += "        %s_ = skull_config_getdouble(config, \"%s\", 0.0f);\n" % (name, name)
+        elif type(value) is str:
+            content += "        %s_ = (char*)skull_config_getstring(config, \"%s\");\n" % (name, name)
+        else:
+            print "Error: Unsupported type, name: %s, type: %s" % (name, type(value))
+            sys.exit(1)
+
+    content += LOAD_END
+    return content
+
+def _generate_data_members():
+    content = "private:\n"
+
+    if yaml_obj is None:
+        return content + "\n"
+
+    for name in yaml_obj:
+        value = yaml_obj[name]
+
+        if type(value) is int:
+            content += "    int %s_;\n" % name
+        elif type(value) is bool:
+            content += "    bool %s_;\n" % name
+        elif type(value) is float:
+            content += "    double %s_;\n" % name
+        elif type(value) is str:
+            content += "    std::string %s_;\n" % name
+        else:
+            print "Error: Unsupported name: %s, type: %s" % (name, type(value))
+            sys.exit(1)
+
+    return content + "\n"
+
+def _generate_data_apis():
+    content = "public:\n"
+
+    if yaml_obj is None:
+        return content
+
+    for name in yaml_obj:
+        value = yaml_obj[name]
+
+        if type(value) is int:
+            content += "    int %s() const {return %s_;}\n" % (name, name)
+        elif type(value) is bool:
+            content += "    bool %s() const {return %s_;}\n" % (name, name)
+        elif type(value) is float:
+            content += "    double %s() const {return %s_;}\n" % (name, name)
+        elif type(value) is str:
+            content += "    const std::string& %s() const {return %s_;}\n" % (name, name)
+        else:
+            print "Error: Unsupported name: %s, type: %s" % (name, type(value))
+            sys.exit(1)
 
     return content
 
 def generate_header():
+    global config_name
     header_file = file(header_name, 'w')
     content = ""
 
     # generate header
-    content += HEADER_CONTENT_START
+    m = hashlib.md5()
+    m.update(config_name)
+    md5_of_config = m.hexdigest()
+    content += HEADER_CONTENT_START % (md5_of_config, md5_of_config)
 
     # generate the config body
-    if yaml_obj is not None:
-        for name in yaml_obj:
-            value = yaml_obj[name]
-            content += _generate_header_item(name, value)
-    else:
-        # add a reserved item to avoid compile error
-        content += HEADER_NO_CFG_ITEM
+    #  constructor part
+    content += _generate_constructor()
+
+    #  loading api part
+    content += _generate_loading_api()
+
+    #  data member part
+    content += _generate_data_members()
+
+    #  data api part
+    content += _generate_data_apis()
 
     # generate tailer
     content += HEADER_CONTENT_END
@@ -164,56 +202,11 @@ def generate_header():
     header_file.write(content)
     header_file.close()
 
-def _generate_convertor_source_item(name, value):
-    content = ""
-
-    # assemble config item
-    if type(value) is int:
-        content += "    new_config->%s = skull_config_getint(config, \"%s\", 0);\n" % (name, name)
-    elif type(value) is bool:
-        content += "    new_config->%s = skull_config_getint(config, \"%s\", 0);\n" % (name, name)
-    elif type(value) is float:
-        content += "    new_config->%s = skull_config_getdouble(config, \"%s\", 0.0f);\n" % (name, name)
-    elif type(value) is str:
-        content += "    new_config->%s = (char*)skull_config_getstring(config, \"%s\");\n" % (name, name)
-    else:
-        print "Error: Unsupported name: %s, type: %s" % (name, type(value))
-        sys.exit(1)
-
-    return content
-
-def generate_source():
-    source_file = file(source_name, 'w')
-    content = ""
-
-    # generate header
-    content += SOURCE_CONTENT_START
-    content += SOURCE_CONTENT_STATIC_CONFIG
-
-    # generate the convertor logic
-    content += SOURCE_CONTENT_CONVERTOR_START
-    if yaml_obj is not None:
-        for name in yaml_obj:
-            value = yaml_obj[name]
-            content += _generate_convertor_source_item(name, value)
-    else:
-        # add a reserved item to avoid compile error
-        content += SOURCE_NO_CFG_ITEM
-
-    content += SOURCE_CONTENT_CONVERTOR_END
-    # generate tailer
-    content += SOURCE_CONTENT_END
-
-    # write and close the source file
-    source_file.write(content)
-    source_file.close()
-
 def generate_config():
     generate_header()
-    generate_source()
 
 def usage():
-    print "usage: skull-config-gen.py -c config -h header_file -s source_file"
+    print "usage: skull-config-gen.py -c config -h output_header_file"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -221,16 +214,14 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'c:h:s:')
+        opts, args = getopt.getopt(sys.argv[1:], 'c:h:')
 
         for op, value in opts:
             if op == "-c":
                 config_name = value
                 load_yaml_config()
-            if op == "-h":
+            elif op == "-h":
                 header_name = value
-            if op == "-s":
-                source_name = value
 
         # Now run the process func according the mode
         generate_config()

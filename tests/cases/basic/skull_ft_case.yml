@@ -7,6 +7,8 @@ pre-run:
     - ${COMMON}/create_module -n test -i 0 -l cpp
     - ${COMMON}/create_service -n s1 -l cpp -m rw-pr
     - ${COMMON}/create_service_api -s s1 -n get
+    - cp ${CASE}/config.yaml ${RUN}/project/src/modules/test/config
+    - cp ${CASE}/module.cpp ${RUN}/project/src/modules/test/src
     - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
 
 run:
@@ -20,6 +22,10 @@ verify:
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello skull"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "module_pack(test): data sz:12"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "config test_item: 123"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "config test_rate: 1"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "config test_name: module"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "config test_bool: 1"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
 
 post-verify:
