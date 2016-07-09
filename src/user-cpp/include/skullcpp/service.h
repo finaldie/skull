@@ -19,8 +19,10 @@ class ServiceData;
 class Service {
 private:
     // Make noncopyable
-    Service(const Service& svc);
-    const Service& operator=(const Service& svc);
+    Service(const Service& svc) = delete;
+    Service(Service&& svc) = delete;
+    Service& operator=(const Service& svc) = delete;
+    Service& operator=(Service&& svc) = delete;
 
 public:
     typedef std::function<void (Service&)> Job;
@@ -71,8 +73,10 @@ public:
 class ServiceData {
 private:
     // Make noncopyable
-    ServiceData(const Service& svc);
-    const ServiceData& operator=(const ServiceData&);
+    ServiceData(const ServiceData&) = delete;
+    ServiceData(ServiceData&&) = delete;
+    ServiceData& operator=(const ServiceData&) = delete;
+    ServiceData& operator=(ServiceData&&) = delete;
 
 public:
     ServiceData() {}

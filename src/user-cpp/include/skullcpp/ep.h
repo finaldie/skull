@@ -22,8 +22,10 @@ class EPClientRet;
 class EPClient {
 private:
     // Make noncopyable
-    EPClient(const EPClient&);
-    const EPClient& operator=(const EPClient&);
+    EPClient(const EPClient&) = delete;
+    EPClient(EPClient&&) = delete;
+    EPClient& operator=(const EPClient&) = delete;
+    EPClient& operator=(EPClient&&) = delete;
 
 private:
     EPClientImpl* impl_;
@@ -82,8 +84,10 @@ public:
 class EPClientRet {
 private:
     // Make noncopyable
-    EPClientRet(const EPClientRet&);
-    const EPClientRet& operator=(const EPClientRet&);
+    EPClientRet(const EPClientRet&) = delete;
+    EPClientRet(EPClientRet&&) = delete;
+    EPClientRet& operator=(const EPClientRet&) = delete;
+    EPClientRet& operator=(EPClientRet&&) = delete;
 
 public:
     EPClientRet() {}

@@ -27,8 +27,10 @@ namespace skullcpp {\n\
 class Config {\n\
 private:\n\
     // Make noncopyable\n\
-    Config(const Config&);\n\
-    Config& operator=(const Config&);\n\
+    Config(const Config&) = delete;\n\
+    Config(Config&&) = delete;\n\
+    Config& operator=(const Config&) = delete;\n\
+    Config& operator=(Config&&) = delete;\n\
 \n\
 public:\n\
     static Config& instance() {\n\
@@ -117,7 +119,7 @@ def _generate_loading_api():
         elif type(value) is float:
             content += "        %s_ = skull_config_getdouble(config, \"%s\", 0.0f);\n" % (name, name)
         elif type(value) is str:
-            content += "        %s_ = (char*)skull_config_getstring(config, \"%s\");\n" % (name, name)
+            content += "        %s_ = skull_config_getstring(config, \"%s\");\n" % (name, name)
         else:
             print "Error: Unsupported type, name: %s, type: %s" % (name, type(value))
             sys.exit(1)
