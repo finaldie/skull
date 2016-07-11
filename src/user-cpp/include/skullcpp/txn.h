@@ -14,8 +14,10 @@ namespace skullcpp {
 class Txn {
 private:
     // Make noncopyable
-    Txn(const Txn&);
-    const Txn* operator=(const Txn&);
+    Txn(const Txn&) = delete;
+    Txn(Txn&&) = delete;
+    Txn& operator=(const Txn&) = delete;
+    Txn& operator=(Txn&&) = delete;
 
 public:
     typedef enum Status {

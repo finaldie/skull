@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-#include <skullcpp/api.h>
+#include "skullcpp/api.h"
 #include "skull_metrics.h"
 #include "skull_protos.h"
 #include "config.h"
@@ -18,14 +18,16 @@ void module_init(const skull_config_t* config)
     SKULLCPP_LOG_INFO("1", "skull info log test " << 3);
     SKULLCPP_LOG_WARN("1", "skull warn log test " << 4, "ignore, this is test");
     SKULLCPP_LOG_ERROR("1", "skull error log test " << 5, "ignore, this is test");
-    SKULLCPP_LOG_FATAL("1", "skull fatal log test " << 6, "ignore, this is test");
+    SKULLCPP_LOG_FATAL("1", "skull fatal log test " << 5, "ignore, this is test");
 
     // Load skull_config to skullcpp::Config
-    skullcpp::Config::instance().load(config);
+    auto& conf = skullcpp::Config::instance();
+    conf.load(config);
 
-    SKULLCPP_LOG_DEBUG("config test_item: " << skullcpp::Config::instance().test_item());
-    SKULLCPP_LOG_DEBUG("config test_rate: " << skullcpp::Config::instance().test_rate());
-    SKULLCPP_LOG_DEBUG("config test_name: " << skullcpp::Config::instance().test_name());
+    SKULLCPP_LOG_DEBUG("config test_item: " << conf.test_item());
+    SKULLCPP_LOG_DEBUG("config test_rate: " << conf.test_rate());
+    SKULLCPP_LOG_DEBUG("config test_name: " << conf.test_name());
+    SKULLCPP_LOG_DEBUG("config test_bool: " << conf.test_bool());
 }
 
 static
@@ -49,34 +51,12 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 }
 
 static
-int svc_api_callback(skullcpp::Txn& txn, const std::string& apiName,
-                     const google::protobuf::Message& request,
-                     const google::protobuf::Message& response)
-{
-    const auto& apiReq  = (skull::service::s1::get_req&)request;
-    const auto& apiResp = (skull::service::s1::get_resp&)response;
-
-    std::cout << "svc_api_callback.... apiName: " << apiName << std::endl;
-    std::cout << "svc_api_callback.... request: " << apiReq.name() << std::endl;
-    std::cout << "svc_api_callback.... response: " << apiResp.response() << std::endl;
-    return 0;
-}
-
-static
 int module_run(skullcpp::Txn& txn)
 {
     auto& example = (skull::workflow::example&)txn.data();
 
     std::cout << "receive data: " << example.data() << std::endl;
     SKULLCPP_LOG_INFO("3", "receive data: " << example.data());
-
-    // Call service
-    skull::service::s1::get_req req;
-    req.set_name("hello service");
-    skullcpp::Txn::IOStatus ret =
-        txn.serviceCall("s1", "get", req, 0, svc_api_callback);
-
-    std::cout << "ServiceCall ret: " << ret << std::endl;
     return 0;
 }
 

@@ -10,8 +10,10 @@ namespace skullcpp {
 class TxnData {
 private:
     // Make noncopyable
-    TxnData(const TxnData&);
-    const TxnData& operator=(const TxnData&);
+    TxnData(const TxnData&) = delete;
+    TxnData(TxnData&&) = delete;
+    TxnData& operator=(const TxnData&) = delete;
+    TxnData& operator=(TxnData&&) = delete;
 
 public:
     TxnData() {};

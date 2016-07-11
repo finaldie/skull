@@ -15,14 +15,13 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
 {
     std::cout << "skull service init" << std::endl;
 
-    // Convert skull_config to skull_static_config
-    skull_static_config_convert(config);
+    // Load skull_config to skullcpp::Config
+    skullcpp::Config::instance().load(config);
 }
 
 static
 void skull_service_release(skullcpp::Service& service)
 {
-    skull_static_config_destroy();
     std::cout << "skull service release" << std::endl;
 }
 

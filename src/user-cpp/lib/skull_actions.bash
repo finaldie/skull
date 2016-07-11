@@ -144,16 +144,11 @@ function action_cpp_gen_config()
     # Compare the md5 of the new metrics and old metrics' files, do not to
     # replace them if they are same, it will reduce the compiling time
     $LANGUAGE_PATH/bin/skull-config-gen.py -c $config \
-        -h $tmpdir/config.h \
-        -s $tmpdir/config.cpp
+        -h $tmpdir/config.h
 
     # if the new config.x are different from the old ones, replace them
     if ! $(_compare_file $targetdir/config.h $tmpdir/config.h); then
         cp $tmpdir/config.h $targetdir/config.h
-    fi
-
-    if ! $(_compare_file $targetdir/config.cpp $tmpdir/config.cpp); then
-        cp $tmpdir/config.cpp $targetdir/config.cpp
     fi
 }
 

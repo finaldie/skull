@@ -41,6 +41,26 @@ void skull_config_destroy(const skull_config_t* config)
     free((void*)config);
 }
 
+int    skull_config_getbool    (const skull_config_t* config, const char* key_name,
+                               int default_value)
+{
+    sk_cfg_node_t* root = config->config;
+    SK_ASSERT_MSG(root->type == SK_CFG_NODE_MAPPING,
+                  "skull config root node type: %d\n", root->type);
+
+    if (!key_name) {
+        return 0;
+    }
+
+    int value = default_value;
+    sk_cfg_node_t* target_node = fhash_str_get(root->data.mapping, key_name);
+    if (target_node) {
+        value = sk_config_getbool(target_node);
+    }
+
+    return value;
+}
+
 int    skull_config_getint    (const skull_config_t* config, const char* key_name,
                                int default_value)
 {

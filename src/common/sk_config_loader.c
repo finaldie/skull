@@ -267,6 +267,15 @@ void sk_config_dump(sk_cfg_node_t* root)
 }
 
 // Util APIs
+int sk_config_getbool(sk_cfg_node_t* node)
+{
+    if (0 == strcasecmp(node->data.value, "true")) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 int sk_config_getint(sk_cfg_node_t* node)
 {
     long int value = strtol(node->data.value, NULL, 10);

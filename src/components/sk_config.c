@@ -285,7 +285,7 @@ void _load_service(const char* service_name, sk_cfg_node_t* node,
         const char* key = iter.key;
 
         if (0 == strcmp(key, "enable")) {
-            service_cfg->enable = sk_config_getint(child);
+            service_cfg->enable = sk_config_getbool(child);
         } else if (0 == strcmp(key, "data_mode")) {
             data_mode_exist = true;
             _load_service_data_mode(child, service_cfg);

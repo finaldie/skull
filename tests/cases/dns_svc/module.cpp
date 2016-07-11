@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <string>
 #include <iostream>
 
 #include "skullcpp/api.h"
@@ -13,7 +12,7 @@
 static
 void module_init(const skull_config_t* config)
 {
-    std::cout << "module(test): init" << std::endl;
+    printf("module(test): init\n");
     SKULL_LOG_TRACE("skull trace log test %d", 1);
     SKULL_LOG_DEBUG("skull debug log test %d", 2);
     SKULL_LOG_INFO("1", "skull info log test %d", 3);
@@ -27,7 +26,7 @@ void module_init(const skull_config_t* config)
 static
 void module_release()
 {
-    std::cout << "module(test): released" << std::endl;
+    printf("module(test): released\n");
     SKULL_LOG_INFO("5", "module(test): released");
 }
 
@@ -39,65 +38,58 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     SKULL_LOG_INFO("2", "module_unpack(test): data sz:%zu", data_sz);
 
     // deserialize data to transcation data
-    auto& example = (skull::workflow::example&)txn.data();
+    skull::workflow::example& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
     return data_sz;
 }
 
 static
-int svc_api_callback(skullcpp::Txn& txn, const std::string& apiName,
-                     const google::protobuf::Message& request,
-                     const google::protobuf::Message& response)
+int _dns_query_cb(skullcpp::Txn& txn, const std::string& apiName,
+                  const google::protobuf::Message& request,
+                  const google::protobuf::Message& response)
 {
-    const auto& apiReq  = (skull::service::s1::get_req&)request;
-    const auto& apiResp = (skull::service::s1::get_resp&)response;
+    std::cout << "dns query result: " << std::endl;
+    const skull::service::dns::query_resp& query_resp =
+        (const skull::service::dns::query_resp&)response;
 
-    std::cout << "svc_api_callback.... apiName: " << apiName << std::endl;
-    std::cout << "svc_api_callback.... request: " << apiReq.name() << std::endl;
-    std::cout << "svc_api_callback.... response: " << apiResp.response() << std::endl;
+    if (!query_resp.code()) {
+        // correct
+        std::cout << "return ip: " << query_resp.ip() << std::endl;
+        SKULLCPP_LOG_INFO("dns_query_cb-1", "query reponse: ip = "
+                          << query_resp.ip());
+    } else {
+        // error ocurred
+        std::cout << "dns error reason: " << query_resp.error() << std::endl;
+        SKULLCPP_LOG_ERROR("dns_query_cb-2", "query error occurred, reasone: "
+            << query_resp.error(), "Network issue?");
+    }
 
-    auto& example = (skull::workflow::example&)txn.data();
-    example.set_data(apiResp.response());
     return 0;
 }
 
 static
 int module_run(skullcpp::Txn& txn)
 {
-    auto& example = (skull::workflow::example&)txn.data();
+    skull::workflow::example& example = (skull::workflow::example&)txn.data();
 
     std::cout << "receive data: " << example.data() << std::endl;
     SKULL_LOG_INFO("3", "receive data: %s", example.data().c_str());
 
-    // Call service api 'set'
-    skull::service::s1::set_req req;
-    req.set_name(example.data());
+    // Call dns service
+    skull::service::dns::query_req query_req;
+    query_req.set_domain("www.google.com");
+
     skullcpp::Txn::IOStatus ret =
-        txn.serviceCall("s1", "set", req, 0,
-            [](skullcpp::Txn&, const std::string&,
-                const google::protobuf::Message&,
-                const google::protobuf::Message&) -> int {
-            std::cout << "api set done" << std::endl;
-            SKULLCPP_LOG_INFO("3.cb", "api set done: " << 1);
-            return 0;
-    });
+        txn.serviceCall("dns", "query", query_req, 0, _dns_query_cb);
 
     std::cout << "ServiceCall ret: " << ret << std::endl;
-
-    // Call service api 'get'
-    skull::service::s1::get_req req1;
-    req1.set_name(example.data());
-    skullcpp::Txn::IOStatus ret1 =
-        txn.serviceCall("s1", "get", req1, 0, svc_api_callback);
-
-    std::cout << "ServiceCall ret1: " << ret1 << std::endl;
     return 0;
 }
 
 static
 void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {
-    auto& example = (skull::workflow::example&)txn.data();
+    skull::workflow::example& example = (skull::workflow::example&)txn.data();
 
     skull_metrics_module.response.inc(1);
     std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;

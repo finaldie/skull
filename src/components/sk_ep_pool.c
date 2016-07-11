@@ -746,8 +746,6 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                        sk_ep_t* ep, unsigned long long start,
                        fdlist_node_t* ep_node)
 {
-    ep->status = SK_EP_ST_CONNECTING;
-
     int fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (fd < 0) {
         return -1;
@@ -759,13 +757,12 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     server_addr.sin_port = htons(handler->port);
     server_addr.sin_addr.s_addr = inet_addr(handler->ip);
 
+    ep->status = SK_EP_ST_CONNECTING;
     int ret = connect(fd, (struct sockaddr *)(&server_addr),
                      sizeof(struct sockaddr));
     if (ret != 0) {
         return -1;
     }
-
-    fnet_set_nonblocking(fd);
 
     sk_entity_t* net_entity = ep->ep;
 

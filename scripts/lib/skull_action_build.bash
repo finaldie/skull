@@ -60,6 +60,9 @@ function _action_prepare()
 
     echo "generate service apis..."
     action_common --srv-idl-gen || exit 1
+
+    echo "generate configs..."
+    action_common --config-gen || exit 1
 }
 
 function _action_build()

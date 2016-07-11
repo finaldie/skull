@@ -14,7 +14,7 @@ function action_service()
     # parse the command args
     local args=`getopt -a \
         -o ash \
-        -l add,list,help,conf-gen,conf-cat,conf-edit,conf-check,api-list,api-add,api-cat,api-edit,api-check,api-gen,import \
+        -l add,list,help,conf-gen,conf-cat,conf-edit,conf-check,api-list,api-add,api-cat:,api-edit:,api-check,api-gen,import: \
         -n "skull_action_service.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -67,33 +67,33 @@ function action_service()
                 exit 0
                 ;;
             --api-add)
-                shift 2
+                shift
                 _action_service_api_add
                 exit 0
                 ;;
             --api-cat)
+                _action_service_api_cat "$2"
                 shift 2
-                _action_service_api_cat $@
                 exit 0
                 ;;
             --api-edit)
+                _action_service_api_edit "$2"
                 shift 2
-                _action_service_api_edit $@
                 exit 0
                 ;;
             --api-check)
-                shift 2
+                shift
                 _action_service_api_check
                 exit 0
                 ;;
             --api-gen)
-                shift 2
+                shift
                 _action_service_api_gen
                 exit 0
                 ;;
             --import)
+                _action_service_import "$2"
                 shift 2
-                _action_service_import $@
                 exit 0
                 ;;
             --)
@@ -179,7 +179,7 @@ function _action_service_add()
     local service=""
     local language=""
     local data_mode=""
-    local langs=$(_get_language_list)
+    local langs=($(_get_language_list))
     local lang_names=`echo ${langs[*]} | sed 's/ /|/g'`
     local total_services=`action_service_show | tail -1 | awk '{print $2}'`
 
@@ -238,18 +238,11 @@ function _action_service_config_gen()
 {
     local service=$(_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
-    local srv_config=$(_current_service_config $service)
-    if [ ! -f $srv_config ]; then
-        echo "Error: not found $srv_config" >&2
-        exit 1
-    fi
-
-    # now, run the config generator
-    _run_service_action $SKULL_LANG_GEN_CONFIG $srv_config
+    utils_service_config_gen $service
 }
 
 function _action_service_config_cat()
@@ -442,9 +435,20 @@ function _action_service_import()
     done
 
     # 4. Get service language
-    language=$(_service_language)
+    language=$(_service_language $service)
+    if [ -z "$language" ]; then
+        echo "Error: Cannot detect service language, import service failed" >&2
+        exit 1
+    fi
 
-    # 5. Add service into skull-config
+    # 5. Generate service config related code
+    utils_service_config_gen $service
+    if [ $? != 0 ]; then
+        echo "Error: import service failed, cannot generate config" >&2
+        exit 1
+    fi
+
+    # 6. Add service into skull-config
     $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
         -a add -s $service -b true -d $data_mode -l $language
 

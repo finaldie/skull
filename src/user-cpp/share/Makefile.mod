@@ -20,8 +20,7 @@ TEST_DEPS_LIBS += \
 
 # Objs and deployment related items
 SRCS = \
-    src/module.cpp \
-    src/config.cpp
+    src/module.cpp
 
 TEST_SRCS = \
     tests/test_module.cpp
