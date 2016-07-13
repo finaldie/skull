@@ -37,18 +37,15 @@ void EPClient::setFlags(int flags) {
     this->impl_->flags_ = flags;
 }
 
-void EPClient::setUnpack(unpack unpackFunc) {
+void EPClient::setUnpack(UnpackFn unpackFunc) {
     this->impl_->unpack_ = unpackFunc;
 }
 
-typedef struct JobCb {
-    EPClient::epPendingCb   pendingCb_;
-    EPClient::epNoPendingCb noPendingCb_;
-} JobCb;
-
 typedef struct EpCbData {
-    EPClient::unpack  unpack_;
-    JobCb cb_;
+    EPClient::UnpackFn unpack_;
+
+    EPClient::EpCb     pendingCb_;
+    EPClient::EpNPCb   noPendingCb_;
 } EpCbData;
 
 static
@@ -74,7 +71,7 @@ void rawEpPendingCb(const skull_service_t* rawSvc, skull_ep_ret_t rawRet,
              const void* rawApiReq, size_t rawApiReqSz,
              void* rawApiResp, size_t rawApiRespSz) {
     EpCbData* epData = (EpCbData*)ud;
-    if (!epData->cb_.pendingCb_) {
+    if (!epData->pendingCb_) {
         return;
     }
 
@@ -88,30 +85,30 @@ void rawEpPendingCb(const skull_service_t* rawSvc, skull_ep_ret_t rawRet,
     ServiceApiDataImp  apiDataImp(&apiReq, &apiResp);
     EPClientRetImp ret(rawRet, response, len, apiDataImp);
 
-    epData->cb_.pendingCb_(svc, ret);
+    epData->pendingCb_(svc, ret);
 }
 
 static
 void rawEpNoPendingCb(const skull_service_t* rawSvc, skull_ep_ret_t rawRet,
              const void* response, size_t len, void* ud) {
     EpCbData* epData = (EpCbData*)ud;
-    if (!epData->cb_.noPendingCb_) {
+    if (!epData->noPendingCb_) {
         return;
     }
 
     ServiceImp svc((skull_service_t*)rawSvc);
     EPClientNPRetImp ret(rawRet, response, len);
 
-    epData->cb_.noPendingCb_(svc, ret);
+    epData->noPendingCb_(svc, ret);
 }
 
 EPClient::Status EPClient::send(const Service& svc, const std::string& data,
-                                epPendingCb cb) {
+                                EpCb cb) {
     return send(svc, data.c_str(), data.length(), cb);
 }
 
 EPClient::Status EPClient::send(const Service& svc, const void* data,
-                                size_t dataSz, epPendingCb cb) {
+                                size_t dataSz, EpCb cb) {
     if (!data || !dataSz) {
         return ERROR;
     }
@@ -138,7 +135,7 @@ EPClient::Status EPClient::send(const Service& svc, const void* data,
 
     EpCbData* epCbData = new EpCbData;
     epCbData->unpack_  = this->impl_->unpack_;
-    epCbData->cb_.pendingCb_ = cb;
+    epCbData->pendingCb_ = cb;
 
     skull_ep_status_t st = skull_ep_send(rawSvc, ep_handler, data, dataSz,
                                          rawEpPendingCb, epCbData);
@@ -151,7 +148,7 @@ EPClient::Status EPClient::send(const Service& svc, const void* data,
 }
 
 EPClient::Status EPClient::send(const Service& svc,
-                                const void* data, size_t dataSz, epNoPendingCb cb)
+                                const void* data, size_t dataSz, EpNPCb cb)
 {
     if (!data || !dataSz) {
         return ERROR;
@@ -179,7 +176,7 @@ EPClient::Status EPClient::send(const Service& svc,
 
     EpCbData* epCbData = new EpCbData;
     epCbData->unpack_   = this->impl_->unpack_;
-    epCbData->cb_.noPendingCb_ = cb;
+    epCbData->noPendingCb_ = cb;
 
     skull_ep_status_t st = skull_ep_send_np(rawSvc, ep_handler, data, dataSz,
                                             rawEpNoPendingCb, epCbData);
@@ -192,7 +189,7 @@ EPClient::Status EPClient::send(const Service& svc,
 }
 
 EPClient::Status EPClient::send(const Service& svc, const std::string& data,
-                                epNoPendingCb cb)
+                                EpNPCb cb)
 {
     return send(svc, data.c_str(), data.length(), cb);
 }

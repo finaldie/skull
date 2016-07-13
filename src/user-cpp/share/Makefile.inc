@@ -8,7 +8,7 @@ STD = -std=c++0x
 WARN = -Wall -Werror
 BASIC = -fPIC
 EXTRA = -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal
-EXTRA += -Winline -Wdisabled-optimization
+EXTRA += -Wdisabled-optimization
 # It's better to use `-fstack-protector-strong`, but most of environment do not
 # have gcc 4.9, so use `-fstack-protector` first
 EXTRA += -fstack-protector -fno-omit-frame-pointer
@@ -16,8 +16,8 @@ EXTRA += -fstack-protector -fno-omit-frame-pointer
 # Enable the following line to build a strong program
 EXTRA += -pedantic -Wconversion
 
-# Enable compiling checking the padded issue
-# EXTRA += -Wpadded
+# Enable compiling checking the padded/inline issue
+# EXTRA += -Wpadded -Winline
 
 SHARED = -shared
 MACRO = -D_POSIX_C_SOURCE=200809L

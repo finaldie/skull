@@ -8,12 +8,12 @@ namespace skullcpp {
 
 class EPClientImpl {
 public:
-    std::string       ip_;
-    EPClient::unpack  unpack_;
-    EPClient::Type    type_;
-    int               timeout_;
-    int               flags_;
-    in_port_t         port_;
+    std::string        ip_;
+    EPClient::UnpackFn unpack_;
+    EPClient::Type     type_;
+    int                timeout_;
+    int                flags_;
+    in_port_t          port_;
 
     uint32_t __padding :16;
 
