@@ -13,7 +13,7 @@ pre-run:
 
 run:
     - echo "run"
-    - '${COMMON}/mock_ep -p 7760 -k'
+    - '${COMMON}/mock_ep -p 7760 -k -i 10000'
     - cd project && skull start -D
     - sleep 1
 

@@ -30,7 +30,22 @@ void EPClient::setUnpack(unpack unpackFunc) {
 }
 
 EPClient::Status EPClient::send(const Service& svc, const void* data,
-                                size_t dataSz, epCb cb) {
+                                size_t dataSz, epPendingCb cb) {
+    return OK;
+}
+
+EPClient::Status EPClient::send(const Service& svc, const std::string& data,
+                                epPendingCb cb) {
+    return OK;
+}
+
+EPClient::Status EPClient::send(const Service& svc, const void* data,
+                                size_t dataSz, epNoPendingCb cb) {
+    return OK;
+}
+
+EPClient::Status EPClient::send(const Service& svc, const std::string& data,
+                                epNoPendingCb cb) {
     return OK;
 }
 

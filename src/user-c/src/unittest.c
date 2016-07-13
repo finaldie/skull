@@ -457,12 +457,18 @@ int skull_service_job_create(skull_service_t*   svc,
     return 0;
 }
 
-// Mock API for skull_ep_send. Return ok directly, since we don't need to mock
+// Mock API for skull_ep_xxx_send. Return ok directly, since we don't need to mock
 // network, only mock the api response is enough
 skull_ep_status_t
-skull_ep_send(const skull_service_t* service, const skull_ep_handler_t handler,
-              const void* data, size_t count,
-              const skull_ep_cb_t cb, void* ud)
+skull_ep_send(const skull_service_t* svc, const skull_ep_handler_t handler,
+            const void* data, size_t count, skull_ep_cb_t cb, void* ud)
+{
+    return SKULL_EP_OK;
+}
+
+skull_ep_status_t
+skull_ep_send_np(const skull_service_t* svc, const skull_ep_handler_t handler,
+              const void* data, size_t count, skull_ep_np_cb_t cb, void* ud)
 {
     return SKULL_EP_OK;
 }

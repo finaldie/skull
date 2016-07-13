@@ -18,6 +18,7 @@ namespace skullcpp {
 
 class EPClientImpl;
 class EPClientRet;
+class EPClientNPRet;
 
 class EPClient {
 private:
@@ -42,11 +43,8 @@ public:
         TIMEOUT = 2
     } Status;
 
-    // Case 1: Be called from a service api call, then user can get api req and
-    //          resp from 'apiData'
-    // Case 2: Be called from a service job, then the 'ret.apiData' is useless,
-    //          and DO NOT try to use it
-    typedef std::function<void (const Service&, EPClientRet& ret)> epCb;
+    typedef std::function<void (const Service&, EPClientRet& ret)>   epPendingCb;
+    typedef std::function<void (const Service&, EPClientNPRet& ret)> epNoPendingCb;
 
     typedef std::function<size_t (const void* data, size_t len)> unpack;
 
@@ -77,8 +75,49 @@ public:
     void setUnpack(unpack unpackFunc);
 
 public:
-    Status send(const Service&, const void* data, size_t dataSz, epCb cb);
-    Status send(const Service&, const std::string& data, epCb cb);
+    /**
+     * Invoke a EP call which would pending the service api
+     *
+     * @return
+     *    - OK      Everything is ok
+     *    - ERROR   No input data or calling outside a service api
+     *    - TIMEOUT Timeout occurred
+     *
+     * @note These two apis only can be called from a service api code block,
+     *        otherwise it would return an ERROR status
+     */
+    Status send(const Service&, const void* data, size_t dataSz, epPendingCb cb);
+    Status send(const Service&, const std::string& data, epPendingCb cb);
+
+    /**
+     * Invoke a EP call which would *NOT* pending the service api
+     *
+     * @return
+     *    - OK      Everything is ok
+     *    - ERROR   No input data
+     *    - TIMEOUT Timeout occurred
+     */
+    Status send(const Service&, const void* data, size_t dataSz, epNoPendingCb cb);
+    Status send(const Service&, const std::string& data, epNoPendingCb cb);
+};
+
+class EPClientNPRet {
+private:
+    // Make noncopyable
+    EPClientNPRet(const EPClientNPRet&) = delete;
+    EPClientNPRet(EPClientNPRet&&) = delete;
+    EPClientNPRet& operator=(const EPClientNPRet&) = delete;
+    EPClientNPRet& operator=(EPClientNPRet&&) = delete;
+
+public:
+    EPClientNPRet() {}
+    virtual ~EPClientNPRet() {}
+
+public:
+    virtual EPClient::Status status() const = 0;
+    virtual int latency() const = 0;
+    virtual const void* response() const = 0;
+    virtual size_t responseSize() const = 0;
 };
 
 class EPClientRet {

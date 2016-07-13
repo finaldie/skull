@@ -50,14 +50,30 @@ typedef struct skull_ep_handler_t {
     void         (*release) (void* ud);
 } skull_ep_handler_t;
 
-typedef void (*skull_ep_cb_t) (skull_service_t*, skull_ep_ret_t,
+typedef void (*skull_ep_cb_t) (const skull_service_t*, skull_ep_ret_t,
                                const void* response, size_t len, void* ud,
                                const void* api_req, size_t api_req_sz,
                                void* api_resp, size_t api_resp_sz);
 
+typedef void (*skull_ep_np_cb_t) (const skull_service_t*, skull_ep_ret_t,
+                               const void* response, size_t len, void* ud);
+
+/**
+ * This api would pend the service call until it's callback be finished
+ *
+ * @note It only can be called in a service api call. If this be called in
+ *        non-service api call, it would return ERROR status
+ */
 skull_ep_status_t
 skull_ep_send(const skull_service_t*, const skull_ep_handler_t handler,
               const void* data, size_t count, skull_ep_cb_t cb, void* ud);
+
+/**
+ * This api would not pend the service call
+ */
+skull_ep_status_t
+skull_ep_send_np(const skull_service_t*, const skull_ep_handler_t handler,
+              const void* data, size_t count, skull_ep_np_cb_t cb, void* ud);
 
 #ifdef __cplusplus
 }
