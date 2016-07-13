@@ -1,3 +1,10 @@
+* 2016-07-13 0.8.7
+  * Core
+    * **Enhancement:** C api layer support invoking no pending ep call
+  * User
+    * **Enhancement:** CPP api layer support invoking no pending ep call
+  * Test
+    * **New:** Add FT case for test no pending ep call
 * 2016-07-11 0.8.6
   * Core
     * **New:** Add a new api `sk_config_getbool`
