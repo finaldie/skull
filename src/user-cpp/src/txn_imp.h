@@ -43,14 +43,14 @@ public:
      *         - ERROR_APINAME
      *         - ERROR_BIO
      */
-    IOStatus serviceCall (const char* serviceName,
-                          const char* apiName,
+    IOStatus serviceCall (const std::string& serviceName,
+                          const std::string& apiName,
                           const google::protobuf::Message& request,
                           int bio_idx,
                           ApiCB cb);
 
-    virtual IOStatus serviceCall (const char* serviceName,
-                          const char* apiName,
+    virtual IOStatus serviceCall (const std::string& serviceName,
+                          const std::string& apiName,
                           const google::protobuf::Message& request,
                           ApiCB cb);
 

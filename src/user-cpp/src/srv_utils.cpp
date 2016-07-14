@@ -7,10 +7,10 @@ namespace skullcpp {
 
 using namespace google::protobuf;
 
-ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const char* apiName) {
+ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const std::string& apiName) {
     this->svc_      = svc;
     this->svcName_  = std::string(skull_service_name(svc));
-    this->apiName_  = std::string(apiName);
+    this->apiName_  = apiName;
     this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
     this->msg_      = NULL;
     this->cb_       = NULL;
@@ -49,11 +49,12 @@ ServiceApiReqData::ServiceApiReqData(const ServiceApiReqRawData* rawData) {
 #endif
 }
 
-ServiceApiReqData::ServiceApiReqData(const char* svcName, const char* apiName,
+ServiceApiReqData::ServiceApiReqData(const std::string& svcName,
+                    const std::string& apiName,
                     const google::protobuf::Message& msg, Txn::ApiCB cb) {
     this->svc_      = NULL;
-    this->svcName_  = std::string(svcName);
-    this->apiName_  = std::string(apiName);
+    this->svcName_  = svcName;
+    this->apiName_  = apiName;
     this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
     this->msg_      = &(google::protobuf::Message&)msg;
     this->cb_       = cb;
@@ -138,7 +139,7 @@ ServiceApiReqRawData* ServiceApiReqData::serialize(size_t& sz) {
 
 /********************************* Resp Data **********************************/
 ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
-                                       const char* apiName,
+                                       const std::string& apiName,
                                        bool storeBack) {
     this->svc_       = svc;
     this->descName_  = std::string(skull_service_name(svc)) + "-" + apiName + "_resp.proto";
@@ -157,8 +158,8 @@ ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
 #endif
 }
 
-ServiceApiRespData::ServiceApiRespData(const char* svcName,
-                                       const char* apiName,
+ServiceApiRespData::ServiceApiRespData(const std::string& svcName,
+                                       const std::string& apiName,
                                        const void* data, size_t sz) {
     this->svc_       = NULL;
     this->descName_  = std::string(svcName) + "-" + apiName + "_resp.proto";
@@ -176,7 +177,7 @@ ServiceApiRespData::ServiceApiRespData(const char* svcName,
 }
 
 ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
-                                       const char* apiName,
+                                       const std::string& apiName,
                                        const void* data, size_t sz) {
     this->svc_       = svc;
     this->descName_  = std::string(skull_service_name(svc)) + "-" + apiName + "_resp.proto";

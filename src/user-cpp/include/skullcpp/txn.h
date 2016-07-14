@@ -56,8 +56,8 @@ public:
      *         - ERROR_SRVNAME
      *         - ERROR_APINAME
      */
-    virtual IOStatus serviceCall (const char* serviceName,
-                          const char* apiName,
+    virtual IOStatus serviceCall (const std::string& serviceName,
+                          const std::string& apiName,
                           const google::protobuf::Message& request,
                           ApiCB cb) = 0;
 
@@ -78,8 +78,8 @@ public:
      *         - ERROR_APINAME
      *         - ERROR_BIO
      */
-    virtual IOStatus serviceCall (const char* serviceName,
-                          const char* apiName,
+    virtual IOStatus serviceCall (const std::string& serviceName,
+                          const std::string& apiName,
                           const google::protobuf::Message& request,
                           int bio_idx,
                           ApiCB cb) = 0;

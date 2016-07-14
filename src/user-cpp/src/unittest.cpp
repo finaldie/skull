@@ -251,8 +251,8 @@ void _api_validator(const void* req, size_t req_sz,
                     const void* resp, size_t resp_sz, void* ud) {
     // 1. Fill up the response message
     ServiceAPIData* apiData = (ServiceAPIData*)ud;
-    ServiceApiRespData apiResp(apiData->service_.svcName().c_str(),
-                               apiData->apiName_.c_str(),
+    ServiceApiRespData apiResp(apiData->service_.svcName(),
+                               apiData->apiName_,
                                resp, resp_sz);
 
     apiData->uResp_.CopyFrom(apiResp.get());
@@ -265,7 +265,7 @@ void UTService::run(const std::string& apiName,
                     const google::protobuf::Message& req,
                     google::protobuf::Message& resp) {
     // 1. construct a service request
-    ServiceApiReqData apiReq(this->svcName_.c_str(), apiName.c_str(), req, NULL);
+    ServiceApiReqData apiReq(this->svcName_, apiName, req, NULL);
     size_t dataSz = 0;
     ServiceApiReqRawData* rawReqData = apiReq.serialize(dataSz);
 

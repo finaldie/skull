@@ -70,7 +70,7 @@ ServiceApiDataImp::ServiceApiDataImp(skull_service_t* svc,
 
     // Construct api response
     const std::string& apiName = rawData->apiName;
-    this->resp_ = new ServiceApiRespData(svc, apiName.c_str(), apiResp, apiRespSz);
+    this->resp_ = new ServiceApiRespData(svc, apiName, apiResp, apiRespSz);
 }
 
 ServiceApiDataImp::ServiceApiDataImp(const skull_service_t* svc,
@@ -90,7 +90,7 @@ ServiceApiDataImp::ServiceApiDataImp(const skull_service_t* svc,
     // Construct api response
     const std::string& apiName = rawData->apiName;
     this->resp_ = new ServiceApiRespData(
-        (skull_service_t*)svc, apiName.c_str(), apiResp, apiRespSz);
+        (skull_service_t*)svc, apiName, apiResp, apiRespSz);
 }
 
 ServiceApiDataImp::~ServiceApiDataImp() {
