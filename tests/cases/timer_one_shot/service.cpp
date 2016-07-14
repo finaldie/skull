@@ -10,9 +10,15 @@
 #include "config.h"
 
 static
-void _timerjob(skullcpp::Service& service) {
+void _timerjob(skullcpp::Service& service, skullcpp::ServiceApiData& apiData) {
     std::cout << "timer job triggered" << std::endl;
     SKULL_LOG_INFO("svc.test.timerjob", "timer job triggered");
+}
+
+static
+void _timerjob_np(skullcpp::Service& service) {
+    std::cout << "no pending timer job triggered" << std::endl;
+    SKULL_LOG_INFO("svc.test.timerjob_np", "timer job triggered1");
 }
 
 // ====================== Service Init/Release =================================
@@ -23,8 +29,21 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
 
     skullcpp::Config::instance().load(config);
 
-    // Create a timer job
-    service.createJob(1000, 0, skull_BindSvc(_timerjob));
+    // Create a timer job (should be failed)
+    int ret = service.createJob(1000, skull_BindSvcJob(_timerjob));
+    if (!ret) {
+        SKULLCPP_LOG_INFO("init", "service job create successful");
+    } else {
+        SKULLCPP_LOG_ERROR("init", "service job create failed", "should check parameters");
+    }
+
+    // Try again
+    ret = service.createJob(1000, 0, skull_BindSvcJobNP(_timerjob_np));
+    if (!ret) {
+        SKULLCPP_LOG_INFO("init1", "service job create successful1");
+    } else {
+        SKULLCPP_LOG_ERROR("init1", "service job create failed1", "should check parameters");
+    }
 }
 
 static

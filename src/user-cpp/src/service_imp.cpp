@@ -39,9 +39,39 @@ skull_service_t* ServiceImp::getRawService() const {
 ServiceApiDataImp::ServiceApiDataImp() : req_(NULL), resp_(NULL) {}
 
 ServiceApiDataImp::ServiceApiDataImp(ServiceApiReqData* req, ServiceApiRespData* resp)
-    : req_(req), resp_(resp) {}
+    : req_(req), resp_(resp), cleanup(false) {}
 
-ServiceApiDataImp::~ServiceApiDataImp() {}
+ServiceApiDataImp::ServiceApiDataImp(skull_service_t* svc,
+    const void* apiReq, size_t apiReqSz, void* apiResp, size_t apiRespSz)
+    : req_(NULL), resp_(NULL), cleanup(true) {
+    // Construct api request
+    const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)apiReq;
+    this->req_ = new ServiceApiReqData(rawData);
+
+    // Construct api response
+    const std::string& apiName = rawData->apiName;
+    this->resp_ = new ServiceApiRespData(svc, apiName.c_str(), apiResp, apiRespSz);
+}
+
+ServiceApiDataImp::ServiceApiDataImp(const skull_service_t* svc,
+    const void* apiReq, size_t apiReqSz, void* apiResp, size_t apiRespSz)
+    : req_(NULL), resp_(NULL), cleanup(true) {
+    // Construct api request
+    const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)apiReq;
+    this->req_ = new ServiceApiReqData(rawData);
+
+    // Construct api response
+    const std::string& apiName = rawData->apiName;
+    this->resp_ = new ServiceApiRespData(
+        (skull_service_t*)svc, apiName.c_str(), apiResp, apiRespSz);
+}
+
+ServiceApiDataImp::~ServiceApiDataImp() {
+    if (!cleanup) return;
+
+    delete this->req_;
+    delete this->resp_;
+}
 
 bool ServiceApiDataImp::valid() const {
     return req_ && resp_;

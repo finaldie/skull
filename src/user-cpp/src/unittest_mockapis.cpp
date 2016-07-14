@@ -50,7 +50,27 @@ EPClient::Status EPClient::send(const Service& svc, const std::string& data,
 }
 
 /***************************** Service Mock APIs ******************************/
-int ServiceImp::createJob(uint32_t delayed, int bioIdx, Job job) const {
+int ServiceImp::createJob(uint32_t delayed, Job job) const {
+    return 0;
+}
+
+int ServiceImp::createJob(Job job) const {
+    return 0;
+}
+
+int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNP job) const {
+    return 0;
+}
+
+int ServiceImp::createJob(uint32_t delayed, JobNP job) const {
+    return 0;
+}
+
+int ServiceImp::createJob(int bioIdx, JobNP job) const {
+    return 0;
+}
+
+int ServiceImp::createJob(JobNP job) const {
     return 0;
 }
 

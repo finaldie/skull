@@ -22,7 +22,9 @@ verify:
     - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep "timer job triggered"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "service job create failed"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "service job create successful1"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "timer job triggered1"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'
 
 post-verify:

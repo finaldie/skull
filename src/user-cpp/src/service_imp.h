@@ -17,7 +17,13 @@ public:
     virtual ~ServiceImp();
 
 public:
-    int createJob(uint32_t delayed, int bioIdx, Job job) const;
+    int createJob(Job job) const;
+    int createJob(uint32_t delayed, Job job) const;
+
+    int createJob(uint32_t delayed, int bioIdx, JobNP job) const;
+    int createJob(uint32_t delayed, JobNP job) const;
+    int createJob(int bioIdx, JobNP job) const;
+    int createJob(JobNP job) const;
 
 public:
     void set(ServiceData* data);
@@ -34,10 +40,23 @@ class ServiceApiDataImp : public ServiceApiData {
 private:
     ServiceApiReqData*  req_;
     ServiceApiRespData* resp_;
+    bool cleanup;
+
+    // padding fields
+    bool  __padding;
+    short __padding1;
+
+#if __WORDSIZE == 64
+    int   __padding2;
+#endif
 
 public:
     ServiceApiDataImp();
     ServiceApiDataImp(ServiceApiReqData*, ServiceApiRespData*);
+    ServiceApiDataImp(skull_service_t*, const void* apiReq, size_t apiReqSz,
+                      void* apiResp, size_t apiRespSz);
+    ServiceApiDataImp(const skull_service_t*, const void* apiReq, size_t apiReqSz,
+                      void* apiResp, size_t apiRespSz);
     virtual ~ServiceApiDataImp();
 
 public:

@@ -148,7 +148,7 @@ int sk_service_run_iocall_cb(sk_service_t* service,
 // APIs for user
 //  Data APIs (Experimental)
 void* sk_service_data(sk_service_t*);
-const void* sk_service_data_const(sk_service_t*);
+const void* sk_service_data_const(const sk_service_t*);
 void sk_service_data_set(sk_service_t*, const void* data);
 
 //  Invoke Service IO call

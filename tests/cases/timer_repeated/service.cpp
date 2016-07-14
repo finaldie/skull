@@ -16,7 +16,7 @@ void _timerjob(skullcpp::Service& service, int times) {
 
     if (times < 5) {
         // Create a timer job again
-        service.createJob(100, 1, skull_BindSvc(_timerjob, times + 1));
+        service.createJob(100, 1, skull_BindSvcJobNP(_timerjob, times + 1));
     }
 }
 
@@ -28,7 +28,8 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
     skullcpp::Config::instance().load(config);
 
     // Create a timer job
-    service.createJob(100, 1, skull_BindSvc(_timerjob, 1));
+    int ret = service.createJob(100, 1, skull_BindSvcJobNP(_timerjob, 1));
+    SKULLCPP_LOG_INFO("init", "create service job, ret: " << ret);
 }
 
 static

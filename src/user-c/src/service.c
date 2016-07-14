@@ -64,7 +64,7 @@ void* skull_service_data (skull_service_t* service)
     return sk_service_data(sk_srv);
 }
 
-const void* skull_service_data_const (skull_service_t* service)
+const void* skull_service_data_const (const skull_service_t* service)
 {
     sk_service_t* sk_srv = service->service;
     SK_ASSERT(sk_srv);
@@ -186,11 +186,6 @@ int skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
                                 skull_job_np_t job, void* ud,
                                 skull_job_udfree_t udfree, int bidx)
 {
-    if (!service->task || !service->txn) {
-        sk_print("Error: skull service: a pending service job only can be created in a service api\n");
-        return 1;
-    }
-
     sk_service_t* sk_svc = service->service;
 
     timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
@@ -247,7 +242,7 @@ void* skull_service_apidata(skull_service_t* svc, int type, size_t* sz)
     }
 }
 
-const char* skull_service_name(skull_service_t* service)
+const char* skull_service_name(const skull_service_t* service)
 {
     sk_service_t* svc = service->service;
     return sk_service_name(svc);

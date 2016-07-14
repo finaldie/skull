@@ -47,7 +47,7 @@ public:
 class EPClientRetImp : public EPClientRet {
 private:
     EPClientNPRetImp  basic_;
-    ServiceApiDataImp apiData_;
+    ServiceApiDataImp* apiData_;
 
 public:
     EPClientRetImp(skull_ep_ret_t ret, const void* response,

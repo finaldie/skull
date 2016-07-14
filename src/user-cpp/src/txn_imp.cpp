@@ -148,6 +148,13 @@ Txn::IOStatus TxnImp::serviceCall (const char* serviceName,
     }
 }
 
+Txn::IOStatus TxnImp::serviceCall (const char* serviceName,
+                                const char* apiName,
+                                const google::protobuf::Message& request,
+                                ApiCB cb) {
+    return serviceCall(serviceName, apiName, request, 0, cb);
+}
+
 skull_txn_t* TxnImp::txn() {
     return this->txn_;
 }

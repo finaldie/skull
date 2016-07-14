@@ -30,22 +30,22 @@ void _ep_cb(const skullcpp::Service& service, skullcpp::EPClientRet& ret)
                    ret.status(), ret.responseSize(), ret.latency());
 
     std::string epResp((const char*)ret.response(), ret.responseSize());
-    SKULLCPP_LOG_INFO("svc.test.ep_cb-1", "ep response: " << epResp);
+    SKULL_LOG_INFO("svc.test.ep_cb-1", "ep response: %s", epResp.c_str());
 }
 
 static
 void _ep_nopending_cb(const skullcpp::Service& service, skullcpp::EPClientNPRet& ret)
 {
-    std::cout << "in _ep_np_cb data len: " << ret.responseSize() << std::endl;
-    SKULL_LOG_INFO("svc.test.ep_np_cb", "status: %d, responseSize: %zu, latency: %d",
+    std::cout << "in _ep_cb data len: " << ret.responseSize() << std::endl;
+    SKULL_LOG_INFO("svc.test.ep_cb", "status: %d, responseSize: %zu, latency: %d",
                    ret.status(), ret.responseSize(), ret.latency());
 
     std::string epResp((const char*)ret.response(), ret.responseSize());
-    SKULLCPP_LOG_INFO("svc.test.ep_np_cb-1", "ep response: " << epResp);
+    SKULL_LOG_INFO("svc.test.ep_cb-1", "ep response: %s", epResp.c_str());
 }
 
 static
-void _timerjob(skullcpp::Service& service, skullcpp::ServiceApiData& apiData) {
+void _timerjob(skullcpp::Service& service) {
     std::cout << "timer job triggered" << std::endl;
     SKULL_LOG_INFO("svc.test.timerjob", "timer job triggered");
 
@@ -56,10 +56,16 @@ void _timerjob(skullcpp::Service& service, skullcpp::ServiceApiData& apiData) {
     epClient.setTimeout(50);
     epClient.setUnpack(skull_BindEpUnpack(_ep_unpack));
 
-    // Call a pending ep call, it would successfully
-    int st = epClient.send(service, "hello ep", skull_BindEpCb(_ep_cb));
+    // Call a pending ep call, it would failed
+    skullcpp::EPClient::Status st =
+        epClient.send(service, "hello ep", skull_BindEpCb(_ep_cb));
     std::cout << "ep status: " << st << std::endl;
-    SKULLCPP_LOG_INFO("svc.test-get-3", "ep status: " << st);
+    SKULL_LOG_INFO("svc.test-get-2", "ep status: %d", st);
+
+    // Call a nopending ep call, it would successfully
+    st = epClient.send(service, "hello ep", skull_BindEpNPCb(_ep_nopending_cb));
+    std::cout << "ep status 2nd: " << st << std::endl;
+    SKULL_LOG_INFO("svc.test-get-3", "ep status 2nd: %d", st);
 }
 
 // ====================== Service Init/Release =================================
@@ -68,6 +74,10 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
 {
     printf("skull service init\n");
     skullcpp::Config::instance().load(config);
+
+    // Create a timer job (no pending)
+    int ret = service.createJob(1000, 0, skull_BindSvcJobNP(_timerjob));
+    SKULLCPP_LOG_INFO("init", "create service job, ret: " << ret);
 }
 
 static
@@ -90,10 +100,6 @@ void skull_service_getdata(const skullcpp::Service& service,
 
     std::cout << "api req: " << apiReq.name() << std::endl;
     apiResp.set_response("Hi new bie");
-
-    // Create a timer job (pending)
-    int ret = service.createJob(1000, skull_BindSvcJob(_timerjob));
-    SKULLCPP_LOG_INFO("init", "create service job, ret: " << ret);
 }
 
 // ====================== Register Service =====================================

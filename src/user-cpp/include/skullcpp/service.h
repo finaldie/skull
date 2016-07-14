@@ -14,6 +14,7 @@
 
 namespace skullcpp {
 
+class ServiceApiData;
 class ServiceData;
 
 class Service {
@@ -25,7 +26,8 @@ private:
     Service& operator=(Service&& svc) = delete;
 
 public:
-    typedef std::function<void (Service&)> Job;
+    typedef std::function<void (Service&, ServiceApiData&)> Job;
+    typedef std::function<void (Service&)> JobNP;
 
 public:
     Service() {};
@@ -33,7 +35,26 @@ public:
 
 public:
     /**
-     * Create a service job
+     * Create a pending service job, which will be triggered ASAP
+     *
+     * @param job      Job callback function
+     *
+     * @return 0 on success, 1 on failure
+     */
+    virtual int createJob(Job) const = 0;
+
+    /**
+     * Create a pending service job
+     *
+     * @param delayed  unit milliseconds
+     * @param job      Job callback function
+     *
+     * @return 0 on success, 1 on failure
+     */
+    virtual int createJob(uint32_t delayed, Job) const = 0;
+
+    /**
+     * Create a no pending service job
      *
      * @param delayed  unit milliseconds
      * @param bio_idx  background io idx
@@ -44,10 +65,48 @@ public:
      *
      * @return 0 on success, 1 on failure
      */
-    virtual int createJob(uint32_t delayed, int bioIdx, Job) const = 0;
+    virtual int createJob(uint32_t delayed, int bioIdx, JobNP) const = 0;
 
-// Use this macro to make a Service::Job easily
-#define skull_BindSvc(f, ...) \
+    /**
+     * Create a no pending service job, which will be triggered ASAP
+     *
+     * @param bio_idx  background io idx
+     *                  - (-1)  : random pick up one
+     *                  - (0)   : do not use bio
+     *                  - (> 0) : use the idx of bio
+     * @param job      Job callback function
+     *
+     * @return 0 on success, 1 on failure
+     */
+    virtual int createJob(int bioIdx, JobNP) const = 0;
+
+    /**
+     * Create a no pending service job
+     *
+     * @param delayed  unit milliseconds
+     * @param job      Job callback function
+     *
+     * @return 0 on success, 1 on failure
+     */
+    virtual int createJob(uint32_t delayed, JobNP) const = 0;
+
+    /**
+     * Create a no pending service job
+     *
+     * @param job      Job callback function
+     *
+     * @return 0 on success, 1 on failure
+     */
+    virtual int createJob(JobNP) const = 0;
+
+// Use these macros to make a Service::Job easily, you still can use lambda
+//  instead of them
+#define skull_BindSvcJob(f, ...) \
+    (skullcpp::Service::Job) \
+    std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
+
+#define skull_BindSvcJobNP(f, ...) \
+    (skullcpp::Service::JobNP) \
     std::bind(f, std::placeholders::_1, ##__VA_ARGS__)
 
 public:
@@ -58,6 +117,13 @@ public:
 };
 
 class ServiceApiData {
+private:
+    // Make noncopyable
+    ServiceApiData(const ServiceApiData&) = delete;
+    ServiceApiData(ServiceApiData&&) = delete;
+    ServiceApiData& operator=(const ServiceApiData&) = delete;
+    ServiceApiData& operator=(ServiceApiData&&) = delete;
+
 public:
     ServiceApiData() {}
     virtual ~ServiceApiData() {}

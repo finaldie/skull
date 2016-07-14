@@ -49,6 +49,11 @@ public:
                           int bio_idx,
                           ApiCB cb);
 
+    virtual IOStatus serviceCall (const char* serviceName,
+                          const char* apiName,
+                          const google::protobuf::Message& request,
+                          ApiCB cb);
+
 public:
     skull_txn_t* txn();
 };
