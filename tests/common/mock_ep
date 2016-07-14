@@ -3,7 +3,7 @@
 function usage()
 {
     echo "usage:"
-    echo "  create_module -n name -i workflow_idx -l language"
+    echo "  mock_ep -p port -d data [-k|--stay] [-i interval]"
 }
 
 function init()
@@ -17,7 +17,7 @@ function parse_and_run()
 {
     # parse the command args
     local args=`getopt -a \
-        -o p:d:kh \
+        -o p:d:ki:h \
         -l port:,data:stay,help \
         -n "mock_ep" -- "$@"`
 
@@ -32,6 +32,7 @@ function parse_and_run()
     local port="7760"
     local data=""
     local stay=false
+    local interval=0
 
     while true; do
         case "$1" in
@@ -46,6 +47,10 @@ function parse_and_run()
             -k|--stay)
                 stay=true
                 shift
+                ;;
+            -i)
+                interval=$2
+                shift 2
                 ;;
             -h|--help)
                 shift
@@ -66,26 +71,31 @@ function parse_and_run()
     done
 
     # Start mock end point
-    run "$port" $stay "$data"
+    run "$port" $stay "$data" "$interval"
 }
 
+# Notes: append '-i 10000' to make sure nc won't response in a short time
 function run()
 {
     local port="$1"
     local stay=$2
     local data="$3"
+    local interval=$4
 
-    local stay_arg=""
+    local extra_arg=""
     if $stay; then
-        # append '-i 10000' to make sure nc won't response in a short time
-        stay_arg="-k -i 10000"
+        extra_arg+="-k "
+    fi
+
+    if [ $interval -gt 0 ]; then
+        extra_arg+="-i $interval "
     fi
 
     local cmd=""
     if [ ! -z "$data" ]; then
-        cmd="echo $data | nc -l $stay_arg 127.0.0.1 $port"
+        cmd="echo $data | nc -l $extra_arg 127.0.0.1 $port"
     else
-        cmd="nc -l $stay_arg 127.0.0.1 $port"
+        cmd="nc -l $extra_arg 127.0.0.1 $port"
     fi
 
     (

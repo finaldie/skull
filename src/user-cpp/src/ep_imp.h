@@ -8,12 +8,12 @@ namespace skullcpp {
 
 class EPClientImpl {
 public:
-    std::string       ip_;
-    EPClient::unpack  unpack_;
-    EPClient::Type    type_;
-    int               timeout_;
-    int               flags_;
-    in_port_t         port_;
+    std::string        ip_;
+    EPClient::UnpackFn unpack_;
+    EPClient::Type     type_;
+    int                timeout_;
+    int                flags_;
+    in_port_t          port_;
 
     uint32_t __padding :16;
 
@@ -26,12 +26,27 @@ public:
     ~EPClientImpl() {}
 };
 
-class EPClientRetImp : public EPClientRet {
+class EPClientNPRetImp : public EPClientNPRet {
 private:
     EPClient::Status  status_;
     int               latency_;
     const void*       response_;
     size_t            responseSize_;
+
+public:
+    EPClientNPRetImp(skull_ep_ret_t ret, const void* response, size_t respSize);
+    virtual ~EPClientNPRetImp();
+
+public:
+    EPClient::Status status() const;
+    int latency() const;
+    const void* response() const;
+    size_t responseSize() const;
+};
+
+class EPClientRetImp : public EPClientRet {
+private:
+    EPClientNPRetImp  basic_;
     ServiceApiDataImp apiData_;
 
 public:

@@ -18,6 +18,7 @@ namespace skullcpp {
 
 class EPClientImpl;
 class EPClientRet;
+class EPClientNPRet;
 
 class EPClient {
 private:
@@ -42,19 +43,26 @@ public:
         TIMEOUT = 2
     } Status;
 
-    // Case 1: Be called from a service api call, then user can get api req and
-    //          resp from 'apiData'
-    // Case 2: Be called from a service job, then the 'ret.apiData' is useless,
-    //          and DO NOT try to use it
-    typedef std::function<void (const Service&, EPClientRet& ret)> epCb;
+    typedef std::function<void (const Service&, EPClientRet& ret)>   EpCb;
+    typedef std::function<void (const Service&, EPClientNPRet& ret)> EpNPCb;
 
-    typedef std::function<size_t (const void* data, size_t len)> unpack;
+    typedef std::function<size_t (const void* data, size_t len)> UnpackFn;
 
-// Use this macro to make a unpack/epCb easily
-#define skull_BindEp(f, ...) \
+// Use these macro to make a unpack/epCb easily. And you still can use *lambda*
+//  instead of these
+#define skull_BindEpUnpack(f, ...) \
+    (skullcpp::EPClient::UnpackFn) \
     std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
 
-// Flags
+#define skull_BindEpCb(f, ...) \
+    (skullcpp::EPClient::EpCb) \
+    std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
+
+#define skull_BindEpNPCb(f, ...) \
+    (skullcpp::EPClient::EpNPCb) \
+    std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
+
+// EP Handler Flags
 #define SKULLCPP_EP_F_CONCURRENT 0x1
 #define SKULLCPP_EP_F_ORPHAN     0x2
 
@@ -74,11 +82,52 @@ public:
 
     // Set value of 'SKULLCPP_EP_F_CONCURRENT' and 'SKULLCPP_EP_F_ORPHAN'
     void setFlags(int flags);
-    void setUnpack(unpack unpackFunc);
+    void setUnpack(UnpackFn unpackFn);
 
 public:
-    Status send(const Service&, const void* data, size_t dataSz, epCb cb);
-    Status send(const Service&, const std::string& data, epCb cb);
+    /**
+     * Invoke a EP call which would pending the service api
+     *
+     * @return
+     *    - OK      Everything is ok
+     *    - ERROR   No input data or calling outside a service api
+     *    - TIMEOUT Timeout occurred
+     *
+     * @note These two apis only can be called from a service api code block,
+     *        otherwise it would return an ERROR status
+     */
+    Status send(const Service&, const void* data, size_t dataSz, EpCb cb);
+    Status send(const Service&, const std::string& data, EpCb cb);
+
+    /**
+     * Invoke a EP call which would *NOT* pending the service api
+     *
+     * @return
+     *    - OK      Everything is ok
+     *    - ERROR   No input data
+     *    - TIMEOUT Timeout occurred
+     */
+    Status send(const Service&, const void* data, size_t dataSz, EpNPCb cb);
+    Status send(const Service&, const std::string& data, EpNPCb cb);
+};
+
+class EPClientNPRet {
+private:
+    // Make noncopyable
+    EPClientNPRet(const EPClientNPRet&) = delete;
+    EPClientNPRet(EPClientNPRet&&) = delete;
+    EPClientNPRet& operator=(const EPClientNPRet&) = delete;
+    EPClientNPRet& operator=(EPClientNPRet&&) = delete;
+
+public:
+    EPClientNPRet() {}
+    virtual ~EPClientNPRet() {}
+
+public:
+    virtual EPClient::Status status() const = 0;
+    virtual int latency() const = 0;
+    virtual const void* response() const = 0;
+    virtual size_t responseSize() const = 0;
 };
 
 class EPClientRet {

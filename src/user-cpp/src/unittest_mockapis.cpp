@@ -26,11 +26,26 @@ void EPClient::setIP(const std::string& ip) {
 void EPClient::setTimeout(int timeout) {
 }
 
-void EPClient::setUnpack(unpack unpackFunc) {
+void EPClient::setUnpack(UnpackFn unpackFunc) {
 }
 
 EPClient::Status EPClient::send(const Service& svc, const void* data,
-                                size_t dataSz, epCb cb) {
+                                size_t dataSz, EpCb cb) {
+    return OK;
+}
+
+EPClient::Status EPClient::send(const Service& svc, const std::string& data,
+                                EpCb cb) {
+    return OK;
+}
+
+EPClient::Status EPClient::send(const Service& svc, const void* data,
+                                size_t dataSz, EpNPCb cb) {
+    return OK;
+}
+
+EPClient::Status EPClient::send(const Service& svc, const std::string& data,
+                                EpNPCb cb) {
     return OK;
 }
 

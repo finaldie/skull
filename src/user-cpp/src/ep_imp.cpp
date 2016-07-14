@@ -4,10 +4,10 @@
 
 namespace skullcpp {
 
-EPClientRetImp::EPClientRetImp(skull_ep_ret_t ret, const void* response,
-    size_t responseSize, ServiceApiDataImp& apiData)
-    : latency_(ret.latency), response_(response), responseSize_(responseSize),
-      apiData_(apiData)
+/****************************** EPClientNPRetImp ******************************/
+EPClientNPRetImp::EPClientNPRetImp(skull_ep_ret_t ret, const void* response,
+    size_t responseSize)
+    : latency_(ret.latency), response_(response), responseSize_(responseSize)
 {
     if (ret.status == SKULL_EP_OK) {
         this->status_ = EPClient::Status::OK;
@@ -18,22 +18,47 @@ EPClientRetImp::EPClientRetImp(skull_ep_ret_t ret, const void* response,
     }
 }
 
-EPClientRetImp::~EPClientRetImp() {}
+EPClientNPRetImp::~EPClientNPRetImp() {}
 
-EPClient::Status EPClientRetImp::status() const {
+EPClient::Status EPClientNPRetImp::status() const {
     return this->status_;
 }
 
-int EPClientRetImp::latency() const {
+int EPClientNPRetImp::latency() const {
     return this->latency_;
 }
 
-const void* EPClientRetImp::response() const {
+const void* EPClientNPRetImp::response() const {
     return this->response_;
 }
 
-size_t EPClientRetImp::responseSize() const {
+size_t EPClientNPRetImp::responseSize() const {
     return this->responseSize_;
+}
+
+/******************************* EPClientRetImp *******************************/
+EPClientRetImp::EPClientRetImp(skull_ep_ret_t ret, const void* response,
+                   size_t responseSize, ServiceApiDataImp& apiData)
+    : basic_(ret, response, responseSize), apiData_(apiData)
+{
+}
+
+EPClientRetImp::~EPClientRetImp() {}
+
+EPClient::Status EPClientRetImp::status() const {
+    return this->basic_.status();
+}
+
+int EPClientRetImp::latency() const {
+    return this->basic_.latency();
+}
+
+const void* EPClientRetImp::response() const {
+    return this->basic_.response();
+}
+
+size_t EPClientRetImp::responseSize() const {
+    return this->basic_.responseSize();
 }
 
 ServiceApiData& EPClientRetImp::apiData() {

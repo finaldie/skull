@@ -14,7 +14,6 @@ static
 void skull_service_init(skullcpp::Service& service, const skull_config_t* config)
 {
     printf("skull service init\n");
-
     skullcpp::Config::instance().load(config);
 }
 
@@ -38,18 +37,17 @@ void _ep_release(void* ud)
 }
 
 static
-void _ep_cb(const skullcpp::Service&, skullcpp::EPClientRet& ret)
+void _ep_cb(const skullcpp::Service&, skullcpp::EPClientNPRet& ret)
 {
-    std::cout << "in _ep_cb data len: " << ret.responseSize() << std::endl;
+    std::cout << "in _ep_cb: status: " << ret.status() << ", data len: " << ret.responseSize() << std::endl;
     SKULL_LOG_INFO("svc.test.ep_cb", "status: %d, responseSize: %zu, latency: %d",
                    ret.status(), ret.responseSize(), ret.latency());
 
-    auto& apiData = ret.apiData();
-    apiData.request().PrintDebugString();
-    auto& apiResp = (skull::service::s1::get_resp&)apiData.response();
-
-    const std::string& rawResponse = apiResp.response();
-    apiResp.set_response(rawResponse + ", " + std::string((const char*)ret.response(), ret.responseSize()));
+    if (ret.status() == skullcpp::EPClient::OK) {
+        SKULLCPP_LOG_INFO("svc.test.ep_cb-1", "ep response: " << std::string((char*)ret.response()));
+    } else {
+        SKULLCPP_LOG_INFO("svc.test.ep_cb-2", "ep timeout or error");
+    }
 }
 
 // ====================== Service APIs Calls ===================================
@@ -71,11 +69,11 @@ void skull_service_getdata(const skullcpp::Service& service,
     epClient.setType(skullcpp::EPClient::TCP);
     epClient.setIP("127.0.0.1");
     epClient.setPort(7760);
-    epClient.setTimeout(50);
+    epClient.setTimeout(3000);
     epClient.setUnpack(skull_BindEpUnpack(_ep_unpack));
 
     skullcpp::EPClient::Status st =
-        epClient.send(service, "hello ep", skull_BindEpCb(_ep_cb));
+        epClient.send(service, "hello ep", skull_BindEpNPCb(_ep_cb));
     std::cout << "ep status: " << st << std::endl;
     SKULL_LOG_INFO("svc.test-get-2", "ep status: %d", st);
 }

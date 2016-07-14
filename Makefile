@@ -3,7 +3,9 @@ prefix ?= /usr/local
 
 MAKE_FLAGS += "--no-print-directory"
 
-all: core api-cpp
+all: api-cpp
+
+api-cpp : core
 
 dep: flibs protos metrics skull-ft jemalloc
 

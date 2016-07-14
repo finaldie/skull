@@ -71,10 +71,10 @@ void skull_service_getdata(const skullcpp::Service& service,
     epClient.setIP("127.0.0.1");
     epClient.setPort(7760);
     epClient.setTimeout(50);
-    epClient.setUnpack(skull_BindEp(_ep_unpack));
+    epClient.setUnpack(skull_BindEpUnpack(_ep_unpack));
 
     skullcpp::EPClient::Status st =
-        epClient.send(service, "hello ep", 9, skull_BindEp(_ep_cb));
+        epClient.send(service, "hello ep", 9, skull_BindEpCb(_ep_cb));
     std::cout << "ep status: " << st << std::endl;
 }
 
