@@ -457,6 +457,16 @@ int skull_service_job_create(skull_service_t*   svc,
     return 0;
 }
 
+int skull_service_job_create_np(skull_service_t*   svc,
+                                uint32_t           delayed,
+                                skull_job_np_t     timer,
+                                void*              ud,
+                                skull_job_udfree_t udfree,
+                                int                bio_idx)
+{
+    return 0;
+}
+
 // Mock API for skull_ep_xxx_send. Return ok directly, since we don't need to mock
 // network, only mock the api response is enough
 skull_ep_status_t

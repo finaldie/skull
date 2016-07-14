@@ -66,11 +66,34 @@ skull_service_async_call (skull_txn_t*,
                           skull_svc_api_cb cb,
                           int bio_idx);
 
-typedef void (*skull_job_t) (skull_service_t*, void* ud);
+typedef void (*skull_job_t) (skull_service_t*, void* ud,
+                             const void* request, size_t req_sz,
+                             const void* response, size_t resp_sz);
+typedef void (*skull_job_np_t) (skull_service_t*, void* ud);
 typedef void (*skull_job_udfree_t) (void* ud);
 
 /**
- * Create a service job
+ * Create a service job which would pending a service api call
+ *
+ * @param delayed  unit milliseconds
+ * @param timer    job callback function
+ * @param ud       user data
+ * @param udfree   the function is used for releasing user data after timer be
+ *                  finished
+ *
+ * @return 0 on success, 1 on failure
+ *
+ * @note When it be called outside a service api call, it returns failure
+ * @note The service job only can be ran on the current thread
+ */
+int skull_service_job_create(skull_service_t*   svc,
+                             uint32_t           delayed,
+                             skull_job_t        timer,
+                             void*              ud,
+                             skull_job_udfree_t udfree);
+
+/**
+ * Create a service job which would NOT pending a service api call
  *
  * @param delayed  unit milliseconds
  * @param timer    job callback function
@@ -84,12 +107,12 @@ typedef void (*skull_job_udfree_t) (void* ud);
  *
  * @return 0 on success, 1 on failure
  */
-int skull_service_job_create(skull_service_t*   svc,
-                             uint32_t           delayed,
-                             skull_job_t        timer,
-                             void*              ud,
-                             skull_job_udfree_t udfree,
-                             int                bio_idx);
+int skull_service_job_create_np(skull_service_t*   svc,
+                                uint32_t           delayed,
+                                skull_job_np_t     timer,
+                                void*              ud,
+                                skull_job_udfree_t udfree,
+                                int                bio_idx);
 
 #ifdef __cplusplus
 }
