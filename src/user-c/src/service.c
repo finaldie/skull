@@ -133,11 +133,11 @@ void _timer_cb (sk_service_t* sk_svc, sk_obj_t* ud, int valid)
 
         // Reduce pending tasks counts
         task_data->pendings--;
-        sk_print("service task pending cnt: %u\n", service->task->pendings);
+        sk_print("service task pending cnt: %u\n", task_data->pendings);
 
         // Try to call api callback
         sk_service_api_complete(sk_svc, service.txn,
-                                service.task, service.task->api_name);
+                                task_data, task_data->api_name);
     } else {
         jobdata->cb_.job_np(&service, jobdata->ud);
     }
