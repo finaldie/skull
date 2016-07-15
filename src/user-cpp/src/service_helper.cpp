@@ -57,7 +57,7 @@ int ServiceImp::createJob(uint32_t delayed, Job job) const {
 }
 
 int ServiceImp::createJob(Job job) const {
-    return createJob(0, job);
+    return createJob((uint32_t)0, job);
 }
 
 int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNP job) const {
