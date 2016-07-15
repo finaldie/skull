@@ -181,9 +181,6 @@ skull_ep_send_np(const skull_service_t* service,
         .cb_.nopending_cb_ = cb
     };
 
-    ep_job_cb.type_ = NOPENDING;
-    ep_job_cb.cb_.nopending_cb_ = cb;
-
     ep_job_t* job = _ep_job_create(service, &handler, ep_job_cb, ud, &sk_handler);
     const sk_entity_t* ett = service->txn ? sk_txn_entity(service->txn) : NULL;
 

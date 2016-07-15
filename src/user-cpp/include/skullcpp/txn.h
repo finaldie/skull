@@ -42,7 +42,7 @@ public:
 
 public:
     virtual google::protobuf::Message& data() = 0;
-    virtual Status status() = 0;
+    virtual Status status() const = 0;
 
     /**
      * Invoke a service async call

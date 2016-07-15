@@ -91,7 +91,7 @@ google::protobuf::Message& TxnImp::data() {
     return *this->msg_;
 }
 
-Txn::Status TxnImp::status() {
+Txn::Status TxnImp::status() const {
     skull_txn_status_t st = skull_txn_status(this->txn_);
 
     if (st == SKULL_TXN_OK) {
@@ -156,7 +156,7 @@ Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
     return serviceCall(serviceName, apiName, request, 0, cb);
 }
 
-skull_txn_t* TxnImp::txn() {
+skull_txn_t* TxnImp::txn() const {
     return this->txn_;
 }
 

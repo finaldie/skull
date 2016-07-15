@@ -96,8 +96,8 @@ public:
      * @note These two apis only can be called from a service api code block,
      *        otherwise it would return an ERROR status
      */
-    Status send(const Service&, const void* data, size_t dataSz, EpCb cb);
-    Status send(const Service&, const std::string& data, EpCb cb);
+    Status send(const Service&, const void* data, size_t dataSz, EpCb cb) const;
+    Status send(const Service&, const std::string& data, EpCb cb) const;
 
     /**
      * Invoke a EP call which would *NOT* pending the service api
@@ -107,8 +107,19 @@ public:
      *    - ERROR   No input data
      *    - TIMEOUT Timeout occurred
      */
-    Status send(const Service&, const void* data, size_t dataSz, EpNPCb cb);
-    Status send(const Service&, const std::string& data, EpNPCb cb);
+    Status send(const Service&, const void* data, size_t dataSz, EpNPCb cb) const;
+    Status send(const Service&, const std::string& data, EpNPCb cb) const;
+
+    /**
+     * Invoke a EP call which would *NOT* pending the service api
+     *
+     * @return
+     *    - OK      Everything is ok
+     *    - ERROR   No input data
+     *    - TIMEOUT Timeout occurred
+     */
+    Status send(const Service&, const void* data, size_t dataSz) const;
+    Status send(const Service&, const std::string& data) const;
 };
 
 class EPClientNPRet {

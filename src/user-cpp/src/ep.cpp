@@ -98,12 +98,12 @@ void rawEpNoPendingCb(const skull_service_t* rawSvc, skull_ep_ret_t rawRet,
 }
 
 EPClient::Status EPClient::send(const Service& svc, const std::string& data,
-                                EpCb cb) {
+                                EpCb cb) const {
     return send(svc, data.c_str(), data.length(), cb);
 }
 
 EPClient::Status EPClient::send(const Service& svc, const void* data,
-                                size_t dataSz, EpCb cb) {
+                                size_t dataSz, EpCb cb) const {
     if (!data || !dataSz) {
         return ERROR;
     }
@@ -143,7 +143,7 @@ EPClient::Status EPClient::send(const Service& svc, const void* data,
 }
 
 EPClient::Status EPClient::send(const Service& svc,
-                                const void* data, size_t dataSz, EpNPCb cb)
+                                const void* data, size_t dataSz, EpNPCb cb) const
 {
     if (!data || !dataSz) {
         return ERROR;
@@ -184,9 +184,18 @@ EPClient::Status EPClient::send(const Service& svc,
 }
 
 EPClient::Status EPClient::send(const Service& svc, const std::string& data,
-                                EpNPCb cb)
+                                EpNPCb cb) const
 {
     return send(svc, data.c_str(), data.length(), cb);
+}
+
+EPClient::Status EPClient::send(const Service& svc,
+                                const void* data, size_t dataSz) const {
+    return send(svc, data, dataSz, (EpNPCb)NULL);
+}
+
+EPClient::Status EPClient::send(const Service& svc, const std::string& data) const {
+    return send(svc, data.c_str(), data.length(), (EpNPCb)NULL);
 }
 
 } // End of namespace

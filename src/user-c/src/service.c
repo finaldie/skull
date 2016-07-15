@@ -149,11 +149,12 @@ int skull_service_job_create(skull_service_t* service, uint32_t delayed,
 {
     if (!service->task || !service->txn) {
         sk_print("Error: skull service: a pending service job only can be created in a service api\n");
+        goto create_job_error;
+    }
 
-        if (udfree) {
-            udfree(ud);
-        }
-        return 1;
+    if (!job) {
+        sk_print("Error: no job specificed, make sure to pass a job function here");
+        goto create_job_error;
     }
 
     sk_service_t* sk_svc = service->service;
@@ -180,12 +181,22 @@ int skull_service_job_create(skull_service_t* service, uint32_t delayed,
     }
 
     return ret;
+
+create_job_error:
+    if (udfree) udfree(ud);
+    return 1;
 }
 
 int skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
                                 skull_job_np_t job, void* ud,
                                 skull_job_udfree_t udfree, int bidx)
 {
+    if (!job) {
+        sk_print("Error: no job specificed, make sure to pass a job into here");
+        if (udfree) udfree(ud);
+        return 1;
+    }
+
     sk_service_t* sk_svc = service->service;
 
     timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
