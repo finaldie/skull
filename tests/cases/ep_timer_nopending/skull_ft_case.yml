@@ -1,4 +1,4 @@
-description: Test a one time timerjob, create a timer job and validate it be triggered correctly (background way)
+description: start a mock endpoint which response a simple string, then send ep call from a timer job
 
 pre-run:
     - echo "pre-run"
@@ -13,6 +13,7 @@ pre-run:
 
 run:
     - echo "run"
+    - '${COMMON}/mock_ep -p 7760 -d welcome'
     - cd project && skull start -D
     - sleep 1
 
@@ -23,9 +24,13 @@ verify:
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "create service job, ret: 0"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep "timer job triggered" | grep "bio-1:service.s1"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "ep status: 1"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "ep status 2nd: 0"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "status: 0, responseSize: 8"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "ep response: welcome"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'
 
 post-verify:
     - echo "post-verify"
     - killall skull-engine || exit 0
+    - killall nc || exit 0

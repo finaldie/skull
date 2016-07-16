@@ -67,9 +67,9 @@ private:
     void deserializeMsg(const void* data, size_t sz);
 
 public:
-    ServiceApiReqData(skull_service_t* svc, const char* apiName);
+    ServiceApiReqData(skull_service_t* svc, const std::string& apiName);
     ServiceApiReqData(const ServiceApiReqRawData* rawData);
-    ServiceApiReqData(const char* svcName, const char* apiName, const google::protobuf::Message& msg,
+    ServiceApiReqData(const std::string& svcName, const std::string& apiName, const google::protobuf::Message& msg,
                       Txn::ApiCB cb);
     ServiceApiReqData(const skullmock_task_t*);
 
@@ -98,10 +98,10 @@ private:
     void deserializeMsg(const void* data, size_t sz);
 
 public:
-    ServiceApiRespData(skull_service_t* svc, const char* apiName, bool storeBack);
-    ServiceApiRespData(const char* svcName, const char* apiName,
+    ServiceApiRespData(skull_service_t* svc, const std::string& apiName, bool storeBack);
+    ServiceApiRespData(const std::string& svcName, const std::string& apiName,
                        const void* data, size_t sz);
-    ServiceApiRespData(skull_service_t* svc, const char* apiName,
+    ServiceApiRespData(skull_service_t* svc, const std::string& apiName,
                        const void* data, size_t sz);
     ~ServiceApiRespData();
 

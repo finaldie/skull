@@ -108,13 +108,13 @@ int _skull_svc_api_callback(skull_txn_t* sk_txn, const char* apiName,
     TxnImp txn(sk_txn);
     const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)request;
     ServiceApiReqData apiReq(rawData);
-    ServiceApiRespData apiResp(rawData->svcName.c_str(), apiName, response, resp_sz);
+    ServiceApiRespData apiResp(rawData->svcName, apiName, response, resp_sz);
 
     return rawData->cb(txn, std::string(apiName), apiReq.get(), apiResp.get());
 }
 
-Txn::IOStatus TxnImp::serviceCall (const char* serviceName,
-                                const char* apiName,
+Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
+                                const std::string& apiName,
                                 const google::protobuf::Message& request,
                                 int bioIdx,
                                 ApiCB cb) {
@@ -125,8 +125,9 @@ Txn::IOStatus TxnImp::serviceCall (const char* serviceName,
 
     // 2. Send service call to core
     skull_service_ret_t ret =
-        skull_service_async_call(this->txn(), serviceName, apiName, rawReqData,
-            dataSz, _skull_svc_api_callback, bioIdx);
+        skull_service_async_call(this->txn(), serviceName.c_str(),
+            apiName.c_str(), rawReqData, dataSz,
+            _skull_svc_api_callback, bioIdx);
 
     if (ret != SKULL_SERVICE_OK) {
         delete rawReqData;
@@ -146,6 +147,13 @@ Txn::IOStatus TxnImp::serviceCall (const char* serviceName,
         assert(0);
         return Txn::IOStatus::OK;
     }
+}
+
+Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
+                                const std::string& apiName,
+                                const google::protobuf::Message& request,
+                                ApiCB cb) {
+    return serviceCall(serviceName, apiName, request, 0, cb);
 }
 
 skull_txn_t* TxnImp::txn() {

@@ -537,7 +537,7 @@ void* sk_service_data(sk_service_t* service)
     return NULL;
 }
 
-const void* sk_service_data_const(sk_service_t* service)
+const void* sk_service_data_const(const sk_service_t* service)
 {
     SK_ASSERT(service);
     return sk_srv_data_get(service->data);

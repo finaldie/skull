@@ -23,7 +23,8 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
     skullcpp::Config::instance().load(config);
 
     // Create a timer job
-    service.createJob(1000, 1, skull_BindSvc(_timerjob));
+    int ret = service.createJob(1000, 1, skull_BindSvcJobNP(_timerjob));
+    SKULLCPP_LOG_INFO("init", "create service job, ret: " << ret);
 }
 
 static

@@ -77,12 +77,7 @@ void rawEpPendingCb(const skull_service_t* rawSvc, skull_ep_ret_t rawRet,
 
     skull_service_t* _svc = (skull_service_t*)rawSvc;
     ServiceImp svc(_svc);
-
-    const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)rawApiReq;
-    const std::string& apiName = rawData->apiName;
-    ServiceApiReqData  apiReq(rawData);
-    ServiceApiRespData apiResp(_svc, apiName.c_str(), rawApiResp, rawApiRespSz);
-    ServiceApiDataImp  apiDataImp(&apiReq, &apiResp);
+    ServiceApiDataImp apiDataImp(rawSvc, rawApiReq, rawApiReqSz, rawApiResp, rawApiRespSz);
     EPClientRetImp ret(rawRet, response, len, apiDataImp);
 
     epData->pendingCb_(svc, ret);

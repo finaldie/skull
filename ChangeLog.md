@@ -1,3 +1,12 @@
+* 2016-07-15 0.8.8
+  * Core
+    * **Enhancement:** C api layer support pending service job creation
+  * User
+    * **Fix:** Make `ServiceApiData` non-copyable
+    * **Enhancement:** Make `Txn` apis robuster and easier to use
+    * **Enhancement:** CPP api layer support pending service job creation
+  * Test
+    * **New:** Add FT case for test pending service job
 * 2016-07-13 0.8.7
   * Core
     * **Enhancement:** C api layer support invoking no pending ep call

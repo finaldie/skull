@@ -123,9 +123,9 @@ ep_job_t* _ep_job_create(const skull_service_t* service,
 
 skull_ep_status_t
 skull_ep_send(const skull_service_t* service,
-                      const skull_ep_handler_t handler,
-                      const void* data, size_t count,
-                      skull_ep_cb_t cb, void* ud)
+              const skull_ep_handler_t handler,
+              const void* data, size_t count,
+              skull_ep_cb_t cb, void* ud)
 {
     sk_print("calling skull_ep_send...\n");
     if (!service->task) {
@@ -168,9 +168,9 @@ skull_ep_send(const skull_service_t* service,
 
 skull_ep_status_t
 skull_ep_send_np(const skull_service_t* service,
-                        const skull_ep_handler_t handler,
-                        const void* data, size_t count,
-                        skull_ep_np_cb_t cb, void* ud)
+                 const skull_ep_handler_t handler,
+                 const void* data, size_t count,
+                 skull_ep_np_cb_t cb, void* ud)
 {
     sk_print("calling skull_ep_send_np...\n");
 

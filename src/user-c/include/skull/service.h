@@ -13,7 +13,7 @@ typedef struct _skull_service_t skull_service_t;
 // ===================== APIs and Data Structures for Service ==================
 void  skull_service_data_set (skull_service_t*, const void* data);
 void* skull_service_data (skull_service_t*);
-const void* skull_service_data_const (skull_service_t*);
+const void* skull_service_data_const (const skull_service_t*);
 
 // api data type definition
 #define SKULL_API_REQ  0
@@ -23,7 +23,7 @@ int skull_service_apidata_set(skull_service_t*, int type,
                                const void* data, size_t sz);
 void* skull_service_apidata(skull_service_t*, int type, size_t* sz);
 
-const char* skull_service_name(skull_service_t*);
+const char* skull_service_name(const skull_service_t*);
 
 // ===================== APIs and Data Structures for Module ===================
 
@@ -66,11 +66,34 @@ skull_service_async_call (skull_txn_t*,
                           skull_svc_api_cb cb,
                           int bio_idx);
 
-typedef void (*skull_job_t) (skull_service_t*, void* ud);
+typedef void (*skull_job_t) (skull_service_t*, void* ud,
+                             const void* api_req, size_t api_req_sz,
+                             void* api_resp, size_t api_resp_sz);
+typedef void (*skull_job_np_t) (skull_service_t*, void* ud);
 typedef void (*skull_job_udfree_t) (void* ud);
 
 /**
- * Create a service job
+ * Create a service job which would pending a service api call
+ *
+ * @param delayed  unit milliseconds
+ * @param timer    job callback function
+ * @param ud       user data
+ * @param udfree   the function is used for releasing user data after timer be
+ *                  finished
+ *
+ * @return 0 on success, 1 on failure
+ *
+ * @note When it be called outside a service api call, it returns failure
+ * @note The service job only can be ran on the current thread
+ */
+int skull_service_job_create(skull_service_t*   svc,
+                             uint32_t           delayed,
+                             skull_job_t        timer,
+                             void*              ud,
+                             skull_job_udfree_t udfree);
+
+/**
+ * Create a service job which would NOT pending a service api call
  *
  * @param delayed  unit milliseconds
  * @param timer    job callback function
@@ -84,12 +107,12 @@ typedef void (*skull_job_udfree_t) (void* ud);
  *
  * @return 0 on success, 1 on failure
  */
-int skull_service_job_create(skull_service_t*   svc,
-                             uint32_t           delayed,
-                             skull_job_t        timer,
-                             void*              ud,
-                             skull_job_udfree_t udfree,
-                             int                bio_idx);
+int skull_service_job_create_np(skull_service_t*   svc,
+                                uint32_t           delayed,
+                                skull_job_np_t     timer,
+                                void*              ud,
+                                skull_job_udfree_t udfree,
+                                int                bio_idx);
 
 #ifdef __cplusplus
 }

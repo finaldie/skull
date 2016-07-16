@@ -64,16 +64,31 @@ void* skull_service_data (skull_service_t* service)
     return sk_service_data(sk_srv);
 }
 
-const void* skull_service_data_const (skull_service_t* service)
+const void* skull_service_data_const (const skull_service_t* service)
 {
     sk_service_t* sk_srv = service->service;
     SK_ASSERT(sk_srv);
     return sk_service_data_const(sk_srv);
 }
 
+typedef enum svc_job_type_t {
+    PENDING   = 0,
+    NOPENDING = 1
+} svc_job_type_t;
+
 typedef struct timer_data_t {
     skull_service_t    svc;
-    skull_job_t        job;
+    svc_job_type_t     type;
+
+#if __WORDSIZE == 64
+    int __padding;
+#endif
+
+    union {
+        skull_job_t    job;
+        skull_job_np_t job_np;
+    } cb_;
+
     skull_job_udfree_t destroyer;
     void* ud;
 } timer_data_t;
@@ -95,30 +110,90 @@ void _timer_cb (sk_service_t* sk_svc, sk_obj_t* ud, int valid)
 {
     sk_print("skull service: timer cb, valid: %d\n", valid);
     timer_data_t* jobdata = sk_obj_get(ud).ud;
+    SK_ASSERT_MSG(valid, "Currently we won't cancel any user timer, it must be something wrong");
 
-    if (valid) {
-        skull_service_t service = jobdata->svc;
-        service.txn     = NULL;
-        service.task    = NULL;
-        service.freezed = 0;
+    if (!valid) {
+        sk_print("Error: skull serivce: timer is not valid, ignore it\n");
+        return;
+    }
 
-        jobdata->job(&service, jobdata->ud);
+    skull_service_t service = jobdata->svc;
+    //service.txn     = NULL;
+    //service.task    = NULL;
+    service.freezed = 0;
+
+    if (jobdata->type == PENDING) {
+        sk_txn_taskdata_t* task_data = service.task;
+        SK_ASSERT(task_data);
+        SK_ASSERT(service.txn);
+
+        jobdata->cb_.job(&service, jobdata->ud,
+                         task_data->request, task_data->request_sz,
+                         task_data->response, task_data->response_sz);
+
+        // Reduce pending tasks counts
+        task_data->pendings--;
+        sk_print("service task pending cnt: %u\n", task_data->pendings);
+
+        // Try to call api callback
+        sk_service_api_complete(sk_svc, service.txn,
+                                task_data, task_data->api_name);
     } else {
-        sk_print("skull serivce: timer is not valid, ignore it\n");
+        jobdata->cb_.job_np(&service, jobdata->ud);
     }
 }
 
 int skull_service_job_create(skull_service_t* service, uint32_t delayed,
-                               skull_job_t job, void* ud,
-                               skull_job_udfree_t udfree, int bidx)
+                             skull_job_t job, void* ud,
+                             skull_job_udfree_t udfree)
 {
+    if (!service->task || !service->txn) {
+        sk_print("Error: skull service: a pending service job only can be created in a service api\n");
+
+        if (udfree) {
+            udfree(ud);
+        }
+        return 1;
+    }
+
     sk_service_t* sk_svc = service->service;
 
     timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->svc       = *service;
-    jobdata->job       = job;
+    jobdata->type      = PENDING;
+    jobdata->cb_.job   = job;
     jobdata->destroyer = udfree;
     jobdata->ud        = ud;
+
+    sk_ud_t      cb_data = {.ud = jobdata};
+    sk_obj_opt_t opt     = {.preset = NULL, .destroy = _timer_data_destroy};
+    sk_obj_t*    param_obj = sk_obj_create(opt, cb_data);
+
+    // Fix the bio index to 0 due to we can not schedule it to other thread,
+    //  or it would leading a contention issue of *task_data* memory
+    int ret = sk_service_job_create(sk_svc, delayed, _timer_cb, param_obj, 0);
+    if (ret) {
+        sk_obj_destroy(param_obj);
+    } else {
+        service->task->pendings++;
+        sk_print("service task pending cnt: %u\n", service->task->pendings);
+    }
+
+    return ret;
+}
+
+int skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
+                                skull_job_np_t job, void* ud,
+                                skull_job_udfree_t udfree, int bidx)
+{
+    sk_service_t* sk_svc = service->service;
+
+    timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
+    jobdata->svc        = *service;
+    jobdata->type       = NOPENDING;
+    jobdata->cb_.job_np = job;
+    jobdata->destroyer  = udfree;
+    jobdata->ud         = ud;
 
     sk_ud_t      cb_data = {.ud = jobdata};
     sk_obj_opt_t opt     = {.preset = NULL, .destroy = _timer_data_destroy};
@@ -144,7 +219,7 @@ int skull_service_apidata_set(skull_service_t* svc, int type,
         taskdata->request    = data;
         taskdata->request_sz = sz;
     } else {
-        taskdata->response   = (void*)data;
+        taskdata->response    = (void*)data;
         taskdata->response_sz = sz;
     }
 
@@ -167,7 +242,7 @@ void* skull_service_apidata(skull_service_t* svc, int type, size_t* sz)
     }
 }
 
-const char* skull_service_name(skull_service_t* service)
+const char* skull_service_name(const skull_service_t* service)
 {
     sk_service_t* svc = service->service;
     return sk_service_name(svc);

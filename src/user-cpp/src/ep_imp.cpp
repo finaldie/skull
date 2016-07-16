@@ -39,7 +39,7 @@ size_t EPClientNPRetImp::responseSize() const {
 /******************************* EPClientRetImp *******************************/
 EPClientRetImp::EPClientRetImp(skull_ep_ret_t ret, const void* response,
                    size_t responseSize, ServiceApiDataImp& apiData)
-    : basic_(ret, response, responseSize), apiData_(apiData)
+    : basic_(ret, response, responseSize), apiData_(&apiData)
 {
 }
 
@@ -62,7 +62,7 @@ size_t EPClientRetImp::responseSize() const {
 }
 
 ServiceApiData& EPClientRetImp::apiData() {
-    return this->apiData_;
+    return *this->apiData_;
 }
 
 } // End of namespace

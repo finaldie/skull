@@ -353,7 +353,7 @@ void* skull_service_data (skull_service_t* service)
     return sk_srv_data_get(fake_service->data);
 }
 
-const void* skull_service_data_const (skull_service_t* service)
+const void* skull_service_data_const (const skull_service_t* service)
 {
     fake_service_t* fake_service = (fake_service_t*)service->service;
     return sk_srv_data_getconst(fake_service->data);
@@ -414,7 +414,7 @@ const char* sk_service_name(const sk_service_t* service)
     return ((fake_service_t*)service)->name;
 }
 
-const char* skull_service_name(skull_service_t* service)
+const char* skull_service_name(const skull_service_t* service)
 {
     fake_service_t* fake_service = (fake_service_t*)service->service;
     return fake_service->name;
@@ -451,8 +451,17 @@ int skull_service_job_create(skull_service_t*   svc,
                              uint32_t           delayed,
                              skull_job_t        timer,
                              void*              ud,
-                             skull_job_udfree_t udfree,
-                             int                bio_idx)
+                             skull_job_udfree_t udfree)
+{
+    return 0;
+}
+
+int skull_service_job_create_np(skull_service_t*   svc,
+                                uint32_t           delayed,
+                                skull_job_np_t     timer,
+                                void*              ud,
+                                skull_job_udfree_t udfree,
+                                int                bio_idx)
 {
     return 0;
 }

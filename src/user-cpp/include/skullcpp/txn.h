@@ -50,6 +50,23 @@ public:
      * @param serivce_name
      * @param apiName
      * @param request       request protobuf message
+     * @param cb            api callback function
+     *
+     * @return - OK
+     *         - ERROR_SRVNAME
+     *         - ERROR_APINAME
+     */
+    virtual IOStatus serviceCall (const std::string& serviceName,
+                          const std::string& apiName,
+                          const google::protobuf::Message& request,
+                          ApiCB cb) = 0;
+
+    /**
+     * Invoke a service async call
+     *
+     * @param serivce_name
+     * @param apiName
+     * @param request       request protobuf message
      * @param bio_idx       background io index
      *                      - (-1)  : random pick up a background io to run
      *                      - (0)   : do not use background io
@@ -61,8 +78,8 @@ public:
      *         - ERROR_APINAME
      *         - ERROR_BIO
      */
-    virtual IOStatus serviceCall (const char* serviceName,
-                          const char* apiName,
+    virtual IOStatus serviceCall (const std::string& serviceName,
+                          const std::string& apiName,
                           const google::protobuf::Message& request,
                           int bio_idx,
                           ApiCB cb) = 0;
