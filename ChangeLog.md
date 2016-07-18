@@ -1,3 +1,6 @@
+* 2016-07-18 0.8.9
+  * User
+    * **Enhancement:** Make apis robuster
 * 2016-07-15 0.8.8
   * Core
     * **Enhancement:** C api layer support pending service job creation

@@ -440,7 +440,9 @@ void _handle_timeout(fdlist_node_t* ep_node, int latency)
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
 
     sk_ep_ret_t ret = {SK_EP_TIMEOUT, latency};
-    ep_data->cb(ret, NULL, 0, ep_data->ud);
+    if (ep_data->cb) {
+        ep_data->cb(ret, NULL, 0, ep_data->ud);
+    }
 
     _ep_node_destroy(ep_node);
 
@@ -459,7 +461,9 @@ void _handle_error(sk_ep_t* ep)
 
         sk_print("handle_error, ep: %p, latency: %d\n", (void*)ep, latency);
         sk_ep_ret_t ret = {SK_EP_ERROR, latency};
-        ep_data->cb(ret, NULL, 0, ep_data->ud);
+        if (ep_data->cb) {
+            ep_data->cb(ret, NULL, 0, ep_data->ud);
+        }
 
         _ep_node_destroy(ep_node);
 
@@ -475,7 +479,9 @@ void _handle_ok(fdlist_node_t* ep_node, const void* data, size_t len)
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
 
     sk_ep_ret_t ret = {SK_EP_OK, (int)sk_ep_time_consumed(ep_data)};
-    ep_data->cb(ret, data, len, ep_data->ud);
+    if (ep_data->cb) {
+        ep_data->cb(ret, data, len, ep_data->ud);
+    }
 
     _ep_node_destroy(ep_node);
 

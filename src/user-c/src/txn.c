@@ -8,7 +8,7 @@
 #include "skull/txndata.h"
 
 // TXN
-const char* skull_txn_idlname(skull_txn_t* txn)
+const char* skull_txn_idlname(const skull_txn_t* txn)
 {
     return txn->idl_name;
 }
@@ -19,13 +19,13 @@ void skull_txn_setdata(skull_txn_t* skull_txn, const void* data)
     sk_txn_setudata(txn, data);
 }
 
-void* skull_txn_data(skull_txn_t* skull_txn)
+void* skull_txn_data(const skull_txn_t* skull_txn)
 {
     sk_txn_t* txn = skull_txn->txn;
     return sk_txn_udata(txn);
 }
 
-skull_txn_status_t skull_txn_status(skull_txn_t* skull_txn)
+skull_txn_status_t skull_txn_status(const skull_txn_t* skull_txn)
 {
     sk_txn_t* txn = skull_txn->txn;
     sk_txn_state_t st = sk_txn_state(txn);
@@ -39,7 +39,7 @@ skull_txn_status_t skull_txn_status(skull_txn_t* skull_txn)
 }
 
 // TXNDATA
-const void* skull_txndata_input(skull_txndata_t* txndata, size_t* buffer_size)
+const void* skull_txndata_input(const skull_txndata_t* txndata, size_t* buffer_size)
 {
     return sk_txn_input(txndata->txn, buffer_size);
 }

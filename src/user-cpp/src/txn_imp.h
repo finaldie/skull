@@ -24,7 +24,7 @@ public:
     virtual ~TxnImp();
 
     google::protobuf::Message& data();
-    Status status();
+    Status status() const;
 
     /**
      * Invoke a service async call
@@ -55,7 +55,7 @@ public:
                           ApiCB cb);
 
 public:
-    skull_txn_t* txn();
+    skull_txn_t* txn() const;
 };
 
 }
