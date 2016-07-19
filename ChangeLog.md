@@ -1,4 +1,4 @@
-* 2016-07-20
+* 2016-07-20 0.8.10
   * Core
     * **Enhancement:** Make skull easier to be built on other Linux releases
     * **Enhancement:** Upgrade `flibs` and `skull-ft` to latest version
