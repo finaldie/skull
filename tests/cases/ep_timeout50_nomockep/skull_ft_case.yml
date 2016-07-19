@@ -14,7 +14,6 @@ pre-run:
 run:
     - echo "run"
     - cd project && skull start -D
-    - ps axuf
     - sleep 1
 
 verify:

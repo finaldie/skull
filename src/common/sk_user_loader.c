@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <dlfcn.h>
 
@@ -14,7 +15,6 @@ typedef struct sk_user_api_t {
 } sk_user_api_t;
 
 static fhash* user_libs = NULL;
-
 
 int sk_userlib_load(const char* filename)
 {
@@ -39,13 +39,13 @@ int sk_userlib_load(const char* filename)
 
     void* handler = dlopen(fullname, RTLD_NOW);
     if (!handler) {
-        sk_print("error: cannot open %s: %s\n", fullname, dlerror());
+        fprintf(stdout, "Notice: cannot open %s: %s\n", fullname, dlerror());
 
         memset(fullname, 0, SK_USER_LIBNAME_MAX);
         snprintf(fullname, SK_USER_LIBNAME_MAX, "%s/%s", SK_USER_PREFIX2, filename);
         handler = dlopen(fullname, RTLD_NOW);
         if (!handler) {
-            sk_print("error: cannot open %s: %s\n", fullname, dlerror());
+            fprintf(stderr, "Error: cannot open %s: %s\n", fullname, dlerror());
             return 1;
         }
     }
@@ -56,7 +56,7 @@ int sk_userlib_load(const char* filename)
     // 2. Find api loader
     *(void**)(&user_api->load) = dlsym(handler, SK_API_LOAD_FUNCNAME);
     if ((error = dlerror()) != NULL) {
-        sk_print("Error: cannot setup user 'load' api %s:%s, reason: %s\n",
+        fprintf(stderr, "Error: cannot setup user 'load' api %s:%s, reason: %s\n",
                  filename, SK_API_LOAD_FUNCNAME, error);
         return 1;
     }
@@ -64,7 +64,7 @@ int sk_userlib_load(const char* filename)
     // 3. Find api unloader
     *(void**)(&user_api->unload) = dlsym(handler, SK_API_UNLOAD_FUNCNAME);
     if ((error = dlerror()) != NULL) {
-        sk_print("Error: cannot setup user 'unload' api %s:%s, reason: %s\n",
+        fprintf(stderr, "Error: cannot setup user 'unload' api %s:%s, reason: %s\n",
                  filename, SK_API_UNLOAD_FUNCNAME, error);
         return 1;
     }

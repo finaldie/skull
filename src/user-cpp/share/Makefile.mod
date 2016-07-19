@@ -1,7 +1,7 @@
 # Include the basic Makefile template
 include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.cpp.inc
 
-INC = \
+INC += \
     -Isrc \
     -I../../common/cpp/src
 

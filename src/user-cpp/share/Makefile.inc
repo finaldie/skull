@@ -2,10 +2,11 @@
 
 debug ?= false
 CXX ?= g++
+strict ?= true
 
 # Compiling flags
 STD = -std=c++0x
-WARN = -Wall -Werror
+WARN = -Wall
 BASIC = -fPIC
 EXTRA = -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal
 EXTRA += -Wdisabled-optimization
@@ -32,6 +33,12 @@ OPT = -O0
 #EXTRA += -fsanitize=address
 endif
 
+ifeq ($(strict),true)
+WARN += -Werror
+endif
+
+INC +=
+
 # Linking flags
 DEPS_LDFLAGS += -rdynamic
 
@@ -42,10 +49,10 @@ DEPS_LDFLAGS += \
     -Wl,-rpath,/usr/local/lib
 
 # Skull cc and ld
-SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(BASIC) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
+SKULL_CFLAGS = $(CFLAGS) $(CXXFLAGS) $(STD) $(WARN) $(BASIC) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_CC = $(CXX) $(SKULL_CFLAGS)
 
-SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(BASIC) $(MACRO) $(OPT) $(OTHER) $(INC)
+SKULL_TP_CFLAGS = $(CFLAGS) $(CXXFLAGS) $(STD) $(WARN) $(BASIC) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_TP_CC = $(CXX) $(SKULL_TP_CFLAGS)
 
 SKULL_LDFLAGS = $(LDFLAGS) $(SHARED) $(OPT) $(OTHER) $(DEPS_LDFLAGS)

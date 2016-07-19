@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 #include "api/sk_utils.h"
@@ -89,7 +90,7 @@ sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
 
     int ret = loader->load_config(module, conf_name, loader->ud);
     if (ret) {
-        sk_print("module config %s load failed\n", conf_name);
+        fprintf(stderr, "module config %s load failed\n", conf_name);
         return NULL;
     }
 

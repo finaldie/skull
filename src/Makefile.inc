@@ -1,14 +1,15 @@
 debug ?= false
+strict ?= true
 
 # compiling flags
 STD = -std=c99
 WARN = -Wall
-EXTRA = -pedantic -Wpadded -Werror -Wextra -Wno-unused-parameter
+EXTRA = -pedantic -Wpadded -Wextra -Wno-unused-parameter
 EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
 EXTRA += -Wconversion -fno-omit-frame-pointer
 OTHER = -pipe -g -ggdb3 -fPIC
 SHARED = -shared
-LDFLAGS += -rdynamic -Wl,-E
+
 MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE
 INC = \
     -I. \
@@ -24,8 +25,12 @@ EXTRA += -fstack-protector-all
 MACRO += -DSK_DEBUG -O0 -finstrument-functions
 endif
 
+ifeq ($(strict),true)
+WARN += -Werror
+endif
+
 # linking flags
-DEPS_LDFLAGS = -L../deps/flibs/lib
+DEPS_LDFLAGS = -L../deps/flibs/lib -rdynamic -Wl,-E
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
@@ -38,8 +43,8 @@ SKULL_LD = $(CC) $(SKULL_LDFLAGS)
 SKULL_UTLD = $(CC) $(SKULL_UTLDFLAGS)
 
 # CXX and LD
-SKULL_CXX = $(CXX) $(SKULL_CFLAGS)
-SKULL_TP_CXX = $(CXX) $(SKULL_TP_CFLAGS)
+SKULL_CXX = $(CXX) $(CXXFLAGS) $(SKULL_CFLAGS)
+SKULL_TP_CXX = $(CXX) $(CXXFLAGS) $(SKULL_TP_CFLAGS)
 SKULL_CXX_LD = $(CXX) $(SKULL_LDFLAGS)
 SKULL_CXX_UTLD = $(CXX) $(SKULL_UTLDFLAGS)
 

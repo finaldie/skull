@@ -54,7 +54,6 @@ typedef struct sk_proto_t {
 #include "pto/idls/service_timer.pb-c.h"
 
 #pragma GCC diagnostic pop
-#endif
 
 // Protocol IDs
 #define SK_PTO_NET_ACCEPT               0
@@ -87,4 +86,5 @@ extern sk_proto_opt_t sk_pto_srv_task_cb;
 // global protocol table
 extern sk_proto_t sk_pto_tbl[];
 
+#endif
 
