@@ -12,8 +12,6 @@ metrics:
 	mv scripts/config/sk_metrics.c src/common
 
 skull-ft:
-	$(MAKE) $(MAKE_FLAGS) -C ./deps/skull-ft || exit "$$?"
-	$(MAKE) $(MAKE_FLAGS) -C ./deps/skull-ft clean || exit "$$?"
 
 jemalloc: deps/jemalloc/Makefile
 	cd deps/jemalloc && $(MAKE) $(MAKE_FLAGS)
