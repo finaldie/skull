@@ -71,9 +71,10 @@ make install
 **Notes:**
  * `make install` may need `sudo` access
  * If you do not want to enable `jemalloc`, use `make -j4 disable_jemalloc=true` to build it
+ * For some _Linux_ Releases, you might need to use `CFLAGS`, `CXXFLAGS`, `LDFLAGS` to finish the build
 
 ## A Quick Demo
-After you installed skull into your system, you can run the following steps to
+After you installed _Skull_ into your system, you can run the following steps to
 create your skull project.
 
 ### Create a skull project

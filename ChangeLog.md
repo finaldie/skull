@@ -1,3 +1,9 @@
+* 2016-07-20
+  * Core
+    * **Enhancement:** Make skull easier to be built on other Linux releases
+    * **Enhancement:** Upgrade `flibs` and `skull-ft` to latest version
+  * User
+    * **Enhancement:** Get more information from EPClientRet
 * 2016-07-18 0.8.9
   * User
     * **Enhancement:** Make apis robuster
