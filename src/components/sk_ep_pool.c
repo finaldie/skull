@@ -830,7 +830,7 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
     }
 
     char ipkey[SK_EP_KEY_MAX];
-    snprintf(ipkey, SK_EP_KEY_MAX, "%s.%d", handler->ip, handler->port);
+    snprintf(ipkey, SK_EP_KEY_MAX, "%s:%d", handler->ip, handler->port);
     ep_list = fhash_str_get(ipm, ipkey);
     if (!ep_list) {
         ep_list = flist_create();
