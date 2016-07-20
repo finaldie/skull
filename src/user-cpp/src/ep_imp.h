@@ -28,14 +28,23 @@ public:
 
 class EPClientNPRetImp : public EPClientNPRet {
 private:
-    EPClient::Status  status_;
-    int               latency_;
-    const void*       response_;
-    size_t            responseSize_;
+    EPClient::Status status_;
+    int              latency_;
+    const void*      response_;
+    size_t           responseSize_;
+    EPClientImpl     clientImp_;
 
 public:
-    EPClientNPRetImp(skull_ep_ret_t ret, const void* response, size_t respSize);
+    EPClientNPRetImp(const EPClientImpl&, skull_ep_ret_t ret,
+                     const void* response, size_t respSize);
     virtual ~EPClientNPRetImp();
+
+public:
+    EPClient::Type type() const;
+    in_port_t port() const;
+    const std::string& ip() const;
+    int timeout() const; // unit: millisecond
+    int flags() const;
 
 public:
     EPClient::Status status() const;
@@ -50,9 +59,17 @@ private:
     ServiceApiDataImp* apiData_;
 
 public:
-    EPClientRetImp(skull_ep_ret_t ret, const void* response,
-                   size_t responseSize, ServiceApiDataImp& apiData);
+    EPClientRetImp(const EPClientImpl&, skull_ep_ret_t ret,
+                   const void* response, size_t responseSize,
+                   ServiceApiDataImp& apiData);
     virtual ~EPClientRetImp();
+
+public:
+    EPClient::Type type() const;
+    in_port_t port() const;
+    const std::string& ip() const;
+    int timeout() const; // unit: millisecond
+    int flags() const;
 
 public:
     EPClient::Status status() const;

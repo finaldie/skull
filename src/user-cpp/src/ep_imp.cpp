@@ -5,9 +5,11 @@
 namespace skullcpp {
 
 /****************************** EPClientNPRetImp ******************************/
-EPClientNPRetImp::EPClientNPRetImp(skull_ep_ret_t ret, const void* response,
+EPClientNPRetImp::EPClientNPRetImp(const EPClientImpl& clientImp,
+    skull_ep_ret_t ret, const void* response,
     size_t responseSize)
-    : latency_(ret.latency), response_(response), responseSize_(responseSize)
+    : latency_(ret.latency), response_(response), responseSize_(responseSize),
+      clientImp_(clientImp)
 {
     if (ret.status == SKULL_EP_OK) {
         this->status_ = EPClient::Status::OK;
@@ -19,6 +21,26 @@ EPClientNPRetImp::EPClientNPRetImp(skull_ep_ret_t ret, const void* response,
 }
 
 EPClientNPRetImp::~EPClientNPRetImp() {}
+
+EPClient::Type EPClientNPRetImp::type() const {
+    return clientImp_.type_;
+}
+
+in_port_t EPClientNPRetImp::port() const {
+    return clientImp_.port_;
+}
+
+const std::string& EPClientNPRetImp::ip() const {
+    return clientImp_.ip_;
+}
+
+int EPClientNPRetImp::timeout() const {
+    return clientImp_.timeout_;
+}
+
+int EPClientNPRetImp::flags() const {
+    return clientImp_.flags_;
+}
 
 EPClient::Status EPClientNPRetImp::status() const {
     return this->status_;
@@ -37,13 +59,34 @@ size_t EPClientNPRetImp::responseSize() const {
 }
 
 /******************************* EPClientRetImp *******************************/
-EPClientRetImp::EPClientRetImp(skull_ep_ret_t ret, const void* response,
-                   size_t responseSize, ServiceApiDataImp& apiData)
-    : basic_(ret, response, responseSize), apiData_(&apiData)
+EPClientRetImp::EPClientRetImp(const EPClientImpl& clientImp,
+    skull_ep_ret_t ret, const void* response,
+    size_t responseSize, ServiceApiDataImp& apiData)
+    : basic_(clientImp, ret, response, responseSize), apiData_(&apiData)
 {
 }
 
 EPClientRetImp::~EPClientRetImp() {}
+
+EPClient::Type EPClientRetImp::type() const {
+    return basic_.type();
+}
+
+in_port_t EPClientRetImp::port() const {
+    return basic_.port();
+}
+
+const std::string& EPClientRetImp::ip() const {
+    return basic_.ip();
+}
+
+int EPClientRetImp::timeout() const {
+    return basic_.timeout();
+}
+
+int EPClientRetImp::flags() const {
+    return basic_.flags();
+}
 
 EPClient::Status EPClientRetImp::status() const {
     return this->basic_.status();

@@ -2,7 +2,7 @@
 include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.cpp.inc
 
 # Include folders
-INC =
+INC +=
 
 # User ldflags and dependency libraries
 DEPS_LDFLAGS +=

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 #include "api/sk_utils.h"
@@ -59,7 +60,7 @@ int sk_service_load(sk_service_t* service, const char* conf_name)
     const char* type = sk_service_type(service);
     sk_service_loader_t* loader = sk_sloader_tbl_get(type);
     if (!loader) {
-        sk_print("cannot find service loader, type: %s\n", type);
+        fprintf(stderr, "cannot find service loader, type: %s\n", type);
         return 1;
     }
 
@@ -72,7 +73,7 @@ int sk_service_load(sk_service_t* service, const char* conf_name)
     sk_service_opt_t service_opt = {NULL, NULL, NULL, NULL, NULL};
     int ret = loader->open(fullname, &service_opt, loader->ud);
     if (ret) {
-        sk_print("load service: %s failed by loader [%s]\n",
+        fprintf(stderr, "load service: %s failed by loader [%s]\n",
                  service_name, type);
         return 1;
     }
@@ -90,7 +91,7 @@ int sk_service_load(sk_service_t* service, const char* conf_name)
 
     ret = loader->load_config(service, conf_name, loader->ud);
     if (ret) {
-        sk_print("service config %s load failed\n", conf_name);
+        fprintf(stderr, "service config %s load failed\n", conf_name);
         return 1;
     }
 

@@ -43,6 +43,12 @@ void _ep_cb(const skullcpp::Service&, skullcpp::EPClientNPRet& ret)
     SKULL_LOG_INFO("svc.test.ep_cb", "status: %d, responseSize: %zu, latency: %d",
                    ret.status(), ret.responseSize(), ret.latency());
 
+    SKULLCPP_LOG_INFO("svc.test.ep_cb1", "ip: " << ret.ip() << ", "
+                      << "port: "    << ret.port()    << ", "
+                      << "timeout: " << ret.timeout() << ", "
+                      << "type: "    << ret.type()    << ", "
+                      << "flags: "   << ret.flags());
+
     if (ret.status() == skullcpp::EPClient::OK) {
         SKULLCPP_LOG_INFO("svc.test.ep_cb-1", "ep response: " << std::string((char*)ret.response()));
     } else {

@@ -26,6 +26,7 @@ verify:
     - 'cat ${RUN}/project/run/log/skull.log | grep "ep status: 0"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "status: 0, responseSize: 8"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "ep response: welcome"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "ip: 127.0.0.1, port: 7760, timeout: 3000, type: 0, flags: 0"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'
 
 post-verify:

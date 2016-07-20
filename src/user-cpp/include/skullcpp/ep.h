@@ -135,6 +135,13 @@ public:
     virtual ~EPClientNPRet() {}
 
 public:
+    virtual EPClient::Type type() const = 0;
+    virtual in_port_t port() const = 0;
+    virtual const std::string& ip() const = 0;
+    virtual int timeout() const = 0; // unit: millisecond
+    virtual int flags() const = 0;
+
+public:
     virtual EPClient::Status status() const = 0;
     virtual int latency() const = 0;
     virtual const void* response() const = 0;
@@ -152,6 +159,13 @@ private:
 public:
     EPClientRet() {}
     virtual ~EPClientRet() {}
+
+public:
+    virtual EPClient::Type type() const = 0;
+    virtual in_port_t port() const = 0;
+    virtual const std::string& ip() const = 0;
+    virtual int timeout() const = 0; // unit: millisecond
+    virtual int flags() const = 0;
 
 public:
     virtual EPClient::Status status() const = 0;

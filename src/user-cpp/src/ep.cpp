@@ -42,18 +42,18 @@ void EPClient::setUnpack(UnpackFn unpackFunc) {
 }
 
 typedef struct EpCbData {
-    EPClient::UnpackFn unpack_;
+    EPClientImpl     clientImp_;
 
-    EPClient::EpCb     pendingCb_;
-    EPClient::EpNPCb   noPendingCb_;
+    EPClient::EpCb   pendingCb_;
+    EPClient::EpNPCb noPendingCb_;
 } EpCbData;
 
 static
 size_t rawUnpackCb(void* ud, const void* data, size_t len) {
     EpCbData* epData = (EpCbData*)ud;
 
-    if (epData->unpack_) {
-        return epData->unpack_(data, len);
+    if (epData->clientImp_.unpack_) {
+        return epData->clientImp_.unpack_(data, len);
     } else {
         return len;
     }
@@ -78,7 +78,7 @@ void rawEpPendingCb(const skull_service_t* rawSvc, skull_ep_ret_t rawRet,
     skull_service_t* _svc = (skull_service_t*)rawSvc;
     ServiceImp svc(_svc);
     ServiceApiDataImp apiDataImp(rawSvc, rawApiReq, rawApiReqSz, rawApiResp, rawApiRespSz);
-    EPClientRetImp ret(rawRet, response, len, apiDataImp);
+    EPClientRetImp ret(epData->clientImp_, rawRet, response, len, apiDataImp);
 
     epData->pendingCb_(svc, ret);
 }
@@ -92,7 +92,7 @@ void rawEpNoPendingCb(const skull_service_t* rawSvc, skull_ep_ret_t rawRet,
     }
 
     ServiceImp svc((skull_service_t*)rawSvc);
-    EPClientNPRetImp ret(rawRet, response, len);
+    EPClientNPRetImp ret(epData->clientImp_, rawRet, response, len);
 
     epData->noPendingCb_(svc, ret);
 }
@@ -129,7 +129,7 @@ EPClient::Status EPClient::send(const Service& svc, const void* data,
     ep_handler.release = rawReleaseCb;
 
     EpCbData* epCbData = new EpCbData;
-    epCbData->unpack_  = this->impl_->unpack_;
+    epCbData->clientImp_ = *this->impl_;
     epCbData->pendingCb_ = cb;
 
     skull_ep_status_t st = skull_ep_send(rawSvc, ep_handler, data, dataSz,
@@ -170,7 +170,7 @@ EPClient::Status EPClient::send(const Service& svc,
     ep_handler.release = rawReleaseCb;
 
     EpCbData* epCbData = new EpCbData;
-    epCbData->unpack_   = this->impl_->unpack_;
+    epCbData->clientImp_   = *this->impl_;
     epCbData->noPendingCb_ = cb;
 
     skull_ep_status_t st = skull_ep_send_np(rawSvc, ep_handler, data, dataSz,
