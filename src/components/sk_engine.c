@@ -134,6 +134,15 @@ void* _sk_engine_thread(void* arg)
         sk_print("start metrics snapshot timer\n");
         _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_SNAPSHOT_TIMER_INTERVAL,
                               _snapshot_timer_triggered);
+    } else {
+#ifdef _GNU_SOURCE
+        // Set the thread name
+        int rc = pthread_setname_np(pthread_self(), thread_env->name);
+        if (rc != 0) {
+            fprintf(stderr, "Error in pthread_setname_np, rc = %d\n", rc);
+            exit(1);
+        }
+#endif
     }
 
     // 4. start scheduler
