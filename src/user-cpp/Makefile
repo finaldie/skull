@@ -43,6 +43,7 @@ SKULL_OBJS = \
     src/srv_executor.o \
     src/srv_loader.o \
     src/srv_utils.o \
+    src/msg_factory.o \
     src/txn_imp.o \
     src/txndata_imp.o \
     src/txn_idldata.o \
@@ -55,6 +56,7 @@ SKULL_UT_OBJS = \
     src/srv_loader.o \
     src/srv_executor.o \
     src/srv_utils.o \
+    src/msg_factory.o \
     src/service_imp.o \
     src/txn_imp.o \
     src/txn_idldata.o \
