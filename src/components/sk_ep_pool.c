@@ -889,8 +889,10 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
 }
 
 // Public APIs
-sk_ep_pool_t* sk_ep_pool_create(void* evlp, sk_timersvc_t* tmsvc, int max)
+sk_ep_pool_t* sk_ep_pool_create(void* evlp, sk_timersvc_t* tmsvc, int max_fds)
 {
+    int max = max_fds > 0 ? max_fds : SK_EP_POOL_MAX;
+
     sk_ep_pool_t* pool = calloc(1, sizeof(*pool));
     pool->tcp   = sk_ep_mgr_create(pool, max);
     pool->udp   = sk_ep_mgr_create(pool, max);

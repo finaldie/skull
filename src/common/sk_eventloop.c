@@ -3,9 +3,10 @@
 #include "flibs/fev.h"
 #include "api/sk_const.h"
 
-void* sk_eventloop_create()
+void* sk_eventloop_create(int max_fds)
 {
-    return fev_create(SK_EVENTLOOP_MAX_EVENTS);
+    int max = max_fds > 0 ? max_fds : SK_EVENTLOOP_MAX_EVENTS;
+    return fev_create(max);
 }
 void sk_eventloop_destroy(void* evlp)
 {

@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include "api/sk_types.h"
 #include "api/sk_utils.h"
@@ -60,14 +62,14 @@ void _sk_setup_engines(sk_core_t* core)
     sk_config_t* config = core->config;
 
     // 1. Create master engine
-    core->master = sk_engine_create(SK_ENGINE_MASTER, 0);
+    core->master = sk_engine_create(SK_ENGINE_MASTER, core->max_fds, 0);
     SK_LOG_INFO(core->logger, "master engine init successfully");
 
     // 2. Create worker engines
     core->workers = calloc((size_t)config->threads, sizeof(sk_engine_t*));
 
     for (int i = 0; i < config->threads; i++) {
-        core->workers[i] = sk_engine_create(SK_ENGINE_WORKER, 0);
+        core->workers[i] = sk_engine_create(SK_ENGINE_WORKER, core->max_fds, 0);
         SK_LOG_INFO(core->logger, "worker engine [%d] init successfully", i);
 
         // create both-way links
@@ -84,7 +86,7 @@ void _sk_setup_engines(sk_core_t* core)
     core->bio = calloc((size_t)config->bio_cnt, sizeof(sk_engine_t*));
 
     for (int i = 0; i < core->config->bio_cnt; i++) {
-        sk_engine_t* bio = sk_engine_create(SK_ENGINE_BIO, SK_SCHED_NON_RR_ROUTABLE);
+        sk_engine_t* bio = sk_engine_create(SK_ENGINE_BIO, core->max_fds, SK_SCHED_NON_RR_ROUTABLE);
         sk_engine_link(bio, core->master);
         sk_engine_link(core->master, bio);
 
@@ -377,6 +379,43 @@ void _sk_init_user_loaders(sk_core_t* core)
     }
 }
 
+static
+void _sk_init_sys(sk_core_t* core)
+{
+    // 1. Set the max open file if needed
+    // 1.1 get the current open file limitation (soft)
+    struct rlimit limit;
+    int ret = getrlimit(RLIMIT_NOFILE, &limit);
+    if (ret) {
+        fprintf(stderr, "Error: getrlimit failed\n");
+        SK_LOG_FATAL(core->logger, "getrlimit failed");
+        exit(1);
+    }
+
+    // 1.2 Set the new limitation if needed
+    int soft_limit = (int)limit.rlim_cur;
+    int conf_max_fds = core->config->max_fds;
+    core->max_fds = conf_max_fds > soft_limit ? conf_max_fds : soft_limit;
+
+    SK_LOG_INFO(core->logger, "current open file limit(soft): %d", soft_limit);
+
+    if (core->max_fds > soft_limit) {
+        struct rlimit new_limit;
+        new_limit.rlim_cur = (rlim_t)core->max_fds;
+        new_limit.rlim_max = (rlim_t)core->max_fds;
+
+        SK_LOG_INFO(core->logger, "set max open file to %d", core->max_fds);
+        if (setrlimit(RLIMIT_NOFILE, &new_limit)) {
+            fprintf(stderr, "Error: set max open file limitation failed: %s",
+                    strerror(errno));
+
+            SK_LOG_FATAL(core->logger,
+                "set max open file limitation failed: %s", strerror(errno));
+            exit(1);
+        }
+    }
+}
+
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
@@ -402,22 +441,25 @@ void sk_core_init(sk_core_t* core)
              "================= skull engine initializing =================");
     sk_print("================= skull engine initializing =================\n");
 
-    // 5. loader user loaders
+    // 5. init system level parameters
+    _sk_init_sys(core);
+
+    // 6. loader user loaders
     _sk_init_user_loaders(core);
 
-    // 6. init global monitor
+    // 7. init global monitor
     _sk_init_moniter(core);
 
-    // 7. init engines
+    // 8. init engines
     _sk_setup_engines(core);
 
-    // 8. init admin
+    // 9. init admin
     _sk_init_admin(core);
 
-    // 9. load services
+    // 10. load services
     _sk_setup_services(core);
 
-    // 10. load workflows and related triggers
+    // 11. load workflows and related triggers
     _sk_setup_workflows(core);
 }
 
