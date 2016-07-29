@@ -64,7 +64,7 @@ google::protobuf::Message& TxnImp::data() {
     const char* idlName = skull_txn_idlname(this->txn_);
     std::string protoFileName = std::string(idlName) + ".proto";
 
-    this->msg_ = MsgFactory::newMsg(protoFileName);
+    this->msg_ = MsgFactory::instance().newMsg(protoFileName);
 
     // 2. Create TxnSharedRawData if needed
     TxnSharedRawData* rawData = (TxnSharedRawData*)skull_txn_data(this->txn_);

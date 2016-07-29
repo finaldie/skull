@@ -16,8 +16,8 @@ private:
     MsgFactory& operator=(MsgFactory&&) = delete;
 
 private:
-    MsgFactory() {}
-    ~MsgFactory() {}
+    MsgFactory();
+    ~MsgFactory();
 
 public:
     static MsgFactory& instance() {
@@ -27,7 +27,7 @@ public:
 
 public:
     // Create a empty message for a specific proto file
-    static google::protobuf::Message* newMsg(const std::string& protoName);
+    google::protobuf::Message* newMsg(const std::string& protoName);
 };
 
 } // End of namespace

@@ -194,7 +194,7 @@ google::protobuf::Message& UTModule::getTxnSharedData() {
 
     const std::string& idlName = this->idlName_;
     std::string protoFileName = idlName + ".proto";
-    this->msg_ = MsgFactory::newMsg(protoFileName);
+    this->msg_ = MsgFactory::instance().newMsg(protoFileName);
 
     TxnSharedRawData* rawData =
         (TxnSharedRawData*)skullut_module_data(this->utModule_);

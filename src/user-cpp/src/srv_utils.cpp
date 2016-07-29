@@ -100,7 +100,7 @@ void ServiceApiReqData::deserializeMsg(const void* data, size_t sz) {
         return;
     }
 
-    this->msg_ = MsgFactory::newMsg(this->descName_);
+    this->msg_ = MsgFactory::instance().newMsg(this->descName_);
 
     if (data && sz) {
         bool r = this->msg_->ParseFromArray(data, (int)sz);
@@ -216,7 +216,7 @@ void ServiceApiRespData::deserializeMsg(const void* data, size_t sz) {
         return;
     }
 
-    this->msg_ = MsgFactory::newMsg(this->descName_);
+    this->msg_ = MsgFactory::instance().newMsg(this->descName_);
 
     if (data && sz) {
         bool r = this->msg_->ParseFromArray(data, (int)sz);
