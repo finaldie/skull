@@ -409,9 +409,11 @@ void _sk_init_sys(sk_core_t* core)
             fprintf(stderr, "Error: set max open file limitation failed: %s",
                     strerror(errno));
 
-            SK_LOG_FATAL(core->logger,
-                "set max open file limitation failed: %s", strerror(errno));
-            exit(1);
+            SK_LOG_WARN(core->logger,
+                "set max open file limitation failed: %s, will use the default value: %d",
+                strerror(errno), soft_limit);
+        } else {
+            core->max_fds = soft_limit;
         }
     }
 }
