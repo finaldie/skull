@@ -32,11 +32,13 @@ global:
         srv_timer_complete:
             desc: How many timers be completed
         ep_create:
-            desc: How many endpoint be created
+            desc: How many endpoints be created
+        ep_destroy:
+            desc: How many endpoints be destroyed
         ep_send:
             desc: How many requests be sent by endpoint
         ep_recv:
-            desc: How many response be received by endpoint
+            desc: How many responses be received by endpoint
         ep_ok:
             desc: How many ep transactions succeed
         ep_timeout:
@@ -78,11 +80,13 @@ worker:
         srv_timer_complete:
             desc: How many timers be completed
         ep_create:
-            desc: How many endpoint be created
+            desc: How many endpoints be created
+        ep_destroy:
+            desc: How many endpoints be destroyed
         ep_send:
             desc: How many requests be sent by endpoint
         ep_recv:
-            desc: How many response be received by endpoint
+            desc: How many responses be received by endpoint
         ep_ok:
             desc: How many ep transactions succeed
         ep_timeout:

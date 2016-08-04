@@ -47,6 +47,11 @@
     sk_metrics_worker.ep_create.inc(1); \
 }
 
+#define SK_METRICS_EP_DESTROY() { \
+    sk_metrics_global.ep_destroy.inc(1); \
+    sk_metrics_worker.ep_destroy.inc(1); \
+}
+
 #define SK_METRICS_EP_SEND() { \
     sk_metrics_global.ep_send.inc(1); \
     sk_metrics_worker.ep_send.inc(1); \
@@ -225,6 +230,8 @@ void _ep_destroy(sk_ep_t* ep)
     }
     fdlist_destroy(ep->txns);
     free(ep);
+
+    SK_METRICS_EP_DESTROY();
 }
 
 static
