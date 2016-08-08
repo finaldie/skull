@@ -86,8 +86,8 @@ void sk_mon_inc(sk_mon_t* sk_mon, const char* name, double value)
         fhash_set(sk_mon->mon_tbl, name, name_len,
                   &new_value, sizeof(new_value));
 
-        sk_print("metrics inc: %s - %f, thread name: %s\n",
-                 name, value, SK_ENV->name);
+        //sk_print("metrics inc: %s - %f, thread name: %s\n",
+        //         name, value, SK_ENV->name);
     }
     pthread_mutex_unlock(&sk_mon->lock);
 }

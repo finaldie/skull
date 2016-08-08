@@ -115,7 +115,7 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
     timer->entity = entity;
     timer->timer  = fev_tmsvc_timer_add(svc->timer_service, expiration,
                                         _timer_triggered, timer);
-    sk_print("fev_timer %p\n", (void*) timer->timer);
+    //sk_print("fev_timer %p\n", (void*) timer->timer);
     timer->trigger = trigger;
     timer->ud      = ud;
     timer->valid   = 1;

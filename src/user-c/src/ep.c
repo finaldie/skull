@@ -116,7 +116,7 @@ ep_job_t* _ep_job_create(const skull_service_t* service,
 
     // TODO: Tricky here, should manually convert the fields one by one
     memcpy(sk_handler, handler, sizeof(*handler));
-    sk_handler->unpack  = _unpack;
+    sk_handler->unpack  = job->handler.unpack ? _unpack : NULL;
     sk_handler->release = _release;
 
     // Hacky here, we force to disable the 'SK_EP_F_CONCURRENT' due to it's a

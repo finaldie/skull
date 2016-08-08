@@ -56,7 +56,7 @@ void _uptime_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 static
 void _timer_data_destroy(sk_ud_t ud)
 {
-    sk_print("metrics timer data destroying...\n");
+    //sk_print("metrics timer data destroying...\n");
     sk_entity_t* timer_entity = ud.ud;
 
     // Clean the entity if it's still no owner

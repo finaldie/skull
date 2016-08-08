@@ -125,7 +125,7 @@ EPClient::Status EPClient::send(const Service& svc, const void* data,
     ep_handler.ip      = this->impl_->ip_.c_str();
     ep_handler.timeout = this->impl_->timeout_;
     ep_handler.flags   = this->impl_->flags_;
-    ep_handler.unpack  = rawUnpackCb;
+    ep_handler.unpack  = this->impl_->unpack_ ? rawUnpackCb : NULL;
     ep_handler.release = rawReleaseCb;
 
     EpCbData* epCbData = new EpCbData;
@@ -166,7 +166,7 @@ EPClient::Status EPClient::send(const Service& svc,
     ep_handler.ip      = this->impl_->ip_.c_str();
     ep_handler.timeout = this->impl_->timeout_;
     ep_handler.flags   = this->impl_->flags_;
-    ep_handler.unpack  = rawUnpackCb;
+    ep_handler.unpack  = this->impl_->unpack_ ? rawUnpackCb : NULL;
     ep_handler.release = rawReleaseCb;
 
     EpCbData* epCbData = new EpCbData;
