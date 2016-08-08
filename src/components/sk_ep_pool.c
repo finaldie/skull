@@ -1031,6 +1031,12 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
         return SK_EP_ERROR;
     }
 
+    if (handler.timeout && !handler.unpack) {
+        sk_print("sk_ep_send: error-> must setup a unpack function if timeout > 0\n");
+        SK_METRICS_EP_ERROR();
+        return SK_EP_ERROR;
+    }
+
     // 2. get ep mgr
     sk_ep_mgr_t* mgr = NULL;
     sk_ep_type_t et = handler.type;

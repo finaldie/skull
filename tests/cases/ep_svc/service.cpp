@@ -77,12 +77,18 @@ void skull_service_getdata(const skullcpp::Service& service,
     epClient.setIP("127.0.0.1");
     epClient.setPort(7760);
     epClient.setTimeout(50);
-    epClient.setUnpack(skull_BindEpUnpack(_ep_unpack));
 
+    // When timeout > 0 and unpack is NULL, it will failed
     skullcpp::EPClient::Status st =
         epClient.send(service, "hello ep", skull_BindEpCb(_ep_cb));
     std::cout << "ep status: " << st << std::endl;
-    SKULL_LOG_INFO("svc.test-get-2", "ep status: %d", st);
+    SKULLCPP_LOG_INFO("svc.test-get-2", "ep status: " << st);
+
+    // Setup unpack and try again
+    epClient.setUnpack(skull_BindEpUnpack(_ep_unpack));
+    st = epClient.send(service, "hello ep", skull_BindEpCb(_ep_cb));
+    std::cout << "ep status1: " << st << std::endl;
+    SKULLCPP_LOG_INFO("svc.test-get-3", "ep status1: " << st);
 }
 
 // ====================== Register Service =====================================
