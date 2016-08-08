@@ -63,8 +63,8 @@ public:
     std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
 
 // EP Handler Flags
-#define SKULLCPP_EP_F_CONCURRENT 0x1
-#define SKULLCPP_EP_F_ORPHAN     0x2
+#define SKULLCPP_EP_F_CONCURRENT 0x1   // (Disabled, No effect)
+#define SKULLCPP_EP_F_ORPHAN     0x2   // Global Shared Endpoint
 
 public:
     EPClient();
@@ -81,6 +81,7 @@ public:
     void setTimeout(int timeout);
 
     // Set value of 'SKULLCPP_EP_F_CONCURRENT' and 'SKULLCPP_EP_F_ORPHAN'
+    // Notes: currently flag 'SKULLCPP_EP_F_CONCURRENT' is be disabled
     void setFlags(int flags);
     void setUnpack(UnpackFn unpackFn);
 

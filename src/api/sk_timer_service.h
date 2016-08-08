@@ -9,6 +9,8 @@ typedef struct sk_timersvc_t sk_timersvc_t;
 typedef struct sk_timer_t sk_timer_t;
 typedef void   (*sk_timer_triggered) (sk_entity_t*, int valid, sk_obj_t* ud);
 
+void sk_timer_reset(sk_timer_t*);
+void sk_timer_resetn(sk_timer_t*, uint32_t expiration);
 int sk_timer_valid(sk_timer_t*);
 void sk_timer_cancel(sk_timer_t*);
 sk_entity_t* sk_timer_entity(sk_timer_t*);

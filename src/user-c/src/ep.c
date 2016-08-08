@@ -118,6 +118,15 @@ ep_job_t* _ep_job_create(const skull_service_t* service,
     memcpy(sk_handler, handler, sizeof(*handler));
     sk_handler->unpack  = _unpack;
     sk_handler->release = _release;
+
+    // Hacky here, we force to disable the 'SK_EP_F_CONCURRENT' due to it's a
+    //  too dangerous flag which will can cause the whole ep pool be blocked,
+    //  So let's just force use the ping-pong mode
+    if (sk_handler->flags & SK_EP_F_CONCURRENT) {
+        sk_handler->flags &= ~SK_EP_F_CONCURRENT;
+        sk_print("force disable ep flag SK_EP_F_CONCURRENT");
+    }
+
     return job;
 }
 

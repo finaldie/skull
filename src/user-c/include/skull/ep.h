@@ -42,6 +42,7 @@ typedef struct skull_ep_handler_t {
     int          timeout;
 
     // Set value of 'SKULL_EP_F_CONCURRENT' and 'SKULL_EP_F_ORPHAN'
+    // Notes: SKULL_EP_F_CONCURRENT flag current is be disabled
     int          flags;
 
     // return 0:   The response data has not finished yet

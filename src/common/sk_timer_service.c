@@ -44,9 +44,8 @@ struct sk_timer_t {
 sk_timersvc_t* sk_timersvc_create(void* evlp)
 {
     sk_timersvc_t* svc = calloc(1, sizeof(*svc));
-    svc->timer_service = fev_create_timer_service(
-                            evlp, TIMER_CHECK_INTERVAL,
-                            FEV_TMSVC_SINGLE_LINKED);
+    svc->timer_service =
+        fev_tmsvc_create(evlp, TIMER_CHECK_INTERVAL, FEV_TMSVC_SINGLE_LINKED);
     svc->timers = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
 
     SK_ASSERT(svc->timer_service);
@@ -72,7 +71,7 @@ void sk_timersvc_destroy(sk_timersvc_t* svc)
     fhash_u64_delete(svc->timers);
 
     // 2. destroy timer service
-    fev_delete_timer_service(svc->timer_service);
+    fev_tmsvc_destroy(svc->timer_service);
     free(svc);
 }
 
@@ -114,7 +113,7 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
     sk_print("tmsvc: create timer %p\n", (void*)timer);
     timer->owner  = svc;
     timer->entity = entity;
-    timer->timer  = fev_tmsvc_add_timer(svc->timer_service, expiration,
+    timer->timer  = fev_tmsvc_timer_add(svc->timer_service, expiration,
                                         _timer_triggered, timer);
     sk_print("fev_timer %p\n", (void*) timer->timer);
     timer->trigger = trigger;
@@ -143,7 +142,7 @@ void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
     SK_ASSERT(svc == timer->owner);
 
     if (!timer->triggered) {
-        fev_tmsvc_del_timer(timer->timer);
+        fev_tmsvc_timer_del(timer->timer);
     }
 
     fhash_u64_del(svc->timers, (uint64_t) (uintptr_t) timer);
@@ -175,4 +174,18 @@ sk_entity_t* sk_timer_entity(sk_timer_t* timer)
 sk_timersvc_t* sk_timer_svc(sk_timer_t* timer)
 {
     return timer->owner;
+}
+
+void sk_timer_reset(sk_timer_t* timer) {
+    if (!timer) return;
+
+    int ret = fev_tmsvc_timer_reset(timer->timer);
+    SK_ASSERT_MSG(!ret, "Reset timer failed\n");
+}
+
+void sk_timer_resetn(sk_timer_t* timer, uint32_t expiration) {
+    if (!timer) return;
+
+    int ret = fev_tmsvc_timer_resetn(timer->timer, expiration);
+    SK_ASSERT_MSG(!ret, "Reset timer failed\n");
 }

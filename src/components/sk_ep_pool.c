@@ -73,12 +73,16 @@ typedef enum sk_ep_nst_t {
     SK_EP_NST_SENT  = 1,
 } sk_ep_nst_t;
 
+struct sk_ep_t;
 typedef struct sk_ep_timerdata_t {
     sk_entity_t*   timer_entity;
-    fdlist_node_t* ep_node;
+
+    union {
+        fdlist_node_t*  ep_node;
+        struct sk_ep_t* ep;
+    } data;
 } sk_ep_timerdata_t;
 
-struct sk_ep_t;
 typedef struct sk_ep_data_t {
     struct sk_ep_t*    owner;
     sk_ep_handler_t    handler;
@@ -108,11 +112,13 @@ typedef struct sk_ep_t {
     char                ipkey[SK_EP_KEY_MAX];
     sk_ep_type_t        type;
     sk_ep_st_t          status;
-    sk_entity_t*        ep;
+    sk_entity_t*        entity;    // network entity
     fdlist*             txns;  // ep txns, type: sk_ep_data_t
 
     int                 ntxn;
     int                 flags;
+
+    sk_timer_t*         shutdown_timer;
 } sk_ep_t;
 
 struct sk_ep_pool_t;
@@ -146,7 +152,14 @@ static
 void _recv_timeout(sk_entity_t* entity, int valid, sk_obj_t* ud);
 
 static
+void _shutdown_ep(sk_entity_t* entity, int valid, sk_obj_t* ud);
+
+static
 void _ep_mgr_del(sk_ep_mgr_t* mgr, sk_ep_t* ep);
+
+static
+sk_timer_t* _ep_create_timer(sk_ep_t* ep, sk_timer_triggered timer_cb,
+                             uint32_t timeout);
 
 static
 int  sk_ep_timeout(sk_ep_data_t* ep_data)
@@ -181,6 +194,19 @@ unsigned long long sk_ep_time_left(sk_ep_data_t* ep_data)
         return 0;
     } else {
         return ep_data->handler.timeout - consumed;
+    }
+}
+
+static
+void _ep_create_shutdown_timer(sk_ep_t* ep, uint32_t expiration) {
+    sk_timer_t* shutdown_timer = ep->shutdown_timer;
+    if (shutdown_timer) {
+        sk_timer_resetn(shutdown_timer, expiration);
+    } else {
+        ep->shutdown_timer =
+            _ep_create_timer(ep, _shutdown_ep, expiration);
+
+        SK_ASSERT(ep->shutdown_timer);
     }
 }
 
@@ -222,6 +248,12 @@ static
 void _ep_destroy(sk_ep_t* ep)
 {
     if (!ep) return;
+
+    // Cancel shutdown timer
+    if (ep->shutdown_timer) {
+        sk_timer_cancel(ep->shutdown_timer);
+        ep->shutdown_timer = NULL;
+    }
 
     // release unfinished user resources
     fdlist_node_t* node = NULL;
@@ -336,7 +368,7 @@ void _ep_mgr_del(sk_ep_mgr_t* mgr, sk_ep_t* ep)
 {
     if (!ep) return;
 
-    sk_entity_mgr_t* emgr = sk_entity_owner(ep->ep);
+    sk_entity_mgr_t* emgr = sk_entity_owner(ep->entity);
 
     SK_ASSERT(emgr);
     SK_ASSERT(ep->owner == mgr);
@@ -352,9 +384,9 @@ void _ep_mgr_del(sk_ep_mgr_t* mgr, sk_ep_t* ep)
 
     // 2.2 Destroy ep entity
     mgr->nep--;
-    sk_entity_mgr_del(emgr, ep->ep);
+    sk_entity_mgr_del(emgr, ep->entity);
     sk_entity_mgr_clean_dead(emgr);
-    ep->ep = NULL;
+    ep->entity = NULL;
 
     // 2.3 Destroy ep
     _ep_destroy(ep);
@@ -376,6 +408,31 @@ void _timer_data_destroy(sk_ud_t ud)
 }
 
 static
+sk_timer_t* _ep_create_timer(sk_ep_t* ep,
+                             sk_timer_triggered timer_cb,
+                             uint32_t timeout)
+{
+    if (timeout == 0) return NULL;
+
+    sk_ep_mgr_t* mgr = ep->owner;
+
+    sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
+    timerdata->timer_entity = sk_entity_create(NULL);
+    timerdata->data.ep = ep;
+
+    sk_ud_t cb_data  = {.ud = timerdata};
+    sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_data_destroy};
+    sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
+
+    sk_timer_t* timer =
+        sk_timersvc_timer_create(mgr->owner->tmsvc, timerdata->timer_entity,
+            timeout, timer_cb, param_obj);
+    SK_ASSERT(timer);
+
+    return timer;
+}
+
+static
 sk_timer_t* _ep_node_create_timer(fdlist_node_t* ep_node,
                                   sk_timer_triggered timer_cb,
                                   uint32_t timeout)
@@ -387,7 +444,7 @@ sk_timer_t* _ep_node_create_timer(fdlist_node_t* ep_node,
 
     sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
     timerdata->timer_entity = sk_entity_create(NULL);
-    timerdata->ep_node = ep_node;
+    timerdata->data.ep_node = ep_node;
 
     sk_ud_t cb_data  = {.ud = timerdata};
     sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_data_destroy};
@@ -415,36 +472,46 @@ sk_ep_status_t _ep_send(fdlist_node_t* ep_node, const void* data, size_t len)
     }
 
     sk_print("ep_send: send data to %s, len: %zu\n", ep->ipkey, len);
-    sk_entity_write(ep->ep, data, len);
+    sk_entity_write(ep->entity, data, len);
     ep_data->status = SK_EP_NST_SENT;
 
     SK_METRICS_EP_SEND();
     SK_LOG_TRACE(SK_ENV_LOGGER, "ep send");
 
     // Set up a timeout timer if needed
-    if (ep_data->handler.timeout && ep_data->handler.unpack) {
+    if (ep_data->handler.timeout) {
         unsigned long long time_left = sk_ep_time_left(ep_data);
         if (time_left == 0) {
             SK_METRICS_EP_TIMEOUT();
             return SK_EP_TIMEOUT;
         }
 
-        ep_data->recv_timer =
-            _ep_node_create_timer(ep_node, _recv_timeout, (uint32_t)time_left);
-        SK_ASSERT(ep_data->recv_timer);
+        if (ep_data->handler.unpack) {
+            ep_data->recv_timer =
+                _ep_node_create_timer(ep_node, _recv_timeout, (uint32_t)time_left);
+            SK_ASSERT(ep_data->recv_timer);
 
-        sk_print("_ep_send: setup recv timer, timeout = %u ms\n",
-                 (uint32_t)time_left);
+            sk_print("_ep_send: setup recv timer, timeout = %u ms\n",
+                     (uint32_t)time_left);
+
+            // Refresh shutdown timer
+            _ep_create_shutdown_timer(ep, ep_data->handler.timeout * 2);
+        }
+    } else {
+        if (!ep_data->handler.unpack) {
+            _ep_create_shutdown_timer(ep, SK_EP_DEFAULT_SHUTDOWN_MS);
+        }
     }
 
     return SK_EP_OK;
 }
 
 static
-void _handle_timeout(fdlist_node_t* ep_node, int latency)
+void _handle_timeout(fdlist_node_t* ep_node)
 {
     sk_print("handle timeout\n");
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
+    int latency = (int)sk_ep_time_consumed(ep_data);
 
     sk_ep_ret_t ret = {SK_EP_TIMEOUT, latency};
     if (ep_data->cb) {
@@ -485,13 +552,21 @@ void _handle_ok(fdlist_node_t* ep_node, const void* data, size_t len)
 {
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
 
-    sk_ep_ret_t ret = {SK_EP_OK, (int)sk_ep_time_consumed(ep_data)};
+    // Try run the ep transcation's callback
     if (ep_data->cb) {
+        sk_ep_ret_t ret = {SK_EP_OK, (int)sk_ep_time_consumed(ep_data)};
         ep_data->cb(ret, data, len, ep_data->ud);
     }
 
-    _ep_node_destroy(ep_node);
+    // Setup shutdown timer
+    sk_ep_t* ep = ep_data->owner;
+    uint32_t timeout = ep_data->handler.timeout;
+    uint32_t shutdown_timeout = timeout ? timeout : SK_EP_DEFAULT_SHUTDOWN_MS;
 
+    _ep_create_shutdown_timer(ep, shutdown_timeout);
+
+    // Destroy this ep transcation, then this ep can be used by other request
+    _ep_node_destroy(ep_node);
     SK_METRICS_EP_OK();
 }
 
@@ -505,12 +580,27 @@ void _recv_timeout(sk_entity_t* entity, int valid, sk_obj_t* ud)
     }
 
     sk_ep_timerdata_t* timerdata = sk_obj_get(ud).ud;
-    fdlist_node_t* ep_node = timerdata->ep_node;
+    fdlist_node_t* ep_node = timerdata->data.ep_node;
     sk_ep_data_t*  ep_data = fdlist_get_nodedata(ep_node);
 
     ep_data->recv_timer = NULL;
-    int latency = (int)sk_ep_time_consumed(ep_data);
-    _handle_timeout(ep_node, latency);
+    _handle_timeout(ep_node);
+}
+
+static
+void _shutdown_ep(sk_entity_t* entity, int valid, sk_obj_t* ud)
+{
+    sk_print("_shutdown_ep, valid: %d\n", valid);
+    if (!valid) {
+        sk_print("_shutdown_ep: timer invalid, skip it\n");
+        return;
+    }
+
+    sk_ep_timerdata_t* timerdata = sk_obj_get(ud).ud;
+    sk_ep_t* ep = timerdata->data.ep;
+    ep->shutdown_timer = NULL;
+
+    _ep_mgr_del(ep->owner, ep);
 }
 
 static
@@ -558,7 +648,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         read_len = used_len * 2;
     }
 
-    ssize_t bytes = sk_entity_read(ep->ep, NULL, read_len);
+    ssize_t bytes = sk_entity_read(ep->entity, NULL, read_len);
     sk_print("ep entity read bytes: %ld\n", bytes);
     if (bytes <= 0) {
         sk_print("ep entity buffer cannot read\n");
@@ -649,10 +739,13 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
         if (0 == err) {
             sk_print("target %s connected\n", ep->ipkey);
             sk_ep_mgr_t* mgr = ep->owner;
+
             fev_buff* evbuff =
                 fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep);
             SK_ASSERT(evbuff);
-            sk_entity_net_create(ep->ep, evbuff);
+
+            sk_entity_net_create(ep->entity, evbuff);
+            _ep_create_shutdown_timer(ep, SK_EP_DEFAULT_SHUTDOWN_MS);
             ep->status = SK_EP_ST_CONNECTED;
             SK_LOG_TRACE(SK_ENV_LOGGER, "ep connected (async)");
 
@@ -662,8 +755,7 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
 
             fdlist_node_t* timeout_node = NULL;
             while ((timeout_node = flist_pop(timeout_nodes))) {
-                sk_ep_data_t* ep_data = fdlist_get_nodedata(timeout_node);
-                _handle_timeout(timeout_node, (int)sk_ep_time_consumed(ep_data));
+                _handle_timeout(timeout_node);
             }
             return;
         }
@@ -683,7 +775,7 @@ void _conn_timeout(sk_entity_t* entity, int valid, sk_obj_t* ud)
     }
 
     sk_ep_timerdata_t* timerdata = sk_obj_get(ud).ud;
-    fdlist_node_t* ep_node = timerdata->ep_node;
+    fdlist_node_t* ep_node = timerdata->data.ep_node;
     sk_ep_data_t*  ep_data = fdlist_get_nodedata(ep_node);
     sk_ep_t*       ep      = ep_data->owner;
 
@@ -693,7 +785,9 @@ void _conn_timeout(sk_entity_t* entity, int valid, sk_obj_t* ud)
     }
 
     ep_data->conn_timer = NULL;
-    _handle_timeout(ep_node, (int)sk_ep_time_consumed(ep_data));
+
+    // Here mark the connection as error, since no need to wait it
+    _handle_error(ep);
 }
 
 // Currently only support ipv4
@@ -714,12 +808,13 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     int sockfd = -1;
     int s = fnet_conn_async(handler->ip, handler->port, &sockfd);
     if (s == 0) {
-        sk_entity_t* net_entity = ep->ep;
+        sk_entity_t* net_entity = ep->entity;
 
         fev_buff* evbuff =
             fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep);
         SK_ASSERT(evbuff);
         sk_entity_net_create(net_entity, evbuff);
+        _ep_create_shutdown_timer(ep, SK_EP_DEFAULT_SHUTDOWN_MS);
 
         ep->status = SK_EP_ST_CONNECTED;
         SK_LOG_TRACE(SK_ENV_LOGGER, "ep connected (sync)");
@@ -777,7 +872,7 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         return -1;
     }
 
-    sk_entity_t* net_entity = ep->ep;
+    sk_entity_t* net_entity = ep->entity;
 
     fev_buff* evbuff =
         fevbuff_new(mgr->owner->evlp, fd, _read_cb, _error, ep);
@@ -799,11 +894,11 @@ sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     ep->type    = handler->type;
     ep->status  = SK_EP_ST_INIT;
     ep->owner   = mgr;
-    ep->ep      = sk_entity_create(NULL);
+    ep->entity  = sk_entity_create(NULL);
     ep->txns    = fdlist_create();
     ep->ntxn    = 0;
-    ep->flags   = handler->flags;
-    SK_ASSERT(ep->ep);
+    ep->flags   = 0;
+    SK_ASSERT(ep->entity);
 
     return ep;
 }
@@ -824,10 +919,10 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
     uint64_t ekey    = 0;
 
     int flags = handler->flags;
-    if (flags & SK_EP_F_ORPHAN) {
-        ekey = 0;
-    } else {
+    if (flags & SK_EP_F_PRIVATE) {
         ekey = (uint64_t) (uintptr_t) entity;
+    } else {
+        ekey = 0;
     }
 
     ipm = fhash_u64_get(mgr->ee, ekey);
@@ -849,7 +944,7 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
         ep = _ep_create(mgr, handler, ekey, ipkey, start);
         if (!ep) return NULL;
 
-        sk_entity_mgr_add(mgr->eps, ep->ep);
+        sk_entity_mgr_add(mgr->eps, ep->entity);
         flist_push(ep_list, ep);
         mgr->nep++;
 
@@ -935,12 +1030,6 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
 
     if (!handler.ip || handler.port == 0) {
         sk_print("sk_ep_send: error -> invalid ip or port\n");
-        SK_METRICS_EP_ERROR();
-        return SK_EP_ERROR;
-    }
-
-    if (handler.timeout <= 0 && !(handler.flags & SK_EP_F_ORPHAN)) {
-        sk_print("Only Orphan ep can set timeout <= 0");
         SK_METRICS_EP_ERROR();
         return SK_EP_ERROR;
     }

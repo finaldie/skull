@@ -33,7 +33,7 @@ typedef void (*sk_ep_cb_t) (sk_ep_ret_t, const void* response,
                             size_t len, void* ud);
 
 #define SK_EP_F_CONCURRENT 0x1
-#define SK_EP_F_ORPHAN     0x2
+#define SK_EP_F_PRIVATE    0x2
 
 typedef struct sk_ep_handler_t {
     sk_ep_type_t type;
@@ -43,11 +43,12 @@ typedef struct sk_ep_handler_t {
     const char*  ip;
 
     // unit: millisecond
-    // <= 0: means no timeout (Only available when 'SK_EP_F_ORPHAN' be set)
-    // >  0: after x milliseconds, the ep call would time out
+    //   0: means no timeout
+    // > 0: after x milliseconds, the ep call would time out
     uint32_t     timeout;
 
-    // Set value of 'SK_EP_F_CONCURRENT' and 'SK_EP_F_ORPHAN'
+    // Set value of 'SK_EP_F_CONCURRENT' and 'SK_EP_F_PRIVATE'
+    // Notes: currently these flags are no effect
     int          flags;
 
     /**
