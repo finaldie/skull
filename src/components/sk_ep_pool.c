@@ -91,7 +91,6 @@ typedef struct sk_ep_data_t {
     unsigned long long start;
     const sk_entity_t* e;       // sk_txn's entity
 
-    sk_timer_t*        conn_timer;
     sk_timer_t*        recv_timer;
 
     size_t             count;   // size of data (bytes)
@@ -118,6 +117,7 @@ typedef struct sk_ep_t {
     int                 ntxn;
     int                 flags;
 
+    sk_timer_t*         conn_timer;
     sk_timer_t*         shutdown_timer;
 } sk_ep_t;
 
@@ -213,11 +213,6 @@ void _ep_create_shutdown_timer(sk_ep_t* ep, uint32_t expiration) {
 static
 void _ep_data_release(sk_ep_data_t* ep_data)
 {
-    if (ep_data->conn_timer) {
-        sk_timer_cancel(ep_data->conn_timer);
-        ep_data->conn_timer = NULL;
-    }
-
     if (ep_data->recv_timer) {
         sk_timer_cancel(ep_data->recv_timer);
         ep_data->recv_timer = NULL;
@@ -498,6 +493,8 @@ sk_ep_status_t _ep_send(fdlist_node_t* ep_node, const void* data, size_t len)
             _ep_create_shutdown_timer(ep, ep_data->handler.timeout * 2);
         }
     } else {
+        // If there is no unpack, we setup a shutdown timer, if has, we will
+        //  setup it after receiving completed(set it in handle_ok)
         if (!ep_data->handler.unpack) {
             _ep_create_shutdown_timer(ep, SK_EP_DEFAULT_SHUTDOWN_MS);
         }
@@ -699,11 +696,6 @@ int _send_each(fdlist_node_t* ep_node, void* ud)
         return 0;
     }
 
-    if (ep_data->conn_timer) {
-        sk_timer_cancel(ep_data->conn_timer);
-        ep_data->conn_timer = NULL;
-    }
-
     sk_ep_status_t ret = _ep_send(ep_node, ep_data->data, ep_data->count);
     if (ret == SK_EP_TIMEOUT) {
         flist_push(timeout_nodes, ep_node);
@@ -745,9 +737,13 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
             SK_ASSERT(evbuff);
 
             sk_entity_net_create(ep->entity, evbuff);
-            _ep_create_shutdown_timer(ep, SK_EP_DEFAULT_SHUTDOWN_MS);
             ep->status = SK_EP_ST_CONNECTED;
             SK_LOG_TRACE(SK_ENV_LOGGER, "ep connected (async)");
+
+            if (ep->conn_timer) {
+                sk_timer_cancel(ep->conn_timer);
+                ep->conn_timer = NULL;
+            }
 
             sk_print("prepare send data to target, txns size: %zu\n", fdlist_size(ep->txns));
             flist* timeout_nodes = ep->owner->tmp;
@@ -775,16 +771,14 @@ void _conn_timeout(sk_entity_t* entity, int valid, sk_obj_t* ud)
     }
 
     sk_ep_timerdata_t* timerdata = sk_obj_get(ud).ud;
-    fdlist_node_t* ep_node = timerdata->data.ep_node;
-    sk_ep_data_t*  ep_data = fdlist_get_nodedata(ep_node);
-    sk_ep_t*       ep      = ep_data->owner;
+    sk_ep_t* ep = timerdata->data.ep;
 
     if (ep->status != SK_EP_ST_CONNECTING) {
         sk_print("ep is not in connecting, skip it, status=%d\n", ep->status);
         return;
     }
 
-    ep_data->conn_timer = NULL;
+    ep->conn_timer = NULL;
 
     // Here mark the connection as error, since no need to wait it
     _handle_error(ep);
@@ -814,7 +808,11 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
             fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep);
         SK_ASSERT(evbuff);
         sk_entity_net_create(net_entity, evbuff);
-        _ep_create_shutdown_timer(ep, SK_EP_DEFAULT_SHUTDOWN_MS);
+
+        if (ep->conn_timer) {
+            sk_timer_cancel(ep->conn_timer);
+            ep->conn_timer = NULL;
+        }
 
         ep->status = SK_EP_ST_CONNECTED;
         SK_LOG_TRACE(SK_ENV_LOGGER, "ep connected (sync)");
@@ -828,10 +826,9 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
             }
 
             // Setup a connection timeout timer
-            ep_data->conn_timer =
-                _ep_node_create_timer(ep_node, _conn_timeout,
-                    (uint32_t)time_left);
-            SK_ASSERT(ep_data->conn_timer);
+            ep->conn_timer =
+                _ep_create_timer(ep, _conn_timeout, (uint32_t)time_left);
+            SK_ASSERT(ep->conn_timer);
 
             sk_print("connection setup timer: timeout: %u\n",
                      (uint32_t)time_left);
