@@ -90,6 +90,7 @@ typedef struct sk_txn_taskdata_t {
 #if __WORDSIZE == 64
     int         _padding;
 #endif
+    uint64_t    task_id;
 } sk_txn_taskdata_t;
 
 /**
@@ -136,6 +137,9 @@ void sk_txn_log_add(sk_txn_t*, const char* fmt, ...);
  * Get full transcation log
  */
 const char* sk_txn_log(const sk_txn_t*);
+
+// Debugging API
+void sk_txn_dump_tasks(const sk_txn_t* txn);
 
 #endif
 

@@ -630,7 +630,7 @@ int sk_service_job_create(sk_service_t*   service,
     // 1. Create timer callback data
     timer_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->service = service;
-    jobdata->entity  = sk_entity_create(NULL);
+    jobdata->entity  = sk_entity_create(NULL, SK_ENTITY_TAG_TIMER);
     jobdata->job     = job;
     jobdata->ud      = ud;
     jobdata->bidx    = bidx;

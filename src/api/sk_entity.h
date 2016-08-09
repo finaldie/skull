@@ -7,6 +7,14 @@
 
 #include "api/sk_object.h"
 
+// debug tags
+#define SK_ENTITY_TAG_NONE         0
+#define SK_ENTITY_TAG_NET          1
+#define SK_ENTITY_TAG_TIMER        2
+#define SK_ENTITY_TAG_EP           3
+#define SK_ENTITY_TAG_EP_TIMER     4
+#define SK_ENTITY_TAG_EP_TXN_TIMER 5
+
 typedef enum sk_entity_type_t {
     SK_ENTITY_NONE = 0,
     SK_ENTITY_NET  = 1,
@@ -31,13 +39,14 @@ typedef struct sk_entity_opt_t {
     void    (*destroy) (sk_entity_t*, void* ud);
 } sk_entity_opt_t;
 
-sk_entity_t* sk_entity_create(struct sk_workflow_t* workflow);
+sk_entity_t* sk_entity_create(struct sk_workflow_t* workflow, int tag);
 void sk_entity_destroy(sk_entity_t* entity);
 
 ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len);
 ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len);
 
 sk_entity_type_t sk_entity_type(sk_entity_t* entity);
+int sk_entity_tag(sk_entity_t* entity);
 sk_entity_status_t sk_entity_status(sk_entity_t* entity);
 struct sk_workflow_t* sk_entity_workflow(sk_entity_t* entity);
 
@@ -60,6 +69,9 @@ void sk_entity_timerdel(sk_entity_t*, const sk_obj_t*);
 // create network entity from a base entity
 void sk_entity_net_create(sk_entity_t* entity, void* ud);
 void sk_entity_stdin_create(sk_entity_t* entity, void* ud);
+
+// Debugging API
+void sk_entity_dump_txns(sk_entity_t* entity);
 
 #endif
 

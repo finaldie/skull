@@ -70,7 +70,7 @@ sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
                                   uint32_t expiration, // unit: millisecond
                                   sk_timer_triggered timer_cb)
 {
-    sk_entity_t* timer_entity = sk_entity_create(NULL);
+    sk_entity_t* timer_entity = sk_entity_create(NULL, SK_ENTITY_TAG_TIMER);
     sk_ud_t cb_data  = {.ud = timer_entity};
     sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_data_destroy};
 

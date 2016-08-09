@@ -19,6 +19,11 @@ struct sk_entity_t {
     sk_entity_opt_t         opt;
     fhash*                  txns;
     fhash*                  timers;
+    int                     tag;
+
+#if __WORDSIZE == 64
+    int                     __padding;
+#endif
 
     sk_entity_status_t status;
     int   task_cnt;
@@ -68,7 +73,7 @@ sk_entity_opt_t default_entity_opt = {
 };
 
 // APIs
-sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
+sk_entity_t* sk_entity_create(sk_workflow_t* workflow, int tag)
 {
     sk_entity_t* entity = calloc(1, sizeof(*entity));
     entity->owner    = NULL;
@@ -77,6 +82,7 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow)
     entity->txns     = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     entity->timers   = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     entity->status   = SK_ENTITY_ACTIVE;
+    entity->tag      = tag;
 
     sk_metrics_global.entity_create.inc(1);
     sk_print("create entity %p\n", (void*)entity);
@@ -90,6 +96,18 @@ void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
     entity->opt.destroy = opt.destroy ? opt.destroy : default_entity_opt.destroy;
 
     entity->ud = ud;
+}
+
+// Debugging Api
+void sk_entity_dump_txns(sk_entity_t* entity)
+{
+    fhash_u64_iter iter = fhash_u64_iter_new(entity->txns);
+    sk_txn_t* txn = NULL;
+    while ((txn = fhash_u64_next(&iter))) {
+        sk_print("entity txns: state: %d, txn log: %s\n", sk_txn_state(txn), sk_txn_log(txn));
+        sk_txn_dump_tasks(txn);
+    }
+    fhash_u64_iter_release(&iter);
 }
 
 void sk_entity_destroy(sk_entity_t* entity)
@@ -129,6 +147,11 @@ void sk_entity_destroy(sk_entity_t* entity)
 
         free(entity);
     }
+}
+
+int sk_entity_tag(sk_entity_t* entity)
+{
+    return entity->tag;
 }
 
 ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len)

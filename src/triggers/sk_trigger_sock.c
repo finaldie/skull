@@ -28,7 +28,7 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
     sk_workflow_t* workflow = trigger->workflow;
     sk_sched_t*    sched    = engine->sched;
 
-    sk_entity_t* entity = sk_entity_create(workflow);
+    sk_entity_t* entity = sk_entity_create(workflow, SK_ENTITY_TAG_NET);
     sk_print("create a new entity(%d)\n", fd);
 
     NetAccept accept_msg = NET_ACCEPT__INIT;

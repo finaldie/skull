@@ -58,7 +58,7 @@ skullut_module_t* skullut_module_create(const char* module_name,
 
     // create a hacked entity, set 'utenv' into half_txn field, we won't use
     // half_txn in UT env, so it's safe for us to use it
-    env->entity = sk_entity_create(env->workflow);
+    env->entity = sk_entity_create(env->workflow, SK_ENTITY_TAG_NONE);
     sk_entity_sethalftxn(env->entity, (void*)env);
 
     env->txn = sk_txn_create(env->workflow, env->entity);

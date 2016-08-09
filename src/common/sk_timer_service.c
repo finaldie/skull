@@ -176,16 +176,21 @@ sk_timersvc_t* sk_timer_svc(sk_timer_t* timer)
     return timer->owner;
 }
 
-void sk_timer_reset(sk_timer_t* timer) {
-    if (!timer) return;
+int sk_timer_reset(sk_timer_t* timer) {
+    if (!timer) return 1;
+    if (timer->triggered) return 1;
 
     int ret = fev_tmsvc_timer_reset(timer->timer);
     SK_ASSERT_MSG(!ret, "Reset timer failed\n");
+    return 0;
 }
 
-void sk_timer_resetn(sk_timer_t* timer, uint32_t expiration) {
-    if (!timer) return;
+int sk_timer_resetn(sk_timer_t* timer, uint32_t expiration) {
+    if (!timer) return 1;
+    if (timer->triggered) return 1;
+
 
     int ret = fev_tmsvc_timer_resetn(timer->timer, expiration);
     SK_ASSERT_MSG(!ret, "Reset timer failed\n");
+    return 0;
 }
