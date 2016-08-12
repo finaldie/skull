@@ -54,5 +54,10 @@ void sk_assert_exit_with_msg(const char* format, ...);
 # define sk_rawprint(...)
 #endif
 
+/**
+ * Dump backtrace to stderr
+ */
+void sk_backtrace_print();
+
 #endif // end of SK_UTILS_H
 

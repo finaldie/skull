@@ -3,6 +3,9 @@
 
 struct sk_const_t;
 
+// dump core
+#define SK_MAX_BACKTRACE                     50
+
 // logger cookies
 #define SK_CORE_LOG_COOKIE                   "skull.core"
 
