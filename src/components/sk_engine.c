@@ -56,7 +56,7 @@ void _uptime_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 static
 void _timer_data_destroy(sk_ud_t ud)
 {
-    sk_print("metrics timer data destroying...\n");
+    //sk_print("metrics timer data destroying...\n");
     sk_entity_t* timer_entity = ud.ud;
 
     // Clean the entity if it's still no owner
@@ -70,7 +70,7 @@ sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
                                   uint32_t expiration, // unit: millisecond
                                   sk_timer_triggered timer_cb)
 {
-    sk_entity_t* timer_entity = sk_entity_create(NULL);
+    sk_entity_t* timer_entity = sk_entity_create(NULL, SK_ENTITY_TAG_TIMER);
     sk_ud_t cb_data  = {.ud = timer_entity};
     sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_data_destroy};
 
@@ -83,17 +83,16 @@ sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
     return metrics_timer;
 }
 
-sk_engine_t* sk_engine_create(sk_engine_type_t type, int flags)
+sk_engine_t* sk_engine_create(sk_engine_type_t type, int max_fds, int flags)
 {
     sk_engine_t* engine = calloc(1, sizeof(*engine));
     engine->type       = type;
-    engine->evlp       = sk_eventloop_create();
+    engine->evlp       = sk_eventloop_create(max_fds);
     engine->entity_mgr = sk_entity_mgr_create(0);
     engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr, flags);
     engine->mon        = sk_mon_create();
     engine->timer_svc  = sk_timersvc_create(engine->evlp);
-    engine->ep_pool    = sk_ep_pool_create(engine->evlp, engine->timer_svc,
-                                           SK_EP_POOL_MAX);
+    engine->ep_pool    = sk_ep_pool_create(engine->evlp, engine->timer_svc, max_fds);
 
     return engine;
 }
@@ -134,6 +133,15 @@ void* _sk_engine_thread(void* arg)
         sk_print("start metrics snapshot timer\n");
         _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_SNAPSHOT_TIMER_INTERVAL,
                               _snapshot_timer_triggered);
+    } else {
+#ifdef _GNU_SOURCE
+        // Set the thread name
+        int rc = pthread_setname_np(pthread_self(), thread_env->name);
+        if (rc != 0) {
+            fprintf(stderr, "Error in pthread_setname_np, rc = %d\n", rc);
+            exit(1);
+        }
+#endif
     }
 
     // 4. start scheduler

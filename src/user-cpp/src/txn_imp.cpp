@@ -3,11 +3,12 @@
 #include <google/protobuf/descriptor.h>
 
 #include "skull/txn.h"
+#include "skullcpp/txn.h"
 
 #include "txn_idldata.h"
 #include "srv_utils.h"
+#include "msg_factory.h"
 #include "txn_imp.h"
-#include "skullcpp/txn.h"
 
 namespace skullcpp {
 
@@ -63,15 +64,7 @@ google::protobuf::Message& TxnImp::data() {
     const char* idlName = skull_txn_idlname(this->txn_);
     std::string protoFileName = std::string(idlName) + ".proto";
 
-    // 1.1 Find the top 1 Message Descriptor
-    const FileDescriptor* fileDesc =
-        DescriptorPool::generated_pool()->FindFileByName(protoFileName);
-    const Descriptor* desc = fileDesc->message_type(0);
-
-    const Message* new_msg =
-        MessageFactory::generated_factory()->GetPrototype(desc);
-
-    this->msg_ = new_msg->New();
+    this->msg_ = MsgFactory::instance().newMsg(protoFileName);
 
     // 2. Create TxnSharedRawData if needed
     TxnSharedRawData* rawData = (TxnSharedRawData*)skull_txn_data(this->txn_);

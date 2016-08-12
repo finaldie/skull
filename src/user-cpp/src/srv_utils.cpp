@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <google/protobuf/descriptor.h>
 
+#include "msg_factory.h"
 #include "srv_utils.h"
 
 namespace skullcpp {
@@ -99,14 +100,7 @@ void ServiceApiReqData::deserializeMsg(const void* data, size_t sz) {
         return;
     }
 
-    const FileDescriptor* fileDesc =
-        DescriptorPool::generated_pool()->FindFileByName(this->descName_);
-    const Descriptor* desc = fileDesc->message_type(0);
-
-    const Message* new_msg =
-        MessageFactory::generated_factory()->GetPrototype(desc);
-
-    this->msg_ = new_msg->New();
+    this->msg_ = MsgFactory::instance().newMsg(this->descName_);
 
     if (data && sz) {
         bool r = this->msg_->ParseFromArray(data, (int)sz);
@@ -222,14 +216,7 @@ void ServiceApiRespData::deserializeMsg(const void* data, size_t sz) {
         return;
     }
 
-    const FileDescriptor* fileDesc =
-        DescriptorPool::generated_pool()->FindFileByName(this->descName_);
-    const Descriptor* desc = fileDesc->message_type(0);
-
-    const Message* new_msg =
-        MessageFactory::generated_factory()->GetPrototype(desc);
-
-    this->msg_ = new_msg->New();
+    this->msg_ = MsgFactory::instance().newMsg(this->descName_);
 
     if (data && sz) {
         bool r = this->msg_->ParseFromArray(data, (int)sz);

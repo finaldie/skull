@@ -9,6 +9,12 @@
 #include "skull_protos.h"
 #include "config.h"
 
+/**
+ * Module Initialization Function.
+ *
+ * @note This function be called during the starting phase before the server
+ *        is ready for serving
+ */
 static
 void module_init(const skull_config_t* config)
 {
@@ -21,13 +27,20 @@ void module_init(const skull_config_t* config)
     SKULLCPP_LOG_FATAL("1", "skull fatal log test " << 5, "ignore, this is test");
 
     // Load skull_config to skullcpp::Config
-    skullcpp::Config::instance().load(config);
+    auto& conf = skullcpp::Config::instance();
+    conf.load(config);
 
-    SKULLCPP_LOG_DEBUG("config test_item: " << skullcpp::Config::instance().test_item());
-    SKULLCPP_LOG_DEBUG("config test_rate: " << skullcpp::Config::instance().test_rate());
-    SKULLCPP_LOG_DEBUG("config test_name: " << skullcpp::Config::instance().test_name());
+    SKULLCPP_LOG_DEBUG("config test_item: " << conf.test_item());
+    SKULLCPP_LOG_DEBUG("config test_rate: " << conf.test_rate());
+    SKULLCPP_LOG_DEBUG("config test_name: " << conf.test_name());
+    SKULLCPP_LOG_DEBUG("config test_bool: " << conf.test_bool());
 }
 
+/**
+ * Module Release Function
+ *
+ * @note This function be called during the server shutdown phase
+ */
 static
 void module_release()
 {
@@ -35,6 +48,16 @@ void module_release()
     SKULLCPP_LOG_INFO("5", "module({MODULE_NAME}): released");
 }
 
+/**
+ * Unpack the request from raw bytes stream.
+ *
+ * @note This function only be executed when this module is the first module
+ *        in the workflow
+ *
+ * @return
+ *   - = 0: Still need more data
+ *   - > 0: Already unpacked a completed request, the returned value will be consumed
+ */
 static
 size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
@@ -48,6 +71,15 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     return data_sz;
 }
 
+/**
+ * Module runnable function, when the transaction is moved to this module, this
+ *  function will be executed.
+ *
+ * @return
+ *  -     0: Everything is ok, transation will move to next module
+ *  - non-0: Error occurred, transcation will be cancelled, and will run the
+ *          `pack` function of the last module
+ */
 static
 int module_run(skullcpp::Txn& txn)
 {
@@ -58,6 +90,10 @@ int module_run(skullcpp::Txn& txn)
     return 0;
 }
 
+/**
+ * Pack the data to `TxnData`, the data will be sent back to the sender. This
+ *  function only be called when this module is the last module in the workflow
+ */
 static
 void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {

@@ -9,6 +9,7 @@
 #include "srv_loader.h"
 #include "srv_utils.h"
 #include "txn_idldata.h"
+#include "msg_factory.h"
 
 #include "skullcpp/unittest.h"
 
@@ -193,14 +194,7 @@ google::protobuf::Message& UTModule::getTxnSharedData() {
 
     const std::string& idlName = this->idlName_;
     std::string protoFileName = idlName + ".proto";
-
-    const FileDescriptor* fileDesc =
-        DescriptorPool::generated_pool()->FindFileByName(protoFileName);
-    const Descriptor* desc = fileDesc->message_type(0);
-
-    const Message* new_msg =
-        MessageFactory::generated_factory()->GetPrototype(desc);
-    this->msg_ = new_msg->New();
+    this->msg_ = MsgFactory::instance().newMsg(protoFileName);
 
     TxnSharedRawData* rawData =
         (TxnSharedRawData*)skullut_module_data(this->utModule_);

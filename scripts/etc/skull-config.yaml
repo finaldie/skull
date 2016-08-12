@@ -9,3 +9,6 @@ workflows:
 services:
 
 languages: [cpp]
+
+# max open files (This requires to start the engine with root permission)
+## max_fds: 65535

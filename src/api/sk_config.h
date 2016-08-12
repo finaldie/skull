@@ -69,6 +69,12 @@ typedef struct sk_config_t {
     // Supportted languages, value: char*
     flist* langs;
 
+    // max open fds
+    int    max_fds;
+
+#if __WORDSIZE == 64
+    int    __padding;
+#endif
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);

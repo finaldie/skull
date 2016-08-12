@@ -54,7 +54,7 @@ Use Ubuntu14.04 as an example.
 
 ### Install Dependencies
 ```console
-apt-get install valgrind libyaml-dev python-yaml libprotobuf-dev protobuf-compiler libprotobuf-c0 libprotobuf-c0-dev protobuf-c-compiler expect
+apt-get install valgrind expect libyaml-dev python-yaml libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler
 
 git clone git@github.com:finaldie/skull.git
 cd skull
@@ -149,10 +149,18 @@ Name                  | Description |
 ----------------------|-------------|
 [Async DNS Client][2] | Example service, to show how to write a basic async DNS client |
 
+# Other Resources
+Name                  | Description |
+----------------------|-------------|
+[Skull-Perf Cases][5] | Including 3 basic perf cases |
+
+
+
 [1]: https://github.com/finaldie/skull-admin-c
 [2]: https://github.com/finaldie/skull-service-dns
 [3]: https://developers.google.com/protocol-buffers/
 [4]: https://github.com/finaldie/final_libs
+[5]: https://github.com/finaldie/skull-perf
 
 # Contribution
-Fork the repo, then apply your fixes/features via a PR. Any question, open an issue directly :)
+Fork the repo, then apply your fixes/features via a PR. Important things before sending a PR, be sure you have added/fixed a(n) new/existing test case, and passed it :)

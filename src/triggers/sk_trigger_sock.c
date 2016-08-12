@@ -23,12 +23,23 @@ typedef struct sk_trigger_sock_data_t {
 static
 void _sk_accept(fev_state* fev, int fd, void* ud)
 {
+    if (fd < 0) {
+        sk_print("new accepted fd(%d) < 0, won't create an entity\n", fd);
+        return;
+    }
+
+    if (-1 == fnet_set_nonblocking(fd)) {
+        fprintf(stderr, "set nonblocking to socket fd %d failed, won't create an entity\n", fd);
+        close(fd);
+        return;
+    }
+
     sk_trigger_t*  trigger  = ud;
     sk_engine_t*   engine   = trigger->engine;
     sk_workflow_t* workflow = trigger->workflow;
     sk_sched_t*    sched    = engine->sched;
 
-    sk_entity_t* entity = sk_entity_create(workflow);
+    sk_entity_t* entity = sk_entity_create(workflow, SK_ENTITY_TAG_NET);
     sk_print("create a new entity(%d)\n", fd);
 
     NetAccept accept_msg = NET_ACCEPT__INIT;

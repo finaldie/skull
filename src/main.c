@@ -58,6 +58,16 @@ void _check_args(sk_cmd_args_t* cmd_args)
 static
 void sig_handler(int sig, siginfo_t *si, void *uc)
 {
+    fprintf(stderr, "signal: %d received\n", sig);
+
+#ifdef SK_DUMP_CORE
+    if (sig == SIGSEGV) {
+       fprintf(stderr, "received SIGSEGV signal, abort\n");
+        sk_backtrace_print();
+        exit(1);
+    }
+#endif
+
     sk_core_stop(&core);
 }
 
@@ -88,6 +98,16 @@ void setup_signal(sk_core_t* core)
         fprintf(stderr, "Error: cannot set up SIGTERM");
         exit(1);
     }
+
+    // Ingore SIGPIPE signal in system level
+    signal(SIGPIPE, SIG_IGN);
+
+#ifdef SK_DUMP_CORE
+    if (sigaction(SIGSEGV, &sa, NULL) == -1) {
+        fprintf(stderr, "Error: cannot set up SIGSEGV");
+        exit(1);
+    }
+#endif
 }
 
 // Do something before process initialization

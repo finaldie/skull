@@ -3,6 +3,9 @@
 
 struct sk_const_t;
 
+// dump core
+#define SK_MAX_BACKTRACE                     50
+
 // logger cookies
 #define SK_CORE_LOG_COOKIE                   "skull.core"
 
@@ -49,6 +52,7 @@ struct sk_const_t;
 // ep pool
 #define SK_EP_POOL_MAX                       (1024)
 #define SK_EP_KEY_MAX                        (64)
+#define SK_EP_DEFAULT_SHUTDOWN_MS            (1000)
 
 // txn log
 #define SK_TXN_DEFAULT_INIT_SIZE             (256)

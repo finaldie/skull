@@ -23,7 +23,8 @@ verify:
     - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie, welcome"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep "ep status: 0"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "ep status: 1"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "ep status1: 0"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "ip: 127.0.0.1, port: 7760, timeout: 50, type: 0, flags: 0"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "status: 0, responseSize: 8"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'

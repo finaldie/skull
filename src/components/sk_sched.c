@@ -279,6 +279,8 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
         if (event.hop == SK_SCHED_MAX_ROUTING_HOP) {
             sk_print("stop routing this event due to it reach the max hop: %d\n",
                      SK_SCHED_MAX_ROUTING_HOP);
+            SK_ASSERT_MSG(0, "Routing event failed due to reach the max hop: %d\n",
+                     SK_SCHED_MAX_ROUTING_HOP);
             _event_destroy(&event);
             continue;
         }
@@ -304,6 +306,7 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
             SK_LOG_WARN(SK_ENV_CORE->logger,
                 "cannot find a io bridge to deliver, ptoid: %d", event.pto_id);
 
+            SK_ASSERT(0);
             _event_destroy(&event);
             continue;
         }
@@ -311,7 +314,11 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
         // 4. Check capacity of dst
         size_t free_slots = fmbuf_free(io_bridge->mq) / SK_EVENT_SZ;
         if (free_slots == 0) {
-            sk_print("no slot in the io bridge, drop it\n");
+            sk_print("no slot in the io bridge, drop it, ptoid: %d\n", event.pto_id);
+            SK_LOG_ERROR(SK_ENV_CORE->logger,
+                "dst io bridge capacity is full, drop event, ptoid: %d", event.pto_id);
+
+            SK_ASSERT_MSG(0, "Should increase the io_bridge capacity\n");
             _event_destroy(&event);
             continue;
         }
@@ -320,6 +327,8 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
         if (io_bridge) {
             delivery[bridge_index] +=
                 (uint64_t) sk_io_bridge_deliver(io_bridge, &event);
+        } else {
+            SK_ASSERT_MSG(0, "Didn't find a io_bridge to deliver the event, ptoid: %d\n", event.pto_id);
         }
     } while (nevents > 0);
 }

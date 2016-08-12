@@ -27,13 +27,50 @@ int _mark_dead(sk_entity_mgr_t* mgr, sk_entity_t* entity, void* ud)
 static
 void _cleanup_dead_entities(sk_entity_mgr_t* mgr, int force)
 {
+    int total_inactive      = 0;
+    int entity_none         = 0;
+    int entity_net          = 0;
+    int entity_timer        = 0;
+    int entity_ep           = 0;
+    int entity_ep_timer     = 0;
+    int entity_ep_txn_timer = 0;
+    int entity_unknown      = 0;
+    int cleaned             = 0;
+
     while (!flist_empty(mgr->inactive_entities)) {
         sk_entity_t* entity = flist_pop(mgr->inactive_entities);
+        total_inactive++;
+
+        int tag = sk_entity_tag(entity);
+        switch (tag) {
+        case SK_ENTITY_TAG_NONE:
+            entity_none++;
+            break;
+        case SK_ENTITY_TAG_NET:
+            entity_net++;
+            break;
+        case SK_ENTITY_TAG_TIMER:
+            entity_timer++;
+            break;
+        case SK_ENTITY_TAG_EP:
+            entity_ep++;
+            break;
+        case SK_ENTITY_TAG_EP_TIMER:
+            entity_ep_timer++;
+            break;
+        case SK_ENTITY_TAG_EP_TXN_TIMER:
+            entity_ep_txn_timer++;
+            break;
+        default:
+            entity_unknown++;
+            break;
+        }
 
         // 1. Check whehter it can be destroyed
         int taskcnt = sk_entity_taskcnt(entity);
         if (taskcnt && !force) {
-            //sk_print("entity(%p) tashcnt(%d) > 0, try to destroy it in next "
+            //sk_entity_dump_txns(entity);
+            //sk_print("entity(%p) taskcnt(%d) > 0, try to destroy it in next "
             //         "round\n", (void*)entity, taskcnt);
             flist_push(mgr->tmp_entities, entity);
             continue;
@@ -51,6 +88,15 @@ void _cleanup_dead_entities(sk_entity_mgr_t* mgr, int force)
         SK_ASSERT(deleted_entity == entity);
         sk_entity_destroy(entity);
         sk_print("clean up dead entity: %p\n", (void*)entity);
+        cleaned++;
+    }
+
+    if (total_inactive) {
+        sk_print("cleanup dead: total inactive: %d, cleaned: %d, entity_none: %d, "
+                 "entity_net: %d, entity_timer: %d, entity_ep: %d, "
+                 "entity_ep_timer: %d, entity_ep_txn_timer: %d, force: %d\n",
+                 total_inactive, cleaned, entity_none, entity_net, entity_timer,
+                 entity_ep, entity_ep_timer, entity_ep_txn_timer, force);
     }
 
     // Swap inactive queue and temp queue

@@ -69,9 +69,8 @@ typedef struct sk_core_t {
     // skull core status
     sk_core_status_t status;
 
-#if __WORDSIZE == 64
-    int _padding;
-#endif
+    // max open files limitation
+    int max_fds;
 } sk_core_t;
 
 void sk_core_init(sk_core_t* core);

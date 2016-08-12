@@ -373,49 +373,40 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
     sk_cfg_node_t* child = NULL;
 
     while ((child = fhash_str_next(&iter))) {
-        // load thread_num
         const char* key = iter.key;
+
+        // load thread_num
         if (0 == strcmp(key, "thread_num")) {
             config->threads = sk_config_getint(child);
             SK_ASSERT_MSG(config->threads > 0, "config: thread_num must > 0\n");
-        }
-
-        // load working flows
-        if (0 == strcmp(key, "workflows")) {
+        } else if (0 == strcmp(key, "workflows")) {
+            // load working flows
             _load_workflow(child, config);
-        }
-
-        // load log name
-        if (0 == strcmp(key, "log_name")) {
+        } else if (0 == strcmp(key, "log_name")) {
+            // load log name
             _load_log_name(child, config);
-        }
-
-        // load log level: trace|debug|info|warn|error|fatal
-        if (0 == strcmp(key, "log_level")) {
+        } else if (0 == strcmp(key, "log_level")) {
+            // load log level: trace|debug|info|warn|error|fatal
             _load_log_level(child, config);
-        }
-
-        // load services
-        if (0 == strcmp(key, "services")) {
+        } else if (0 == strcmp(key, "services")) {
+            // load services
             _load_services(child, config);
-        }
-
-        // load bio(s)
-        if (0 == strcmp(key, "bio")) {
+        } else if (0 == strcmp(key, "bio")) {
+            // load bio(s)
             _load_bios(child, config);
-        }
-
-        // load languages
-        if (0 == strcmp(key, "languages")) {
+        } else if (0 == strcmp(key, "languages")) {
+            // load languages
             _load_langs(child, config);
-        }
-
-        // load command port
-        if (0 == strcmp(key, "command_port")) {
+        } else if (0 == strcmp(key, "command_port")) {
+            // load command port
             int port = sk_config_getint(child);
             SK_ASSERT_MSG(port > 0 && port <= 65535, "port[%d] should be "
                               "in (0, 65535]\n", port);
             config->command_port = port;
+        } else if (0 == strcmp(key, "max_fds")) {
+            // load max_fds
+            int max_fds = sk_config_getint(child);
+            config->max_fds = max_fds;
         }
     }
 

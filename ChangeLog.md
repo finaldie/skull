@@ -1,3 +1,16 @@
+* 2016-08-12 0.8.11
+  * Core
+    * **Fix:** Resolve ep pool crash issue
+    * **Fix:** Add missing metrics when ep client be destroyed
+    * **Fix:** Timer entity leak issue
+    * **Enhancement:** Add Shutdown timer for ep client
+    * **Enhancement:** Set thread name align with thread_env.name
+    * **Enhancement:** Support config 'max_fds' item
+    * **Enhancement:** Ingore SIGPIPE signal for entire application
+  * User
+    * **Enhancement:** Performance improve for protobuf reflection
+  * Scripts
+    * **Enhancement:** Add `ulimit -c unlimited` in skull-start script
 * 2016-07-20 0.8.10
   * Core
     * **Enhancement:** Make skull easier to be built on other Linux releases
