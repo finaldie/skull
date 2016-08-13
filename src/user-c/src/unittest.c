@@ -448,25 +448,27 @@ const sk_service_api_t* sk_service_api(const sk_service_t* svc, const char* api)
     return NULL;
 }
 
-int skull_service_job_create(skull_service_t*   svc,
+skull_job_ret_t
+skull_service_job_create(skull_service_t*   svc,
                              uint32_t           delayed,
+                             skull_job_rw_t     type,
                              skull_job_t        job,
-                             skull_job_err_t    job_error,
                              void*              ud,
                              skull_job_udfree_t udfree)
 {
-    return 0;
+    return SKULL_JOB_OK;
 }
 
-int skull_service_job_create_np(skull_service_t*   svc,
+skull_job_ret_t
+skull_service_job_create_np(skull_service_t*   svc,
                                 uint32_t           delayed,
+                                skull_job_rw_t     type,
                                 skull_job_np_t     job,
-                                skull_job_np_err_t job_error,
                                 void*              ud,
                                 skull_job_udfree_t udfree,
                                 int                bio_idx)
 {
-    return 0;
+    return SKULL_JOB_OK;
 }
 
 // Mock API for skull_ep_xxx_send. Return ok directly, since we don't need to mock

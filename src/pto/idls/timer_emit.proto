@@ -5,4 +5,5 @@ message timer_emit {
     required uint64 udata   = 3;
     required int32  valid   = 4;
     required int32  bidx    = 5;
+    required int32  type    = 6;
 }

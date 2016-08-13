@@ -33,6 +33,8 @@ global:
             desc: How many timers be emitted
         srv_timer_complete:
             desc: How many timers be completed
+        srv_timer_busy:
+            desc: How many service timers failed due to service busy
         ep_create:
             desc: How many endpoints be created
         ep_destroy:
@@ -83,6 +85,8 @@ worker:
             desc: How many timers be emitted
         srv_timer_complete:
             desc: How many timers be completed
+        srv_timer_busy:
+            desc: How many service timers failed due to service busy
         ep_create:
             desc: How many endpoints be created
         ep_destroy:

@@ -11,7 +11,19 @@
 
 typedef struct sk_service_t sk_service_t;
 
-typedef void (*sk_service_job) (sk_service_t*, sk_obj_t* ud, int valid);
+typedef enum sk_service_job_ret_t {
+    SK_SRV_JOB_OK         = 0,
+    SK_SRV_JOB_ERROR_BIO  = 1,
+    SK_SRV_JOB_ERROR_BUSY = 2
+} sk_service_job_ret_t;
+
+typedef enum sk_service_job_rw_t {
+    SK_SRV_JOB_READ  = 1,
+    SK_SRV_JOB_WRITE = 2
+} sk_service_job_rw_t;
+
+typedef void (*sk_service_job) (sk_service_t*, sk_service_job_ret_t,
+                                sk_obj_t* ud, int valid);
 
 // service status
 typedef enum sk_srv_status_t {
@@ -159,19 +171,24 @@ int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
  * Create a service job
  *
  * @param delayed   delay N milliseconds to start the job
+ * @param type      read or write type of job
  * @param job       job function
  * @param ud        user data
  * @param bio_idx   background io idx.
  *                  - (0): Do not use bio
  *                  - (-1): random pick up a bio
  *
- * @return 0: successful; 1: failed
+ * @return
+ *  - SK_SRV_JOB_OK
+ *  - SK_SRV_JOB_ERROR_BIO
  */
-int sk_service_job_create(sk_service_t*   svc,
-                          uint32_t        delayed,
-                          sk_service_job  job,
-                          const sk_obj_t* ud,
-                          int             bio_idx);
+sk_service_job_ret_t
+sk_service_job_create(sk_service_t*       svc,
+                      uint32_t            delayed,
+                      sk_service_job_rw_t type,
+                      sk_service_job      job,
+                      const sk_obj_t*     ud,
+                      int                 bio_idx);
 
 #endif
 

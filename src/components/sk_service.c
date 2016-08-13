@@ -185,6 +185,8 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
     sk_entity_t*   entity = task->data.timer.entity;
     sk_obj_t*      ud     = task->data.timer.ud;
     int            valid  = task->data.timer.valid;
+    sk_service_job_ret_t status = task->io_status == SK_SRV_IO_STATUS_OK
+        ? SK_SRV_JOB_OK : SK_SRV_JOB_ERROR_BUSY;
 
     ServiceTimerRun msg = SERVICE_TIMER_RUN__INIT;
     msg.svc       = (uintptr_t) (void*) service;
@@ -192,9 +194,11 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
     msg.job.data  = (uint8_t*) &job;
     msg.ud        = (uintptr_t) (void*) ud;
     msg.valid     = valid;
+    msg.status    = status;
 
     // 2. Find a bio if needed
-    sk_sched_t* target = _find_target_sched(src, bidx);
+    sk_sched_t* target = status == SK_SRV_JOB_OK
+        ? _find_target_sched(src, bidx) : src;
     SK_ASSERT(target);
 
     // 3. Schedule to target scheduler to handle the task
@@ -216,23 +220,20 @@ int _validate_bidx(int idx)
     }
 }
 
-typedef struct timer_jobdata_t {
+typedef struct srv_jobdata_t {
     sk_service_t*   service;
     sk_entity_t*    entity;
     sk_service_job  job;
     const sk_obj_t* ud;
     int             bidx;
-
-#if __WORDSIZE == 64
-    int _padding;
-#endif
-} timer_jobdata_t;
+    sk_service_job_rw_t type;
+} srv_jobdata_t;
 
 static
-void _timer_jobdata_destroy(sk_ud_t ud)
+void _jobdata_destroyer(sk_ud_t ud)
 {
     sk_print("destroy timer jobdata\n");
-    timer_jobdata_t* jobdata = ud.ud;
+    srv_jobdata_t* jobdata = ud.ud;
     SK_ASSERT(sk_entity_owner(jobdata->entity));
     free(jobdata);
 }
@@ -242,11 +243,12 @@ void _job_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
     // 1. Extract timer parameters
     sk_print("timer triggered\n");
-    timer_jobdata_t* jobdata = sk_obj_get(ud).ud;
+    srv_jobdata_t* jobdata = sk_obj_get(ud).ud;
     sk_service_t*    svc     = jobdata->service;
     sk_service_job   job     = jobdata->job;
     const sk_obj_t*  udata   = jobdata->ud;
     int              bidx    = jobdata->bidx;
+    sk_service_job_rw_t type = jobdata->type;
 
     TimerEmit timer_msg = TIMER_EMIT__INIT;
     timer_msg.svc       = (uint64_t) (uintptr_t) svc;
@@ -255,6 +257,7 @@ void _job_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     timer_msg.udata     = (uint64_t) (uintptr_t) udata;
     timer_msg.valid     = valid;
     timer_msg.bidx      = bidx;
+    timer_msg.type      = type;
 
     // 4. Send event to prepare running a service task
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched, entity, NULL,
@@ -378,14 +381,13 @@ sk_srv_status_t sk_service_push_task(sk_service_t* service,
     return SK_SRV_STATUS_OK;
 }
 
-// 
 static
 void sk_service_schedule_errortask(sk_service_t* service,
                                     const sk_srv_task_t* task)
 {
     switch (task->type) {
     case SK_SRV_TASK_API_QUERY:
-        _schedule_api_task(service, task);
+        _schedule_api_errortask(service, task);
         break;
     case SK_SRV_TASK_TIMER:
         _schedule_timer_task(service, task);
@@ -663,34 +665,37 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     return 0;
 }
 
-int sk_service_job_create(sk_service_t*   service,
-                          uint32_t        delayed,
-                          sk_service_job  job,
-                          const sk_obj_t* ud,
-                          int             bidx)
+sk_service_job_ret_t
+sk_service_job_create(sk_service_t*       service,
+                      uint32_t            delayed,
+                      sk_service_job_rw_t type,
+                      sk_service_job      job,
+                      const sk_obj_t*     ud,
+                      int                 bidx)
 {
     SK_ASSERT(service);
     SK_ASSERT(job);
 
     if (!_validate_bidx(bidx)) {
-        return 1;
+        return SK_SRV_JOB_ERROR_BIO;
     }
 
     sk_print("create a service timer job, bidx: %d\n", bidx);
 
     // 1. Create timer callback data
-    timer_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
+    srv_jobdata_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->service = service;
     jobdata->entity  = sk_entity_create(NULL, SK_ENTITY_TAG_TIMER);
     jobdata->job     = job;
     jobdata->ud      = ud;
     jobdata->bidx    = bidx;
+    jobdata->type    = type;
 
     sk_entity_mgr_add(SK_ENV_ENTITY_MGR, jobdata->entity);
     sk_entity_timeradd(jobdata->entity, ud);
 
     sk_ud_t cb_data  = {.ud = jobdata};
-    sk_obj_opt_t opt = {.preset = NULL, .destroy = _timer_jobdata_destroy};
+    sk_obj_opt_t opt = {.preset = NULL, .destroy = _jobdata_destroyer};
 
     sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
 
@@ -709,5 +714,5 @@ int sk_service_job_create(sk_service_t*   service,
     // 3. Record metrics
     sk_metrics_global.srv_timer_emit.inc(1);
     sk_metrics_worker.srv_timer_emit.inc(1);
-    return 0;
+    return SK_SRV_JOB_OK;
 }

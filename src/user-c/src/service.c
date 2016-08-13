@@ -76,7 +76,7 @@ typedef enum svc_job_type_t {
     NOPENDING = 1
 } svc_job_type_t;
 
-typedef struct timer_data_t {
+typedef struct job_data_t {
     skull_service_t    svc;
     svc_job_type_t     type;
 
@@ -91,12 +91,12 @@ typedef struct timer_data_t {
 
     skull_job_udfree_t destroyer;
     void* ud;
-} timer_data_t;
+} job_data_t;
 
 static
 void _timer_data_destroy(sk_ud_t ud)
 {
-    timer_data_t* data = ud.ud;
+    job_data_t* data = ud.ud;
 
     if (data->destroyer) {
         data->destroyer(data->ud);
@@ -106,11 +106,15 @@ void _timer_data_destroy(sk_ud_t ud)
 }
 
 static
-void _timer_cb (sk_service_t* sk_svc, sk_obj_t* ud, int valid)
+void _job_cb (sk_service_t* sk_svc, sk_service_job_ret_t ret,
+              sk_obj_t* ud, int valid)
 {
     sk_print("skull service: timer cb, valid: %d\n", valid);
-    timer_data_t* jobdata = sk_obj_get(ud).ud;
+    job_data_t* jobdata = sk_obj_get(ud).ud;
     SK_ASSERT_MSG(valid, "Currently we won't cancel any user timer, it must be something wrong");
+
+    SK_ASSERT_MSG(ret == SK_SRV_JOB_OK || ret == SK_SRV_JOB_ERROR_BUSY,
+                          "ret: %d\n", ret);
 
     if (!valid) {
         sk_print("Error: skull serivce: timer is not valid, ignore it\n");
@@ -120,14 +124,19 @@ void _timer_cb (sk_service_t* sk_svc, sk_obj_t* ud, int valid)
     skull_service_t service = jobdata->svc;
     service.freezed = 0;
 
+    skull_job_ret_t skull_ret =
+        ret == SK_SRV_JOB_OK ? SKULL_JOB_OK : SKULL_JOB_ERROR_BUSY;
+
     if (jobdata->type == PENDING) {
         sk_txn_taskdata_t* task_data = service.task;
         SK_ASSERT(task_data);
         SK_ASSERT(service.txn);
 
-        jobdata->cb_.job(&service, jobdata->ud,
-                         task_data->request, task_data->request_sz,
-                         task_data->response, task_data->response_sz);
+        if (jobdata->cb_.job) {
+            jobdata->cb_.job(&service, skull_ret, jobdata->ud,
+                             task_data->request, task_data->request_sz,
+                             task_data->response, task_data->response_sz);
+        }
 
         // Reduce pending tasks counts
         task_data->pendings--;
@@ -137,27 +146,32 @@ void _timer_cb (sk_service_t* sk_svc, sk_obj_t* ud, int valid)
         sk_service_api_complete(sk_svc, service.txn,
                                 task_data, task_data->api_name);
     } else {
-        jobdata->cb_.job_np(&service, jobdata->ud);
+        jobdata->cb_.job_np(&service, skull_ret, jobdata->ud);
     }
 }
 
-int skull_service_job_create(skull_service_t* service, uint32_t delayed,
-                             skull_job_t job, void* ud,
-                             skull_job_udfree_t udfree)
+skull_job_ret_t
+skull_service_job_create(skull_service_t* service, uint32_t delayed,
+                             skull_job_rw_t type, skull_job_t job,
+                             void* ud, skull_job_udfree_t udfree)
 {
+    skull_job_ret_t ret = SKULL_JOB_OK;
+
     if (!service->task || !service->txn) {
         sk_print("Error: skull service: a pending service job only can be created in a service api\n");
+        ret = SKULL_JOB_ERROR_ENV;
         goto create_job_error;
     }
 
     if (!job) {
         sk_print("Error: no job specificed, make sure to pass a job function here");
+        ret = SKULL_JOB_ERROR_NOCB;
         goto create_job_error;
     }
 
     sk_service_t* sk_svc = service->service;
 
-    timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
+    job_data_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->svc       = *service;
     jobdata->type      = PENDING;
     jobdata->cb_.job   = job;
@@ -170,9 +184,13 @@ int skull_service_job_create(skull_service_t* service, uint32_t delayed,
 
     // Fix the bio index to 0 due to we can not schedule it to other thread,
     //  or it would leading a contention issue of *task_data* memory
-    int ret = sk_service_job_create(sk_svc, delayed, _timer_cb, param_obj, 0);
-    if (ret) {
+    sk_service_job_rw_t job_rw = type == SKULL_JOB_READ
+                                    ? SK_SRV_JOB_READ : SK_SRV_JOB_WRITE;
+    sk_service_job_ret_t sret = sk_service_job_create(sk_svc, delayed,
+                                    job_rw, _job_cb, param_obj, 0);
+    if (sret != SK_SRV_JOB_OK) {
         sk_obj_destroy(param_obj);
+        ret = SKULL_JOB_ERROR_BIO;
     } else {
         service->task->pendings++;
         sk_print("service task pending cnt: %u\n", service->task->pendings);
@@ -185,19 +203,22 @@ create_job_error:
     return 1;
 }
 
-int skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
-                                skull_job_np_t job, void* ud,
-                                skull_job_udfree_t udfree, int bidx)
+skull_job_ret_t
+skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
+                                skull_job_rw_t type, skull_job_np_t job,
+                                void* ud, skull_job_udfree_t udfree, int bidx)
 {
+    skull_job_ret_t ret = SKULL_JOB_OK;
+
     if (!job) {
         sk_print("Error: no job specificed, make sure to pass a job into here");
         if (udfree) udfree(ud);
-        return 1;
+        return SKULL_JOB_ERROR_NOCB;
     }
 
     sk_service_t* sk_svc = service->service;
 
-    timer_data_t* jobdata = calloc(1, sizeof(*jobdata));
+    job_data_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->svc        = *service;
     jobdata->type       = NOPENDING;
     jobdata->cb_.job_np = job;
@@ -208,9 +229,13 @@ int skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
     sk_obj_opt_t opt     = {.preset = NULL, .destroy = _timer_data_destroy};
     sk_obj_t*    param_obj = sk_obj_create(opt, cb_data);
 
-    int ret = sk_service_job_create(sk_svc, delayed, _timer_cb, param_obj, bidx);
-    if (ret) {
+    sk_service_job_rw_t job_rw =
+        type == SKULL_JOB_READ ? SK_SRV_JOB_READ : SK_SRV_JOB_WRITE;
+    sk_service_job_ret_t sret =
+        sk_service_job_create(sk_svc, delayed, job_rw, _job_cb, param_obj, bidx);
+    if (sret != SK_SRV_JOB_OK) {
         sk_obj_destroy(param_obj);
+        ret = SKULL_JOB_ERROR_BIO;
     }
 
     return ret;

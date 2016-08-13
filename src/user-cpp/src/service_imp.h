@@ -17,13 +17,19 @@ public:
     virtual ~ServiceImp();
 
 public:
-    int createJob(Job job) const;
-    int createJob(uint32_t delayed, Job job) const;
+    int createJob(uint32_t delayed, JobR, JobError) const;
+    int createJob(uint32_t delayed, JobW, JobError) const;
+    int createJob(JobR, JobError) const;
+    int createJob(JobW, JobError) const;
 
-    int createJob(uint32_t delayed, int bioIdx, JobNP job) const;
-    int createJob(uint32_t delayed, JobNP job) const;
-    int createJob(int bioIdx, JobNP job) const;
-    int createJob(JobNP job) const;
+    int createJob(uint32_t delayed, int bioIdx, JobNPR, JobNPError) const;
+    int createJob(uint32_t delayed, int bioIdx, JobNPW, JobNPError) const;
+    int createJob(int bioIdx, JobNPR, JobNPError) const;
+    int createJob(int bioIdx, JobNPW, JobNPError) const;
+    int createJob(uint32_t delayed, JobNPR, JobNPError) const;
+    int createJob(uint32_t delayed, JobNPW, JobNPError) const;
+    int createJob(JobNPR, JobNPError) const;
+    int createJob(JobNPW, JobNPError) const;
 
 public:
     void set(ServiceData* data);
