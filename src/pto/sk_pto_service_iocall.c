@@ -34,15 +34,9 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     int         bidx          = iocall_msg->bio_idx;
     sk_txn_taskdata_t* taskdata = (sk_txn_taskdata_t*) (uintptr_t) iocall_msg->txn_task;
 
-    sk_srv_status_t srv_status   = SK_SRV_STATUS_OK;
-    sk_srv_io_status_t io_status = SK_SRV_IO_STATUS_OK;
-
     // 2. find the target service
     sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
-    if (!service) {
-        SK_LOG_ERROR(SK_ENV_LOGGER, "Invalid service name %s", service_name);
-        io_status = SK_SRV_IO_STATUS_INVALID_SRV_NAME;
-    }
+    SK_ASSERT_MSG(service, "service_name: %s\n", service_name);
 
     const sk_service_cfg_t* srv_cfg = sk_service_config(service);
     const sk_service_api_t* srv_api = sk_service_api(service, api_name);
@@ -63,7 +57,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     }
 
     task.type      = SK_SRV_TASK_API_QUERY;
-    task.io_status = io_status;
+    task.io_status = SK_SRV_IO_STATUS_OK;
     task.bidx      = bidx;
     task.src       = src;
     task.data.api.service = service;
@@ -74,14 +68,18 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
 
     // 3.2 push task to service
     int ret = 0;
-    srv_status = sk_service_push_task(service, &task);
+    sk_srv_status_t srv_status = sk_service_push_task(service, &task);
     if (srv_status == SK_SRV_STATUS_BUSY) {
         task.io_status = SK_SRV_IO_STATUS_BUSY;
     }
 
     // 3.3 If push error, schedule back the task directly with error status
-    if (task.io_status == SK_SRV_IO_STATUS_BUSY ||
-        task.io_status == SK_SRV_IO_STATUS_INVALID_SRV_NAME) {
+    if (task.io_status == SK_SRV_IO_STATUS_BUSY) {
+        sk_metrics_worker.srv_iocall_busy.inc(1);
+        sk_metrics_global.srv_iocall_busy.inc(1);
+        SK_LOG_WARN(SK_ENV_LOGGER, "ServiceIocall Busy, service: %s, "
+                    "api: %s", service_name, srv_api->name);
+
         sk_service_schedule_task(service, &task);
         ret = 1;
         goto io_call_exit;

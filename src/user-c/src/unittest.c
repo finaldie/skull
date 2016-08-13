@@ -141,7 +141,8 @@ int skullut_module_run(skullut_module_t* env)
         skull_txn_t skull_txn;
         skull_txn_init(&skull_txn, env->txn);
 
-        task->cb(&skull_txn, api_name, task->request, task->request_sz,
+        task->cb(&skull_txn, SKULL_SERVICE_OK, api_name,
+                 task->request, task->request_sz,
                  task->response, task->response_sz);
 
         // 4. clean up
@@ -449,7 +450,8 @@ const sk_service_api_t* sk_service_api(const sk_service_t* svc, const char* api)
 
 int skull_service_job_create(skull_service_t*   svc,
                              uint32_t           delayed,
-                             skull_job_t        timer,
+                             skull_job_t        job,
+                             skull_job_err_t    job_error,
                              void*              ud,
                              skull_job_udfree_t udfree)
 {
@@ -458,7 +460,8 @@ int skull_service_job_create(skull_service_t*   svc,
 
 int skull_service_job_create_np(skull_service_t*   svc,
                                 uint32_t           delayed,
-                                skull_job_np_t     timer,
+                                skull_job_np_t     job,
+                                skull_job_np_err_t job_error,
                                 void*              ud,
                                 skull_job_udfree_t udfree,
                                 int                bio_idx)

@@ -27,17 +27,19 @@ const char* skull_service_name(const skull_service_t*);
 
 // ===================== APIs and Data Structures for Module ===================
 
-// module callback function declartion
-typedef int (*skull_svc_api_cb) (skull_txn_t*, const char* api_name,
-                                 const void* request, size_t req_sz,
-                                 const void* response, size_t resp_sz);
-
 typedef enum skull_service_ret_t {
     SKULL_SERVICE_OK            = 0,
     SKULL_SERVICE_ERROR_SRVNAME = 1,
     SKULL_SERVICE_ERROR_APINAME = 2,
-    SKULL_SERVICE_ERROR_BIO     = 3
+    SKULL_SERVICE_ERROR_BIO     = 3,
+    SKULL_SERVICE_ERROR_SRVBUSY = 4
 } skull_service_ret_t;
+
+// module callback function declartion
+typedef int (*skull_svc_api_cb) (skull_txn_t*, skull_service_ret_t,
+                                 const char* api_name,
+                                 const void* request, size_t req_sz,
+                                 const void* response, size_t resp_sz);
 
 /**
  * Invoke a service async call
@@ -46,7 +48,7 @@ typedef enum skull_service_ret_t {
  * @param api_name
  * @param request       request protobuf message
  * @param request_sz    request protobuf message size
- * @param cb            module callback function
+ * @param cb            api callback function
  * @param bio_idx       background io index
  *                      - (-1)  : random pick up a background io to run
  *                      - (0)   : do not use background io
@@ -66,17 +68,26 @@ skull_service_async_call (skull_txn_t*,
                           skull_svc_api_cb cb,
                           int bio_idx);
 
+// =============================== Service Job =================================
 typedef void (*skull_job_t) (skull_service_t*, void* ud,
                              const void* api_req, size_t api_req_sz,
                              void* api_resp, size_t api_resp_sz);
+
+typedef void (*skull_job_err_t)(const skull_service_t*, void* ud,
+                                const void* api_req, size_t api_req_sz,
+                                void* api_resp, size_t api_resp_sz);
+
 typedef void (*skull_job_np_t) (skull_service_t*, void* ud);
+typedef void (*skull_job_np_err_t) (const skull_service_t*, void* ud);
+
 typedef void (*skull_job_udfree_t) (void* ud);
 
 /**
  * Create a service job which would pending a service api call
  *
  * @param delayed  unit milliseconds
- * @param timer    job callback function
+ * @param job      job callback function
+ * @param job_err  job error callback function
  * @param ud       user data
  * @param udfree   the function is used for releasing user data after timer be
  *                  finished
@@ -88,7 +99,8 @@ typedef void (*skull_job_udfree_t) (void* ud);
  */
 int skull_service_job_create(skull_service_t*   svc,
                              uint32_t           delayed,
-                             skull_job_t        timer,
+                             skull_job_t        job,
+                             skull_job_err_t    job_err,
                              void*              ud,
                              skull_job_udfree_t udfree);
 
@@ -96,7 +108,8 @@ int skull_service_job_create(skull_service_t*   svc,
  * Create a service job which would NOT pending a service api call
  *
  * @param delayed  unit milliseconds
- * @param timer    job callback function
+ * @param job      job callback function
+ * @param job_err  job error callback function
  * @param ud       user data
  * @param udfree   the function is used for releasing user data after timer be
  *                  finished
@@ -109,7 +122,8 @@ int skull_service_job_create(skull_service_t*   svc,
  */
 int skull_service_job_create_np(skull_service_t*   svc,
                                 uint32_t           delayed,
-                                skull_job_np_t     timer,
+                                skull_job_np_t     job,
+                                skull_job_np_err_t job_err,
                                 void*              ud,
                                 skull_job_udfree_t udfree,
                                 int                bio_idx);

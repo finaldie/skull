@@ -83,8 +83,19 @@ int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
     skull_txn_t skull_txn;
     skull_txn_init(&skull_txn, txn);
 
+    // Set service return code
+    skull_service_ret_t skull_ret;
+    sk_txn_task_status_t st = sk_txn_task_status(txn, task_id);
+    SK_ASSERT_MSG(st == SK_TXN_TASK_DONE || st == SK_TXN_TASK_BUSY, "st %d\n: st");
+
+    if (st == SK_TXN_TASK_DONE) {
+        skull_ret = SKULL_SERVICE_OK;
+    } else {
+        skull_ret = SKULL_SERVICE_ERROR_SRVBUSY;
+    }
+
     // Invoke task callback
-    int ret = ((skull_svc_api_cb)task_data->cb)(&skull_txn, api_name,
+    int ret = ((skull_svc_api_cb)task_data->cb)(&skull_txn, skull_ret, api_name,
                                   task_data->request, task_data->request_sz,
                                   task_data->response, task_data->response_sz);
 

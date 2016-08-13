@@ -29,10 +29,9 @@ typedef enum sk_srv_status_t {
 
 // service status for user layer
 typedef enum sk_srv_io_status_t {
-    SK_SRV_IO_STATUS_OK = 0,
-    SK_SRV_IO_STATUS_INVALID_SRV_NAME = 1,
-    SK_SRV_IO_STATUS_BUSY = 2,
-    SK_SRV_IO_STATUS_MAX // DO NOT USE IT
+    SK_SRV_IO_STATUS_OK   = 0,
+    SK_SRV_IO_STATUS_BUSY = 1,
+    SK_SRV_IO_STATUS_MAX       // DO NOT USE IT
 } sk_srv_io_status_t;
 
 typedef enum sk_srv_task_type_t {

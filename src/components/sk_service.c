@@ -156,6 +156,26 @@ void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
 }
 
 static
+void _schedule_api_errortask(sk_service_t* service, const sk_srv_task_t* task)
+{
+    // 1. Construct protocol
+    sk_sched_t* src     = task->src;
+    sk_txn_t*   txn     = task->data.api.txn;
+    sk_txn_taskdata_t* taskdata = task->data.api.txn_task;
+
+    ServiceTaskCb task_cb_msg = SERVICE_TASK_CB__INIT;
+    task_cb_msg.taskdata      = (uint64_t) (uintptr_t) taskdata;
+    task_cb_msg.service_name  = (char*) sk_service_name(service);;
+    task_cb_msg.api_name      = (char*) task->data.api.name;
+    task_cb_msg.task_status   = (uint32_t) SK_TXN_TASK_BUSY;
+    task_cb_msg.svc_task_done = 0;
+
+    // 2. Deliver the protocol
+    sk_sched_send(SK_ENV_SCHED, src, sk_txn_entity(txn), txn,
+                  SK_PTO_SVC_TASK_CB, &task_cb_msg, 0);
+}
+
+static
 void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
 {
     // 1. Create timer message
@@ -358,9 +378,26 @@ sk_srv_status_t sk_service_push_task(sk_service_t* service,
     return SK_SRV_STATUS_OK;
 }
 
-// construct a service_'task_run' protocol, and deliver it to worker thread
-void sk_service_schedule_task(sk_service_t* service,
-                              const sk_srv_task_t* task)
+// 
+static
+void sk_service_schedule_errortask(sk_service_t* service,
+                                    const sk_srv_task_t* task)
+{
+    switch (task->type) {
+    case SK_SRV_TASK_API_QUERY:
+        _schedule_api_task(service, task);
+        break;
+    case SK_SRV_TASK_TIMER:
+        _schedule_timer_task(service, task);
+        break;
+    default:
+        SK_ASSERT(0);
+    }
+}
+
+static
+void sk_service_schedule_normaltask(sk_service_t* service,
+                                    const sk_srv_task_t* task)
 {
     service->running_task_cnt++;
 
@@ -373,6 +410,17 @@ void sk_service_schedule_task(sk_service_t* service,
         break;
     default:
         SK_ASSERT(0);
+    }
+}
+
+// construct a service_'task_run' protocol, and deliver it to worker thread
+void sk_service_schedule_task(sk_service_t* service,
+                              const sk_srv_task_t* task)
+{
+    if (task->io_status == SK_SRV_IO_STATUS_OK) {
+        sk_service_schedule_normaltask(service, task);
+    } else {
+        sk_service_schedule_errortask(service, task);
     }
 }
 
@@ -420,6 +468,9 @@ size_t sk_service_schedule_tasks(sk_service_t* service)
         _sk_service_handle_exception(service, pop_status);
 
         // 2. schedule task to worker
+        SK_ASSERT_MSG(task.io_status == SK_SRV_IO_STATUS_OK,
+                      "task.io_status: %d\n", task.io_status);
+
         sk_service_schedule_task(service, &task);
         scheduled_task++;
     }

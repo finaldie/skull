@@ -45,7 +45,7 @@ int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn
     // 2. Push to service task queue
     sk_print("push task to service queue\n");
     sk_srv_status_t ret = sk_service_push_task(svc, &task);
-    SK_ASSERT(ret == SK_SRV_STATUS_OK);
+    SK_ASSERT_MSG(ret == SK_SRV_STATUS_OK, "ret: %d\n", ret);
 
     // 3. Reschedule service tasks
     sk_service_schedule_tasks(svc);

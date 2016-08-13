@@ -27,6 +27,8 @@ global:
             desc: How many service iocalls be completed
         srv_iocall_execute:
             desc: How many service iocalls be executed
+        srv_iocall_busy:
+            desc: How many service iocalls failed due to service busy
         srv_timer_emit:
             desc: How many timers be emitted
         srv_timer_complete:
@@ -75,6 +77,8 @@ worker:
             desc: How many service iocalls be completed
         srv_iocall_execute:
             desc: How many service iocalls be executed
+        srv_iocall_busy:
+            desc: How many service iocalls failed due to service busy
         srv_timer_emit:
             desc: How many timers be emitted
         srv_timer_complete:

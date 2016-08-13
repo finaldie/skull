@@ -27,7 +27,9 @@ private:
 
 public:
     typedef std::function<void (Service&, ServiceApiData&)> Job;
+    typedef std::function<void (const Service&, ServiceApiData&)> JobError;
     typedef std::function<void (Service&)> JobNP;
+    typedef std::function<void (const Service&)> JobNPError;
 
 public:
     Service() {};
