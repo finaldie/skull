@@ -55,7 +55,7 @@ int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn
         sk_metrics_worker.srv_timer_busy.inc(1);
         sk_metrics_global.srv_timer_busy.inc(1);
 
-        SK_LOG_WARN(SK_ENV_LOGGER, "ServiceJob Busy, service: %s", sk_service_name(svc));
+        SK_LOG_DEBUG(SK_ENV_LOGGER, "ServiceJob Busy, service: %s", sk_service_name(svc));
 
         // Schedule it back to original caller
         sk_service_schedule_task(svc, &task);

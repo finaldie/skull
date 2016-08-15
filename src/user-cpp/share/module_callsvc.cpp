@@ -54,6 +54,12 @@ int svc_api_callback(skullcpp::Txn& txn, skullcpp::Txn::IOStatus status,
                      const google::protobuf::Message& request,
                      const google::protobuf::Message& response)
 {
+    if (status != skullcpp::Txn::IOStatus::OK) {
+        SKULLCPP_LOG_ERROR("api_callback", "iocall error, status: " << status,
+                           "Please increase service max queue limitation");
+        return 1;
+    }
+
     const auto& apiReq  = (skull::service::s1::get_req&)request;
     const auto& apiResp = (skull::service::s1::get_resp&)response;
 

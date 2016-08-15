@@ -77,7 +77,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     if (task.io_status == SK_SRV_IO_STATUS_BUSY) {
         sk_metrics_worker.srv_iocall_busy.inc(1);
         sk_metrics_global.srv_iocall_busy.inc(1);
-        SK_LOG_WARN(SK_ENV_LOGGER, "ServiceIocall Busy, service: %s, "
+        SK_LOG_DEBUG(SK_ENV_LOGGER, "ServiceIocall Busy, service: %s, "
                     "api: %s", service_name, srv_api->name);
 
         sk_service_schedule_task(service, &task);
