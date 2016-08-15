@@ -45,7 +45,8 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 }
 
 static
-int svc_api_callback1(skullcpp::Txn& txn, const std::string& apiName,
+int svc_api_callback1(skullcpp::Txn& txn, skullcpp::Txn::IOStatus status,
+                     const std::string& apiName,
                      const google::protobuf::Message& request,
                      const google::protobuf::Message& response) {
     const auto& apiReq  = (skull::service::s1::get_req&)request;
@@ -62,7 +63,8 @@ int svc_api_callback1(skullcpp::Txn& txn, const std::string& apiName,
 }
 
 static
-int svc_api_callback(skullcpp::Txn& txn, const std::string& apiName,
+int svc_api_callback(skullcpp::Txn& txn, skullcpp::Txn::IOStatus status,
+                     const std::string& apiName,
                      const google::protobuf::Message& request,
                      const google::protobuf::Message& response)
 {
