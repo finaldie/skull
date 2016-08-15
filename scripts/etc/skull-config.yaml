@@ -6,6 +6,7 @@ log_level: debug
 
 workflows:
 
+# If you want to set the max_queue_size, use 'max_qsize' for the service item
 services:
 
 languages: [cpp]

@@ -450,23 +450,23 @@ const sk_service_api_t* sk_service_api(const sk_service_t* svc, const char* api)
 
 skull_job_ret_t
 skull_service_job_create(skull_service_t*   svc,
-                             uint32_t           delayed,
-                             skull_job_rw_t     type,
-                             skull_job_t        job,
-                             void*              ud,
-                             skull_job_udfree_t udfree)
+                         uint32_t           delayed,
+                         skull_job_rw_t     type,
+                         skull_job_t        job,
+                         void*              ud,
+                         skull_job_udfree_t udfree)
 {
     return SKULL_JOB_OK;
 }
 
 skull_job_ret_t
 skull_service_job_create_np(skull_service_t*   svc,
-                                uint32_t           delayed,
-                                skull_job_rw_t     type,
-                                skull_job_np_t     job,
-                                void*              ud,
-                                skull_job_udfree_t udfree,
-                                int                bio_idx)
+                            uint32_t           delayed,
+                            skull_job_rw_t     type,
+                            skull_job_np_t     job,
+                            void*              ud,
+                            skull_job_udfree_t udfree,
+                            int                bio_idx)
 {
     return SKULL_JOB_OK;
 }

@@ -5,6 +5,7 @@
 #include "flibs/fhash.h"
 #include "flibs/fmbuf.h"
 #include "api/sk_utils.h"
+#include "api/sk_const.h"
 #include "api/sk_env.h"
 #include "api/sk_pto.h"
 #include "api/sk_metrics.h"
@@ -14,7 +15,6 @@
 #include "api/sk_service.h"
 
 #define SK_SRV_TASK_SZ    (sizeof(sk_srv_task_t))
-#define SK_SRV_MAX_TASK   1024
 
 struct sk_service_t {
     int running_task_cnt;
@@ -72,8 +72,10 @@ void _sk_service_handle_exception(sk_service_t* service, sk_srv_status_t st)
 }
 
 static
-void _sk_service_data_create(sk_service_t* service, sk_srv_data_mode_t mode)
+void _sk_service_data_create(sk_service_t* service, const sk_service_cfg_t* cfg)
 {
+    // 1. get queue mode
+    sk_srv_data_mode_t mode = cfg->data_mode;
     service->data = sk_srv_data_create(mode);
 
     sk_queue_mode_t queue_mode = 0;
@@ -88,8 +90,30 @@ void _sk_service_data_create(sk_service_t* service, sk_srv_data_mode_t mode)
         SK_ASSERT(0);
     }
 
-    service->pending_tasks = sk_queue_create(queue_mode, SK_SRV_TASK_SZ,
-                                             0, SK_SRV_MAX_TASK);
+    // 2. get max_queue_size
+    size_t max_queue_limitation = SIZE_MAX / SK_SRV_TASK_SZ;
+    size_t max_queue_size = 0;
+
+    if (cfg->max_qsize > 0) {
+        if ((size_t)cfg->max_qsize > max_queue_limitation) {
+            SK_LOG_WARN(SK_ENV_LOGGER, "service(%s) config 'max_qsize' over limitation, "
+                "max_qsize: %d, will be set to %zu", service->name,
+                cfg->max_qsize, max_queue_limitation);
+
+            max_queue_size = max_queue_limitation;
+        } else {
+            max_queue_size = (size_t)cfg->max_qsize;
+        }
+    } else {
+        max_queue_size = SK_SRV_MAX_TASK;
+    }
+
+    SK_LOG_INFO(SK_ENV_LOGGER, "service(%s) create task queue with %zu slots",
+                service->name, max_queue_size);
+
+    // 3. create task queue according to mode and max_queue_size
+    service->pending_tasks =
+        sk_queue_create(queue_mode, SK_SRV_TASK_SZ, 0, max_queue_size);
 }
 
 static
@@ -277,7 +301,7 @@ sk_service_t* sk_service_create(const char* service_name,
     service->cfg  = cfg;
     service->apis = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
-    _sk_service_data_create(service, cfg->data_mode);
+    _sk_service_data_create(service, cfg);
 
     return service;
 }
