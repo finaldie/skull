@@ -1,6 +1,7 @@
 * 2016-08-15 0.9.1
   * Core
     * **Fix:** Do not calling service api/job if service busy
+    * **Fix:** Fix a potential memleak in txn.iocall if callback is NULL
     * **Enhancement:** Add an optional service config item for controlling max queue size
   * User
     * **Enhancement:** Upgrade service/txn apis for handling service busy case
