@@ -152,7 +152,7 @@ Name                  | Description |
 # Other Resources
 Name                  | Description |
 ----------------------|-------------|
-[Skull-Perf Cases][5] | Including 3 basic perf cases |
+[Skull-Perf Cases][5] | Including some basic perf cases |
 
 
 
