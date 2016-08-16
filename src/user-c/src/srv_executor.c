@@ -71,13 +71,22 @@ int  skull_srv_iocall  (sk_service_t* srv, const sk_txn_t* txn, void* sdata,
 int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
                                 uint64_t task_id, const char* api_name)
 {
-    // get the task data
+    skull_service_opt_t* opt = sdata;
+    int ret = 0;
+
     sk_txn_taskdata_t* task_data = sk_txn_taskdata(txn, task_id);
     SK_ASSERT(task_data);
 
+    skull_service_t skull_service = {
+        .service = srv,
+        .txn     = txn,
+        .task    = task_data,
+        .freezed = 0
+    };
+
     if (!task_data->cb) {
         sk_print("no service api callback function to run, skip it\n");
-        return 0;
+        goto iocall_cleanup;
     }
 
     skull_txn_t skull_txn;
@@ -95,19 +104,12 @@ int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
     }
 
     // Invoke task callback
-    int ret = ((skull_svc_api_cb)task_data->cb)(&skull_txn, skull_ret, api_name,
+    ret = ((skull_svc_api_cb)task_data->cb)(&skull_txn, skull_ret, api_name,
                                   task_data->request, task_data->request_sz,
                                   task_data->response, task_data->response_sz);
 
     // Invoke iocomplete to do the cleanup job
-    skull_service_opt_t* opt = sdata;
-    skull_service_t skull_service = {
-        .service = srv,
-        .txn     = txn,
-        .task    = task_data,
-        .freezed = 0
-    };
-
+iocall_cleanup:
     opt->iocomplete(&skull_service, api_name, opt->ud);
 
     // Release the skull_txn
