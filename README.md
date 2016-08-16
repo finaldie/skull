@@ -20,6 +20,8 @@ A fast to start, easy to maintain, high productivity serving framework<br>
 - [How to Create a Service](#How to Create a Service)
 - [How to Check Metrics](#How to Check Metrics)
 - [Existing Services](#Existing Services)
+- [Other Resources](#Other Resources)
+- [Contribution](#Contribution)
 
 ## Introduction
 Skull provides the following features:
@@ -152,7 +154,7 @@ Name                  | Description |
 # Other Resources
 Name                  | Description |
 ----------------------|-------------|
-[Skull-Perf Cases][5] | Including 3 basic perf cases |
+[Skull-Perf Cases][5] | Including some basic perf cases |
 
 
 

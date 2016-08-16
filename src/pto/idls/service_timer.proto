@@ -3,6 +3,7 @@ message service_timer_run {
     required bytes  job   = 2;
     required uint64 ud    = 3;
     required int32  valid = 4;
+    required int32  status = 5;
 }
 
 message service_timer_complete {

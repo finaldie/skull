@@ -40,6 +40,7 @@ sk_service_cfg_t* _service_cfg_item_create()
     sk_service_cfg_t* cfg = calloc(1, sizeof(*cfg));
     cfg->enable = false;
     cfg->data_mode = SK_SRV_DATA_MODE_RW_PR;
+    cfg->max_qsize = 0;
 
     return cfg;
 }
@@ -291,6 +292,8 @@ void _load_service(const char* service_name, sk_cfg_node_t* node,
             _load_service_data_mode(child, service_cfg);
         } else if (0 == strcmp(key, "type")) {
             service_cfg->type = strdup(sk_config_getstring(child));
+        } else if (0 == strcmp(key, "max_qsize")) {
+            service_cfg->max_qsize = sk_config_getint(child);
         }
     }
 

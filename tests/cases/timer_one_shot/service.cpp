@@ -30,7 +30,7 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
     skullcpp::Config::instance().load(config);
 
     // Create a timer job (should be failed)
-    int ret = service.createJob((uint32_t)1000, skull_BindSvcJob(_timerjob));
+    int ret = service.createJob((uint32_t)1000, skull_BindSvcJobW(_timerjob), NULL);
     if (!ret) {
         SKULLCPP_LOG_INFO("init", "service job create successful");
     } else {
@@ -38,7 +38,7 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
     }
 
     // Try again
-    ret = service.createJob(1000, 0, skull_BindSvcJobNP(_timerjob_np));
+    ret = service.createJob(1000, 0, skull_BindSvcJobNPW(_timerjob_np), NULL);
     if (!ret) {
         SKULLCPP_LOG_INFO("init1", "service job create successful1");
     } else {

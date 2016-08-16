@@ -70,7 +70,7 @@ typedef enum sk_txn_task_status_t {
     SK_TXN_TASK_RUNNING = 0,
     SK_TXN_TASK_DONE    = 1,
     SK_TXN_TASK_PENDING = 2,
-    SK_TXN_TASK_ERROR   = 3
+    SK_TXN_TASK_BUSY    = 3
 } sk_txn_task_status_t;
 
 typedef int (*sk_txn_task_cb) ();

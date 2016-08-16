@@ -49,10 +49,14 @@ public:
                           int bio_idx,
                           ApiCB cb);
 
-    virtual IOStatus serviceCall (const std::string& serviceName,
+    IOStatus serviceCall (const std::string& serviceName,
                           const std::string& apiName,
                           const google::protobuf::Message& request,
                           ApiCB cb);
+
+    IOStatus serviceCall (const std::string& serviceName,
+                          const std::string& apiName,
+                          const google::protobuf::Message& request);
 
 public:
     skull_txn_t* txn() const;

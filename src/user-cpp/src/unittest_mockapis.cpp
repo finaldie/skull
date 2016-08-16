@@ -59,27 +59,51 @@ EPClient::Status EPClient::send(const Service& svc, const std::string& data) con
 }
 
 /***************************** Service Mock APIs ******************************/
-int ServiceImp::createJob(uint32_t delayed, Job job) const {
+int ServiceImp::createJob(uint32_t delayed, JobR job, JobError err) const {
     return 0;
 }
 
-int ServiceImp::createJob(Job job) const {
+int ServiceImp::createJob(uint32_t delayed, JobW job, JobError err) const {
     return 0;
 }
 
-int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNP job) const {
+int ServiceImp::createJob(JobR job, JobError err) const {
     return 0;
 }
 
-int ServiceImp::createJob(uint32_t delayed, JobNP job) const {
+int ServiceImp::createJob(JobW job, JobError err) const {
     return 0;
 }
 
-int ServiceImp::createJob(int bioIdx, JobNP job) const {
+int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNPR job, JobNPError err) const {
     return 0;
 }
 
-int ServiceImp::createJob(JobNP job) const {
+int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNPW job, JobNPError err) const {
+    return 0;
+}
+
+int ServiceImp::createJob(uint32_t delayed, JobNPR job, JobNPError err) const {
+    return 0;
+}
+
+int ServiceImp::createJob(uint32_t delayed, JobNPW job, JobNPError err) const {
+    return 0;
+}
+
+int ServiceImp::createJob(int bioIdx, JobNPR job, JobNPError err) const {
+    return 0;
+}
+
+int ServiceImp::createJob(int bioIdx, JobNPW job, JobNPError err) const {
+    return 0;
+}
+
+int ServiceImp::createJob(JobNPR job, JobNPError err) const {
+    return 0;
+}
+
+int ServiceImp::createJob(JobNPW job, JobNPError err) const {
     return 0;
 }
 

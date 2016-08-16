@@ -45,7 +45,7 @@ void _ep_nopending_cb(const skullcpp::Service& service, skullcpp::EPClientNPRet&
 }
 
 static
-void _timerjob(skullcpp::Service& service, skullcpp::ServiceApiData& apiData) {
+void _timerjob(const skullcpp::Service& service, skullcpp::ServiceApiData& apiData) {
     std::cout << "timer job triggered" << std::endl;
     SKULL_LOG_INFO("svc.test.timerjob", "timer job triggered");
 
@@ -91,8 +91,8 @@ void skull_service_getdata(const skullcpp::Service& service,
     std::cout << "api req: " << apiReq.name() << std::endl;
     apiResp.set_response("Hi new bie");
 
-    // Create a timer job (pending)
-    int ret = service.createJob((uint32_t)1000, skull_BindSvcJob(_timerjob));
+    // Create a timer job (pending, write)
+    int ret = service.createJob((uint32_t)1000, skull_BindSvcJobR(_timerjob), NULL);
     SKULLCPP_LOG_INFO("init", "create service job, ret: " << ret);
 }
 

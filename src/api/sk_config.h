@@ -38,6 +38,13 @@ typedef struct sk_service_cfg_t {
     short __padding2;
 
     sk_srv_data_mode_t data_mode;
+
+    // Max queue size
+    int max_qsize;
+
+#if __WORDSIZE == 64
+    int   __padding3;
+#endif
 } sk_service_cfg_t;
 
 typedef struct sk_config_t {

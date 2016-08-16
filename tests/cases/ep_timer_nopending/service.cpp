@@ -76,7 +76,7 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
     skullcpp::Config::instance().load(config);
 
     // Create a timer job (no pending)
-    int ret = service.createJob(1000, 0, skull_BindSvcJobNP(_timerjob));
+    int ret = service.createJob(1000, 0, skull_BindSvcJobNPW(_timerjob), NULL);
     SKULLCPP_LOG_INFO("init", "create service job, ret: " << ret);
 }
 

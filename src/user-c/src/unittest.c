@@ -141,7 +141,8 @@ int skullut_module_run(skullut_module_t* env)
         skull_txn_t skull_txn;
         skull_txn_init(&skull_txn, env->txn);
 
-        task->cb(&skull_txn, api_name, task->request, task->request_sz,
+        task->cb(&skull_txn, SKULL_SERVICE_OK, api_name,
+                 task->request, task->request_sz,
                  task->response, task->response_sz);
 
         // 4. clean up
@@ -447,23 +448,27 @@ const sk_service_api_t* sk_service_api(const sk_service_t* svc, const char* api)
     return NULL;
 }
 
-int skull_service_job_create(skull_service_t*   svc,
-                             uint32_t           delayed,
-                             skull_job_t        timer,
-                             void*              ud,
-                             skull_job_udfree_t udfree)
+skull_job_ret_t
+skull_service_job_create(skull_service_t*   svc,
+                         uint32_t           delayed,
+                         skull_job_rw_t     type,
+                         skull_job_t        job,
+                         void*              ud,
+                         skull_job_udfree_t udfree)
 {
-    return 0;
+    return SKULL_JOB_OK;
 }
 
-int skull_service_job_create_np(skull_service_t*   svc,
-                                uint32_t           delayed,
-                                skull_job_np_t     timer,
-                                void*              ud,
-                                skull_job_udfree_t udfree,
-                                int                bio_idx)
+skull_job_ret_t
+skull_service_job_create_np(skull_service_t*   svc,
+                            uint32_t           delayed,
+                            skull_job_rw_t     type,
+                            skull_job_np_t     job,
+                            void*              ud,
+                            skull_job_udfree_t udfree,
+                            int                bio_idx)
 {
-    return 0;
+    return SKULL_JOB_OK;
 }
 
 // Mock API for skull_ep_xxx_send. Return ok directly, since we don't need to mock

@@ -58,5 +58,8 @@ struct sk_const_t;
 #define SK_TXN_DEFAULT_INIT_SIZE             (256)
 #define SK_TXN_DEFAULT_MAX_SIZE              (2048)
 
+// service
+#define SK_SRV_MAX_TASK                      (1024)
+
 #endif
 

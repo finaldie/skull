@@ -40,7 +40,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
     uint64_t task_id = sk_txn_task_id(taskdata->owner);
 
     // 2. mark the txn task complete
-    if (task_status == SK_TXN_TASK_DONE) {
+    if (task_status == SK_TXN_TASK_DONE || task_status == SK_TXN_TASK_BUSY) {
         sk_txn_task_setcomplete(txn, task_id, task_status);
 
         // 3. get the target service
@@ -71,8 +71,8 @@ int _run(sk_sched_t* sched, sk_sched_t* src,
         unsigned long long task_starttime = sk_txn_task_starttime(txn, task_id);
 
         sk_txn_log_add(txn, "; t:%s:%s st: %d cb_st: %d start: %llu end: %llu ",
-                       service_name, api_name, sk_txn_task_status(txn, task_id),
-                       ret, task_starttime - txn_starttime, txn_alivetime);
+                       service_name, api_name, task_status, ret,
+                       task_starttime - txn_starttime, txn_alivetime);
     }
 
     // 5. log the task lifetime for debugging purpose

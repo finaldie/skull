@@ -7,38 +7,79 @@ namespace skullcpp {
 
 class ServiceJobData {
 public:
-    skullcpp::Service::Job   job_;
-    skullcpp::Service::JobNP jobNP_;
+    skullcpp::Service::JobR     jobR_;
+    skullcpp::Service::JobW     jobW_;
+    skullcpp::Service::JobError jobError_;
+
+    skullcpp::Service::JobNPR     jobNPR_;
+    skullcpp::Service::JobNPW     jobNPW_;
+    skullcpp::Service::JobNPError jobNPError_;
 
 public:
-    ServiceJobData(skullcpp::Service::Job   job) : job_(job),  jobNP_(NULL) {}
-    ServiceJobData(skullcpp::Service::JobNP job) : job_(NULL), jobNP_(job)  {}
+    ServiceJobData(skullcpp::Service::JobR job, skullcpp::Service::JobError jobError) :
+        jobR_(job), jobW_(NULL), jobError_(jobError),
+        jobNPR_(NULL), jobNPW_(NULL), jobNPError_(NULL) {}
+
+    ServiceJobData(skullcpp::Service::JobW job, skullcpp::Service::JobError jobError) :
+        jobR_(NULL), jobW_(job), jobError_(jobError),
+        jobNPR_(NULL), jobNPW_(NULL), jobNPError_(NULL) {}
+
+    ServiceJobData(skullcpp::Service::JobNPR job, skullcpp::Service::JobNPError jobError) :
+        jobR_(NULL), jobW_(NULL), jobError_(NULL),
+        jobNPR_(job), jobNPW_(NULL), jobNPError_(jobError) {}
+
+    ServiceJobData(skullcpp::Service::JobNPW job, skullcpp::Service::JobNPError jobError) :
+        jobR_(NULL), jobW_(NULL), jobError_(NULL),
+        jobNPR_(NULL), jobNPW_(job), jobNPError_(jobError) {}
+
     ~ServiceJobData() {}
 };
 
 static
-void _job_triggered(skull_service_t* svc, void* ud,
+void _job_triggered(skull_service_t* svc, skull_job_ret_t ret, void* ud,
                     const void* api_req, size_t api_req_sz,
                     void* api_resp, size_t api_resp_sz)
 {
-    ServiceJobData* jobdata = (ServiceJobData*)ud;
-    if (jobdata) {
-        skullcpp::ServiceImp service(svc);
-        skullcpp::ServiceApiDataImp apiDataImp(
-            svc, api_req, api_req_sz, api_resp, api_resp_sz);
+    if (!ud) return;
 
-        jobdata->job_(service, apiDataImp);
+    ServiceJobData* jobdata = (ServiceJobData*)ud;
+    skullcpp::ServiceImp service(svc);
+    skullcpp::ServiceApiDataImp apiDataImp(
+        svc, api_req, api_req_sz, api_resp, api_resp_sz);
+
+    if (ret != SKULL_JOB_OK) {
+        if (jobdata->jobError_) {
+            jobdata->jobError_(service, apiDataImp);
+        }
+        return;
+    }
+
+    if (jobdata->jobR_) {
+        jobdata->jobR_(service, apiDataImp);
+    } else {
+        jobdata->jobW_(service, apiDataImp);
     }
 }
 
 static
-void _job_triggered_np(skull_service_t* svc, void* ud)
+void _job_triggered_np(skull_service_t* svc, skull_job_ret_t ret, void* ud)
 {
-    ServiceJobData* jobdata = (ServiceJobData*)ud;
-    if (jobdata) {
-        skullcpp::ServiceImp service(svc);
+    if (!ud) return;
 
-        jobdata->jobNP_(service);
+    ServiceJobData* jobdata = (ServiceJobData*)ud;
+    skullcpp::ServiceImp service(svc);
+
+    if (ret != SKULL_JOB_OK) {
+        if (jobdata->jobNPError_) {
+            jobdata->jobNPError_(service);
+        }
+        return;
+    }
+
+    if (jobdata->jobNPR_) {
+        jobdata->jobNPR_(service);
+    } else {
+        jobdata->jobNPW_(service);
     }
 }
 
@@ -49,34 +90,66 @@ void _release_jobdata(void* ud)
     delete jobdata;
 }
 
-int ServiceImp::createJob(uint32_t delayed, Job job) const {
-    ServiceJobData* jobdata = new ServiceJobData(job);
+int ServiceImp::createJob(uint32_t delayed, JobR job, JobError jobErr) const {
+    ServiceJobData* jobdata = new ServiceJobData(job, jobErr);
 
-    return skull_service_job_create(this->svc, delayed, _job_triggered, jobdata,
-                                    _release_jobdata);
+    return skull_service_job_create(this->svc, delayed, SKULL_JOB_READ,
+                                    _job_triggered, jobdata, _release_jobdata);
 }
 
-int ServiceImp::createJob(Job job) const {
-    return createJob((uint32_t)0, job);
+int ServiceImp::createJob(uint32_t delayed, JobW job, JobError jobErr) const {
+    ServiceJobData* jobdata = new ServiceJobData(job, jobErr);
+
+    return skull_service_job_create(this->svc, delayed, SKULL_JOB_WRITE,
+                                    _job_triggered, jobdata, _release_jobdata);
 }
 
-int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNP job) const {
-    ServiceJobData* jobdata = new ServiceJobData(job);
-
-    return skull_service_job_create_np(this->svc, 0, _job_triggered_np, jobdata,
-                                    _release_jobdata, bioIdx);
+int ServiceImp::createJob(JobR job, JobError jobErr) const {
+    return createJob((uint32_t)0, job, jobErr);
 }
 
-int ServiceImp::createJob(uint32_t delayed, JobNP job) const {
-    return createJob(delayed, 0, job);
+int ServiceImp::createJob(JobW job, JobError jobErr) const {
+    return createJob((uint32_t)0, job, jobErr);
 }
 
-int ServiceImp::createJob(int bioIdx, JobNP job) const {
-    return createJob(0, bioIdx, job);
+int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNPR job,
+                          JobNPError jobErr) const {
+    ServiceJobData* jobdata = new ServiceJobData(job, jobErr);
+
+    return skull_service_job_create_np(this->svc, 0, SKULL_JOB_READ,
+                    _job_triggered_np, jobdata, _release_jobdata, bioIdx);
 }
 
-int ServiceImp::createJob(JobNP job) const {
-    return createJob(0, 0, job);
+int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNPW job,
+                          JobNPError jobErr) const {
+    ServiceJobData* jobdata = new ServiceJobData(job, jobErr);
+
+    return skull_service_job_create_np(this->svc, 0, SKULL_JOB_WRITE,
+                    _job_triggered_np, jobdata, _release_jobdata, bioIdx);
+}
+
+int ServiceImp::createJob(uint32_t delayed, JobNPR job, JobNPError jobErr) const {
+    return createJob(delayed, 0, job, jobErr);
+}
+
+int ServiceImp::createJob(uint32_t delayed, JobNPW job, JobNPError jobErr) const {
+    return createJob(delayed, 0, job, jobErr);
+}
+
+int ServiceImp::createJob(int bioIdx, JobNPR job, JobNPError jobErr) const {
+    return createJob((uint32_t)0, bioIdx, job, jobErr);
+}
+
+int ServiceImp::createJob(int bioIdx, JobNPW job, JobNPError jobErr) const {
+    return createJob((uint32_t)0, bioIdx, job, jobErr);
+}
+
+int ServiceImp::createJob(JobNPR job, JobNPError jobErr) const {
+    return createJob((uint32_t)0, 0, job, jobErr);
+}
+
+int ServiceImp::createJob(JobNPW job, JobNPError jobErr) const {
+    return createJob((uint32_t)0, 0, job, jobErr);
 }
 
 } // End of namespace

@@ -95,7 +95,8 @@ Txn::Status TxnImp::status() const {
 }
 
 static
-int _skull_svc_api_callback(skull_txn_t* sk_txn, const char* apiName,
+int _skull_svc_api_callback(skull_txn_t* sk_txn, skull_service_ret_t ret,
+                            const char* apiName,
                             const void* request, size_t req_sz,
                             const void* response, size_t resp_sz) {
     TxnImp txn(sk_txn);
@@ -103,7 +104,16 @@ int _skull_svc_api_callback(skull_txn_t* sk_txn, const char* apiName,
     ServiceApiReqData apiReq(rawData);
     ServiceApiRespData apiResp(rawData->svcName, apiName, response, resp_sz);
 
-    return rawData->cb(txn, std::string(apiName), apiReq.get(), apiResp.get());
+    Txn::IOStatus st;
+    if (ret == SKULL_SERVICE_OK) {
+        st = Txn::IOStatus::OK;
+    } else if (ret == SKULL_SERVICE_ERROR_SRVBUSY) {
+        st = Txn::IOStatus::ERROR_SRVBUSY;
+    } else {
+        assert(0);
+    }
+
+    return rawData->cb(txn, st, std::string(apiName), apiReq.get(), apiResp.get());
 }
 
 Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
@@ -120,7 +130,7 @@ Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
     skull_service_ret_t ret =
         skull_service_async_call(this->txn(), serviceName.c_str(),
             apiName.c_str(), rawReqData, dataSz,
-            _skull_svc_api_callback, bioIdx);
+            cb ? _skull_svc_api_callback : NULL, bioIdx);
 
     if (ret != SKULL_SERVICE_OK) {
         delete rawReqData;
@@ -147,6 +157,12 @@ Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
                                 const google::protobuf::Message& request,
                                 ApiCB cb) {
     return serviceCall(serviceName, apiName, request, 0, cb);
+}
+
+Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
+                                const std::string& apiName,
+                                const google::protobuf::Message& request) {
+    return serviceCall(serviceName, apiName, request, 0, NULL);
 }
 
 skull_txn_t* TxnImp::txn() const {

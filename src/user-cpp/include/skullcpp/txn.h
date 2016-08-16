@@ -29,10 +29,11 @@ public:
         OK            = 0,
         ERROR_SRVNAME = 1,
         ERROR_APINAME = 2,
-        ERROR_BIO     = 3
+        ERROR_BIO     = 3,
+        ERROR_SRVBUSY = 4
     } IOStatus;
 
-    typedef int (*ApiCB) (Txn&, const std::string& apiName,
+    typedef int (*ApiCB) (Txn&, IOStatus, const std::string& apiName,
                           const google::protobuf::Message& request,
                           const google::protobuf::Message& response);
 
@@ -45,6 +46,21 @@ public:
     virtual Status status() const = 0;
 
     /**
+     * Invoke a service async call (no pending)
+     *
+     * @param serivce_name
+     * @param apiName
+     * @param request       request protobuf message
+     *
+     * @return - OK
+     *         - ERROR_SRVNAME
+     *         - ERROR_APINAME
+     */
+    virtual IOStatus serviceCall (const std::string& serviceName,
+                          const std::string& apiName,
+                          const google::protobuf::Message& request) = 0;
+
+    /**
      * Invoke a service async call
      *
      * @param serivce_name
@@ -55,6 +71,8 @@ public:
      * @return - OK
      *         - ERROR_SRVNAME
      *         - ERROR_APINAME
+     *
+     * @note If cb is NULL, it's a no pending call as well
      */
     virtual IOStatus serviceCall (const std::string& serviceName,
                           const std::string& apiName,
@@ -77,6 +95,8 @@ public:
      *         - ERROR_SRVNAME
      *         - ERROR_APINAME
      *         - ERROR_BIO
+     *
+     * @note If cb is NULL, it's a no pending call as well
      */
     virtual IOStatus serviceCall (const std::string& serviceName,
                           const std::string& apiName,
