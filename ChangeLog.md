@@ -1,3 +1,9 @@
+* 2016-08-15 0.9.1
+  * Core
+    * **Fix:** Do not calling service api/job if service busy
+    * **Enhancement:** Add an optional service config item for controlling max queue size
+  * User
+    * **Enhancement:** Upgrade service/txn apis for handling service busy case
 * 2016-08-12 0.8.11
   * Core
     * **Fix:** Resolve ep pool crash issue
