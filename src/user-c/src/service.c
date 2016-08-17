@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "api/sk_core.h"
-#include "api/sk_env.h"
 #include "api/sk_pto.h"
 #include "api/sk_utils.h"
 #include "api/sk_object.h"
@@ -11,35 +10,6 @@
 #include "srv_types.h"
 #include "skull/txn.h"
 #include "skull/service.h"
-
-skull_service_ret_t
-skull_service_async_call (skull_txn_t* txn, const char* service_name,
-                          const char* api_name, const void* request,
-                          size_t request_sz, skull_svc_api_cb cb, int bidx)
-{
-    sk_core_t* core = SK_ENV_CORE;
-    sk_service_t* service = sk_core_service(core, service_name);
-    if (!service) {
-        return SKULL_SERVICE_ERROR_SRVNAME;
-    }
-
-    // find the exact async api
-    const sk_service_api_t* api = sk_service_api(service, api_name);
-    if (!api) {
-        return SKULL_SERVICE_ERROR_APINAME;
-    }
-
-    // serialize the request data
-    int ioret = sk_service_iocall(service, txn->txn, api_name,
-                      request, request_sz,
-                      (sk_txn_task_cb)cb, txn, bidx);
-
-    if (ioret) {
-        return SKULL_SERVICE_ERROR_BIO;
-    }
-
-    return SKULL_SERVICE_OK;
-}
 
 void  skull_service_data_set (skull_service_t* service, const void* data)
 {

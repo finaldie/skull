@@ -141,7 +141,7 @@ int skullut_module_run(skullut_module_t* env)
         skull_txn_t skull_txn;
         skull_txn_init(&skull_txn, env->txn);
 
-        task->cb(&skull_txn, SKULL_SERVICE_OK, api_name,
+        task->cb(&skull_txn, SKULL_TXN_IO_OK, api_name,
                  task->request, task->request_sz,
                  task->response, task->response_sz);
 
@@ -230,17 +230,17 @@ sk_thread_env_t* sk_thread_env()
 }
 
 // Mock API for running mock service api in module ut
-skull_service_ret_t
+skull_txn_ioret_t
 skull_service_async_call (skull_txn_t* txn,
                           const char* service_name,
                           const char* api_name,
                           const void* request,
                           size_t request_sz,
-                          skull_svc_api_cb cb,
+                          skull_txn_iocb cb,
                           int bidx)
 {
     if (!service_name) {
-        return SKULL_SERVICE_ERROR_SRVNAME;
+        return SKULL_TXN_IO_ERROR_SRVNAME;
     }
 
     sk_txn_t* sk_txn = txn->txn;
@@ -249,7 +249,7 @@ skull_service_async_call (skull_txn_t* txn,
 
     skullmock_svc_t* service = fhash_str_get(env->services, service_name);
     if (!service) {
-        return SKULL_SERVICE_ERROR_SRVNAME;
+        return SKULL_TXN_IO_ERROR_SRVNAME;
     }
 
     // create a mock task and push it task list
@@ -261,7 +261,7 @@ skull_service_async_call (skull_txn_t* txn,
     task->request_sz = request_sz;
 
     flist_push(env->tasks, task);
-    return SKULL_SERVICE_OK;
+    return SKULL_TXN_IO_OK;
 }
 
 // Simulate the same layout of the real sk_service_t, and beware of that if the

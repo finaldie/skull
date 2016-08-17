@@ -95,7 +95,7 @@ Txn::Status TxnImp::status() const {
 }
 
 static
-int _skull_svc_api_callback(skull_txn_t* sk_txn, skull_service_ret_t ret,
+int _skull_svc_api_callback(skull_txn_t* sk_txn, skull_txn_ioret_t ret,
                             const char* apiName,
                             const void* request, size_t req_sz,
                             const void* response, size_t resp_sz) {
@@ -105,9 +105,9 @@ int _skull_svc_api_callback(skull_txn_t* sk_txn, skull_service_ret_t ret,
     ServiceApiRespData apiResp(rawData->svcName, apiName, response, resp_sz);
 
     Txn::IOStatus st;
-    if (ret == SKULL_SERVICE_OK) {
+    if (ret == SKULL_TXN_IO_OK) {
         st = Txn::IOStatus::OK;
-    } else if (ret == SKULL_SERVICE_ERROR_SRVBUSY) {
+    } else if (ret == SKULL_TXN_IO_ERROR_SRVBUSY) {
         st = Txn::IOStatus::ERROR_SRVBUSY;
     } else {
         assert(0);
@@ -127,24 +127,23 @@ Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
     ServiceApiReqRawData* rawReqData = apiReq.serialize(dataSz);
 
     // 2. Send service call to core
-    skull_service_ret_t ret =
-        skull_service_async_call(this->txn(), serviceName.c_str(),
+    skull_txn_ioret_t ret = skull_txn_iocall(this->txn(), serviceName.c_str(),
             apiName.c_str(), rawReqData, dataSz,
             cb ? _skull_svc_api_callback : NULL, bioIdx);
 
-    if (ret != SKULL_SERVICE_OK) {
+    if (ret != SKULL_TXN_IO_OK) {
         delete rawReqData;
     }
 
     // 3. Return status code
     switch (ret) {
-    case SKULL_SERVICE_OK:
+    case SKULL_TXN_IO_OK:
         return Txn::IOStatus::OK;
-    case SKULL_SERVICE_ERROR_SRVNAME:
+    case SKULL_TXN_IO_ERROR_SRVNAME:
         return Txn::IOStatus::ERROR_SRVNAME;
-    case SKULL_SERVICE_ERROR_APINAME:
+    case SKULL_TXN_IO_ERROR_APINAME:
         return Txn::IOStatus::ERROR_APINAME;
-    case SKULL_SERVICE_ERROR_BIO:
+    case SKULL_TXN_IO_ERROR_BIO:
         return Txn::IOStatus::ERROR_BIO;
     default:
         assert(0);
