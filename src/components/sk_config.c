@@ -16,6 +16,7 @@ sk_workflow_cfg_t* _create_workflow_cfg()
     sk_workflow_cfg_t* workflow = calloc(1, sizeof(*workflow));
     workflow->port = SK_CONFIG_NO_PORT;
     workflow->modules = flist_create();
+    workflow->bind4   = strdup("127.0.0.1");
     return workflow;
 }
 
@@ -30,6 +31,7 @@ void _delete_workflow_cfg(sk_workflow_cfg_t* workflow)
     }
     flist_delete(workflow->modules);
 
+    free((void*)workflow->bind4);
     free((void*)workflow->idl_name);
     free(workflow);
 }
@@ -192,6 +194,9 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
                 SK_ASSERT_MSG(enabled_stdin == 0,
                               "Only one workflow can enable stdin\n");
                 enabled_stdin = 1;
+            } else if (0 == strcmp(key, "bind4")) {
+                free((void*)workflow->bind4);
+                workflow->bind4 = strdup(sk_config_getstring(child));
             }
         }
         fhash_str_iter_release(&item_iter);
@@ -208,7 +213,7 @@ void _load_log_name(sk_cfg_node_t* child, sk_config_t* config)
     const char* log_name = child->data.value;
 
     if (log_name && strlen(log_name)) {
-        strncpy(config->log_name, child->data.value, SK_CONFIG_LOGNAME_LEN - 1);
+        strncpy(config->log_name, log_name, SK_CONFIG_LOGNAME_LEN - 1);
     } else {
         sk_print_err("Fatal: empty log name, please configure a non-empty "
                      "log name\n");
@@ -221,6 +226,7 @@ void _load_log_level(sk_cfg_node_t* child, sk_config_t* config)
 {
     SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
     const char* log_level_str = child->data.value;
+
     if (0 == strcmp("trace", log_level_str)) {
         config->log_level = FLOG_LEVEL_TRACE;
     } else if (0 == strcmp("debug", log_level_str)) {

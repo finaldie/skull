@@ -19,10 +19,13 @@ typedef struct sk_module_cfg_t {
 typedef struct sk_workflow_cfg_t {
     uint32_t concurrent   :1;
     uint32_t enable_stdin :1;
-    uint32_t localhost    :1;
-    uint32_t _reserved    :29;
+    uint32_t _reserved    :30;
 
     int port;
+
+    // which IPv4 address we want to bind (by default is 127.0.0.1)
+    const char* bind4;
+
 
     const char* idl_name; // workflow idl name
     flist* modules;       // sk_module_cfg_t list

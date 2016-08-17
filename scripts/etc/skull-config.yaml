@@ -4,12 +4,14 @@ bio: 1
 log_name: skull.log
 log_level: debug
 
+# Optional workflow item 'bind4': which IPv4 address we want to bind, by default is 127.0.0.1
 workflows:
 
-# Optional item, if you want to set the max_queue_size, use 'max_qsize' for the service item
+# Optional service item 'max_qsize': control the max_queue_size, by default is 1024
 services:
 
 languages: [cpp]
 
-# max open files (This requires to start the engine with root permission)
+# Optional global item 'max_fds': means max open files, if there is no right
+#  permission to set it successfully, the engine will use the default bash value
 ## max_fds: 65535
