@@ -94,6 +94,11 @@ void _ep_cb(sk_ep_ret_t ret, const void* response, size_t len, void* ud)
         sk_service_api_complete(service->service, service->txn,
                                 service->task, service->task->api_name);
     } else {
+        // Reset task and txn to NULL, to prevent user to create a pending job
+        //  from a no pending job's callback
+        new_svc.task = NULL;
+        new_svc.txn  = NULL;
+
         job->cb.cb_.nopending_cb_(&new_svc, skull_ret, response, len, job->ud);
     }
 }
