@@ -231,13 +231,13 @@ sk_thread_env_t* sk_thread_env()
 
 // Mock API for running mock service api in module ut
 skull_txn_ioret_t
-skull_service_async_call (skull_txn_t* txn,
-                          const char* service_name,
-                          const char* api_name,
-                          const void* request,
-                          size_t request_sz,
-                          skull_txn_iocb cb,
-                          int bidx)
+skull_txn_iocall (skull_txn_t* txn,
+                  const char* service_name,
+                  const char* api_name,
+                  const void* request,
+                  size_t request_sz,
+                  skull_txn_iocb cb,
+                  int bidx)
 {
     if (!service_name) {
         return SKULL_TXN_IO_ERROR_SRVNAME;
