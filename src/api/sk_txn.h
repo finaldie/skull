@@ -17,7 +17,8 @@ typedef enum sk_txn_state_t {
     SK_TXN_COMPLETED = 4,
     SK_TXN_PACKED    = 5,
     SK_TXN_ERROR     = 6,
-    SK_TXN_DESTROYED = 7
+    SK_TXN_TIMEOUT   = 7,
+    SK_TXN_DESTROYED = 8
 } sk_txn_state_t;
 
 typedef struct sk_txn_t sk_txn_t;
@@ -44,6 +45,8 @@ int sk_txn_is_last_module(const sk_txn_t* txn);
 // sk_txn's alive time from it be created (unit: micro-second)
 unsigned long long sk_txn_alivetime(const sk_txn_t* txn);
 unsigned long long sk_txn_starttime(const sk_txn_t* txn);
+
+int sk_txn_timeout(const sk_txn_t* txn);
 
 // set user data
 void sk_txn_setudata(sk_txn_t* txn, const void* data);

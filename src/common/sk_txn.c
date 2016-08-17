@@ -411,3 +411,24 @@ const char* sk_txn_log(const sk_txn_t* txn)
 {
     return sk_mbuf_rawget(txn->transcation, 0);
 }
+
+int sk_txn_timeout(const sk_txn_t* txn)
+{
+    sk_workflow_t* workflow = sk_txn_workflow(txn);
+    int timeout = workflow->cfg->timeout;
+    if (timeout <= 0) {
+        return 0;
+    }
+
+    // Won't be timeout if it's already in error state
+    if (sk_txn_state(txn) == SK_TXN_ERROR) {
+        return 0;
+    }
+
+    unsigned long long alivetime_ms = sk_txn_alivetime(txn) / 1000;
+    if (alivetime_ms > (unsigned long long)timeout) {
+        return 1;
+    }
+
+    return 0;
+}

@@ -13,8 +13,9 @@ typedef struct _skull_txn_t skull_txn_t;
 const char* skull_txn_idlname(const skull_txn_t* txn);
 
 typedef enum skull_txn_status_t {
-    SKULL_TXN_OK = 0,
-    SKULL_TXN_ERROR
+    SKULL_TXN_OK      = 0,
+    SKULL_TXN_ERROR   = 1,
+    SKULL_TXN_TIMEOUT = 2
 } skull_txn_status_t;
 
 // get txn status

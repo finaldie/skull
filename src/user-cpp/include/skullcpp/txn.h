@@ -21,8 +21,9 @@ private:
 
 public:
     typedef enum Status {
-        TXN_OK = 0,
-        TXN_ERROR
+        TXN_OK      = 0,
+        TXN_ERROR   = 1,
+        TXN_TIMEOUT = 2
     } Status;
 
     typedef enum IOStatus {

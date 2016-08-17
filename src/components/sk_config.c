@@ -197,6 +197,8 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
             } else if (0 == strcmp(key, "bind4")) {
                 free((void*)workflow->bind4);
                 workflow->bind4 = strdup(sk_config_getstring(child));
+            } else if (0 == strcmp(key, "timeout")) {
+                workflow->timeout = sk_config_getint(child);
             }
         }
         fhash_str_iter_release(&item_iter);

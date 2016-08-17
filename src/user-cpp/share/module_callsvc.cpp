@@ -93,8 +93,9 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
     auto& example = (skull::workflow::example&)txn.data();
 
     if (txn.status() != skullcpp::Txn::TXN_OK) {
-        SKULLCPP_LOG_ERROR("5", "module_pack(test): error status occurred. txn data: "
-                            << example.data(), "This error is expected");
+        SKULLCPP_LOG_ERROR("5", "module_pack(test): error status occurred: "
+                           << txn.status() << ". txn data: "
+                           << example.data(), "This error is expected");
         txndata.append("error");
         return;
     }

@@ -171,8 +171,12 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
          void* proto_msg)
 {
     SK_ASSERT(sched && entity && txn);
-
     sk_txn_state_t state = sk_txn_state(txn);
+
+    // Check whether timeout
+    if (sk_txn_timeout(txn)) {
+        sk_txn_setstate(txn, SK_TXN_TIMEOUT);
+    }
 
     switch (state) {
     case SK_TXN_UNPACKED: {
@@ -199,8 +203,9 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
         _txn_log_and_destroy(txn);
         break;
     }
-    case SK_TXN_ERROR: {
-        sk_print("txn - ERROR: txn error\n");
+    case SK_TXN_ERROR:
+    case SK_TXN_TIMEOUT: {
+        sk_print("txn - ERROR or TIMEOUT: txn error or timeout\n");
         return _module_pack(sched, src, entity, txn, proto_msg);
     }
     case SK_TXN_DESTROYED: {

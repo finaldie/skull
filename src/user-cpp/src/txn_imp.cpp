@@ -87,10 +87,12 @@ google::protobuf::Message& TxnImp::data() {
 Txn::Status TxnImp::status() const {
     skull_txn_status_t st = skull_txn_status(this->txn_);
 
-    if (st == SKULL_TXN_OK) {
-        return Txn::TXN_OK;
-    } else {
+    if (st == SKULL_TXN_ERROR) {
         return Txn::TXN_ERROR;
+    } else if (st == SKULL_TXN_TIMEOUT) {
+        return Txn::TXN_TIMEOUT;
+    } else {
+        return Txn::TXN_OK;
     }
 }
 
