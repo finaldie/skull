@@ -56,7 +56,7 @@ public:
      *         - ERROR_SRVNAME
      *         - ERROR_APINAME
      */
-    virtual IOStatus serviceCall (const std::string& serviceName,
+    virtual IOStatus iocall (const std::string& serviceName,
                           const std::string& apiName,
                           const google::protobuf::Message& request) = 0;
 
@@ -74,7 +74,7 @@ public:
      *
      * @note If cb is NULL, it's a no pending call as well
      */
-    virtual IOStatus serviceCall (const std::string& serviceName,
+    virtual IOStatus iocall (const std::string& serviceName,
                           const std::string& apiName,
                           const google::protobuf::Message& request,
                           ApiCB cb) = 0;
@@ -98,7 +98,7 @@ public:
      *
      * @note If cb is NULL, it's a no pending call as well
      */
-    virtual IOStatus serviceCall (const std::string& serviceName,
+    virtual IOStatus iocall (const std::string& serviceName,
                           const std::string& apiName,
                           const google::protobuf::Message& request,
                           int bio_idx,

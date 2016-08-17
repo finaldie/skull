@@ -74,7 +74,7 @@ int module_run(skullcpp::Txn& txn)
     skull::service::s1::get_req req;
     req.set_name(example.data());
     skullcpp::Txn::IOStatus ret =
-        txn.serviceCall("s1", "get", req, 0, svc_api_callback);
+        txn.iocall("s1", "get", req, 0, svc_api_callback);
 
     std::cout << "ServiceCall ret: " << ret << std::endl;
     return 0;

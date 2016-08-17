@@ -83,7 +83,7 @@ int svc_api_callback(skullcpp::Txn& txn, skullcpp::Txn::IOStatus status,
     req.set_name("again");
 
     skullcpp::Txn::IOStatus ret =
-        txn.serviceCall("s1", "get", req, 0, svc_api_callback1);
+        txn.iocall("s1", "get", req, 0, svc_api_callback1);
 
     std::cout << "ServiceCall ret1: " << ret << std::endl;
 
@@ -103,7 +103,7 @@ int module_run(skullcpp::Txn& txn)
     req.set_name(example.data());
 
     skullcpp::Txn::IOStatus ret =
-        txn.serviceCall("s1", "get", req, 0, svc_api_callback);
+        txn.iocall("s1", "get", req, 0, svc_api_callback);
 
     std::cout << "ServiceCall ret: " << ret << std::endl;
     return 0;

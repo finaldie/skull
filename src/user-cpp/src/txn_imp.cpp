@@ -116,7 +116,7 @@ int _skull_svc_api_callback(skull_txn_t* sk_txn, skull_txn_ioret_t ret,
     return rawData->cb(txn, st, std::string(apiName), apiReq.get(), apiResp.get());
 }
 
-Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
+Txn::IOStatus TxnImp::iocall (const std::string& serviceName,
                                 const std::string& apiName,
                                 const google::protobuf::Message& request,
                                 int bioIdx,
@@ -151,17 +151,17 @@ Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
     }
 }
 
-Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
+Txn::IOStatus TxnImp::iocall (const std::string& serviceName,
                                 const std::string& apiName,
                                 const google::protobuf::Message& request,
                                 ApiCB cb) {
-    return serviceCall(serviceName, apiName, request, 0, cb);
+    return iocall(serviceName, apiName, request, 0, cb);
 }
 
-Txn::IOStatus TxnImp::serviceCall (const std::string& serviceName,
+Txn::IOStatus TxnImp::iocall (const std::string& serviceName,
                                 const std::string& apiName,
                                 const google::protobuf::Message& request) {
-    return serviceCall(serviceName, apiName, request, 0, NULL);
+    return iocall(serviceName, apiName, request, 0, NULL);
 }
 
 skull_txn_t* TxnImp::txn() const {
