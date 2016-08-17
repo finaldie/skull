@@ -49,10 +49,7 @@ typedef enum svc_job_type_t {
 typedef struct job_data_t {
     skull_service_t    svc;
     svc_job_type_t     type;
-
-#if __WORDSIZE == 64
-    int __padding;
-#endif
+    skull_job_rw_t     rw_type;
 
     union {
         skull_job_t    job;
@@ -64,7 +61,7 @@ typedef struct job_data_t {
 } job_data_t;
 
 static
-void _timer_data_destroy(sk_ud_t ud)
+void _job_data_destroy(sk_ud_t ud)
 {
     job_data_t* data = ud.ud;
 
@@ -86,16 +83,16 @@ void _job_cb (sk_service_t* sk_svc, sk_service_job_ret_t ret,
     SK_ASSERT_MSG(ret == SK_SRV_JOB_OK || ret == SK_SRV_JOB_ERROR_BUSY,
                           "ret: %d\n", ret);
 
-    if (!valid) {
-        sk_print("Error: skull serivce: timer is not valid, ignore it\n");
-        return;
-    }
-
-    skull_service_t service = jobdata->svc;
+    skull_job_ret_t skull_ret = SKULL_JOB_OK;
+    skull_service_t service   = jobdata->svc;
     service.freezed = 0;
 
-    skull_job_ret_t skull_ret =
-        ret == SK_SRV_JOB_OK ? SKULL_JOB_OK : SKULL_JOB_ERROR_BUSY;
+    if (ret != SK_SRV_JOB_OK) {
+        skull_ret = SKULL_JOB_ERROR_BUSY;
+        service.freezed = 1;
+    } else {
+        service.freezed = jobdata->rw_type == SKULL_JOB_READ;
+    }
 
     if (jobdata->type == PENDING) {
         sk_txn_taskdata_t* task_data = service.task;
@@ -116,14 +113,18 @@ void _job_cb (sk_service_t* sk_svc, sk_service_job_ret_t ret,
         sk_service_api_complete(sk_svc, service.txn,
                                 task_data, task_data->api_name);
     } else {
+        // Reset task and txn to NULL, to prevent user to create a pending job
+        //  from a no pending job's callback
+        service.task = NULL;
+        service.txn  = NULL;
         jobdata->cb_.job_np(&service, skull_ret, jobdata->ud);
     }
 }
 
 skull_job_ret_t
 skull_service_job_create(skull_service_t* service, uint32_t delayed,
-                             skull_job_rw_t type, skull_job_t job,
-                             void* ud, skull_job_udfree_t udfree)
+                         skull_job_rw_t type, skull_job_t job,
+                         void* ud, skull_job_udfree_t udfree)
 {
     skull_job_ret_t ret = SKULL_JOB_OK;
 
@@ -149,7 +150,7 @@ skull_service_job_create(skull_service_t* service, uint32_t delayed,
     jobdata->ud        = ud;
 
     sk_ud_t      cb_data = {.ud = jobdata};
-    sk_obj_opt_t opt     = {.preset = NULL, .destroy = _timer_data_destroy};
+    sk_obj_opt_t opt     = {.preset = NULL, .destroy = _job_data_destroy};
     sk_obj_t*    param_obj = sk_obj_create(opt, cb_data);
 
     // Fix the bio index to 0 due to we can not schedule it to other thread,
@@ -175,8 +176,8 @@ create_job_error:
 
 skull_job_ret_t
 skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
-                                skull_job_rw_t type, skull_job_np_t job,
-                                void* ud, skull_job_udfree_t udfree, int bidx)
+                            skull_job_rw_t type, skull_job_np_t job,
+                            void* ud, skull_job_udfree_t udfree, int bidx)
 {
     skull_job_ret_t ret = SKULL_JOB_OK;
 
@@ -196,7 +197,7 @@ skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
     jobdata->ud         = ud;
 
     sk_ud_t      cb_data = {.ud = jobdata};
-    sk_obj_opt_t opt     = {.preset = NULL, .destroy = _timer_data_destroy};
+    sk_obj_opt_t opt     = {.preset = NULL, .destroy = _job_data_destroy};
     sk_obj_t*    param_obj = sk_obj_create(opt, cb_data);
 
     sk_service_job_rw_t job_rw =
