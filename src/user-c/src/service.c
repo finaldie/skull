@@ -86,6 +86,7 @@ void _job_cb (sk_service_t* sk_svc, sk_service_job_ret_t ret,
     skull_job_ret_t skull_ret = SKULL_JOB_OK;
     skull_service_t service   = jobdata->svc;
     service.freezed = 0;
+    SK_ASSERT(service.service == sk_svc);
 
     if (ret != SK_SRV_JOB_OK) {
         skull_ret = SKULL_JOB_ERROR_BUSY;
@@ -145,6 +146,7 @@ skull_service_job_create(skull_service_t* service, uint32_t delayed,
     job_data_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->svc       = *service;
     jobdata->type      = PENDING;
+    jobdata->rw_type   = type;
     jobdata->cb_.job   = job;
     jobdata->destroyer = udfree;
     jobdata->ud        = ud;
@@ -192,6 +194,7 @@ skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
     job_data_t* jobdata = calloc(1, sizeof(*jobdata));
     jobdata->svc        = *service;
     jobdata->type       = NOPENDING;
+    jobdata->rw_type    = type;
     jobdata->cb_.job_np = job;
     jobdata->destroyer  = udfree;
     jobdata->ud         = ud;
