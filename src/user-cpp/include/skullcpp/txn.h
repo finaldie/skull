@@ -30,8 +30,9 @@ public:
         OK            = 0,
         ERROR_SRVNAME = 1,
         ERROR_APINAME = 2,
-        ERROR_BIO     = 3,
-        ERROR_SRVBUSY = 4
+        ERROR_STATE   = 3,
+        ERROR_BIO     = 4,
+        ERROR_SRVBUSY = 5
     } IOStatus;
 
     typedef int (*ApiCB) (Txn&, IOStatus, const std::string& apiName,
@@ -56,6 +57,7 @@ public:
      * @return - OK
      *         - ERROR_SRVNAME
      *         - ERROR_APINAME
+     *         - ERROR_STATE
      */
     virtual IOStatus iocall (const std::string& serviceName,
                           const std::string& apiName,
@@ -72,6 +74,7 @@ public:
      * @return - OK
      *         - ERROR_SRVNAME
      *         - ERROR_APINAME
+     *         - ERROR_STATE
      *
      * @note If cb is NULL, it's a no pending call as well
      */
@@ -95,6 +98,7 @@ public:
      * @return - OK
      *         - ERROR_SRVNAME
      *         - ERROR_APINAME
+     *         - ERROR_STATE
      *         - ERROR_BIO
      *
      * @note If cb is NULL, it's a no pending call as well

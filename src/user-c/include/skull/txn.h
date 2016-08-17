@@ -31,15 +31,16 @@ typedef enum skull_txn_ioret_t {
     SKULL_TXN_IO_OK            = 0,
     SKULL_TXN_IO_ERROR_SRVNAME = 1,
     SKULL_TXN_IO_ERROR_APINAME = 2,
-    SKULL_TXN_IO_ERROR_BIO     = 3,
-    SKULL_TXN_IO_ERROR_SRVBUSY = 4
+    SKULL_TXN_IO_ERROR_STATE   = 3,
+    SKULL_TXN_IO_ERROR_BIO     = 4,
+    SKULL_TXN_IO_ERROR_SRVBUSY = 5
 } skull_txn_ioret_t;
 
 // module callback function declartion
 typedef int (*skull_txn_iocb) (skull_txn_t*, skull_txn_ioret_t,
-                                 const char* api_name,
-                                 const void* request, size_t req_sz,
-                                 const void* response, size_t resp_sz);
+                               const char* api_name,
+                               const void* request, size_t req_sz,
+                               const void* response, size_t resp_sz);
 
 /**
  * Invoke a service iocall
@@ -57,6 +58,7 @@ typedef int (*skull_txn_iocb) (skull_txn_t*, skull_txn_ioret_t,
  * @return - SKULL_TXN_IO_OK
  *         - SKULL_TXN_IO_ERROR_SRVNAME
  *         - SKULL_TXN_IO_ERROR_APINAME
+ *         - SKULL_TXN_IO_ERROR_STATE
  *         - SKULL_TXN_IO_ERROR_BIO
  */
 skull_txn_ioret_t

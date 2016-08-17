@@ -145,6 +145,8 @@ Txn::IOStatus TxnImp::iocall (const std::string& serviceName,
         return Txn::IOStatus::ERROR_SRVNAME;
     case SKULL_TXN_IO_ERROR_APINAME:
         return Txn::IOStatus::ERROR_APINAME;
+    case SKULL_TXN_IO_ERROR_STATE:
+        return Txn::IOStatus::ERROR_STATE;
     case SKULL_TXN_IO_ERROR_BIO:
         return Txn::IOStatus::ERROR_BIO;
     default:

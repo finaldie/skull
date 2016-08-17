@@ -21,6 +21,11 @@ skull_txn_iocall (skull_txn_t* txn, const char* service_name,
         return SKULL_TXN_IO_ERROR_APINAME;
     }
 
+    if (sk_txn_state(txn->txn) == SK_TXN_INIT) {
+        return SKULL_TXN_IO_ERROR_STATE;
+    }
+
+
     // serialize the request data
     int ioret = sk_service_iocall(service, txn->txn, api_name,
                       request, request_sz,
