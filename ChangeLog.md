@@ -1,3 +1,13 @@
+* 2016-08-19 0.9.2
+  * Core
+    * **New:** Add 'bind4' workflow config item, by default is 127.0.0.1 for the security reason
+    * **New:** Add workflow 'timeout' config item, for controlling the timeout case
+    * **Enhancement:** Rename skull_service_async_call to skull_txn_iocall
+    * **Enhancement:** Make service.create_job apis robuster
+    * **Enhancement:** Make ep nopending api robuster
+    * **Enhancement:** Make txn.iocall robuster, it will failed if be called from module.unpack
+  * User
+    * **Enhancement:** Rename txn.serviceCall to txn.iocall for cpp api
 * 2016-08-15 0.9.1
   * Core
     * **Fix:** Do not calling service api/job if service is busy
