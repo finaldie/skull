@@ -25,49 +25,6 @@ void* skull_service_apidata(skull_service_t*, int type, size_t* sz);
 
 const char* skull_service_name(const skull_service_t*);
 
-// ===================== APIs and Data Structures for Module ===================
-
-typedef enum skull_service_ret_t {
-    SKULL_SERVICE_OK            = 0,
-    SKULL_SERVICE_ERROR_SRVNAME = 1,
-    SKULL_SERVICE_ERROR_APINAME = 2,
-    SKULL_SERVICE_ERROR_BIO     = 3,
-    SKULL_SERVICE_ERROR_SRVBUSY = 4
-} skull_service_ret_t;
-
-// module callback function declartion
-typedef int (*skull_svc_api_cb) (skull_txn_t*, skull_service_ret_t,
-                                 const char* api_name,
-                                 const void* request, size_t req_sz,
-                                 const void* response, size_t resp_sz);
-
-/**
- * Invoke a service async call
- *
- * @param serivce_name
- * @param api_name
- * @param request       request protobuf message
- * @param request_sz    request protobuf message size
- * @param cb            api callback function
- * @param bio_idx       background io index
- *                      - (-1)  : random pick up a background io to run
- *                      - (0)   : do not use background io
- *                      - (> 0) : run on the index of background io
- *
- * @return - SKULL_SERVICE_OK
- *         - SKULL_SERVICE_ERROR_SRVNAME
- *         - SKULL_SERVICE_ERROR_APINAME
- *         - SKULL_SERVICE_BIO
- */
-skull_service_ret_t
-skull_service_async_call (skull_txn_t*,
-                          const char* service_name,
-                          const char* api_name,
-                          const void* request,
-                          size_t request_sz,
-                          skull_svc_api_cb cb,
-                          int bio_idx);
-
 // =============================== Service Job =================================
 typedef enum skull_job_rw_t {
     SKULL_JOB_READ  = 0,

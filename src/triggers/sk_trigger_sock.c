@@ -54,10 +54,8 @@ void _trigger_sock_create(sk_trigger_t* trigger, sk_workflow_cfg_t* cfg)
                   "trigger port(%d) must be in (0, 65535]\n", cfg->port);
 
     sk_trigger_sock_data_t* data = calloc(1, sizeof(*data));
-    data->port = (in_port_t)cfg->port;
-    data->listen_fd = !cfg->localhost
-                          ? fnet_listen(NULL, data->port, 1024, 0)
-                          : fnet_listen("127.0.0.1", data->port, 1024, 0);
+    data->port      = (in_port_t)cfg->port;
+    data->listen_fd = fnet_listen(cfg->bind4, data->port, 1024, 0);
 
     trigger->data = data;
 }

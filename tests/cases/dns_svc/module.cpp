@@ -81,7 +81,7 @@ int module_run(skullcpp::Txn& txn)
     query_req.set_domain("www.google.com");
 
     skullcpp::Txn::IOStatus ret =
-        txn.serviceCall("dns", "query", query_req, 0, _dns_query_cb);
+        txn.iocall("dns", "query", query_req, 0, _dns_query_cb);
 
     std::cout << "ServiceCall ret: " << ret << std::endl;
     return 0;

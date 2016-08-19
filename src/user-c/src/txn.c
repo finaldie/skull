@@ -31,10 +31,12 @@ skull_txn_status_t skull_txn_status(const skull_txn_t* skull_txn)
     sk_txn_state_t st = sk_txn_state(txn);
 
     SK_ASSERT(st != SK_TXN_DESTROYED);
-    if (st != SK_TXN_ERROR) {
-        return SKULL_TXN_OK;
-    } else {
+    if (st == SK_TXN_ERROR) {
         return SKULL_TXN_ERROR;
+    } else if (st == SK_TXN_TIMEOUT) {
+        return SKULL_TXN_TIMEOUT;
+    } else {
+        return SKULL_TXN_OK;
     }
 }
 

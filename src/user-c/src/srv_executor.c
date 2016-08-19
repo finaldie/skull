@@ -71,9 +71,8 @@ int  skull_srv_iocall  (sk_service_t* srv, const sk_txn_t* txn, void* sdata,
 int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
                                 uint64_t task_id, const char* api_name)
 {
-    skull_service_opt_t* opt = sdata;
     int ret = 0;
-
+    skull_service_opt_t* opt = sdata;
     sk_txn_taskdata_t* task_data = sk_txn_taskdata(txn, task_id);
     SK_ASSERT(task_data);
 
@@ -93,18 +92,18 @@ int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
     skull_txn_init(&skull_txn, txn);
 
     // Set service return code
-    skull_service_ret_t skull_ret;
+    skull_txn_ioret_t skull_ret;
     sk_txn_task_status_t st = sk_txn_task_status(txn, task_id);
     SK_ASSERT_MSG(st == SK_TXN_TASK_DONE || st == SK_TXN_TASK_BUSY, "st %d\n: st");
 
     if (st == SK_TXN_TASK_DONE) {
-        skull_ret = SKULL_SERVICE_OK;
+        skull_ret = SKULL_TXN_IO_OK;
     } else {
-        skull_ret = SKULL_SERVICE_ERROR_SRVBUSY;
+        skull_ret = SKULL_TXN_IO_ERROR_SRVBUSY;
     }
 
     // Invoke task callback
-    ret = ((skull_svc_api_cb)task_data->cb)(&skull_txn, skull_ret, api_name,
+    ret = ((skull_txn_iocb)task_data->cb)(&skull_txn, skull_ret, api_name,
                                   task_data->request, task_data->request_sz,
                                   task_data->response, task_data->response_sz);
 

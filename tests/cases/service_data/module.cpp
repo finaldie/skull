@@ -74,7 +74,7 @@ int module_run(skullcpp::Txn& txn)
     skull::service::s1::set_req req;
     req.set_name(example.data());
     skullcpp::Txn::IOStatus ret =
-        txn.serviceCall("s1", "set", req, 0,
+        txn.iocall("s1", "set", req, 0,
             [](skullcpp::Txn&, skullcpp::Txn::IOStatus, const std::string&,
                 const google::protobuf::Message&,
                 const google::protobuf::Message&) -> int {
@@ -89,7 +89,7 @@ int module_run(skullcpp::Txn& txn)
     skull::service::s1::get_req req1;
     req1.set_name(example.data());
     skullcpp::Txn::IOStatus ret1 =
-        txn.serviceCall("s1", "get", req1, 0, svc_api_callback);
+        txn.iocall("s1", "get", req1, 0, svc_api_callback);
 
     std::cout << "ServiceCall ret1: " << ret1 << std::endl;
     return 0;

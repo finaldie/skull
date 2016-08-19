@@ -51,7 +51,7 @@ typedef struct skullmock_svc_t {
 
 typedef struct skullmock_task_t {
     skullmock_svc_t* service;
-    skull_svc_api_cb cb;
+    skull_txn_iocb   cb;
 
     const char* api_name;
     const void* request;
