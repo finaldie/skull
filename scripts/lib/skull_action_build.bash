@@ -35,15 +35,15 @@ function action_build()
 
 function action_build_usage()
 {
-    echo "usage:"
+    echo "Usage:"
     echo "  skull build [arg(s)...]"
     echo ""
-    echo "args:"
+    echo "Args:"
     echo "  - check"
     echo "  - valgrind-check"
     echo "  - clean"
     echo ""
-    echo "example:"
+    echo "Example:"
     echo "  skull buld"
     echo "  skull buld CC=clang"
     echo "  skull buld check"
@@ -52,16 +52,13 @@ function action_build_usage()
 
 function _action_prepare()
 {
-    echo "generate metrics..."
+    echo "Generating metrics..."
     action_common --metrics-gen || exit 1
 
-    echo "generate transcation idls..."
+    echo "Generating transcation/service IDLs..."
     action_common --idl-gen || exit 1
 
-    echo "generate service apis..."
-    action_common --srv-idl-gen || exit 1
-
-    echo "generate configs..."
+    echo "Generating configs..."
     action_common --config-gen || exit 1
 }
 

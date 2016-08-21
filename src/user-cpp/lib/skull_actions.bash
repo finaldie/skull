@@ -8,7 +8,6 @@
 #  - `action_$lang_gen_idl`
 #  - `action_$lang_service_valid`
 #  - `action_$lang_service_add`
-#  - `action_$lang_service_api_gen`
 #
 # NOTES2: before running any methods in file, skull will change the current
 # folder to the top of the project `SKULL_PROJECT_ROOT`, so it's no need to
@@ -154,21 +153,38 @@ function action_cpp_gen_config()
 
 function action_cpp_gen_idl()
 {
-    # 1. generate protobuf source code for workflows
+    # 1. generate protobuf source code for workflows/services
     (
-        cd $SKULL_WORKFLOW_IDL_FOLDER
+        # 1. prepare building folder
         mkdir -p $PROTO_FOLDER
+        cd $PROTO_FOLDER
+
+        # 2. copy workflow/service idls into building folder
+        # 2.1 copy workflow idls
+        local workflow_idls=($(util_workflow_all_idls))
+        for idl in ${workflow_idls[@]}; do
+            cp $idl $PROTO_FOLDER
+        done
+
+        # 2.2 copy service idls
+        local service_idls=($(util_service_all_idls))
+        for idl in ${service_idls[@]}; do
+            cp $idl $PROTO_FOLDER
+        done
+
+        # 2.3 check at least have one proto to build
         local proto_cnt=`ls ./ | grep ".proto" | wc -l`
         if [ $proto_cnt -eq 0 ]; then
             return 0
         fi
 
+        # 2.4 compile proto files to cpp source files
         for idl in ./*.proto; do
             protoc --cpp_out=$PROTO_FOLDER $idl
         done
     )
 
-    # 2. generate user api source code
+    # 2. generate user api (header file)
     _generate_protos
     return 0
 }
@@ -225,10 +241,10 @@ function action_cpp_service_add()
 
 function _generate_protos()
 {
-    local wf_proto_raw_list=`ls -1 $SKULL_WORKFLOW_IDL_FOLDER | grep .proto`
+    local wf_proto_raw_list="$(util_workflow_all_idls)"
     local wf_proto_list=`echo $wf_proto_raw_list | sed 's/ /|/g'`
 
-    local svc_proto_raw_list=`ls -1 $SKULL_SERVICE_IDL_FOLDER | grep .proto`
+    local svc_proto_raw_list="$(util_service_all_idls)"
     local svc_proto_list=`echo $svc_proto_raw_list | sed 's/ /|/g'`
 
     local param_list=""
@@ -245,19 +261,3 @@ function _generate_protos()
         $param_list
 }
 
-function action_cpp_service_api_gen()
-{
-    # 1. generate protobuf source code for workflows
-    (
-        cd $SKULL_SERVICE_IDL_FOLDER
-        mkdir -p $PROTO_FOLDER
-
-        for idl in ./*.proto; do
-            protoc --cpp_out=$PROTO_FOLDER $idl
-        done
-    )
-
-    # 2. generate idls
-    _generate_protos
-    return 0
-}

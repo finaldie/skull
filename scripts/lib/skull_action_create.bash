@@ -11,8 +11,7 @@ function _skull_create()
     # build the basic workspace folder structure
     mkdir -p $workspace
     mkdir -p $workspace/.skull/makefiles
-    mkdir -p $workspace/idls/workflow
-    mkdir -p $workspace/idls/service
+    mkdir -p $workspace/idls/
     mkdir -p $workspace/src/modules
     mkdir -p $workspace/src/services
     mkdir -p $workspace/src/common

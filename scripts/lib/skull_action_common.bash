@@ -6,7 +6,7 @@
 function action_common()
 {
     # parse the command args
-    local args=`getopt -a -o h -l config-gen,metrics-gen,metrics-dump,idl-gen,srv-idl-gen,help \
+    local args=`getopt -a -o h -l config-gen,metrics-gen,metrics-dump,idl-gen,help \
         -n "skull_action_common.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -29,10 +29,6 @@ function action_common()
             --idl-gen)
                 shift
                 _action_idl_gen
-                ;;
-            --srv-idl-gen)
-                shift
-                _action_srv_idl_gen
                 ;;
             --config-gen)
                 shift
@@ -86,14 +82,13 @@ function _action_idl_gen()
 {
     local langs=($(_get_language_list))
 
+    # Generate proto source files per-language
+    # notes: Different language may use different building folder/structure,
+    #  so preparing the building environment job handled by language-
+    #  level script
     for language in ${langs[@]}; do
         action_${language}_gen_idl $SKULL_CONFIG_FILE
     done
-}
-
-function _action_srv_idl_gen()
-{
-    skull_utils_srv_api_gen
 }
 
 function _action_config_gen()
