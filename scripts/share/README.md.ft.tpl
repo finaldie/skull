@@ -52,3 +52,9 @@ post-verify:
 ```console
 skull build ft-check [case=$caseName]
 ```
+
+### Basic Macros
+To better writing the `skull_ft_case.yml`, some times you will need to copy some files from case folder to running folder, here are some basic macros we can use:
+* **{COMMON}** It will be replaced with the `common` folder path
+* **{RUN}** It will be replaced with the `running` folder path
+* **{CASE}** It will be replaced with the `case` folder path

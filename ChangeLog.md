@@ -1,3 +1,9 @@
+* 2016-08-26 0.9.3
+  * Scripts
+    * **New:** Integrate `skull-ft`
+    * **Enhancement:** Add some reminder message for workflow actions, to show where are the idl files
+    * **Enhancement:** Build proto files for workflow/service together
+    * **Enhancement:** Refactor skull_utils.bash
 * 2016-08-19 0.9.2
   * Core
     * **New:** Add 'bind4' workflow config item, by default is 127.0.0.1 for the security reason
