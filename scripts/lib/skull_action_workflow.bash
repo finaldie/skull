@@ -102,7 +102,7 @@ function _action_workflow_add()
             while true; do
                 read -p "Input the port you want (1025-65535): " port
 
-                if ! $(_is_number $port); then
+                if ! $(sk_util_is_number $port); then
                     echo "Error: please input a digital for the port" >&2
                 else
                     break

@@ -98,7 +98,7 @@ function action_module_usage()
 
 function _action_module_list()
 {
-    _module_list
+    sk_util_module_list
 }
 
 function _action_module_path()
@@ -119,7 +119,7 @@ function _action_module_add()
     local module=""
     local workflow_idx=0
     local language=""
-    local langs=($(_get_language_list))
+    local langs=($(sk_util_get_language_list))
     local lang_names=`echo ${langs[*]} | sed 's/ /|/g'`
     local total_workflows=`action_workflow_show | tail -1 | awk '{print $2}'`
 
@@ -127,7 +127,7 @@ function _action_module_add()
     while true; do
         read -p "module name? " module
 
-        if $(_check_name "$module"); then
+        if $(sk_util_check_name "$module"); then
             break;
         fi
     done
@@ -155,7 +155,7 @@ function _action_module_add()
         read -p "which language the module belongs to? ($lang_names) " language
 
         # verify the language valid or not
-        if $(_check_language "$language"); then
+        if $(sk_util_check_language "$language"); then
             break;
         fi
     done
@@ -175,31 +175,31 @@ function _action_module_add()
 
 function _action_module_config_gen()
 {
-    local module=$(_current_module)
+    local module=$(sk_util_current_module)
     if [ -z "$module" ]; then
         echo "Error: not in a module, pwd=`pwd`" >&2
         exit 1
     fi
 
-    local module_config=$(_current_module_config $module)
+    local module_config=$(sk_util_current_module_config $module)
     if [ ! -f $module_config ]; then
         echo "Error: not found $module_config" >&2
         exit 1
     fi
 
     # now, run the config generator
-    _run_module_action $module $SKULL_LANG_GEN_CONFIG $module_config
+    sk_util_run_module_action $module $SKULL_LANG_GEN_CONFIG $module_config
 }
 
 function _action_module_config_cat()
 {
-    local module=$(_current_module)
+    local module=$(sk_util_current_module)
     if [ -z "$module" ]; then
         echo "Error: not in a module" >&2
         exit 1
     fi
 
-    local module_config=$(_current_module_config $module)
+    local module_config=$(sk_util_current_module_config $module)
     if [ ! -f $module_config ]; then
         echo "Error: not found $module_config" >&2
         exit 1
@@ -210,13 +210,13 @@ function _action_module_config_cat()
 
 function _action_module_config_edit()
 {
-    local module=$(_current_module)
+    local module=$(sk_util_current_module)
     if [ -z "$module" ]; then
         echo "Error: not in a module" >&2
         exit 1
     fi
 
-    local module_config=$(_current_module_config $module)
+    local module_config=$(sk_util_current_module_config $module)
     if [ ! -f $module_config ]; then
         echo "Error: not found $module_config" >&2
         exit 1

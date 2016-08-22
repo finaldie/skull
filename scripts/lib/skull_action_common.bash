@@ -56,14 +56,14 @@ function action_common_usage()
     echo "  skull common --metrics-gen"
     echo "  skull common --metrics-dump"
     echo "  skull common --idl-gen"
-    echo "  skull common --srv-idl-gen"
+    echo "  skull common --config-gen"
     echo "  skull common -h|--help"
 }
 
 function _action_metrics_gen()
 {
     local metrics_config=$SKULL_PROJ_ROOT/config/metrics.yaml
-    local langs=($(_get_language_list))
+    local langs=($(sk_util_get_language_list))
 
     for language in ${langs[@]}; do
         if [ -d "$SKULL_PROJ_ROOT/src/common/$language" ]; then
@@ -80,7 +80,7 @@ function _action_metrics_dump()
 
 function _action_idl_gen()
 {
-    local langs=($(_get_language_list))
+    local langs=($(sk_util_get_language_list))
 
     # Generate proto source files per-language
     # notes: Different language may use different building folder/structure,
@@ -94,14 +94,18 @@ function _action_idl_gen()
 function _action_config_gen()
 {
     # 1. Generate modules config
-    for module in $(_module_list); do
+    local module_list=($(sk_util_module_list))
+
+    for module in ${module_list[@]}; do
         echo " - Generating module [$module] config..."
-        utils_module_config_gen $module
+        sk_util_module_config_gen $module
     done
 
     # 2. Generate services config
-    for service in $(utils_service_list); do
+    local service_list=($(sk_util_service_list))
+
+    for service in ${service_list[@]}; do
         echo " - Generating service [$service] config..."
-        utils_service_config_gen $service
+        sk_util_service_config_gen $service
     done
 }

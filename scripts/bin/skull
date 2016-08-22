@@ -69,7 +69,7 @@ function prepare()
 
     # 3. Now if the other commands need the root path of a skull project,
     #  so get it before run any other commands
-    get_proj_root
+    sk_util_get_proj_root
     if [ $? = 1 ]; then
         echo "Fatal: Not a skull project" >&2
         exit 1
@@ -79,7 +79,7 @@ function prepare()
     . $SKULL_ROOT/lib/skull/skull_env.bash
 
     # 5. load language scripts
-    _preload_language_actions
+    sk_util_preload_language_actions
 }
 
 ###################################### MAIN ####################################

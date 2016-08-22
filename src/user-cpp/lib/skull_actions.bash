@@ -124,11 +124,11 @@ function action_cpp_gen_metrics()
         -h $tmp_header_file \
         -s $tmp_source_file
 
-    if ! $(_compare_file $tmp_header_file $header_file); then
+    if ! $(sk_util_compare_file $tmp_header_file $header_file); then
         cp $tmp_header_file $header_file
     fi
 
-    if ! $(_compare_file $tmp_source_file $source_file); then
+    if ! $(sk_util_compare_file $tmp_source_file $source_file); then
         cp $tmp_source_file $source_file
     fi
 }
@@ -146,7 +146,7 @@ function action_cpp_gen_config()
         -h $tmpdir/config.h
 
     # if the new config.x are different from the old ones, replace them
-    if ! $(_compare_file $targetdir/config.h $tmpdir/config.h); then
+    if ! $(sk_util_compare_file $targetdir/config.h $tmpdir/config.h); then
         cp $tmpdir/config.h $targetdir/config.h
     fi
 }
@@ -161,13 +161,13 @@ function action_cpp_gen_idl()
 
         # 2. copy workflow/service idls into building folder
         # 2.1 copy workflow idls
-        local workflow_idls=($(util_workflow_all_idls))
+        local workflow_idls=($(sk_util_workflow_all_idls))
         for idl in ${workflow_idls[@]}; do
             cp $idl $PROTO_FOLDER
         done
 
         # 2.2 copy service idls
-        local service_idls=($(util_service_all_idls))
+        local service_idls=($(sk_util_service_all_idls))
         for idl in ${service_idls[@]}; do
             cp $idl $PROTO_FOLDER
         done
@@ -241,10 +241,10 @@ function action_cpp_service_add()
 
 function _generate_protos()
 {
-    local wf_proto_raw_list="$(util_workflow_all_idls)"
+    local wf_proto_raw_list="$(sk_util_workflow_all_idls)"
     local wf_proto_list=`echo $wf_proto_raw_list | sed 's/ /|/g'`
 
-    local svc_proto_raw_list="$(util_service_all_idls)"
+    local svc_proto_raw_list="$(sk_util_service_all_idls)"
     local svc_proto_list=`echo $svc_proto_raw_list | sed 's/ /|/g'`
 
     local param_list=""
