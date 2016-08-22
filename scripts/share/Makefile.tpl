@@ -55,6 +55,10 @@ valgrind-check:
 	    echo ""; \
 	done
 
+# Required by skull, to start the functional test
+ft-check:
+	@cd tests && $(MAKE)
+
 # Required by skull
 clean:
 	@set -e; for sub in $(SUBS); do \
@@ -93,12 +97,13 @@ prepare_deploy_files:
 	@cp -r $(SKULL_BIN_DIR)/* $(DEPLOY_BIN_ROOT)
 	@echo "done"
 
-.PHONY: build check valgrind-check deploy clean prepare_deploy
+.PHONY: build check valgrind-check ft-check deploy clean prepare_deploy
 .PHONY: prepare_deploy_dirs prepare_deploy_files help
 
 help:
 	@echo "make options:"
 	@echo "- check"
 	@echo "- valgrind-check"
+	@echo "- ft-check"
 	@echo "- clean"
 	@echo "- deploy"

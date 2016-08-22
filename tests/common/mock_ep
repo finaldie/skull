@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SKULL_PROJ_NAME=project
+
 function usage()
 {
     echo "usage:"
@@ -10,7 +12,9 @@ function init()
 {
     BIN_PATH=`dirname $0`
 
-    . $BIN_PATH/env.bash
+    if [ -f $BIN_PATH/env.bash ]; then
+        . $BIN_PATH/env.bash
+    fi
 }
 
 function parse_and_run()

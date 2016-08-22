@@ -28,6 +28,12 @@ api-cpp:
 install-core:
 	cd src && $(MAKE) install
 
+install-dep:
+	cd deps/skull-ft && $(MAKE) install
+
+install-ft:
+	cd tests && $(MAKE) install
+
 install-api:
 	cd src/user-c && $(MAKE) install
 
@@ -42,6 +48,7 @@ install-scripts:
 	cd scripts && $(MAKE) install
 
 .PHONY: install-core install-api intall-api-cpp install-others install-scripts
+.PHONY: install-dep install-ft
 
 # clean targets
 

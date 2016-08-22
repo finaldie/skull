@@ -62,16 +62,16 @@ git clone git@github.com:finaldie/skull.git
 cd skull
 git submodule update --init --recursive
 make dep
+sudo make install-dep
 ```
 
 ### Build and Install
 ```console
 make -j4
-make install
+sudo make install
 ```
 
 **Notes:**
- * `make install` may need `sudo` access
  * If you do not want to enable `jemalloc`, use `make -j4 disable_jemalloc=true` to build it
  * For some _Linux_ Releases, you might need to use `CFLAGS`, `CXXFLAGS`, `LDFLAGS` to finish the build
 
