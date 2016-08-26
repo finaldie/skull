@@ -5,7 +5,7 @@ MAKE_FLAGS += "--no-print-directory"
 
 all: api-cpp
 
-api-cpp : core
+api-cpp: core
 
 dep: flibs protos metrics skull-ft jemalloc
 
@@ -19,6 +19,7 @@ valgrind-check:
 	cd tests && $(MAKE) $@
 
 install: install-core install-scripts install-api install-api-cpp install-others
+install: install-ft
 
 clean: clean-api-cpp
 	cd src && $(MAKE) $@

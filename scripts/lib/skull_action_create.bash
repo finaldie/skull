@@ -8,25 +8,30 @@
 function _skull_create()
 {
     local workspace=$1
+
     # build the basic workspace folder structure
     mkdir -p $workspace
     mkdir -p $workspace/.skull/makefiles
-    mkdir -p $workspace/idls/workflow
-    mkdir -p $workspace/idls/service
+    mkdir -p $workspace/idls/
     mkdir -p $workspace/src/modules
     mkdir -p $workspace/src/services
     mkdir -p $workspace/src/common
     mkdir -p $workspace/scripts
-    mkdir -p $workspace/tests
+    mkdir -p $workspace/tests/common
+    mkdir -p $workspace/tests/cases
     mkdir -p $workspace/config
     mkdir -p $workspace/bin
 
     # copy templates to the target workspace
-    cp $SKULL_ROOT/share/skull/Makefile.tpl $workspace/Makefile
-    cp $SKULL_ROOT/share/skull/ChangeLog.md.tpl $workspace/ChangeLog.md
-    cp $SKULL_ROOT/share/skull/README.md.tpl $workspace/README.md
-    cp -r $SKULL_ROOT/share/skull/bin/* $workspace/bin
-    cp $SKULL_ROOT/share/skull/gitignore $workspace/.gitignore
+    cp $SKULL_ROOT/share/skull/Makefile.tpl      $workspace/Makefile
+    cp $SKULL_ROOT/share/skull/ChangeLog.md.tpl  $workspace/ChangeLog.md
+    cp $SKULL_ROOT/share/skull/README.md.tpl     $workspace/README.md
+
+    cp $SKULL_ROOT/share/skull/Makefile.ft.tpl   $workspace/tests/Makefile
+    cp $SKULL_ROOT/share/skull/README.md.ft.tpl  $workspace/tests/README.md
+
+    cp -r $SKULL_ROOT/share/skull/bin/*          $workspace/bin
+    cp $SKULL_ROOT/share/skull/gitignore         $workspace/.gitignore
     cp $SKULL_ROOT/share/skull/ycm_extra_conf.py $workspace/.ycm_extra_conf.py
 
     # copy all the configurations except ChangeLog.md
@@ -45,7 +50,7 @@ function action_create()
     local workspace=$1
     echo "create skull workspace..."
     if [ -d $workspace ] && [ -d $workspace/.skull ]; then
-        echo "Notice: The workspace [$workspace] is a skull project, " \
+        echo "Notice: The workspace [$workspace] is a skull project," \
              "give up to build it"
         exit 1
     fi

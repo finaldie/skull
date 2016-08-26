@@ -2,7 +2,7 @@
 #
 # NOTES: This is included by the main script `skull`
 
-function get_proj_root()
+function sk_util_get_proj_root()
 {
     local current_dir=`pwd`
 
@@ -25,18 +25,17 @@ function get_proj_root()
     return 0
 }
 
-function _preload_language_actions()
+function sk_util_preload_language_actions()
 {
     # Load Language action scripts, for now, we only have C language
-    for lang_dir in $SKULL_ROOT/share/skull/lang/*;
-    do
-        if [ -d $lang_dir ]; then
+    for lang_dir in $SKULL_ROOT/share/skull/lang/*; do
+        if [ -d "$lang_dir" ]; then
             . $lang_dir/lib/skull_actions.bash
         fi
     done
 }
 
-function _get_language_list()
+function sk_util_get_language_list()
 {
     local langs
     local idx=0
@@ -53,9 +52,9 @@ function _get_language_list()
     echo ${langs[*]}
 }
 
-function _check_language()
+function sk_util_check_language()
 {
-    local langs=($(_get_language_list))
+    local langs=($(sk_util_get_language_list))
     local input_lang=$1
 
     for lang in "${langs[@]}"; do
@@ -68,7 +67,7 @@ function _check_language()
     return 1
 }
 
-function _is_number()
+function sk_util_is_number()
 {
     local value="$1"
     local re="^[0-9]+$"
@@ -83,7 +82,7 @@ function _is_number()
 # return:
 #  - 0 if the two files are the same
 #  - 1 if the two files are not the same
-function _compare_file()
+function sk_util_compare_file()
 {
     local file1=$1
     local file2=$2
@@ -97,7 +96,7 @@ function _compare_file()
     fi
 
     local md5_file1=`md5sum "$file1" | awk '{print $1}'`
-    local md5_file2=`md5sum "$file2" | awk '{print $2}'`
+    local md5_file2=`md5sum "$file2" | awk '{print $1}'`
 
     if [ $md5_file1 == $md5_file2 ]; then
         return 0
@@ -108,7 +107,7 @@ function _compare_file()
 
 # 'remove' action is very dangerous, so this function is wrap the 'rm' and
 #  do it when everything is correct
-function _safe_rm()
+function sk_util_safe_rm()
 {
     if [ $# = 0 ]; then
         return 0
@@ -122,7 +121,7 @@ function _safe_rm()
         # check the path is part of SKULL_PROJ_ROOT
         echo "$absolute_path" | grep "$target"
         if [ $? -eq 1 ]; then
-            echo "$absolute_path cannot be deleted" >&2
+            echo "Notice: $absolute_path cannot be deleted, please review it again and delete it if really needed" >&2
         else
             rm -f $absolute_path
         fi
@@ -130,7 +129,7 @@ function _safe_rm()
 }
 
 # return current module name if user indeed inside a module folder
-function _current_module()
+function sk_util_current_module()
 {
     local module_path=`echo "$SKULL_OLD_LOACTION" | grep -oP "src/modules/(\w+)"`
     local module=""
@@ -141,7 +140,7 @@ function _current_module()
     echo "$module"
 }
 
-function _current_module_config()
+function sk_util_current_module_config()
 {
     local module=$1
     local module_config=$SKULL_PROJ_ROOT/src/modules/$module/config/config.yaml
@@ -152,13 +151,13 @@ function _current_module_config()
 # return
 #  - language name if this is a supported language. for exmaple: c
 #  - empty if this is a unsupported language
-function _module_language()
+function sk_util_module_language()
 {
     local module=$1
-    local langs=($(_get_language_list))
+    local langs=($(sk_util_get_language_list))
 
     for lang in "${langs[@]}"; do
-        if $(_run_lang_action $lang $SKULL_LANG_MODULE_VALID $module); then
+        if $(sk_util_run_lang_action $lang $SKULL_LANG_MODULE_VALID $module); then
             echo $lang
         fi
     done
@@ -166,15 +165,15 @@ function _module_language()
     echo ""
 }
 
-function _module_list()
+function sk_util_module_list()
 {
-    ls -1 $SKULL_PROJ_ROOT/src/modules;
+    ls -1 $SKULL_MODULE_BASE_FOLDER;
 }
 
 # param action_name
 # param language_name
 # return the output of the corresponding output of that action
-function _run_lang_action()
+function sk_util_run_lang_action()
 {
     local lang=$1
     local action=$2
@@ -185,33 +184,33 @@ function _run_lang_action()
 
 # param action_name
 # return the output of the corresponding output of that action
-function _run_module_action()
+function sk_util_run_module_action()
 {
     local module=$1
     local action=$2
     shift 2
 
-    local module_lang=$(_module_language $module)
+    local module_lang=$(sk_util_module_language $module)
     if [ -z "$module_lang" ]; then
         echo "Error: unsupported module language type" >&2
         return 1
     fi
 
-    _run_lang_action $module_lang $action $@
+    sk_util_run_lang_action $module_lang $action $@
 }
 
 # Generate module config code files
-function utils_module_config_gen()
+function sk_util_module_config_gen()
 {
     local module=$1
     shift 1
 
-    local module_config=$(_current_module_config $module)
-    _run_module_action $module $SKULL_LANG_GEN_CONFIG $module_config
+    local module_config=$(sk_util_current_module_config $module)
+    sk_util_run_module_action $module $SKULL_LANG_GEN_CONFIG $module_config
 }
 
 # verify a name must be in [0-9a-zA-Z_]
-function _check_name()
+function sk_util_check_name()
 {
     local name=$1
 
@@ -232,7 +231,7 @@ function _check_name()
 ################ Service related ###############
 
 # return current module name if user indeed inside a module folder
-function _current_service()
+function sk_util_current_service()
 {
     local srv_path=`echo "$SKULL_OLD_LOACTION" | grep -oP "src/services/(\w+)"`
     local service=""
@@ -243,7 +242,7 @@ function _current_service()
     echo "$service"
 }
 
-function _current_service_config()
+function sk_util_current_service_config()
 {
     local service=$1
     local srv_config=$SKULL_PROJ_ROOT/src/services/$service/config/config.yaml
@@ -254,13 +253,13 @@ function _current_service_config()
 # return
 #  - language name if this is a supported language. for exmaple: c
 #  - empty if this is a unsupported language
-function _service_language()
+function sk_util_service_language()
 {
     local service=$1
-    local langs=($(_get_language_list))
+    local langs=($(sk_util_get_language_list))
 
     for lang in "${langs[@]}"; do
-        if $(_run_lang_action $lang $SKULL_LANG_SERVICE_VALID $service); then
+        if $(sk_util_run_lang_action $lang $SKULL_LANG_SERVICE_VALID $service); then
             echo $lang
         fi
     done
@@ -268,87 +267,57 @@ function _service_language()
     echo ""
 }
 
-function utils_service_list()
+function sk_util_service_list()
 {
-    ls -1 $SKULL_PROJ_ROOT/src/services;
+    ls -1 $SKULL_SERVICE_BASE_FOLDER;
+}
+
+function sk_util_service_all_idls()
+{
+    local service_list=($(sk_util_service_list))
+
+    for service in ${service_list[@]}; do
+        local idls=(`ls -1 $SKULL_SERVICE_BASE_FOLDER/$service/idl/ | grep ".proto"`)
+
+        for idl in ${idls[@]}; do
+            echo "$SKULL_SERVICE_BASE_FOLDER/$service/idl/$idl"
+        done
+    done
+}
+
+function sk_util_workflow_all_idls()
+{
+    local idls=(`ls -1 $SKULL_WORKFLOW_IDL_FOLDER | grep ".proto"`)
+
+    for idl in ${idls[@]}; do
+        echo $SKULL_WORKFLOW_IDL_FOLDER/$idl
+    done
 }
 
 # param action_name
 # return the output of the corresponding output of that action
-function _run_service_action()
+function sk_util_run_service_action()
 {
     local service=$1
     local action=$2
     shift 2
 
-    local service_lang=$(_service_language $service)
+    local service_lang=$(sk_util_service_language $service)
     if [ -z "$service_lang" ]; then
         echo "Error: unsupported service language type [$service_lang]" >&2
         return 1
     fi
 
-    _run_lang_action $service_lang $action $@
+    sk_util_run_lang_action $service_lang $action $@
 }
 
 # Generate service config code files
-function utils_service_config_gen()
+function sk_util_service_config_gen()
 {
     local service=$1
     shift 1
 
-    local svc_config=$(_current_service_config $service)
-    _run_service_action $service $SKULL_LANG_GEN_CONFIG $svc_config
+    local svc_config=$(sk_util_current_service_config $service)
+    sk_util_run_service_action $service $SKULL_LANG_GEN_CONFIG $svc_config
 }
 
-function _utils_srv_api_copy()
-{
-    local service=$1
-    local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
-    local srv_api_files=`ls $srv_idl_folder | grep ".proto"`
-
-    local srv_api_cnt=`echo $srv_api_files | wc -w`
-    if [ $srv_api_cnt -eq 0 ]; then
-        return 0
-    fi
-
-    # copy the api proto files to topdir/idls/service
-    ls -1 $srv_idl_folder | grep .proto | while read api_file; do
-        cp $srv_idl_folder/$api_file $SKULL_SERVICE_IDL_FOLDER
-
-        echo "$api_file"
-    done
-}
-
-# generate service idls (apis)
-function skull_utils_srv_api_gen()
-{
-    local service_list=`ls $SKULL_PROJ_ROOT/src/services`
-    local api_list=""
-
-    # copy all service api protos to idls/service and get api list
-    for service in $service_list; do
-        if [ -z "$service" ]; then
-            continue
-        fi
-
-        local apis=$(_utils_srv_api_copy $service)
-
-        api_list+=$apis
-        api_list+=" "
-    done
-
-    # check api cnt
-    local api_cnt=`echo $api_list | wc -w`
-    if [ $api_cnt -eq 0 ]; then
-        return 0
-    fi
-
-    # convert api protos to target language source files
-    local langs=($(_get_language_list))
-
-    for lang in "${langs[@]}"; do
-        _run_lang_action $lang $SKULL_LANG_SERVICE_API_GEN $api_list
-    done
-
-    return 0
-}

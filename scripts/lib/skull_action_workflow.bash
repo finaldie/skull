@@ -52,7 +52,7 @@ function action_workflow()
 
 function action_workflow_usage()
 {
-    echo "usage: "
+    echo "Usage: "
     echo "  skull workflow -a|--add"
     echo "  skull workflow -l|--list"
     echo "  skull workflow -h|--help"
@@ -102,7 +102,7 @@ function _action_workflow_add()
             while true; do
                 read -p "Input the port you want (1025-65535): " port
 
-                if ! $(_is_number $port); then
+                if ! $(sk_util_is_number $port); then
                     echo "Error: please input a digital for the port" >&2
                 else
                     break
@@ -122,8 +122,10 @@ function _action_workflow_add()
             -c $skull_conf -a gen_idl -n $idl -p $idl_path
     fi
 
-    echo "workflow added successfully"
-    echo "note: run 'skull module --add' to create a new module for it"
+    echo "Workflow added successfully"
+    echo ""
+    echo "Note: All the workflow idls are in 'idls' folder"
+    echo "Note: Run 'skull module --add' to create a new module for it"
 }
 
 function action_workflow_show()

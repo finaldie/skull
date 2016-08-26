@@ -179,7 +179,7 @@ function _action_service_add()
     local service=""
     local language=""
     local data_mode=""
-    local langs=($(_get_language_list))
+    local langs=($(sk_util_get_language_list))
     local lang_names=`echo ${langs[*]} | sed 's/ /|/g'`
     local total_services=`action_service_show | tail -1 | awk '{print $2}'`
 
@@ -187,7 +187,7 @@ function _action_service_add()
     while true; do
         read -p "service name? " service
 
-        if $(_check_name "$service"); then
+        if $(sk_util_check_name "$service"); then
             break;
         fi
     done
@@ -205,7 +205,7 @@ function _action_service_add()
         read -p "which language the service belongs to? ($lang_names) " language
 
         # verify the language valid or not
-        if $(_check_language "$language"); then
+        if $(sk_util_check_language "$language"); then
             break;
         fi
     done
@@ -222,38 +222,38 @@ function _action_service_add()
     done
 
     # 4. Add basic folder structure if the target module does not exist
-    _run_lang_action $language $SKULL_LANG_SERVICE_ADD $service
+    sk_util_run_lang_action $language $SKULL_LANG_SERVICE_ADD $service
 
     # 5. Add service into main config
     $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
         -a add -s $service -b true -d $data_mode -l $language
 
     # 6. add common folder
-    _run_lang_action $language $SKULL_LANG_COMMON_CREATE
+    sk_util_run_lang_action $language $SKULL_LANG_COMMON_CREATE
 
     echo "service [$service] added successfully"
 }
 
 function _action_service_config_gen()
 {
-    local service=$(_current_service)
+    local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
         echo "Error: not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
-    utils_service_config_gen $service
+    sk_util_service_config_gen $service
 }
 
 function _action_service_config_cat()
 {
-    local service=$(_current_service)
+    local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
         echo "Error: not in a service" >&2
         exit 1
     fi
 
-    local srv_config=$(_current_service_config $service)
+    local srv_config=$(sk_util_current_service_config $service)
     if [ ! -f $srv_config ]; then
         echo "Error: not found $srv_config" >&2
         exit 1
@@ -264,13 +264,13 @@ function _action_service_config_cat()
 
 function _action_service_config_edit()
 {
-    local service=$(_current_service)
+    local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
         echo "Error: not in a service" >&2
         exit 1
     fi
 
-    local srv_config=$(_current_service_config $service)
+    local srv_config=$(sk_util_current_service_config $service)
     if [ ! -f $srv_config ]; then
         echo "Error: not found $srv_config" >&2
         exit 1
@@ -289,7 +289,7 @@ function _action_service_config_check()
 
 function _action_service_api_list()
 {
-    local service=$(_current_service)
+    local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
         echo "Error: not in a service" >&2
         exit 1
@@ -301,7 +301,7 @@ function _action_service_api_list()
 
 function _action_service_api_cat()
 {
-    local service=$(_current_service)
+    local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
         echo "Error: not in a service" >&2
         exit 1
@@ -325,7 +325,7 @@ function _action_service_api_cat()
 
 function _action_service_api_edit()
 {
-    local service=$(_current_service)
+    local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
         echo "Error: not in a service" >&2
         exit 1
@@ -351,14 +351,14 @@ function _action_service_api_check()
 
 function _action_service_api_gen()
 {
-    skull_utils_srv_api_gen
+    action_common --idl-gen || exit 1
 
     echo "service api generated, run 'skull build' to re-compile the project"
 }
 
 function _action_service_api_add()
 {
-    local service=$(_current_service)
+    local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
         echo "Error: not in a service" >&2
         exit 1
@@ -368,7 +368,7 @@ function _action_service_api_add()
     while true; do
         read -p "service api name: " idl_name
 
-        if $(_check_name "$idl_name"); then
+        if $(sk_util_check_name "$idl_name"); then
             break;
         fi
     done
@@ -435,14 +435,14 @@ function _action_service_import()
     done
 
     # 4. Get service language
-    language=$(_service_language $service)
+    language=$(sk_util_service_language $service)
     if [ -z "$language" ]; then
         echo "Error: Cannot detect service language, import service failed" >&2
         exit 1
     fi
 
     # 5. Generate service config related code
-    utils_service_config_gen $service
+    sk_util_service_config_gen $service
     if [ $? != 0 ]; then
         echo "Error: import service failed, cannot generate config" >&2
         exit 1

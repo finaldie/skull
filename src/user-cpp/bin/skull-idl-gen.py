@@ -36,7 +36,8 @@ def generate_headers(api_file_list):
 
     # Generate include contents
     for api_file in api_file_list:
-        api_basename = api_file.split(".")
+        api_basename = os.path.basename(api_file)
+        api_basename = api_basename.split(".")
         api_basename = api_basename[0]
 
         content += "#include \"%s/%s.pb.h\"\n" % (prefix, api_basename)

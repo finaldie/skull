@@ -6,7 +6,7 @@
 function action_start()
 {
     # 1. Try to get the project root first if already in a project
-    get_proj_root
+    sk_util_get_proj_root
 
     # 2. Setup running_dir
     local running_dir="$SKULL_PROJ_ROOT/run"

@@ -36,3 +36,4 @@ cscope.*
 
 # deployment directory
 run/**
+tests/run/**
