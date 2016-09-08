@@ -27,7 +27,7 @@ const char* _module_conf_name(const char* short_name, char* confname, size_t sz)
 {
     memset(confname, 0, sz);
 
-    // The full name format: lib/libskull-modules-%s.so
+    // The full name format: etc/libskull-modules-%s.yaml
     snprintf(confname, sz, "etc/" SKULL_MODULE_CONF_PREFIX_NAME "%s.yaml",
              short_name);
     return confname;

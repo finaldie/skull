@@ -1,0 +1,19 @@
+# Required Targets
+$(TARGET): prepare
+	python -m compileall .
+
+prepare:
+
+check: $(TARGET)
+
+valgrind-check: $(TARGET)
+
+deploy:
+	test -d $(DEPLOY_DIR) || mkdir -p $(DEPLOY_DIR)
+	test -d $(COMMON_DIR) || mkdir -p $(COMMON_DIR)
+	cp -f ./*.py* $(COMMON_DIR)
+
+clean:
+	rm -f ./*.pyc
+
+.PHONY: prepare check valgrind-check deploy clean

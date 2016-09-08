@@ -26,6 +26,9 @@ void _read_commands(int argc, char** argv, sk_cmd_args_t* cmd_args)
         exit(1);
     }
 
+    // store bin path
+    cmd_args->binary_path = argv[0];
+
     int opt;
     while ((opt = getopt(argc, argv, "c:D")) != -1) {
         switch (opt) {

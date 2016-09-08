@@ -1,0 +1,7 @@
+TARGET := all
+
+COMMON_DIR := $(DEPLOY_DIR)/lib/py/skull/common
+
+# Include the basic Makefile targets
+include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.common.py.targets
+

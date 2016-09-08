@@ -24,6 +24,7 @@ typedef enum sk_core_status_t {
 
 // skull core related structures
 typedef struct sk_cmd_args_t {
+    const char* binary_path;
     const char* config_location;
     bool daemon;
 
@@ -82,6 +83,7 @@ void sk_core_destroy(sk_core_t* core);
 sk_service_t*    sk_core_service(sk_core_t*, const char* service_name);
 sk_core_status_t sk_core_status(sk_core_t*);
 sk_engine_t*     sk_core_bio(sk_core_t*, int idx);
+const char*      sk_core_binpath(sk_core_t*);
 
 #endif
 

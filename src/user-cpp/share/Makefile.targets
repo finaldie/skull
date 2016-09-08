@@ -24,4 +24,4 @@ deploy:
 clean:
 	rm -f $(TARGET) $(OBJS) $(TEST_TARGET) $(TEST_OBJS)
 
-.PHONY: check deploy clean
+.PHONY: prepare check valgrind-check deploy clean

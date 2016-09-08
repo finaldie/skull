@@ -659,3 +659,8 @@ sk_engine_t*     sk_core_bio(sk_core_t* core, int idx)
 
     return core->bio[bidx];
 }
+
+const char* sk_core_binpath(sk_core_t* core)
+{
+    return core->cmd_args.binary_path;
+}
