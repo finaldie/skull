@@ -59,7 +59,7 @@ def module_execute(user_module, entry_name, skull_txn=None, data=None, skull_txn
     if user_module is None:
         return
 
-    if entry_name is None or !isinstance(entry_name, types.StringType):
+    if entry_name is None or isinstance(entry_name, types.StringType) is False:
         return
 
     entry_func = user_module[entry_name]

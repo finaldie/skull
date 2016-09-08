@@ -18,6 +18,7 @@ SKULLPY_API_DIR := $(prefix)/lib/skullpy
 PYTHON_INC := $(shell python-config --includes)
 PYTHON_LDFLAGS := $(shell python-config --ldflags)
 PYTHON_CFLAGS := $(shell python-config --cflags)
+PYTHON_LIBS := $(shell python-config --libs)
 
 CXX ?= g++
 STD = -std=c++0x
@@ -27,19 +28,21 @@ INC += \
     $(PYTHON_INC)
 
 SKULL_LDFLAGS += $(SHARED) $(PYTHON_LDFLAGS)
-SKULL_CFLAGS += $(PYTHON_CFLAGS)
+#SKULL_CFLAGS += $(PYTHON_CFLAGS)
 
 SKULL_CPP_LIB := libskullpy-api.so
 
 DEPS_LDFLAGS +=
 
 SKULL_LIBS = \
-    -ldl
+    -ldl \
+    $(PYTHON_LIBS)
 
 SKULL_OBJS = \
     src/module_executor.o \
     src/module_loader.o \
-    src/api_loader.o
+    src/api_loader.o \
+    src/capis.o
 
 all: $(SKULL_CPP_LIB)
 	cd src && python -m compileall .

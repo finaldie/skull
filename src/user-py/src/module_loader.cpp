@@ -2,7 +2,10 @@
 #include <string.h>
 #include <dlfcn.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 #include <Python.h>
+#pragma GCC diagnostic pop
 
 #include "skull/api.h"
 #include "skullcpp/module_loader.h"
@@ -139,13 +142,13 @@ skull_module_loader_t module_getloader() {
 }
 
 // Module Loader Register
-void skullcpp_module_loader_register()
+void skullpy_module_loader_register()
 {
     skull_module_loader_t loader = module_getloader();
     skull_module_loader_register("py", loader);
 }
 
-void skullcpp_module_loader_unregister()
+void skullpy_module_loader_unregister()
 {
     skull_module_loader_unregister("py");
 }
