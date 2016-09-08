@@ -70,9 +70,11 @@ void skull_load_api()
         exit(1);
     }
 
-    snprintf(runningPath, PYTHON_PATH_MAX, "%s/lib/py", runningPath);
+    char newRunningPath[PYTHON_PATH_MAX];
+    snprintf(newRunningPath, PYTHON_PATH_MAX, "%s/lib/py", runningPath);
+    printf("runningPath: %s; newRunningPath: %s\n", runningPath, newRunningPath);
 
-    if (_append_syspath(runningPath)) {
+    if (_append_syspath(newRunningPath)) {
         fprintf(stderr, "Error: cannot append python sys.path: %s\n", runningPath);
         exit(1);
     }
