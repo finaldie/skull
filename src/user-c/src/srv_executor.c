@@ -103,9 +103,11 @@ int skull_srv_iocall_complete(sk_service_t* srv, sk_txn_t* txn, void* sdata,
     }
 
     // Invoke task callback
-    ret = ((skull_txn_iocb)task_data->cb)(&skull_txn, skull_ret, api_name,
+    ret = ((skull_txn_iocb)task_data->cb)(&skull_txn, skull_ret,
+                                  sk_service_name(srv), api_name,
                                   task_data->request, task_data->request_sz,
-                                  task_data->response, task_data->response_sz);
+                                  task_data->response, task_data->response_sz,
+                                  task_data->user_data);
 
     // Invoke iocomplete to do the cleanup job
 iocall_cleanup:

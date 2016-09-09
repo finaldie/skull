@@ -23,6 +23,9 @@ int skull_service_apidata_set(skull_service_t*, int type,
                               const void* data, size_t sz);
 void* skull_service_apidata(skull_service_t*, int type, size_t* sz);
 
+// Return api name if have, or return NULL
+const char* skull_service_apiname(const skull_service_t*);
+
 const char* skull_service_name(const skull_service_t*);
 
 // =============================== Service Job =================================

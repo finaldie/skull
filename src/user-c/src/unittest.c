@@ -141,9 +141,9 @@ int skullut_module_run(skullut_module_t* env)
         skull_txn_t skull_txn;
         skull_txn_init(&skull_txn, env->txn);
 
-        task->cb(&skull_txn, SKULL_TXN_IO_OK, api_name,
+        task->cb(&skull_txn, SKULL_TXN_IO_OK, mock_svc->name, api_name,
                  task->request, task->request_sz,
-                 task->response, task->response_sz);
+                 task->response, task->response_sz, task->ud);
 
         // 4. clean up
         skull_txn_release(&skull_txn, env->txn);
@@ -237,7 +237,8 @@ skull_txn_iocall (skull_txn_t* txn,
                   const void* request,
                   size_t request_sz,
                   skull_txn_iocb cb,
-                  int bidx)
+                  int bidx,
+                  void* ud)
 {
     if (!service_name) {
         return SKULL_TXN_IO_ERROR_SRVNAME;
@@ -259,6 +260,7 @@ skull_txn_iocall (skull_txn_t* txn,
     task->api_name   = api_name;
     task->request    = request;
     task->request_sz = request_sz;
+    task->ud         = ud;
 
     flist_push(env->tasks, task);
     return SKULL_TXN_IO_OK;
@@ -374,6 +376,8 @@ int skull_service_timer_create(skull_service_t* service, uint32_t delayed,
     return 0;
 }
 
+// TODO: the apidata_set, apidata, apiname apis should be linked directly instead
+//  of copy the code to here
 int skull_service_apidata_set(skull_service_t* svc, int type,
                               const void* data, size_t sz)
 {
@@ -407,6 +411,16 @@ void* skull_service_apidata(skull_service_t* svc, int type, size_t* sz)
         if (sz) *sz = taskdata->response_sz;
         return taskdata->response;
     }
+}
+
+const char* skull_service_apiname(const skull_service_t* svc)
+{
+    sk_txn_taskdata_t* taskdata = svc->task;
+    if (!taskdata) {
+        return NULL;
+    }
+
+    return taskdata->api_name;
 }
 
 // Mock API for sk_service
