@@ -213,6 +213,7 @@ function _generate_py_protos()
 
     $LANGUAGE_PY_PATH/bin/skull-idl-gen.py -p $PROTO_PY_FOLDER_NAME \
         -o $COMMON_PY_LOCATION/protos.py \
+        -i $PROTO_PY_FOLDER/__init__.py \
         $param_list
 }
 

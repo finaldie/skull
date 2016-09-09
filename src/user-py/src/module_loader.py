@@ -50,7 +50,7 @@ def module_load(module_name):
         uModule = __import__(full_name)
     except Exception, e:
         print "Error: Cannot load user module %s: %s" % (module_name, str(e))
-        return False
+        raise
 
     # 2. Loader user module entries into userModule
     # 2.1 Load module_init
