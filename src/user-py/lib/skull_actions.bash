@@ -108,18 +108,11 @@ function action_py_gen_metrics()
 
     local config=$1
     local tmpdir=/tmp
-    local tmp_header_file=$tmpdir/metrics.h
-    local tmp_source_file=$tmpdir/metrics.cpp
-    local header_file=$COMMON_PY_LOCATION/metrics.h
-    local source_file=$COMMON_PY_LOCATION/metrics.cpp
+    local tmp_source_file=$tmpdir/metrics.py
+    local source_file=$COMMON_PY_LOCATION/metrics.tmp
 
     $LANGUAGE_PY_PATH/bin/skull-metrics-gen.py -c $config \
-        -h $tmp_header_file \
-        -s $tmp_source_file
-
-    if ! $(sk_util_compare_file $tmp_header_file $header_file); then
-        cp $tmp_header_file $header_file
-    fi
+        -o $tmp_source_file
 
     if ! $(sk_util_compare_file $tmp_source_file $source_file); then
         cp $tmp_source_file $source_file

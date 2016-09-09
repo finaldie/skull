@@ -37,7 +37,7 @@ int sk_userlib_load(const char* filename)
     memset(fullname, 0, SK_USER_LIBNAME_MAX);
     snprintf(fullname, SK_USER_LIBNAME_MAX, "%s/%s", SK_USER_PREFIX1, filename);
 
-    void* handler = dlopen(fullname, RTLD_NOW);
+    void* handler = dlopen(fullname, RTLD_NOW | RTLD_GLOBAL);
     if (!handler) {
         fprintf(stdout, "Notice: cannot open %s: %s\n", fullname, dlerror());
 

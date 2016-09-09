@@ -8,10 +8,11 @@ namespace skullpy {
 
 typedef struct module_data_t {
     const skull_config_t* config;
+    const char* name;
+
     PyObject* pyLoaderModule;
     PyObject* pyLoaderFunc;   // Module Loader
     PyObject* pyExecutorFunc; // Module Executor
-    PyObject* pyModule;       // User Module
 } module_data_t;
 
 } // End of namespace

@@ -18,7 +18,7 @@ skull_start() {
 }
 
 skull_start_memcheck() {
-    exec valgrind --tool=memcheck --leak-check=full -v \
+    exec valgrind --tool=memcheck --leak-check=full --num-callers=50 -v \
         skull-engine -c $skull_config
 }
 

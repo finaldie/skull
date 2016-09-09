@@ -23,9 +23,10 @@ void   skull_module_init(void* md)
 
     // Prepare args
     PyObject* pyArgs = PyTuple_New(2);
-    PyObject* pyEntryName = PyString_FromString(MODULE_INIT_FUNCNAME);
+    PyObject* pyModuleName = PyString_FromString(mdata->name);
+    PyObject* pyEntryName  = PyString_FromString(MODULE_INIT_FUNCNAME);
 
-    PyTuple_SetItem(pyArgs, 0, mdata->pyModule);
+    PyTuple_SetItem(pyArgs, 0, pyModuleName);
     PyTuple_SetItem(pyArgs, 1, pyEntryName);
 
     // Call user module_init
@@ -43,9 +44,10 @@ void   skull_module_release(void* md)
 
     // Prepare args
     PyObject* pyArgs = PyTuple_New(2);
+    PyObject* pyModuleName = PyString_FromString(mdata->name);
     PyObject* pyEntryName = PyString_FromString(MODULE_RELEASE_FUNCNAME);
 
-    PyTuple_SetItem(pyArgs, 0, mdata->pyModule);
+    PyTuple_SetItem(pyArgs, 0, pyModuleName);
     PyTuple_SetItem(pyArgs, 1, pyEntryName);
 
     // Call user module_init

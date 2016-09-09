@@ -77,16 +77,18 @@ skull_module_t* _module_open(const char* module_name)
     md->pyLoaderModule = pyLoaderModule;
     md->pyLoaderFunc   = pyLoaderFunc;
     md->pyExecutorFunc = pyExecutorFunc;
+    printf("loaderModule Ref: %lu, loaderFunc Ref: %lu, pyExecutorFunc Ref: %lu\n",
+           Py_REFCNT(md->pyLoaderModule), Py_REFCNT(md->pyLoaderFunc), Py_REFCNT(md->pyExecutorFunc));
 
     // 3. load module entry
     PyObject* pyArgs = PyTuple_New(1);
     PyObject* pyModuleName = PyString_FromString(module_name);
     PyTuple_SetItem(pyArgs, 0, pyModuleName);
 
-    md->pyModule = PyObject_CallObject(md->pyLoaderFunc, pyArgs);
+    PyObject* ret = PyObject_CallObject(md->pyLoaderFunc, pyArgs);
     Py_DECREF(pyArgs);
 
-    if (!md->pyModule) {
+    if (!ret) {
         fprintf(stderr, "Error: Cannot load user module: %s", module_name);
         PyErr_Print();
         return NULL;
@@ -99,6 +101,7 @@ skull_module_t* _module_open(const char* module_name)
     module->pack    = skull_module_pack;
     module->release = skull_module_release;
     module->ud = md;
+    md->name = strdup(module_name);
 
     return module;
 }
@@ -109,9 +112,10 @@ int _module_close(skull_module_t* module)
     skullpy::module_data_t* md = (skullpy::module_data_t*)module->ud;
     skull_config_destroy(md->config);
     Py_XDECREF(md->pyLoaderModule);
-    Py_XDECREF(md->pyModule);
     Py_XDECREF(md->pyLoaderFunc);
+    Py_XDECREF(md->pyExecutorFunc);
 
+    free((void*)md->name);
     free(md);
     free(module);
     return 0;

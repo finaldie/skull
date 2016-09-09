@@ -12,6 +12,9 @@ MODULE_RUN_FUNCNAME     = 'module_run'
 MODULE_UNPACK_FUNCNAME  = 'module_unpack'
 MODULE_PACK_FUNCNAME    = 'module_pack'
 
+# Global Module Table
+UserModuleTables = {}
+
 # Internel APIs
 def _load_user_entry(moduleName, entryName, uModule, userModule, isPrintError):
     pkg_modules = uModule.__dict__.get('modules')
@@ -45,41 +48,45 @@ def module_load(module_name):
         print "user module for loading: %s" % full_name
 
         uModule = __import__(full_name)
-        #print "uModule: "
-        #print uModule
-        #pprint(uModule)
     except Exception, e:
         print "Error: Cannot load user module %s: %s" % (module_name, str(e))
-        return None
+        return False
 
     # 2. Loader user module entries into userModule
     # 2.1 Load module_init
     if _load_user_entry(module_name, MODULE_INIT_FUNCNAME, uModule, userModule, True) is None:
-        return None
+        return False
 
     # 2.2 Load module_release
     if _load_user_entry(module_name, MODULE_RELEASE_FUNCNAME, uModule, userModule, True) is None:
-        return None
+        return False
 
     # 2.3 Load module_run
     if _load_user_entry(module_name, MODULE_RUN_FUNCNAME, uModule, userModule, True) is None:
-        return None
+        return False
 
     # 2.4 Load module_pack
     if _load_user_entry(module_name, MODULE_PACK_FUNCNAME, uModule, userModule, False) is None:
-        return None
+        return False
 
     # 2.5 Load module_unpack
     if _load_user_entry(module_name, MODULE_UNPACK_FUNCNAME, uModule, userModule, False) is None:
-        return None
+        return False
 
-    return userModule
+    # 3. Assembe user module into Global Module Table
+    UserModuleTables[module_name] = userModule
+    return True
 
-def module_execute(user_module, entry_name, skull_txn=None, data=None, skull_txndata=None):
-    if user_module is None:
+def module_execute(module_name, entry_name, skull_txn=None, data=None, skull_txndata=None):
+    if module_name is None or isinstance(module_name, types.StringType) is False:
         return
 
     if entry_name is None or isinstance(entry_name, types.StringType) is False:
+        return
+
+    user_module = UserModuleTables.get(module_name)
+    if user_module is None:
+        print "Cannot find user module: %s" % module_name
         return
 
     entry_func = user_module['entries'][entry_name]
