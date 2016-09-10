@@ -14,7 +14,9 @@ svc_file_list = []
 prefix = ""
 
 # static
-HEADER_CONTENT_START = "\
+HEADER_CONTENT_START = "\n"
+
+HEADER_CONTENT_INIT_START = "\
 from google.protobuf import descriptor_pb2\n\
 from google.protobuf import descriptor_pool\n\
 \n\
@@ -49,26 +51,6 @@ def generate_headers(api_file_list, pkg_name, addReflection):
 
     return content
 
-def generate_refection_api():
-    content  = "\n"
-    content += "from google.protobuf import message_factory\n"
-    content += "\n"
-    content += "##\n"
-    content += "# Create a message by proto full name\n"
-    content += "#\n"
-    content += "# @param proto_full_name  Like 'skull.workflow.example'\n"
-    content += "# @return new message of this proto\n"
-    content += "def newMessage(proto_full_name):\n"
-    content += "    factory = message_factory.MessageFactory(descriptor_pool.Default())\n"
-    content += "    proto_descriptor = factory.pool.FindMessageTypeByName(proto_full_name)\n"
-    content += "    if proto_descriptor is None: return None\n"
-    content += "\n"
-    content += "    proto_cls = factory.GetPrototype(proto_descriptor)\n"
-    content += "    return proto_cls()\n"
-    content += "\n"
-
-    return content
-
 def generate_workflow_header(addReflection):
     content = "# Workflow transcation shared data protos\n"
     content += generate_headers(wf_file_list, 'workflow', addReflection)
@@ -91,9 +73,6 @@ def generate_idl_file(header_file_name):
     content += "\n"
     content += generate_svc_header(False)
 
-    # Fill the refection API
-    content += generate_refection_api()
-
     # Fill bottle lines
     content += HEADER_CONTENT_END
 
@@ -105,7 +84,7 @@ def generate_init_file(init_file_name):
     init_file = file(init_file_name, 'w')
 
     # Fill top title
-    content = HEADER_CONTENT_START
+    content = HEADER_CONTENT_INIT_START
 
     # Fill workflow and service header files as well as add them into desc
     #  default pool

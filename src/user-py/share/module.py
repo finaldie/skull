@@ -11,11 +11,14 @@ def module_release():
     print "py module release"
     return
 
-def module_unpack(skull_txn, data):
+def module_unpack(txn, data):
+    print "py module unpack"
     return 0
 
-def module_pack(skull_txn, skull_txndata):
+def module_pack(txn, txndata):
+    print "py module pack"
     return
 
-def module_run(skull_txn):
+def module_run(txn):
+    print "py module run"
     return True
