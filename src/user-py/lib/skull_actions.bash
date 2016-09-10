@@ -109,7 +109,7 @@ function action_py_gen_metrics()
     local config=$1
     local tmpdir=/tmp
     local tmp_source_file=$tmpdir/metrics.py
-    local source_file=$COMMON_PY_LOCATION/metrics.tmp
+    local source_file=$COMMON_PY_LOCATION/metrics.py
 
     $LANGUAGE_PY_PATH/bin/skull-metrics-gen.py -c $config \
         -o $tmp_source_file
