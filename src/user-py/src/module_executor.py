@@ -3,8 +3,8 @@
 import skullpy.txn as skullpy_txn
 import skullpy.txndata as skullpy_txndata
 
-def run_module_init(init_func):
-    init_func()
+def run_module_init(init_func, config):
+    init_func(config)
 
 def run_module_release(release_func):
     release_func()

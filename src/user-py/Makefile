@@ -35,7 +35,6 @@ SKULL_CPP_LIB := libskullpy-api.so
 DEPS_LDFLAGS +=
 
 SKULL_LIBS = \
-    -ldl \
     $(PYTHON_LIBS)
 
 SKULL_OBJS = \

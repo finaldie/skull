@@ -1,9 +1,11 @@
 
+import yaml
+
 import skullpy.api as api
 import skull.common.protos as protos
 import skull.common.metrics as metrics
 
-def module_init():
+def module_init(config):
     print "py module init"
     return
 

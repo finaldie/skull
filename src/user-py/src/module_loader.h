@@ -11,8 +11,9 @@ typedef struct module_data_t {
     const char* name;
 
     PyObject* pyLoaderModule;
-    PyObject* pyLoaderFunc;   // Module Loader
-    PyObject* pyExecutorFunc; // Module Executor
+    PyObject* pyLoadingFunc;      // Module Load
+    PyObject* pyLoadingConfFunc;  // Module Load Config
+    PyObject* pyExecutorFunc;     // Module Executor
 } module_data_t;
 
 } // End of namespace
