@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 ulimit -c unlimited
@@ -18,7 +18,17 @@ skull_start() {
 }
 
 skull_start_memcheck() {
+    # Generate suppression argument
+    local supp_files=(`ls bin/*.supp`)
+    local supp_arg=""
+
+    for supp_file in ${supp_files[@]}; do
+        supp_arg+=" --suppressions="${supp_file}" "
+    done
+
+    # Run valgrind to start skull
     exec valgrind --tool=memcheck --leak-check=full --num-callers=50 -v \
+        ${supp_arg} \
         skull-engine -c $skull_config
 }
 
