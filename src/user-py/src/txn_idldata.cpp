@@ -4,7 +4,7 @@
 
 #include "txn_idldata.h"
 
-namespace skullcpp {
+namespace skullpy {
 
 TxnSharedRawData::TxnSharedRawData(const void* data, size_t sz) {
     this->data_ = (void*)data;

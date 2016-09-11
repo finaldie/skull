@@ -1,8 +1,9 @@
 # Python Txn Class
 
 import types
-import skull_capi
+import skull_capi as capi
 from google.protobuf import message_factory
+from google.protobuf import descriptor_pool
 
 class Txn():
     # Txn Status
@@ -18,16 +19,16 @@ class Txn():
     IO_ERROR_BIO     = 4
 
     def __init__(self, skull_txn):
-        self.skull_txn = skull_txn
-        self.msg = None
+        self._skull_txn = skull_txn
+        self._msg = None
 
     def data(self):
-        idl_name = 'skull.workflow.' + skull_capi.txn_idlname(self.skull_txn)
+        idl_name = 'skull.workflow.' + capi.txn_idlname(self._skull_txn)
 
-        return __getOrCreateMessage(idl_name)
+        return self.__getOrCreateMessage(idl_name)
 
     def status(self):
-        return skull_capi.txn_status(self.skull_txn)
+        return capi.txn_status(self._skull_txn)
 
     ##
     # Send a iocall to service
@@ -54,37 +55,38 @@ class Txn():
         if api_name is None or isinstance(api_name, types.StringType) is False:
             return Txn.IO_ERROR_APINAME
 
-        return skull_capi.txn_iocall(self.skull_txn, service_name, api_name, request_msg, bio_idx, api_cb)
+        return capi.txn_iocall(self._skull_txn, service_name, api_name, request_msg, bio_idx, api_cb)
 
     # Internal API: Get or Create a message according to full proto name
     def __getOrCreateMessage(self, proto_full_name):
-        if self.msg is not None:
-            return self.msg
+        if self._msg is not None:
+            return self._msg
 
         factory = message_factory.MessageFactory(descriptor_pool.Default())
         proto_descriptor = factory.pool.FindMessageTypeByName(proto_full_name)
         if proto_descriptor is None: return None
 
         proto_cls = factory.GetPrototype(proto_descriptor)
-        self.msg = proto_cls()
+        self._msg = proto_cls()
 
-        msgBinData = skull_capi.txn_get(self.skull_txn)
+        msgBinData = capi.txn_get(self._skull_txn)
         if msgBinData is None:
-            return self.msg
+            return self._msg
 
-        self.msg.ParseFromString(msgBinData)
-        return self.msg
+        self._msg.ParseFromString(msgBinData)
+        return self._msg
 
-    # Internel API: Store the binary message data back to skull_txn
-    def __storeMsgData(self):
-        if self.msg is None:
+    # Store the binary message data back to skull_txn
+    def storeMsgData(self):
+        if self._msg is None:
             return
 
-        msgBinData = self.msg.SerializeToString()
-        skull_capi.txn_set(self.skull_txn, msgBinData)
+        msgBinData = self._msg.SerializeToString()
+        print "storeMsgData: [%s]" % msgBinData
+        capi.txn_set(self._skull_txn, msgBinData)
 
-    # Internel API: Destroy the binary message data in skull_txn
-    def __destroyMsgData(self):
-        self.msg = None
-        skull_capi.txn_set(self.skull_txn, None)
+    # Destroy the binary message data in skull_txn
+    def destroyMsgData(self):
+        self._msg = None
+        capi.txn_set(self._skull_txn, None)
 

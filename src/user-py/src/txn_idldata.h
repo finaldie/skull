@@ -1,9 +1,9 @@
-#ifndef SKULLCPP_IDL_INTERNAL_H
-#define SKULLCPP_IDL_INTERNAL_H
+#ifndef SKULLPY_IDL_INTERNAL_H
+#define SKULLPY_IDL_INTERNAL_H
 
 #include <stddef.h>
 
-namespace skullcpp {
+namespace skullpy {
 
 class TxnSharedRawData {
 private:

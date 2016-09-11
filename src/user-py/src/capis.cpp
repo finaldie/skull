@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
@@ -9,26 +10,104 @@
 #include <iostream>
 
 #include "skull/api.h"
+#include "txn_idldata.h"
 #include "capis.h"
 
 static
 PyObject* py_txn_idlname(PyObject* self, PyObject* args) {
-    return NULL;
-}
+    PyObject* pyTxn = NULL;
+    skull_txn_t* txn = NULL;
 
-static
-PyObject* py_txn_get(PyObject* self, PyObject* args) {
-    return NULL;
-}
+    if (!PyArg_ParseTuple(args, "O", &pyTxn)) {
+        return NULL;
+    }
 
-static
-PyObject* py_txn_set(PyObject* self, PyObject* args) {
-    return NULL;
+    txn = (skull_txn_t*) PyCapsule_GetPointer(pyTxn, "skull_txn");
+    if (!txn) {
+        return NULL;
+    }
+
+    return Py_BuildValue("s", skull_txn_idlname(txn));
 }
 
 static
 PyObject* py_txn_status(PyObject* self, PyObject* args) {
-    return NULL;
+    PyObject* pyTxn = NULL;
+    skull_txn_t* txn = NULL;
+
+    if (!PyArg_ParseTuple(args, "O", &pyTxn)) {
+        return NULL;
+    }
+
+    txn = (skull_txn_t*) PyCapsule_GetPointer(pyTxn, "skull_txn");
+    if (!txn) {
+        return NULL;
+    }
+
+    return Py_BuildValue("i", skull_txn_status(txn));
+}
+
+static
+PyObject* py_txn_get(PyObject* self, PyObject* args) {
+    PyObject* pyTxn = NULL;
+    skull_txn_t* txn = NULL;
+
+    if (!PyArg_ParseTuple(args, "O", &pyTxn)) {
+        return NULL;
+    }
+
+    txn = (skull_txn_t*) PyCapsule_GetPointer(pyTxn, "skull_txn");
+    if (!txn) {
+        return NULL;
+    }
+
+    const auto* rawData = (skullpy::TxnSharedRawData*)skull_txn_data(txn);
+    if (!rawData) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    } else {
+        return Py_BuildValue("s#", rawData->data(), rawData->size());
+    }
+}
+
+static
+PyObject* py_txn_set(PyObject* self, PyObject* args) {
+    PyObject* pyTxn = NULL;
+    skull_txn_t* txn = NULL;
+    PyObject* pyData = NULL;
+
+    if (!PyArg_ParseTuple(args, "O|O", &pyTxn, &pyData)) {
+        return NULL;
+    }
+
+    txn = (skull_txn_t*) PyCapsule_GetPointer(pyTxn, "skull_txn");
+    if (!txn) {
+        return NULL;
+    }
+
+    auto* rawData = (skullpy::TxnSharedRawData*)skull_txn_data(txn);
+
+    if (!pyData || pyData == Py_None) {
+        delete rawData;
+        skull_txn_setdata(txn, NULL);
+    } else {
+        if (!rawData) {
+            rawData = new skullpy::TxnSharedRawData();
+            skull_txn_setdata(txn, rawData);
+        }
+
+        const char* data = PyString_AsString(pyData);
+        Py_ssize_t size = PyString_Size(pyData);
+
+        if (size > 0) {
+            void* newData = calloc(1, (size_t)size);
+            memcpy(newData, data, (size_t)size);
+            rawData->reset(newData, (size_t)size);
+        }
+    }
+
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 static

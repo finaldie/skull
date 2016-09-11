@@ -41,7 +41,8 @@ SKULL_OBJS = \
     src/module_executor.o \
     src/module_loader.o \
     src/api_loader.o \
-    src/capis.o
+    src/capis.o \
+    src/txn_idldata.o
 
 all: $(SKULL_CPP_LIB)
 	cd src && python -m compileall .
