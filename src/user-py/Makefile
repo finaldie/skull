@@ -28,7 +28,7 @@ INC += \
     $(PYTHON_INC)
 
 SKULL_LDFLAGS += $(SHARED) $(PYTHON_LDFLAGS)
-#SKULL_CFLAGS += $(PYTHON_CFLAGS)
+SKULL_CFLAGS += -fno-strict-aliasing
 
 SKULL_CPP_LIB := libskullpy-api.so
 

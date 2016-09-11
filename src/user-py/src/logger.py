@@ -1,6 +1,8 @@
 # Python Logger API
 
+import os
 import types
+import inspect
 import skull_capi as capi
 
 def trace(msg):
@@ -10,7 +12,13 @@ def trace(msg):
     if isTraceEnabled() is False:
         return
 
-    capi.log_trace(str(msg))
+    caller_frame_record = inspect.stack()[1]
+    caller_frame = caller_frame_record[0]
+    info = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(info.filename)
+
+    log_msg = "%s:%d TRACE - %s" % (filename, info.lineno, str(msg))
+    capi.log(log_msg)
 
 def debug(msg):
     if msg is None:
@@ -19,18 +27,36 @@ def debug(msg):
     if isDebugEnabled() is False:
         return
 
-    capi.log_debug(str(msg))
+    caller_frame_record = inspect.stack()[1]
+    caller_frame = caller_frame_record[0]
+    info = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(info.filename)
 
-def info(msg):
+    log_msg = "%s:%d DEBUG - %s" % (filename, info.lineno, str(msg))
+    capi.log(log_msg)
+
+def info(code, msg):
+    if code is None:
+        raise Exception('Logging Format Error: Must have a code')
+
     if msg is None:
         return
 
     if isInfoEnabled() is False:
         return
 
-    capi.log_info(str(msg))
+    caller_frame_record = inspect.stack()[1]
+    caller_frame = caller_frame_record[0]
+    info = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(info.filename)
 
-def warn(msg, suggestion):
+    log_msg = "%s:%d INFO - {%s} %s" % (filename, info.lineno, str(code), str(msg))
+    capi.log(log_msg)
+
+def warn(code, msg, suggestion):
+    if code is None:
+        raise Exception('Logging Format Error: Must have a code')
+
     if msg is None:
         return
 
@@ -40,9 +66,18 @@ def warn(msg, suggestion):
     if suggestion is None:
         raise Exception('Logging Format Error: Must have a suggestion message')
 
-    capi.log_warn(str(msg), str(suggestion))
+    caller_frame_record = inspect.stack()[1]
+    caller_frame = caller_frame_record[0]
+    info = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(info.filename)
 
-def error(msg, solution):
+    log_msg = "%s:%d WARN - {%s} %s; suggestion: %s" % (filename, info.lineno, str(code), str(msg), str(suggestion))
+    capi.log(log_msg)
+
+def error(code, msg, solution):
+    if code is None:
+        raise Exception('Logging Format Error: Must have a code')
+
     if msg is None:
         return
 
@@ -52,16 +87,31 @@ def error(msg, solution):
     if solution is None:
         raise Exception('Logging Format Error: Must have a solution message')
 
-    capi.log_error(str(msg), str(solution))
+    caller_frame_record = inspect.stack()[1]
+    caller_frame = caller_frame_record[0]
+    info = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(info.filename)
 
-def fatal(msg, solution):
+    log_msg = "%s:%d ERROR - {%s} %s; solution: %s" % (filename, info.lineno, str(code), str(msg), str(solution))
+    capi.log(log_msg)
+
+def fatal(code, msg, solution):
+    if code is None:
+        raise Exception('Logging Format Error: Must have a code')
+
     if msg is None:
         return
 
     if solution is None:
         raise Exception('Logging Format Error: Must have a solution message')
 
-    capi.log_fatal(str(msg), str(solution))
+    caller_frame_record = inspect.stack()[1]
+    caller_frame = caller_frame_record[0]
+    info = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(info.filename)
+
+    log_msg = "%s:%d FATAL - {%s} %s; solution: %s" % (filename, info.lineno, str(code), str(msg), str(solution))
+    capi.log(log_msg)
 
 # Level Checking APIs
 def isTraceEnabled():

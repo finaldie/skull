@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdbool.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
@@ -44,11 +45,9 @@ static
 PyObject* py_metrics_inc(PyObject* self, PyObject* args) {
     const char* name = NULL;
     double value = 0.0f;
-    //printf("ParseTuple C metrics inc\n");
     //std::cout << "Tuple Size: " << PyTuple_Size(args) << std::endl;
 
     if (!PyArg_ParseTuple(args, "sd", &name, &value)) {
-        //printf("ParseTuple error\n");
         return NULL;
     }
 
@@ -71,58 +70,81 @@ PyObject* py_metrics_get(PyObject* self, PyObject* args) {
 }
 
 static
-PyObject* py_log_trace(PyObject* self, PyObject* args) {
-    return NULL;
-}
+PyObject* py_log(PyObject* self, PyObject* args) {
+    const char* msg = NULL;
 
-static
-PyObject* py_log_debug(PyObject* self, PyObject* args) {
-    return NULL;
-}
+    if (!PyArg_ParseTuple(args, "s", &msg)) {
+        return NULL;
+    }
 
-static
-PyObject* py_log_info(PyObject* self, PyObject* args) {
-    return NULL;
-}
-
-static
-PyObject* py_log_warn(PyObject* self, PyObject* args) {
-    return NULL;
-}
-
-static
-PyObject* py_log_error(PyObject* self, PyObject* args) {
-    return NULL;
-}
-
-static
-PyObject* py_log_fatal(PyObject* self, PyObject* args) {
-    return NULL;
+    skull_log("%s", msg);
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 static
 PyObject* py_log_trace_enabled(PyObject* self, PyObject* args) {
-    return NULL;
+    bool enabled = skull_log_enable_trace();
+
+    if (enabled) {
+        Py_INCREF(Py_True);
+        return Py_True;
+    } else {
+        Py_INCREF(Py_False);
+        return Py_False;
+    }
 }
 
 static
 PyObject* py_log_debug_enabled(PyObject* self, PyObject* args) {
-    return NULL;
+    bool enabled = skull_log_enable_debug();
+
+    if (enabled) {
+        Py_INCREF(Py_True);
+        return Py_True;
+    } else {
+        Py_INCREF(Py_False);
+        return Py_False;
+    }
 }
 
 static
 PyObject* py_log_info_enabled(PyObject* self, PyObject* args) {
-    return NULL;
+    bool enabled = skull_log_enable_info();
+
+    if (enabled) {
+        Py_INCREF(Py_True);
+        return Py_True;
+    } else {
+        Py_INCREF(Py_False);
+        return Py_False;
+    }
 }
 
 static
 PyObject* py_log_warn_enabled(PyObject* self, PyObject* args) {
-    return NULL;
+    bool enabled = skull_log_enable_warn();
+
+    if (enabled) {
+        Py_INCREF(Py_True);
+        return Py_True;
+    } else {
+        Py_INCREF(Py_False);
+        return Py_False;
+    }
 }
 
 static
 PyObject* py_log_error_enabled(PyObject* self, PyObject* args) {
-    return NULL;
+    bool enabled = skull_log_enable_error();
+
+    if (enabled) {
+        Py_INCREF(Py_True);
+        return Py_True;
+    } else {
+        Py_INCREF(Py_False);
+        return Py_False;
+    }
 }
 
 static PyMethodDef SkullMethods[] = {
@@ -139,12 +161,7 @@ static PyMethodDef SkullMethods[] = {
     {"metrics_get",       py_metrics_get,       METH_VARARGS, "metrics_get"},
 
     // logger APIs
-    {"log_trace",         py_log_trace,         METH_VARARGS, "log_trace"},
-    {"log_debug",         py_log_debug,         METH_VARARGS, "log_debug"},
-    {"log_info",          py_log_info,          METH_VARARGS, "log_info"},
-    {"log_warn",          py_log_warn,          METH_VARARGS, "log_warn"},
-    {"log_error",         py_log_error,         METH_VARARGS, "log_error"},
-    {"log_fatal",         py_log_fatal,         METH_VARARGS, "log_fatal"},
+    {"log",               py_log,               METH_VARARGS, "log"},
     {"log_trace_enabled", py_log_trace_enabled, METH_VARARGS, "log_trace_enabled"},
     {"log_debug_enabled", py_log_debug_enabled, METH_VARARGS, "log_debug_enabled"},
     {"log_info_enabled",  py_log_info_enabled,  METH_VARARGS, "log_info_enabled"},
