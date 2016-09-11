@@ -19,6 +19,7 @@ using namespace skullpy;
 
 void   skull_module_init(void* md)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
     module_data_t* mdata = (module_data_t*)md;
 
     // Prepare args
@@ -37,10 +38,12 @@ void   skull_module_init(void* md)
 
     Py_XDECREF(ret);
     Py_DECREF(pyArgs);
+    PyGILState_Release(state);
 }
 
 void   skull_module_release(void* md)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
     module_data_t* mdata = (module_data_t*)md;
 
     // Prepare args
@@ -59,10 +62,12 @@ void   skull_module_release(void* md)
 
     Py_XDECREF(ret);
     Py_DECREF(pyArgs);
+    PyGILState_Release(state);
 }
 
 int    skull_module_run    (void* md, skull_txn_t* txn)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
     module_data_t* mdata = (module_data_t*)md;
 
     // Prepare args
@@ -88,12 +93,14 @@ int    skull_module_run    (void* md, skull_txn_t* txn)
 
     Py_XDECREF(pyRet);
     Py_DECREF(pyArgs);
+    PyGILState_Release(state);
     return ret;
 }
 
 size_t skull_module_unpack (void* md, skull_txn_t* txn,
                             const void* data, size_t data_len)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
     module_data_t* mdata = (module_data_t*)md;
 
     // Prepare args
@@ -127,16 +134,18 @@ size_t skull_module_unpack (void* md, skull_txn_t* txn,
 
     Py_XDECREF(pyConsumed);
     Py_DECREF(pyArgs);
+    PyGILState_Release(state);
     return consumed;
 }
 
 void   skull_module_pack   (void* md, skull_txn_t* txn,
                             skull_txndata_t* txndata)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
     module_data_t* mdata = (module_data_t*)md;
 
     // Prepare args
-    PyObject* pyArgs = PyTuple_New(4);
+    PyObject* pyArgs = PyTuple_New(5);
     PyObject* pyModuleName = PyString_FromString(mdata->name);
     PyObject* pyEntryName  = PyString_FromString(MODULE_PACK_FUNCNAME);
     PyObject* pyTxn        = PyCapsule_New(txn, "skull_txn", NULL);
@@ -158,4 +167,5 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
 
     Py_XDECREF(pyRet);
     Py_DECREF(pyArgs);
+    PyGILState_Release(state);
 }

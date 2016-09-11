@@ -5,6 +5,8 @@
 #include <Python.h>
 #pragma GCC diagnostic pop
 
+#include <iostream>
+
 #include "skull/api.h"
 #include "capis.h"
 
@@ -40,12 +42,32 @@ PyObject* py_txndata_append(PyObject* self, PyObject* args) {
 
 static
 PyObject* py_metrics_inc(PyObject* self, PyObject* args) {
-    return NULL;
+    const char* name = NULL;
+    double value = 0.0f;
+    //printf("ParseTuple C metrics inc\n");
+    //std::cout << "Tuple Size: " << PyTuple_Size(args) << std::endl;
+
+    if (!PyArg_ParseTuple(args, "sd", &name, &value)) {
+        //printf("ParseTuple error\n");
+        return NULL;
+    }
+
+    skull_metric_inc(name, value);
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 static
-PyObject* py_metrics_set(PyObject* self, PyObject* args) {
-    return NULL;
+PyObject* py_metrics_get(PyObject* self, PyObject* args) {
+    const char* name = NULL;
+    double value = 0.0f;
+
+    if (!PyArg_ParseTuple(args, "s", &name)) {
+        return NULL;
+    }
+
+    value = skull_metric_get(name);
+    return Py_BuildValue("d", value);
 }
 
 static
@@ -114,7 +136,7 @@ static PyMethodDef SkullMethods[] = {
 
     // Metrics APIs
     {"metrics_inc",       py_metrics_inc,       METH_VARARGS, "metrics_inc"},
-    {"metrics_set",       py_metrics_set,       METH_VARARGS, "metrics_set"},
+    {"metrics_get",       py_metrics_get,       METH_VARARGS, "metrics_get"},
 
     // logger APIs
     {"log_trace",         py_log_trace,         METH_VARARGS, "log_trace"},

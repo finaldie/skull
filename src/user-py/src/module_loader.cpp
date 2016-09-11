@@ -40,6 +40,8 @@ const char* _module_conf_name(const char* short_name, char* confname, size_t sz)
 static
 skull_module_t* _module_open(const char* module_name)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
+
     // 1. Import python module_loader
     PyObject* pyLoaderModuleName = PyString_FromString(PYTHON_API_LOADER_NAME);
     if (!pyLoaderModuleName) {
@@ -126,12 +128,15 @@ skull_module_t* _module_open(const char* module_name)
     module->ud = md;
     md->name = strdup(module_name);
 
+    PyGILState_Release(state);
     return module;
 }
 
 static
 int _module_close(skull_module_t* module)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
+
     skullpy::module_data_t* md = (skullpy::module_data_t*)module->ud;
     skull_config_destroy(md->config);
     Py_XDECREF(md->pyLoaderModule);
@@ -142,6 +147,8 @@ int _module_close(skull_module_t* module)
     free((void*)md->name);
     free(md);
     free(module);
+
+    PyGILState_Release(state);
     return 0;
 }
 
@@ -153,6 +160,7 @@ int _module_load_config(skull_module_t* module, const char* filename)
         return 1;
     }
 
+    PyGILState_STATE state = PyGILState_Ensure();
     skullpy::module_data_t* md = (skullpy::module_data_t*)module->ud;
     md->config = skull_config_create(filename);
 
@@ -170,9 +178,11 @@ int _module_load_config(skull_module_t* module, const char* filename)
         fprintf(stderr, "Error: Cannot load user module(%s) config: %s",
                 md->name, filename);
         PyErr_Print();
+        PyGILState_Release(state);
         return 1;
     }
 
+    PyGILState_Release(state);
     return 0;
 }
 

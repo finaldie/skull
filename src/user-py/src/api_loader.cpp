@@ -22,6 +22,8 @@ void skull_unload_api();
 #define PYTHON_SYSPATH2        "/usr/lib"
 #define PYTHON_PATH_MAX        (4096)
 
+static PyThreadState* g_main_pythread_state = NULL;
+
 static
 int _append_syspath(const std::string& path)
 {
@@ -49,9 +51,14 @@ int _append_syspath(const std::string& path)
 void skull_load_api()
 {
     // 1. Initialize Python Environment
+    // 1.1 Initalize python interpreter, GIL and enable threads
     Py_Initialize();
+    PyEval_InitThreads();
+    g_main_pythread_state = PyEval_SaveThread();
 
-    // 1.1 Append python loader path into sys.path
+    // 1.2 Append python loader path into sys.path
+    PyGILState_STATE state = PyGILState_Ensure();
+
     if (_append_syspath(PYTHON_SYSPATH1)) {
         fprintf(stderr, "Error: cannot append python sys.path: %s\n", PYTHON_SYSPATH1);
         exit(1);
@@ -62,7 +69,7 @@ void skull_load_api()
         exit(1);
     }
 
-    // 1.2 Append python running path into sys.path
+    // 1.3 Append python running path into sys.path
     char runningPath[PYTHON_PATH_MAX];
     memset(runningPath, 0, PYTHON_PATH_MAX);
     if (!getcwd(runningPath, PYTHON_PATH_MAX)) {
@@ -84,14 +91,19 @@ void skull_load_api()
 
     // 3. Register module loader
     skullpy_module_loader_register();
+
+    PyGILState_Release(state);
 }
 
 void skull_unload_api()
 {
     // 1. Unregister module loader
+    PyGILState_STATE state = PyGILState_Ensure();
     skullpy_module_loader_unregister();
+    PyGILState_Release(state);
 
     // 2. Destroy Python Environment
+    PyEval_RestoreThread(g_main_pythread_state);
     Py_Finalize();
 }
 
