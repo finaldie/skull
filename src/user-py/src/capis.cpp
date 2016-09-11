@@ -38,7 +38,29 @@ PyObject* py_txn_iocall(PyObject* self, PyObject* args) {
 
 static
 PyObject* py_txndata_append(PyObject* self, PyObject* args) {
-    return NULL;
+    const char* buf = NULL;
+    int buf_size = 0;
+    PyObject* pyTxnData = NULL;
+    skull_txndata_t* txndata = NULL;
+
+    if (!PyArg_ParseTuple(args, "Os#", &pyTxnData, &buf, &buf_size)) {
+        return NULL;
+    }
+
+    if (buf_size <= 0) {
+        goto end;
+    }
+
+    txndata = (skull_txndata_t*) PyCapsule_GetPointer(pyTxnData, "skull_txndata");
+    if (!txndata) {
+        return NULL;
+    }
+
+    skull_txndata_output_append(txndata, buf, (size_t)buf_size);
+
+end:
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 static
