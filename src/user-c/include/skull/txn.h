@@ -51,7 +51,7 @@ typedef int (*skull_txn_iocb) (skull_txn_t*, skull_txn_ioret_t,
  * @param api_name
  * @param request       request protobuf message
  * @param request_sz    request protobuf message size
- * @param cb            api callback function
+ * @param cb            api callback function (no pending if it's NULL)
  * @param bio_idx       background io index
  *                      - (-1)  : random pick up a background io to run
  *                      - (0)   : do not use background io

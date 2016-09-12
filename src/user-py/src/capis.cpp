@@ -110,9 +110,107 @@ PyObject* py_txn_set(PyObject* self, PyObject* args) {
     return Py_None;
 }
 
+class ApiCbData {
+public:
+    PyObject* wrapper_;
+    PyObject* userCb_;
+
+public:
+    ApiCbData(PyObject* wrapper, PyObject* userCb) : wrapper_(wrapper), userCb_(userCb) {
+        Py_XINCREF(this->wrapper_);
+        Py_XINCREF(this->userCb_);
+    }
+
+    ~ApiCbData() {
+        Py_XDECREF(this->wrapper_);
+        Py_XDECREF(this->userCb_);
+    }
+};
+
+static
+int _api_cb(skull_txn_t* txn, skull_txn_ioret_t io_status,
+            const char* service_name,
+            const char* api_name,
+            const void* request, size_t req_sz,
+            const void* response, size_t resp_sz,
+            void* ud) {
+    auto* apiCbData = (ApiCbData*)ud;
+
+    PyObject* pyTxn            = PyCapsule_New(txn, "skull_txn", NULL);
+    PyObject* pyServiceName    = PyString_FromString(service_name);
+    PyObject* pyApiName        = PyString_FromString(api_name);
+    PyObject* pyRequestBinMsg  = PyString_FromStringAndSize((const char*)request, (Py_ssize_t)req_sz);
+    PyObject* pyResponseBinMsg = PyString_FromStringAndSize((const char*)response, (Py_ssize_t)resp_sz);
+
+    PyObject* pyArgs = PyTuple_New(6);
+    PyTuple_SetItem(pyArgs, 0, pyTxn);
+    PyTuple_SetItem(pyArgs, 1, pyServiceName);
+    PyTuple_SetItem(pyArgs, 2, pyApiName);
+    PyTuple_SetItem(pyArgs, 3, pyRequestBinMsg);
+    PyTuple_SetItem(pyArgs, 4, pyResponseBinMsg);
+    PyTuple_SetItem(pyArgs, 5, apiCbData->userCb_);
+
+    // Call user service callback wrapper
+    PyObject* pyRet = PyObject_CallObject(apiCbData->wrapper_, pyArgs);
+    int ret = 0;
+
+    if (!pyRet) {
+        if (PyErr_Occurred()) PyErr_Print();
+        ret = 1; // Error occurred
+    } else {
+        ret = PyObject_IsTrue(pyRet) ? 0 : 1;
+    }
+
+    Py_XDECREF(pyRet);
+    Py_DECREF(pyArgs);
+    delete apiCbData;
+    return ret;
+}
+
 static
 PyObject* py_txn_iocall(PyObject* self, PyObject* args) {
-    return NULL;
+    const char*  serviceName = NULL;
+    const char*  apiName = NULL;
+    PyObject*    pyTxn = NULL;
+    PyObject*    pyRequestBinMsg = NULL; // serialized request message
+    PyObject*    pyCbWrapper = NULL;
+    PyObject*    pyApiCb = NULL;
+    int          bioIdx = 0; // Default is no background IO
+    skull_txn_t* txn = NULL;
+
+    if (!PyArg_ParseTuple(args, "OssO|iOO", &pyTxn, &serviceName, &apiName,
+                          &pyRequestBinMsg, &bioIdx, &pyCbWrapper, &pyApiCb)) {
+        return NULL;
+    }
+
+    if (!pyTxn || pyTxn == Py_None) {
+        return NULL;
+    }
+
+    txn = (skull_txn_t*) PyCapsule_GetPointer(pyTxn, "skull_txn");
+    if (!txn) {
+        return NULL;
+    }
+
+    void* userCb = NULL;
+    if (pyApiCb != Py_None) {
+        userCb = new ApiCbData(pyCbWrapper, pyApiCb);
+    }
+
+    const char* data = PyString_AsString(pyRequestBinMsg);
+    Py_ssize_t size = PyString_Size(pyRequestBinMsg);
+    void* serializedMsg = calloc(1, (size_t)size);
+    memcpy(serializedMsg, data, (size_t)size);
+
+    skull_txn_ioret_t ret =
+        skull_txn_iocall(txn, serviceName, apiName, serializedMsg, (size_t)size,
+                         userCb ? _api_cb : NULL, bioIdx, userCb);
+
+    if (ret != SKULL_TXN_IO_OK) {
+        delete (ApiCbData*)userCb;
+    }
+
+    return Py_BuildValue("i", ret);
 }
 
 static

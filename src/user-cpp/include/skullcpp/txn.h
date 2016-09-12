@@ -60,8 +60,8 @@ public:
      *         - ERROR_STATE
      */
     virtual IOStatus iocall (const std::string& serviceName,
-                          const std::string& apiName,
-                          const google::protobuf::Message& request) = 0;
+                             const std::string& apiName,
+                             const google::protobuf::Message& request) = 0;
 
     /**
      * Invoke a service async call
