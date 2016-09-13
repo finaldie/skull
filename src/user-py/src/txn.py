@@ -115,7 +115,10 @@ def _serviceApiCallback(skull_txn, io_status, service_name, api_name,
     resp_msg = _restoreServiceMsg(resp_full_name, resp_bin_msg)
 
     # Call user callback
-    return api_cb(txn, io_status, api_name, req_msg, resp_msg)
+    ret = api_cb(txn, io_status, api_name, req_msg, resp_msg)
+
+    txn.storeMsgData()
+    return ret
 
 def _restoreServiceMsg(proto_full_name, msg_bin_data):
     factory = message_factory.MessageFactory(descriptor_pool.Default())
