@@ -99,9 +99,9 @@ skull_module_t* _module_open(const char* module_name)
     md->pyLoadingFunc      = pyLoadingFunc;
     md->pyLoadingConfFunc  = pyLoadingConfFunc;
     md->pyExecutorFunc     = pyExecutorFunc;
-    printf("loaderModule Ref: %lu, loaderFunc Ref: %lu, pyExecutorFunc Ref: %lu\n",
-           Py_REFCNT(md->pyLoaderModule), Py_REFCNT(md->pyLoadingFunc),
-           Py_REFCNT(md->pyExecutorFunc));
+    //printf("loaderModule Ref: %lu, loaderFunc Ref: %lu, pyExecutorFunc Ref: %lu\n",
+    //       Py_REFCNT(md->pyLoaderModule), Py_REFCNT(md->pyLoadingFunc),
+    //       Py_REFCNT(md->pyExecutorFunc));
 
     // 4. Call loader module.module_load to load the user module entires
     PyObject* pyArgs = PyTuple_New(1);
