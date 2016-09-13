@@ -68,7 +68,7 @@ class Txn():
 
         msgBinData = request_msg.SerializeToString()
         return capi.txn_iocall(self._skull_txn, service_name, api_name,
-                msgBinData, bio_idx, __serviceApiCallback, api_cb)
+                msgBinData, bio_idx, _serviceApiCallback, api_cb)
 
     # Internal API: Get or Create a message according to full proto name
     def __getOrCreateMessage(self, proto_full_name):
@@ -103,21 +103,21 @@ class Txn():
         self._msg = None
         capi.txn_set(self._skull_txn, None)
 
-def __serviceApiCallback(skull_txn, io_status, service_name, api_name,
+def _serviceApiCallback(skull_txn, io_status, service_name, api_name,
         req_bin_msg, resp_bin_msg, api_cb):
     txn = Txn(skull_txn)
 
     # Restore request and response message
     req_full_name = 'skull.service.{}.{}_req'.format(service_name, api_name)
-    req_msg = __restoreServiceMsg(req_full_name, req_bin_msg)
+    req_msg = _restoreServiceMsg(req_full_name, req_bin_msg)
 
     resp_full_name = 'skull.service.{}.{}_resp'.format(service_name, api_name)
-    resp_msg = __restoreServiceMsg(resp_full_name, resp_bin_msg)
+    resp_msg = _restoreServiceMsg(resp_full_name, resp_bin_msg)
 
     # Call user callback
     return api_cb(txn, io_status, api_name, req_msg, resp_msg)
 
-def __restoreServiceMsg(proto_full_name, msg_bin_data):
+def _restoreServiceMsg(proto_full_name, msg_bin_data):
     factory = message_factory.MessageFactory(descriptor_pool.Default())
     proto_descriptor = factory.pool.FindMessageTypeByName(proto_full_name)
     if proto_descriptor is None: return None

@@ -127,6 +127,9 @@ public:
     }
 };
 
+// This callback function is trggered by service when the api call has been
+//  completed, so here needs to use 'PyGILState_Ensure()' protect python global
+//  state again.
 static
 int _api_cb(skull_txn_t* txn, skull_txn_ioret_t io_status,
             const char* service_name,
@@ -134,21 +137,24 @@ int _api_cb(skull_txn_t* txn, skull_txn_ioret_t io_status,
             const void* request, size_t req_sz,
             const void* response, size_t resp_sz,
             void* ud) {
+    PyGILState_STATE state = PyGILState_Ensure();
     auto* apiCbData = (ApiCbData*)ud;
 
     PyObject* pyTxn            = PyCapsule_New(txn, "skull_txn", NULL);
+    PyObject* pyIoStatus       = PyInt_FromLong(io_status);
     PyObject* pyServiceName    = PyString_FromString(service_name);
     PyObject* pyApiName        = PyString_FromString(api_name);
     PyObject* pyRequestBinMsg  = PyString_FromStringAndSize((const char*)request, (Py_ssize_t)req_sz);
     PyObject* pyResponseBinMsg = PyString_FromStringAndSize((const char*)response, (Py_ssize_t)resp_sz);
 
-    PyObject* pyArgs = PyTuple_New(6);
+    PyObject* pyArgs = PyTuple_New(7);
     PyTuple_SetItem(pyArgs, 0, pyTxn);
-    PyTuple_SetItem(pyArgs, 1, pyServiceName);
-    PyTuple_SetItem(pyArgs, 2, pyApiName);
-    PyTuple_SetItem(pyArgs, 3, pyRequestBinMsg);
-    PyTuple_SetItem(pyArgs, 4, pyResponseBinMsg);
-    PyTuple_SetItem(pyArgs, 5, apiCbData->userCb_);
+    PyTuple_SetItem(pyArgs, 1, pyIoStatus);
+    PyTuple_SetItem(pyArgs, 2, pyServiceName);
+    PyTuple_SetItem(pyArgs, 3, pyApiName);
+    PyTuple_SetItem(pyArgs, 4, pyRequestBinMsg);
+    PyTuple_SetItem(pyArgs, 5, pyResponseBinMsg);
+    PyTuple_SetItem(pyArgs, 6, apiCbData->userCb_);
 
     // Call user service callback wrapper
     PyObject* pyRet = PyObject_CallObject(apiCbData->wrapper_, pyArgs);
@@ -164,6 +170,8 @@ int _api_cb(skull_txn_t* txn, skull_txn_ioret_t io_status,
     Py_XDECREF(pyRet);
     Py_DECREF(pyArgs);
     delete apiCbData;
+
+    PyGILState_Release(state);
     return ret;
 }
 

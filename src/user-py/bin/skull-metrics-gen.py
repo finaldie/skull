@@ -33,7 +33,6 @@ class _MetricsBase(object):\n\
         return\n\
 \n\
     def get(self, name):\n\
-        print \"get name: %s\" % name\n\
         v = capi.metrics_get(name)\n\
         if v is None:\n\
             return 0.0\n\
@@ -41,7 +40,6 @@ class _MetricsBase(object):\n\
             return v\n\
 \n\
     def inc(self, name, value):\n\
-        print \"inc name: %s\" % name\n\
         capi.metrics_inc(name, value)\n\
 \n\
 class _Metrics(_MetricsBase):\n\
