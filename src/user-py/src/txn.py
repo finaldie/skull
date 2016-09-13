@@ -66,6 +66,9 @@ class Txn():
         if api_cb is not None and isinstance(api_cb, types.FunctionType) is False:
             return Txn.IO_ERROR_REQUEST
 
+        if bio_idx is None:
+            bio_idx = 0
+
         msgBinData = request_msg.SerializeToString()
         return capi.txn_iocall(self._skull_txn, service_name, api_name,
                 msgBinData, bio_idx, _serviceApiCallback, api_cb)
