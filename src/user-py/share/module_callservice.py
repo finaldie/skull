@@ -95,4 +95,18 @@ def module_run(txn):
 
     mod_dymetrics = Metrics.transcation('test')
     mod_dymetrics.request.inc(1)
+
+    # Assemble api request
+    get_req_msg = service_s1_get_req_pto.get_req()
+    get_req_msg.name = "hello"
+
+    # invoke iocall to s1 service
+    ret = txn.iocall('s1', 'get', get_req_msg, 0, _api_cb)
+    print "iocall ret: {}".format(ret)
+    return True
+
+def _api_cb(txn, iostatus, api_name, request_msg, response_msg):
+    print "api_cb: iostatus: {}, api_name: {}, request_msg: {}, response_msg: {}".format(
+            iostatus, api_name, request_msg, response_msg)
+
     return True
