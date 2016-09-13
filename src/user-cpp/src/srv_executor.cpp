@@ -88,12 +88,14 @@ int  skull_srv_iocall  (skull_service_t* srv, const char* api_name,
 
 void skull_srv_iocomplete(skull_service_t* srv, const char* api_name, void* data)
 {
-    // 1. Release api request data
-    void* apiReq = skull_service_apidata(srv, SKULL_API_REQ, NULL);
-    free(apiReq);
+    // 1. Reset api request data to NULL. The caller is responsible for releasing
+    //     the data
+    skull_service_apidata_set(srv, SKULL_API_REQ, NULL, 0);
 
     // 2. Release api response data
     void* apiResp = skull_service_apidata(srv, SKULL_API_RESP, NULL);
     free(apiResp);
+
+    skull_service_apidata_set(srv, SKULL_API_RESP, NULL, 0);
 }
 

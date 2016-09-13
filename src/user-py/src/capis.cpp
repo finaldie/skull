@@ -121,9 +121,10 @@ public:
         Py_XINCREF(this->userCb_);
     }
 
+    // Do not call Py_DECREF here, or the callback function py obj will be releases
     ~ApiCbData() {
-        Py_XDECREF(this->wrapper_);
-        Py_XDECREF(this->userCb_);
+        //Py_XDECREF(this->wrapper_);
+        //Py_XDECREF(this->userCb_);
     }
 };
 
@@ -170,8 +171,10 @@ int _api_cb(skull_txn_t* txn, skull_txn_ioret_t io_status,
     Py_XDECREF(pyRet);
     Py_DECREF(pyArgs);
     delete apiCbData;
-
     PyGILState_Release(state);
+
+    // Release the request data
+    free((void*)request);
     return ret;
 }
 

@@ -117,7 +117,11 @@ int _skull_svc_api_callback(skull_txn_t* sk_txn, skull_txn_ioret_t ret,
     }
 
     Txn::ApiCB cb = (Txn::ApiCB)(uintptr_t)ud;
-    return cb(txn, st, std::string(apiName), apiReq.get(), apiResp.get());
+    int r = cb(txn, st, std::string(apiName), apiReq.get(), apiResp.get());
+
+    // Release the request data
+    free((void*)request);
+    return r;
 }
 
 Txn::IOStatus TxnImp::iocall (const std::string& serviceName,
