@@ -1,4 +1,5 @@
 import yaml
+import pprint
 
 from skullpy import txn     as Txn
 from skullpy import txndata as TxnData
@@ -15,6 +16,7 @@ from skull.common.proto import *
 #
 def module_init(config):
     print "py module init"
+    Logger.info('0', 'config: {}'.format(pprint.pformat(config)))
 
     Logger.trace('py module init: trace test')
     Logger.debug('py module init: debug test')
@@ -43,6 +45,7 @@ def module_release():
 #
 def module_unpack(txn, data):
     print "py module unpack"
+    Logger.info('5', 'receive data: {}'.format(data))
 
     # Store data into txn sharedData
     example_msg = txn.data()
@@ -70,12 +73,13 @@ def module_pack(txn, txndata):
     mod_dymetrics.response.inc(1)
 
     # Assemble response
-    example_msg = txn.data()
-    print "pack data: %s" % example_msg.data
-
     if txn.status() != Txn.Txn.TXN_OK:
         txndata.append('error')
     else:
+        example_msg = txn.data()
+        print "pack data: %s" % example_msg.data
+        Logger.info('7', 'module_pack: data sz: {}'.format(len(example_msg.data)))
+
         txndata.append(example_msg.data)
 
 ##
