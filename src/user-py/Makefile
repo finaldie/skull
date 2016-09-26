@@ -22,6 +22,8 @@ PYTHON_LIBS := $(shell python-config --libs)
 
 CXX ?= g++
 STD = -std=c++0x
+# Reset macro
+MACRO =
 INC += \
     -Iinclude \
     -I../user-c/include \

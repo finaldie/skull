@@ -1,11 +1,11 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 #include <Python.h>
 #pragma GCC diagnostic pop
+
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
 #include <iostream>
 

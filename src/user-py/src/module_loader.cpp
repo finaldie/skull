@@ -1,10 +1,10 @@
-#include <stdlib.h>
-#include <string.h>
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 #include <Python.h>
 #pragma GCC diagnostic pop
+
+#include <stdlib.h>
+#include <string.h>
 
 #include "module_executor.h"
 #include "module_loader.h"

@@ -1,13 +1,13 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+#include <Python.h>
+#pragma GCC diagnostic pop
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <string>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#include <Python.h>
-#pragma GCC diagnostic pop
 
 #include "module_loader.h"
 #include "capis.h"

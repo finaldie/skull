@@ -1,9 +1,9 @@
-#include <stdlib.h>
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 #include <Python.h>
 #pragma GCC diagnostic pop
+
+#include <stdlib.h>
 
 #include <skull/txn.h>
 #include "module_loader.h"
