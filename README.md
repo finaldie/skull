@@ -25,15 +25,15 @@ A fast to start, easy to maintain, high productivity serving framework<br>
 
 ## Introduction
 Skull provides the following features:
-* Modular development
-* Project management
+* Modular Development Environment
+* Project Management
 * Processize
 * Lockfree Environment
 * Native Monitoring
 * Native Async Network IO
 * Native Background IO
 * Native Timer
-* Multi-language Support
+* Multi-Language Support (**_C/C++_**, **_Python_**)
 * Service Shareable
 
 It's based on [Google Protobuf][3] and [Flibs][4], target to _Linux_ platform. And _Skull_ is compose of 3 components: **skull-core**, **skull-user-api** and **skull-project-management-scripts**, besides of that logically there are also 3 major concepts in _Skull_: **Workflow**, **Module** and **Service**. Before using _Skull_, let's understand the core concepts first.
@@ -83,7 +83,9 @@ create your skull project.
 ### Create a skull project
 [![skull demo 1](http://g.recordit.co/6yGrVG7i0s.gif)]()
 
-**Notes:** By default, the new module with a example code which is used for echo-back message
+**Notes:**
+ * By default, the new module with a example code which is used for echo-back message
+ * Above creation is for C++ module, type `py` in language selection step if you want
 
 ### Play with skull
 [![skull demo 2](http://g.recordit.co/vSON9N6nuV.gif)]()
