@@ -63,11 +63,11 @@ skull_module_t* _module_open(const char* filename)
 
     md->entry = md->reg();
 
-    module->init    = skull_module_init;
-    module->run     = skull_module_run;
-    module->unpack  = skull_module_unpack;
-    module->pack    = skull_module_pack;
-    module->release = skull_module_release;
+    module->init    = skullcpp::skull_module_init;
+    module->run     = skullcpp::skull_module_run;
+    module->unpack  = skullcpp::skull_module_unpack;
+    module->pack    = skullcpp::skull_module_pack;
+    module->release = skullcpp::skull_module_release;
 
     return module;
 }
@@ -98,6 +98,8 @@ int _module_load_config(skull_module_t* module, const char* filename)
     return 0;
 }
 
+namespace skullcpp {
+
 skull_module_loader_t module_getloader() {
     skull_module_loader_t loader;
     loader.name        = _module_name;
@@ -110,13 +112,16 @@ skull_module_loader_t module_getloader() {
 }
 
 // Module Loader Register
-void skullcpp_module_loader_register()
+void module_loader_register()
 {
     skull_module_loader_t loader = module_getloader();
     skull_module_loader_register("cpp", loader);
 }
 
-void skullcpp_module_loader_unregister()
+void module_loader_unregister()
 {
     skull_module_loader_unregister("cpp");
 }
+
+} // End of namespace
+

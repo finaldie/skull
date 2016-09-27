@@ -1,8 +1,12 @@
 #ifndef SKULLPY_MOD_LOADER_H
 #define SKULLPY_MOD_LOADER_H
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 #include <Python.h>
-#include <skull/api.h>
+#pragma GCC diagnostic pop
+
+#include "skull/api.h"
 
 namespace skullpy {
 
@@ -16,11 +20,10 @@ typedef struct module_data_t {
     PyObject* pyExecutorFunc;     // Module Executor
 } module_data_t;
 
-} // End of namespace
+void module_loader_register();
+void module_loader_unregister();
 
-void skullpy_module_loader_register();
-void skullpy_module_loader_unregister();
-skull_module_loader_t module_getloader();
+} // End of namespace
 
 #endif
 

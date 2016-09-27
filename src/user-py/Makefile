@@ -25,7 +25,6 @@ STD = -std=c++0x
 # Reset macro
 MACRO =
 INC += \
-    -Iinclude \
     -I../user-c/include \
     $(PYTHON_INC)
 

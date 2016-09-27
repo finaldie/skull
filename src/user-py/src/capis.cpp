@@ -381,6 +381,11 @@ static PyMethodDef SkullMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-void skullpy_register_capis() {
+namespace skullpy {
+
+void register_capis() {
     Py_InitModule("skull_capi", SkullMethods);
 }
+
+} // End of namespace
+

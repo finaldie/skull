@@ -56,6 +56,7 @@ skull_module_t* _module_open(const char* module_name)
     if (!pyLoaderModule) {
         fprintf(stderr, "Cannot import python api loader module: %s",
                 PYTHON_API_LOADER_NAME);
+        PyErr_Print();
         return NULL;
     }
 
@@ -120,11 +121,11 @@ skull_module_t* _module_open(const char* module_name)
 
     // 4. Assemble execution point
     skull_module_t* module = (skull_module_t*)calloc(1, sizeof(*module));
-    module->init    = skull_module_init;
-    module->run     = skull_module_run;
-    module->unpack  = skull_module_unpack;
-    module->pack    = skull_module_pack;
-    module->release = skull_module_release;
+    module->init    = skullpy::skull_module_init;
+    module->run     = skullpy::skull_module_run;
+    module->unpack  = skullpy::skull_module_unpack;
+    module->pack    = skullpy::skull_module_pack;
+    module->release = skullpy::skull_module_release;
     module->ud = md;
     md->name = strdup(module_name);
 
@@ -186,7 +187,8 @@ int _module_load_config(skull_module_t* module, const char* filename)
     return 0;
 }
 
-skull_module_loader_t module_getloader() {
+static
+skull_module_loader_t py_module_getloader() {
     skull_module_loader_t loader;
     loader.name        = _module_name;
     loader.conf_name   = _module_conf_name;
@@ -197,14 +199,19 @@ skull_module_loader_t module_getloader() {
     return loader;
 }
 
+namespace skullpy {
+
 // Module Loader Register
-void skullpy_module_loader_register()
+void module_loader_register()
 {
-    skull_module_loader_t loader = module_getloader();
+    skull_module_loader_t loader = py_module_getloader();
     skull_module_loader_register("py", loader);
 }
 
-void skullpy_module_loader_unregister()
+void module_loader_unregister()
 {
     skull_module_loader_unregister("py");
 }
+
+} // End of namespace
+

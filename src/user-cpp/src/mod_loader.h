@@ -14,11 +14,11 @@ typedef struct module_data_t {
     ModuleEntry*          (*reg)();
 } module_data_t;
 
-} // End of namespace
-
-void skullcpp_module_loader_register();
-void skullcpp_module_loader_unregister();
+void module_loader_register();
+void module_loader_unregister();
 skull_module_loader_t module_getloader();
+
+} // End of namespace
 
 #endif
 

@@ -87,10 +87,10 @@ void skull_load_api()
     }
 
     // 2. Register C APIs for Python
-    skullpy_register_capis();
+    skullpy::register_capis();
 
     // 3. Register module loader
-    skullpy_module_loader_register();
+    skullpy::module_loader_register();
 
     PyGILState_Release(state);
 }
@@ -99,7 +99,7 @@ void skull_unload_api()
 {
     // 1. Unregister module loader
     PyGILState_STATE state = PyGILState_Ensure();
-    skullpy_module_loader_unregister();
+    skullpy::module_loader_unregister();
     PyGILState_Release(state);
 
     // 2. Destroy Python Environment

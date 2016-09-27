@@ -13,19 +13,19 @@ void skull_unload_api();
 void skull_load_api()
 {
     // 1. Register module loader
-    skullcpp_module_loader_register();
+    skullcpp::module_loader_register();
 
     // 2. Register service loader
-    skullcpp_service_loader_register();
+    skullcpp::service_loader_register();
 }
 
 void skull_unload_api()
 {
     // 1. Unregister module loader
-    skullcpp_module_loader_unregister();
+    skullcpp::module_loader_unregister();
 
     // 2. Unregister service loader
-    skullcpp_service_loader_unregister();
+    skullcpp::service_loader_unregister();
 
     // 3. Shutdown the protobuf library correctly. Problem: if there are
     //  some dynamic libs used protobuf, if we dlclose them before we calling

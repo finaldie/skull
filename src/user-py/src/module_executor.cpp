@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-#include <skull/txn.h>
+#include "skull/txn.h"
 #include "module_loader.h"
 #include "module_executor.h"
 
@@ -15,7 +15,7 @@
 #define MODULE_UNPACK_FUNCNAME  "module_unpack"
 #define MODULE_PACK_FUNCNAME    "module_pack"
 
-using namespace skullpy;
+namespace skullpy {
 
 void   skull_module_init(void* md)
 {
@@ -169,3 +169,6 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
     Py_DECREF(pyArgs);
     PyGILState_Release(state);
 }
+
+} // End of namespace
+
