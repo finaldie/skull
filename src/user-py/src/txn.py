@@ -98,7 +98,6 @@ class Txn():
             return
 
         msgBinData = self._msg.SerializeToString()
-        print "storeMsgData: [%s]" % msgBinData
         capi.txn_set(self._skull_txn, msgBinData)
 
     # Destroy the binary message data in skull_txn
