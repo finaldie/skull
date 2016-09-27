@@ -9,7 +9,7 @@ before_install:
     - cat /etc/issue
     - sudo apt-get update -qq
     - sudo apt-get install valgrind expect libyaml-dev python-dev python2.7-dev python-pip libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler libc-ares-dev
-    - sudo pip install PyYAML protobuf
+    - sudo pip install PyYAML protobuf pympler
     - gcc --version
     - g++ --version
     - clang --version

@@ -7,6 +7,9 @@ from google.protobuf import message
 from google.protobuf import message_factory
 from google.protobuf import descriptor_pool
 
+# Global message factory (Notes: Should not create it dynamically, or it will lead memleak)
+_MESSAGE_FACTORY = message_factory.MessageFactory(descriptor_pool.Default())
+
 class Txn():
     # Txn Status
     TXN_OK      = 0
@@ -78,11 +81,10 @@ class Txn():
         if self._msg is not None:
             return self._msg
 
-        factory = message_factory.MessageFactory(descriptor_pool.Default())
-        proto_descriptor = factory.pool.FindMessageTypeByName(proto_full_name)
+        proto_descriptor = _MESSAGE_FACTORY.pool.FindMessageTypeByName(proto_full_name)
         if proto_descriptor is None: return None
 
-        proto_cls = factory.GetPrototype(proto_descriptor)
+        proto_cls = _MESSAGE_FACTORY.GetPrototype(proto_descriptor)
         self._msg = proto_cls()
 
         msgBinData = capi.txn_get(self._skull_txn)
@@ -123,11 +125,10 @@ def _serviceApiCallback(skull_txn, io_status, service_name, api_name,
     return ret
 
 def _restoreServiceMsg(proto_full_name, msg_bin_data):
-    factory = message_factory.MessageFactory(descriptor_pool.Default())
-    proto_descriptor = factory.pool.FindMessageTypeByName(proto_full_name)
+    proto_descriptor = _MESSAGE_FACTORY.pool.FindMessageTypeByName(proto_full_name)
     if proto_descriptor is None: return None
 
-    proto_cls = factory.GetPrototype(proto_descriptor)
+    proto_cls = _MESSAGE_FACTORY.GetPrototype(proto_descriptor)
     msg = proto_cls()
 
     if msg_bin_data is None:
