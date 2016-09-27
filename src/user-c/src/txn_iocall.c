@@ -7,7 +7,7 @@
 skull_txn_ioret_t
 skull_txn_iocall (skull_txn_t* txn, const char* service_name,
                   const char* api_name, const void* request,
-                  size_t request_sz, skull_txn_iocb cb, int bidx)
+                  size_t request_sz, skull_txn_iocb cb, int bidx, void* ud)
 {
     sk_core_t* core = SK_ENV_CORE;
     sk_service_t* service = sk_core_service(core, service_name);
@@ -28,8 +28,7 @@ skull_txn_iocall (skull_txn_t* txn, const char* service_name,
 
     // serialize the request data
     int ioret = sk_service_iocall(service, txn->txn, api_name,
-                      request, request_sz,
-                      (sk_txn_task_cb)cb, txn, bidx);
+                      request, request_sz, (sk_txn_task_cb)cb, ud, bidx);
 
     if (ioret) {
         return SKULL_TXN_IO_ERROR_BIO;

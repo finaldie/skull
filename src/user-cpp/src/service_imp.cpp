@@ -64,13 +64,8 @@ ServiceApiDataImp::ServiceApiDataImp(skull_service_t* svc,
     (void)__padding2;
 #endif
 
-    // Construct api request
-    const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)apiReq;
-    this->req_ = new ServiceApiReqData(rawData);
-
-    // Construct api response
-    const std::string& apiName = rawData->apiName;
-    this->resp_ = new ServiceApiRespData(svc, apiName, apiResp, apiRespSz);
+    ServiceApiDataImp((const skull_service_t*)svc, apiReq, apiReqSz,
+                      apiResp, apiRespSz);
 }
 
 ServiceApiDataImp::ServiceApiDataImp(const skull_service_t* svc,
@@ -83,12 +78,13 @@ ServiceApiDataImp::ServiceApiDataImp(const skull_service_t* svc,
     (void)__padding2;
 #endif
 
+    const std::string& svcName = skull_service_name(svc);
+    const std::string& apiName = skull_service_apiname(svc);
+
     // Construct api request
-    const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)apiReq;
-    this->req_ = new ServiceApiReqData(rawData);
+    this->req_ = new ServiceApiReqData(svcName, apiName, apiReq, apiReqSz);
 
     // Construct api response
-    const std::string& apiName = rawData->apiName;
     this->resp_ = new ServiceApiRespData(
         (skull_service_t*)svc, apiName, apiResp, apiRespSz);
 }

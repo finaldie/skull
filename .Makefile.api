@@ -1,0 +1,27 @@
+
+# user api targets
+api-cpp:
+	cd src/user-cpp && $(MAKE) $(MAKE_FLAGS)
+
+api-py:
+	cd src/user-py && $(MAKE) $(MAKE_FLAGS)
+
+.PHONY: api-cpp api-py
+
+# user api install targets
+install-api-cpp:
+	cd src/user-cpp && $(MAKE) install
+
+install-api-py:
+	cd src/user-py && $(MAKE) install
+
+.PHONY: install-api-cpp install-api-py
+
+# clean targets
+clean-api-cpp:
+	cd src/user-cpp && $(MAKE) clean
+
+clean-api-py:
+	cd src/user-py && $(MAKE) clean
+
+.PHONY: clean-api-cpp clean-api-py

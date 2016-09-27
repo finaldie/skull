@@ -42,6 +42,8 @@ public:
 };
 
 // It's used by epclient callback
+// Notes: It only can be used for pending EP call, otherwise the program may
+//  crashed
 class ServiceApiDataImp : public ServiceApiData {
 private:
     ServiceApiReqData*  req_;
@@ -61,6 +63,7 @@ public:
     ServiceApiDataImp(ServiceApiReqData*, ServiceApiRespData*);
     ServiceApiDataImp(skull_service_t*, const void* apiReq, size_t apiReqSz,
                       void* apiResp, size_t apiRespSz);
+
     ServiceApiDataImp(const skull_service_t*, const void* apiReq, size_t apiReqSz,
                       void* apiResp, size_t apiRespSz);
     virtual ~ServiceApiDataImp();

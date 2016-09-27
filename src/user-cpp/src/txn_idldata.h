@@ -20,7 +20,7 @@ public:
     void* data();
     void  reset(const void* data, size_t sz);
 
-    size_t size();
+    size_t size() const;
 };
 
 }

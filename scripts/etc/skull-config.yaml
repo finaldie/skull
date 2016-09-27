@@ -11,7 +11,7 @@ workflows:
 # Optional workflow item 'timeout': transcation timeout, unit is millisecond, by default is 0 (no timeout)
 services:
 
-languages: [cpp]
+languages: [cpp, py]
 
 # Optional global item 'max_fds': means max open files, if there is no right
 #  permission to set it successfully, the engine will use the default bash value

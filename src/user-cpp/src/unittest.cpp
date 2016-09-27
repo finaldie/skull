@@ -21,9 +21,7 @@ static
 void _release_apirawdata(const void* request, const void* response)
 {
     // 1. Release api request data
-    ServiceApiReqRawData* apiReq =
-        (ServiceApiReqRawData*)request;
-    delete apiReq;
+    free((void*)request);
 
     // 2. Release api response data
     free((void*)response);
@@ -259,9 +257,9 @@ void UTService::run(const std::string& apiName,
                     const google::protobuf::Message& req,
                     google::protobuf::Message& resp) {
     // 1. construct a service request
-    ServiceApiReqData apiReq(this->svcName_, apiName, req, NULL);
+    ServiceApiReqData apiReq(this->svcName_, apiName, req);
     size_t dataSz = 0;
-    ServiceApiReqRawData* rawReqData = apiReq.serialize(dataSz);
+    void* rawReqData = apiReq.serialize(dataSz);
 
     // 2. construct api data
     ServiceAPIData apiData(*this, apiName, resp);

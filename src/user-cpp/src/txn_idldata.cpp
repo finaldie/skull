@@ -24,7 +24,7 @@ void* TxnSharedRawData::data() {
     return this->data_;
 }
 
-size_t TxnSharedRawData::size() {
+size_t TxnSharedRawData::size() const {
     return this->size_;
 }
 

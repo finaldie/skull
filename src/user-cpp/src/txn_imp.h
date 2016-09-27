@@ -32,7 +32,7 @@ public:
      * @param serivce_name
      * @param apiName
      * @param request       request protobuf message
-     * @param bio_idx       background io index
+     * @param bioIdx        background io index
      *                      - (-1)  : random pick up a background io to run
      *                      - (0)   : do not use background io
      *                      - (> 0) : run on the index of background io
@@ -44,19 +44,19 @@ public:
      *         - ERROR_BIO
      */
     IOStatus iocall (const std::string& serviceName,
-                          const std::string& apiName,
-                          const google::protobuf::Message& request,
-                          int bio_idx,
-                          ApiCB cb);
+                     const std::string& apiName,
+                     const google::protobuf::Message& request,
+                     int bioIdx,
+                     ApiCB cb);
 
     IOStatus iocall (const std::string& serviceName,
-                          const std::string& apiName,
-                          const google::protobuf::Message& request,
-                          ApiCB cb);
+                     const std::string& apiName,
+                     const google::protobuf::Message& request,
+                     ApiCB cb);
 
     IOStatus iocall (const std::string& serviceName,
-                          const std::string& apiName,
-                          const google::protobuf::Message& request);
+                     const std::string& apiName,
+                     const google::protobuf::Message& request);
 
 public:
     skull_txn_t* txn() const;
