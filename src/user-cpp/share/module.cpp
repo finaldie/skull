@@ -9,6 +9,9 @@
 #include "skull_protos.h"
 #include "config.h"
 
+// Create Metrics
+static skullcpp::metrics::module moduleMetrics;
+
 /**
  * Module Initialization Function.
  *
@@ -19,17 +22,13 @@ static
 void module_init(const skull_config_t* config)
 {
     std::cout << "module(test): init" << std::endl;
-    SKULLCPP_LOG_TRACE("skull trace log test " << 1);
-    SKULLCPP_LOG_DEBUG("skull debug log test " << 2);
-    SKULLCPP_LOG_INFO("1", "skull info log test " << 3);
-    SKULLCPP_LOG_WARN("1", "skull warn log test " << 4, "ignore, this is test");
-    SKULLCPP_LOG_ERROR("1", "skull error log test " << 5, "ignore, this is test");
-    SKULLCPP_LOG_FATAL("1", "skull fatal log test " << 5, "ignore, this is test");
+    SKULLCPP_LOG_INFO("1", "module(test): init");
 
     // Load skull_config to skullcpp::Config
     auto& conf = skullcpp::Config::instance();
     conf.load(config);
 
+    // Log the config item values (Feel free to remove them)
     SKULLCPP_LOG_DEBUG("config test_item: " << conf.test_item());
     SKULLCPP_LOG_DEBUG("config test_rate: " << conf.test_rate());
     SKULLCPP_LOG_DEBUG("config test_name: " << conf.test_name());
@@ -61,13 +60,13 @@ void module_release()
 static
 size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
-    skullcpp::metrics::module moduleMetrics;
+    // Increase the 'module.request' metrics counter
     moduleMetrics.request.inc(1);
 
     std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
     SKULLCPP_LOG_INFO("2", "module_unpack(test): data sz:" << data_sz);
 
-    // deserialize data to transcation data
+    // Deserialize data to transcation data
     auto& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
     return data_sz;
@@ -87,6 +86,7 @@ int module_run(skullcpp::Txn& txn)
 {
     auto& example = (skull::workflow::example&)txn.data();
 
+    // Print and Log the current shared data value
     std::cout << "receive data: " << example.data() << std::endl;
     SKULLCPP_LOG_INFO("3", "receive data: " << example.data());
     return 0;
@@ -101,6 +101,7 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {
     auto& example = (skull::workflow::example&)txn.data();
 
+    // If the transcation status is not OK, return a 'error' message
     if (txn.status() != skullcpp::Txn::TXN_OK) {
         SKULLCPP_LOG_ERROR("5", "module_pack(test): error status occurred: "
                            << txn.status() << ". txn data: "
@@ -109,9 +110,10 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
         return;
     }
 
-    skullcpp::metrics::module moduleMetrics;
+    // Increase the 'module.response' metrics counter
     moduleMetrics.response.inc(1);
 
+    // Log and return response message
     std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
     SKULLCPP_LOG_INFO("4", "module_pack(test): data sz:" << example.data().length());
     txndata.append(example.data());

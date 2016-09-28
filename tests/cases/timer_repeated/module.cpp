@@ -34,7 +34,9 @@ void module_release()
 static
 size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
-    skull_metrics_module.request.inc(1);
+    skullcpp::metrics::module moduleMetrics;
+    moduleMetrics.request.inc(1);
+
     std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
     SKULL_LOG_INFO("2", "module_unpack(test): data sz:%zu", data_sz);
 
@@ -85,7 +87,9 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {
     auto& example = (skull::workflow::example&)txn.data();
 
-    skull_metrics_module.response.inc(1);
+    skullcpp::metrics::module moduleMetrics;
+    moduleMetrics.response.inc(1);
+
     std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
     SKULL_LOG_INFO("4", "module_pack(test): data sz:%zu", example.data().length());
     txndata.append(example.data().c_str(), example.data().length());

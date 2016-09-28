@@ -9,6 +9,9 @@
 #include "skull_protos.h"
 #include "config.h"
 
+// Create Metrics
+static skullcpp::metrics::module moduleMetrics;
+
 static
 void module_init(const skull_config_t* config)
 {
@@ -38,7 +41,6 @@ void module_release()
 static
 size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
-    skullcpp::metrics::module moduleMetrics;
     moduleMetrics.request.inc(1);
 
     std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
@@ -102,7 +104,6 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
         return;
     }
 
-    skullcpp::metrics::module moduleMetrics;
     moduleMetrics.response.inc(1);
 
     std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
