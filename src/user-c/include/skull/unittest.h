@@ -56,8 +56,9 @@ typedef struct skullmock_task_t {
     const char* api_name;
     const void* request;
     size_t      request_sz;
-    void *      response;
+    void*       response;
     size_t      response_sz;
+    void*       ud;
 } skullmock_task_t;
 
 int skullut_module_mocksrv_add(skullut_module_t* env, skullmock_svc_t ut_svc);

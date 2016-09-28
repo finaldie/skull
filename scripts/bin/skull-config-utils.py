@@ -168,7 +168,7 @@ def _process_gen_workflow_idl():
         content += "\n"
         content += "package skull.workflow;\n\n"
         content += "message %s {\n" % idl_name
-        content += "    required bytes data = 1;\n"
+        content += "    optional bytes data = 1;\n"
         content += "}\n"
 
         proto_file.write(content)

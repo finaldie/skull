@@ -38,9 +38,11 @@ typedef enum skull_txn_ioret_t {
 
 // module callback function declartion
 typedef int (*skull_txn_iocb) (skull_txn_t*, skull_txn_ioret_t,
+                               const char* service_name,
                                const char* api_name,
                                const void* request, size_t req_sz,
-                               const void* response, size_t resp_sz);
+                               const void* response, size_t resp_sz,
+                               void* ud);
 
 /**
  * Invoke a service iocall
@@ -49,11 +51,12 @@ typedef int (*skull_txn_iocb) (skull_txn_t*, skull_txn_ioret_t,
  * @param api_name
  * @param request       request protobuf message
  * @param request_sz    request protobuf message size
- * @param cb            api callback function
+ * @param cb            api callback function (no pending if it's NULL)
  * @param bio_idx       background io index
  *                      - (-1)  : random pick up a background io to run
  *                      - (0)   : do not use background io
  *                      - (> 0) : run on the index of background io
+ * @param ud            user data. This one will be carry over to callback
  *
  * @return - SKULL_TXN_IO_OK
  *         - SKULL_TXN_IO_ERROR_SRVNAME
@@ -68,7 +71,8 @@ skull_txn_iocall (skull_txn_t*,
                   const void* request,
                   size_t request_sz,
                   skull_txn_iocb cb,
-                  int bio_idx);
+                  int bio_idx,
+                  void* ud);
 
 #ifdef __cplusplus
 }

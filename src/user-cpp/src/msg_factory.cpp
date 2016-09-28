@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <unordered_map>
 #include <set>
 #include <mutex>
@@ -65,6 +66,7 @@ Message* MsgFactory::newMsg(const std::string& protoName) {
         // Notes: Find the top 1 Message Descriptor which is the main descriptor
         const FileDescriptor* fileDesc =
             DescriptorPool::generated_pool()->FindFileByName(protoName);
+        assert(fileDesc);
         const Descriptor* desc = fileDesc->message_type(0);
 
         factoryMsg = MessageFactory::generated_factory()->GetPrototype(desc);

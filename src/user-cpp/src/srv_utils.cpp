@@ -14,33 +14,12 @@ ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const std::string& ap
     this->apiName_  = apiName;
     this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
     this->msg_      = NULL;
-    this->cb_       = NULL;
     this->destroyMsg_ = true;
 
     size_t sz  = 0;
-    ServiceApiReqRawData* raw =
-        (ServiceApiReqRawData*)skull_service_apidata(this->svc_, SKULL_API_REQ,  &sz);
+    void* data = skull_service_apidata(this->svc_, SKULL_API_REQ,  &sz);
 
-    deserializeMsg(raw->data, raw->sz);
-
-#if __WORDSIZE == 64
-    (void)__padding;
-    (void)__padding1;
-#else
-    (void)__padding;
-#endif
-}
-
-ServiceApiReqData::ServiceApiReqData(const ServiceApiReqRawData* rawData) {
-    this->svc_      = NULL;
-    this->svcName_  = rawData->svcName;
-    this->apiName_  = rawData->apiName;
-    this->descName_ = rawData->svcName + "-" + this->apiName_ + "_req.proto";
-    this->msg_      = NULL;
-    this->cb_       = NULL;
-    this->destroyMsg_ = true;
-
-    deserializeMsg(rawData->data, rawData->sz);
+    deserializeMsg(data, sz);
 
 #if __WORDSIZE == 64
     (void)__padding;
@@ -52,14 +31,33 @@ ServiceApiReqData::ServiceApiReqData(const ServiceApiReqRawData* rawData) {
 
 ServiceApiReqData::ServiceApiReqData(const std::string& svcName,
                     const std::string& apiName,
-                    const google::protobuf::Message& msg, Txn::ApiCB cb) {
+                    const google::protobuf::Message& msg) {
     this->svc_      = NULL;
     this->svcName_  = svcName;
     this->apiName_  = apiName;
     this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
     this->msg_      = &(google::protobuf::Message&)msg;
-    this->cb_       = cb;
     this->destroyMsg_ = false;
+
+#if __WORDSIZE == 64
+    (void)__padding;
+    (void)__padding1;
+#else
+    (void)__padding;
+#endif
+}
+
+ServiceApiReqData::ServiceApiReqData(const std::string& svcName,
+                    const std::string& apiName,
+                    const void* data, size_t sz) {
+    this->svc_      = NULL;
+    this->svcName_  = svcName;
+    this->apiName_  = apiName;
+    this->descName_ = this->svcName_ + "-" + apiName + "_req.proto";
+    this->msg_      = NULL;
+    this->destroyMsg_ = true;
+
+    deserializeMsg(data, sz);
 
 #if __WORDSIZE == 64
     (void)__padding;
@@ -75,11 +73,12 @@ ServiceApiReqData::ServiceApiReqData(const skullmock_task_t* task) {
     this->apiName_  = std::string(task->api_name);
     this->descName_ = this->svcName_ + "-" + this->apiName_ + "_req.proto";
     this->msg_      = NULL;
-    this->cb_       = NULL;
     this->destroyMsg_ = true;
 
-    const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)task->request;
-    deserializeMsg(rawData->data, rawData->sz);
+    size_t sz  = 0;
+    void* data = skull_service_apidata(this->svc_, SKULL_API_REQ,  &sz);
+
+    deserializeMsg(data, sz);
 
 #if __WORDSIZE == 64
     (void)__padding;
@@ -113,22 +112,19 @@ const google::protobuf::Message& ServiceApiReqData::get() const {
     return *this->msg_;
 }
 
-ServiceApiReqRawData* ServiceApiReqData::serialize(size_t& sz) {
-    ServiceApiReqRawData* rawData = new ServiceApiReqRawData;
-    rawData->sz = (size_t)this->msg_->ByteSize();
-    if (rawData->sz) {
-        rawData->data = calloc(1, rawData->sz);
+void* ServiceApiReqData::serialize(size_t& sz) {
+    size_t msg_sz = (size_t)this->msg_->ByteSize();
 
-        bool r = this->msg_->SerializeToArray(rawData->data, (int)rawData->sz);
+    void* data = NULL;
+    if (msg_sz) {
+        data = calloc(1, msg_sz);
+
+        bool r = this->msg_->SerializeToArray(data, (int)msg_sz);
         assert(r);
     }
 
-    rawData->svcName = this->svcName_;
-    rawData->apiName = this->apiName_;
-    rawData->cb = this->cb_;
-
-    sz = sizeof(*rawData);
-    return rawData;
+    sz = msg_sz;
+    return data;
 }
 
 /********************************* Resp Data **********************************/

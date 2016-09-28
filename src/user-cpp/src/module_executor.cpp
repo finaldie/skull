@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include <skull/txn.h>
+#include "skull/txn.h"
 
 #include "txn_idldata.h"
 #include "mod_loader.h"
@@ -8,7 +8,7 @@
 #include "txn_imp.h"
 #include "module_executor.h"
 
-using namespace skullcpp;
+namespace skullcpp {
 
 void   skull_module_init   (void* md)
 {
@@ -66,3 +66,6 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
 
     entry->pack(uTxn, uTxnData);
 }
+
+} // End of namespace
+

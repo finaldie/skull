@@ -1,0 +1,8 @@
+TARGET := all
+
+COMMON_PARENT_DIR := $(DEPLOY_DIR)/lib/py/skull
+COMMON_DIR := $(COMMON_PARENT_DIR)/common
+
+# Include the basic Makefile targets
+include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.common.py.targets
+
