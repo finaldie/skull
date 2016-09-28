@@ -60,11 +60,11 @@ int _srv_open (const char* filename, skull_service_opt_t* opt/*out*/)
 
     md->entry = md->reg();
 
-    opt->ud      = md;
-    opt->init    = skull_srv_init;
-    opt->release = skull_srv_release;
-    opt->iocall  = skull_srv_iocall;
-    opt->iocomplete = skull_srv_iocomplete;
+    opt->ud         = md;
+    opt->init       = skullcpp::skull_srv_init;
+    opt->release    = skullcpp::skull_srv_release;
+    opt->iocall     = skullcpp::skull_srv_iocall;
+    opt->iocomplete = skullcpp::skull_srv_iocomplete;
 
     return 0;
 }
@@ -94,6 +94,8 @@ int _srv_load_config (skull_service_opt_t* opt, const char* filename)
     return 0;
 }
 
+namespace skullcpp {
+
 skull_service_loader_t svc_getloader()
 {
     skull_service_loader_t loader;
@@ -107,13 +109,15 @@ skull_service_loader_t svc_getloader()
 }
 
 // Service Loader Register
-void skullcpp_service_loader_register()
+void service_loader_register()
 {
     skull_service_loader_register("cpp", svc_getloader());
 }
 
-void skullcpp_service_loader_unregister()
+void service_loader_unregister()
 {
     skull_service_loader_unregister("cpp");
 }
+
+} // End of namespace
 

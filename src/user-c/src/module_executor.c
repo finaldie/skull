@@ -56,7 +56,7 @@ size_t skull_module_unpack (void* md, sk_txn_t* txn,
 
 void   skull_module_pack   (void* md, sk_txn_t* txn)
 {
-    SK_ASSERT(sk_txn_udata(txn));
+    //SK_ASSERT(sk_txn_udata(txn));
 
     // 1. deserialize the binary data to user layer structure
     skull_txn_t skull_txn;

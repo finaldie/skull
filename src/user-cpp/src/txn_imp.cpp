@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <google/protobuf/descriptor.h>
 
 #include "skull/txn.h"
@@ -98,13 +99,13 @@ Txn::Status TxnImp::status() const {
 
 static
 int _skull_svc_api_callback(skull_txn_t* sk_txn, skull_txn_ioret_t ret,
+                            const char* serviceName,
                             const char* apiName,
-                            const void* request, size_t req_sz,
-                            const void* response, size_t resp_sz) {
+                            const void* request, size_t reqSz,
+                            const void* response, size_t respSz, void* ud) {
     TxnImp txn(sk_txn);
-    const ServiceApiReqRawData* rawData = (const ServiceApiReqRawData*)request;
-    ServiceApiReqData apiReq(rawData);
-    ServiceApiRespData apiResp(rawData->svcName, apiName, response, resp_sz);
+    ServiceApiReqData apiReq(serviceName, apiName, request, reqSz);
+    ServiceApiRespData apiResp(serviceName, apiName, response, respSz);
 
     Txn::IOStatus st;
     if (ret == SKULL_TXN_IO_OK) {
@@ -115,26 +116,33 @@ int _skull_svc_api_callback(skull_txn_t* sk_txn, skull_txn_ioret_t ret,
         assert(0);
     }
 
-    return rawData->cb(txn, st, std::string(apiName), apiReq.get(), apiResp.get());
+    Txn::ApiCB cb = (Txn::ApiCB)(uintptr_t)ud;
+    int r = cb(txn, st, std::string(apiName), apiReq.get(), apiResp.get());
+
+    // Release the request data
+    free((void*)request);
+    return r;
 }
 
 Txn::IOStatus TxnImp::iocall (const std::string& serviceName,
-                                const std::string& apiName,
-                                const google::protobuf::Message& request,
-                                int bioIdx,
-                                ApiCB cb) {
+                              const std::string& apiName,
+                              const google::protobuf::Message& request,
+                              int bioIdx,
+                              ApiCB cb) {
     // 1. Construct raw req data
-    ServiceApiReqData apiReq(serviceName, apiName, request, cb);
+    ServiceApiReqData apiReq(serviceName, apiName, request);
     size_t dataSz = 0;
-    ServiceApiReqRawData* rawReqData = apiReq.serialize(dataSz);
+    void* rawReqData = apiReq.serialize(dataSz);
+
+    void* void_cb = (void*)(uintptr_t)cb;
 
     // 2. Send service call to core
     skull_txn_ioret_t ret = skull_txn_iocall(this->txn(), serviceName.c_str(),
             apiName.c_str(), rawReqData, dataSz,
-            cb ? _skull_svc_api_callback : NULL, bioIdx);
+            cb ? _skull_svc_api_callback : NULL, bioIdx, void_cb);
 
     if (ret != SKULL_TXN_IO_OK) {
-        delete rawReqData;
+        free(rawReqData);
     }
 
     // 3. Return status code
@@ -156,15 +164,15 @@ Txn::IOStatus TxnImp::iocall (const std::string& serviceName,
 }
 
 Txn::IOStatus TxnImp::iocall (const std::string& serviceName,
-                                const std::string& apiName,
-                                const google::protobuf::Message& request,
-                                ApiCB cb) {
+                              const std::string& apiName,
+                              const google::protobuf::Message& request,
+                              ApiCB cb) {
     return iocall(serviceName, apiName, request, 0, cb);
 }
 
 Txn::IOStatus TxnImp::iocall (const std::string& serviceName,
-                                const std::string& apiName,
-                                const google::protobuf::Message& request) {
+                              const std::string& apiName,
+                              const google::protobuf::Message& request) {
     return iocall(serviceName, apiName, request, 0, NULL);
 }
 

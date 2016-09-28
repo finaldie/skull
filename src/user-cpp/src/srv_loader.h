@@ -22,11 +22,11 @@ typedef struct srvdata_t {
     ServiceEntry* (*reg) ();
 } srvdata_t;
 
-} // End of namespace
-
-void skullcpp_service_loader_register();
-void skullcpp_service_loader_unregister();
+void service_loader_register();
+void service_loader_unregister();
 skull_service_loader_t svc_getloader();
+
+} // End of namespace
 
 #endif
 

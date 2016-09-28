@@ -250,6 +250,16 @@ void* skull_service_apidata(skull_service_t* svc, int type, size_t* sz)
     }
 }
 
+const char* skull_service_apiname(const skull_service_t* svc)
+{
+    sk_txn_taskdata_t* taskdata = svc->task;
+    if (!taskdata) {
+        return NULL;
+    }
+
+    return taskdata->api_name;
+}
+
 const char* skull_service_name(const skull_service_t* service)
 {
     sk_service_t* svc = service->service;

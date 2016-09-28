@@ -8,7 +8,7 @@
 
 #include "srv_executor.h"
 
-using namespace skullcpp;
+namespace skullcpp {
 
 template<class T>
 void _register_svc_api(skull_service_t* srv, T* apis, skull_service_api_type_t type) {
@@ -88,13 +88,16 @@ int  skull_srv_iocall  (skull_service_t* srv, const char* api_name,
 
 void skull_srv_iocomplete(skull_service_t* srv, const char* api_name, void* data)
 {
-    // 1. Release api request data
-    ServiceApiReqRawData* apiReq =
-        (ServiceApiReqRawData*)skull_service_apidata(srv, SKULL_API_REQ, NULL);
-    delete apiReq;
+    // 1. Reset api request data to NULL. The caller is responsible for releasing
+    //     the data
+    skull_service_apidata_set(srv, SKULL_API_REQ, NULL, 0);
 
     // 2. Release api response data
     void* apiResp = skull_service_apidata(srv, SKULL_API_RESP, NULL);
     free(apiResp);
+
+    skull_service_apidata_set(srv, SKULL_API_RESP, NULL, 0);
 }
+
+} // End of namespace
 

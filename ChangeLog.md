@@ -1,3 +1,13 @@
+* 2016-09-27 0.9.4
+  * User
+    * **New:** Add _Python_ API layer
+    * **Fix:** Remove `ServiceApiReqRawData` structure, make module and service standalone
+    * **Fix:** Fix some namespace issue for cpp/py in lower version of compiler
+  * Test
+    * **New:** Add _Python_ API layer FT cases
+  * Scripts
+    * **Fix:** User can create python module now
+    * **Fix:** Fix common name issue
 * 2016-08-26 0.9.3
   * Scripts
     * **New:** Integrate `skull-ft`

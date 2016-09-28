@@ -27,24 +27,6 @@ T* FindApi(T* apis, const char* api_name) {
     return NULL;
 }
 
-class ServiceApiReqRawData {
-public:
-    void*  data;
-    size_t sz;
-
-    std::string    svcName;
-    std::string    apiName;
-    Txn::ApiCB     cb;
-
-public:
-    ServiceApiReqRawData() : data(NULL), sz(0), cb(NULL) {}
-    ~ServiceApiReqRawData() {
-        if (this->data && this->sz) {
-            free(this->data);
-        }
-    }
-};
-
 class ServiceApiReqData {
 private:
     skull_service_t* svc_;
@@ -53,7 +35,6 @@ private:
     std::string      descName_;
     google::protobuf::Message* msg_;
 
-    Txn::ApiCB       cb_;
     bool destroyMsg_;
 
 #if __WORDSIZE == 64
@@ -68,16 +49,20 @@ private:
 
 public:
     ServiceApiReqData(skull_service_t* svc, const std::string& apiName);
-    ServiceApiReqData(const ServiceApiReqRawData* rawData);
-    ServiceApiReqData(const std::string& svcName, const std::string& apiName, const google::protobuf::Message& msg,
-                      Txn::ApiCB cb);
+
+    ServiceApiReqData(const std::string& svcName, const std::string& apiName,
+                      const google::protobuf::Message& msg);
+
+    ServiceApiReqData(const std::string& svcName, const std::string& apiName,
+                      const void* data, size_t sz);
+
     ServiceApiReqData(const skullmock_task_t*);
 
     ~ServiceApiReqData();
 
 public:
     const google::protobuf::Message& get() const;
-    ServiceApiReqRawData* serialize(size_t& sz);
+    void* serialize(size_t& sz);
 };
 
 class ServiceApiRespData {
