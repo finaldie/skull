@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-#include "skullcpp/api.h"
+#include <skullcpp/api.h>
 #include "skull_metrics.h"
 #include "skull_protos.h"
 #include "config.h"
@@ -18,7 +18,7 @@
 static
 void module_init(const skull_config_t* config)
 {
-    std::cout << "module({MODULE_NAME}): init" << std::endl;
+    std::cout << "module(test): init" << std::endl;
     SKULLCPP_LOG_TRACE("skull trace log test " << 1);
     SKULLCPP_LOG_DEBUG("skull debug log test " << 2);
     SKULLCPP_LOG_INFO("1", "skull info log test " << 3);
@@ -44,8 +44,8 @@ void module_init(const skull_config_t* config)
 static
 void module_release()
 {
-    std::cout << "module({MODULE_NAME}): released" << std::endl;
-    SKULLCPP_LOG_INFO("5", "module({MODULE_NAME}): released");
+    std::cout << "module(test): released" << std::endl;
+    SKULLCPP_LOG_INFO("5", "module(test): released");
 }
 
 /**
@@ -61,9 +61,11 @@ void module_release()
 static
 size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
-    skull_metrics_module.request.inc(1);
-    std::cout << "module_unpack({MODULE_NAME}): data sz: " << data_sz << std::endl;
-    SKULLCPP_LOG_INFO("2", "module_unpack({MODULE_NAME}): data sz:" << data_sz);
+    skullcpp::metrics::module moduleMetrics;
+    moduleMetrics.request.inc(1);
+
+    std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
+    SKULLCPP_LOG_INFO("2", "module_unpack(test): data sz:" << data_sz);
 
     // deserialize data to transcation data
     auto& example = (skull::workflow::example&)txn.data();
@@ -100,16 +102,18 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
     auto& example = (skull::workflow::example&)txn.data();
 
     if (txn.status() != skullcpp::Txn::TXN_OK) {
-        SKULLCPP_LOG_ERROR("5", "module_pack({MODULE_NAME}): error status occurred: "
+        SKULLCPP_LOG_ERROR("5", "module_pack(test): error status occurred: "
                            << txn.status() << ". txn data: "
                            << example.data(), "This error is expected");
         txndata.append("error");
         return;
     }
 
-    skull_metrics_module.response.inc(1);
-    std::cout << "module_pack({MODULE_NAME}): data sz: " << example.data().length() << std::endl;
-    SKULLCPP_LOG_INFO("4", "module_pack({MODULE_NAME}): data sz:" << example.data().length());
+    skullcpp::metrics::module moduleMetrics;
+    moduleMetrics.response.inc(1);
+
+    std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
+    SKULLCPP_LOG_INFO("4", "module_pack(test): data sz:" << example.data().length());
     txndata.append(example.data());
 }
 

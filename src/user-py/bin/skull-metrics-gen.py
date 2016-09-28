@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # This is skull metrics generator and used only for the skull engine itself.
-# It will generate the C header and source files
+# It will generate the python source files
 
 import sys
 import os
@@ -46,29 +46,29 @@ class _Metrics(_MetricsBase):\n\
     PREFIX = 'skull.user.s'\n\
 \n\
     def __init__(self, top_name, name):\n\
-        self.seq_ = (self.PREFIX, top_name, name)\n\
-        self.combined_name_ = '.'.join(self.seq_)\n\
+        self._seq = (self.PREFIX, top_name, name)\n\
+        self._combined_name = '.'.join(self._seq)\n\
         super(_Metrics, self).__init__()\n\
 \n\
     def get(self):\n\
-        return super(_Metrics, self).get(self.combined_name_)\n\
+        return super(_Metrics, self).get(self._combined_name)\n\
 \n\
     def inc(self, value):\n\
-        super(_Metrics, self).inc(self.combined_name_, value)\n\
+        super(_Metrics, self).inc(self._combined_name, value)\n\
 \n\
 class _MetricsDynamic(_MetricsBase):\n\
     PREFIX = 'skull.user.d'\n\
 \n\
     def __init__(self, top_name, name, dynamic_name):\n\
-        self.seq_ = (self.PREFIX, top_name, name, dynamic_name)\n\
-        self.combined_name_ = '.'.join(self.seq_)\n\
+        self._seq = (self.PREFIX, top_name, name, dynamic_name)\n\
+        self._combined_name = '.'.join(self._seq)\n\
         super(_MetricsDynamic, self).__init__()\n\
 \n\
     def get(self):\n\
-        return super(_MetricsDynamic, self).get(self.combined_name_)\n\
+        return super(_MetricsDynamic, self).get(self._combined_name)\n\
 \n\
     def inc(self, value):\n\
-        super(_MetricsDynamic, self).inc(self.combined_name_, value)\n\
+        super(_MetricsDynamic, self).inc(self._combined_name, value)\n\
 \n\
 "
 
@@ -170,4 +170,4 @@ if __name__ == "__main__":
     except Exception, e:
         print "Fatal: " + str(e)
         usage()
-        sys.exit(1)
+        raise
