@@ -37,6 +37,10 @@ function _skull_create()
     # copy all the configurations except ChangeLog.md
     local copy_list=`find $SKULL_ROOT/etc/skull/* -name "*" | grep -v "ChangeLog.md"`
     cp -r $copy_list $workspace/config
+
+    # Create a example FT test case
+    mkdir -p $workspace/tests/cases/example
+    cp $SKULL_ROOT/share/skull/skull_ft_case.yml $workspace/tests/cases/example
 }
 
 function action_create()
