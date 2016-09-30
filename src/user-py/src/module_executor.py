@@ -21,10 +21,14 @@ def run_module_run(run_func, skull_txn):
 
 def run_module_unpack(unpack_func, skull_txn, data):
     txn = Txn.Txn(skull_txn)
-    consumed_length = unpack_func(txn, data)
 
-    txn.storeMsgData()
-    return consumed_length
+    try:
+        consumed_length = unpack_func(txn, data)
+
+        txn.storeMsgData()
+        return consumed_length
+    except Exception, e:
+        return -1 # Error occurred
 
 def run_module_pack(pack_func, skull_txn, skull_txndata):
     txn = Txn.Txn(skull_txn)

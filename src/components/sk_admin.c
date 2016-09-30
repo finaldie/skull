@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 
@@ -292,7 +293,7 @@ int _admin_run(void* md, sk_txn_t* txn)
 }
 
 static
-size_t _admin_unpack(void* md, struct sk_txn_t* txn,
+ssize_t _admin_unpack(void* md, struct sk_txn_t* txn,
                       const void* data, size_t data_sz)
 {
     sk_print("admin_unpack, data sz: %zu\n", data_sz);
@@ -325,7 +326,7 @@ size_t _admin_unpack(void* md, struct sk_txn_t* txn,
 unpack_done:
     sk_txn_setudata(txn, admin_data);
 
-    return data_sz;
+    return (ssize_t)data_sz;
 }
 
 static

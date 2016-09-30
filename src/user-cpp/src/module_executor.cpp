@@ -39,8 +39,8 @@ int    skull_module_run    (void* md, skull_txn_t* txn)
     return ret;
 }
 
-size_t skull_module_unpack (void* md, skull_txn_t* txn,
-                            const void* data, size_t data_len)
+ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
+                         const void* data, size_t data_len)
 {
     // 1. prepare a fresh new user layer idl structure
     skullcpp::TxnImp uTxn(txn);
@@ -49,7 +49,7 @@ size_t skull_module_unpack (void* md, skull_txn_t* txn,
     module_data_t* mdata = (module_data_t*)md;
     ModuleEntry* entry = mdata->entry;
 
-    size_t consumed_sz = entry->unpack(uTxn, data, data_len);
+    ssize_t consumed_sz = entry->unpack(uTxn, data, data_len);
     return consumed_sz;
 }
 
