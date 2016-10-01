@@ -24,9 +24,12 @@ def run_module_unpack(unpack_func, skull_txn, data):
 
     try:
         consumed_length = unpack_func(txn, data)
-
         txn.storeMsgData()
-        return consumed_length
+
+        if consumed_length is None:
+            return -1
+
+        return int(consumed_length)
     except Exception, e:
         return -1 # Error occurred
 
