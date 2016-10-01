@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #include <string>
@@ -56,9 +57,10 @@ void module_release()
  * @return
  *   - = 0: Still need more data
  *   - > 0: Already unpacked a completed request, the returned value will be consumed
+ *   - < 0: Error occurred
  */
 static
-size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
+ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
     // Increase the 'module.request' metrics counter
     moduleMetrics.request.inc(1);
@@ -69,7 +71,7 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     // Deserialize data to transcation data
     auto& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
-    return data_sz;
+    return (ssize_t)data_sz;
 }
 
 /**

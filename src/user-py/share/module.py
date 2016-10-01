@@ -41,7 +41,9 @@ def module_release():
 #              invoke `iocall`
 # @param data Input data
 #
-# @return How many bytes be consumed
+# @return - > 0: How many bytes consumed
+#         - = 0: Need more data
+#         - < 0: Error occurred
 #
 def module_unpack(txn, data):
     print "py module unpack"

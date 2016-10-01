@@ -32,7 +32,7 @@ void module_release()
 }
 
 static
-size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
+ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
     skullcpp::metrics::module moduleMetrics;
     moduleMetrics.request.inc(1);
@@ -43,7 +43,7 @@ size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     // deserialize data to transcation data
     auto& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
-    return data_sz;
+    return (ssize_t)data_sz;
 }
 
 static
