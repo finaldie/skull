@@ -16,7 +16,7 @@ def run_module_run(run_func, skull_txn):
 
         txn.storeMsgData()
         return ret
-    except Exception, e:
+    except Exception as e:
         return False
 
 def run_module_unpack(unpack_func, skull_txn, data):
@@ -30,7 +30,7 @@ def run_module_unpack(unpack_func, skull_txn, data):
             return -1
 
         return int(consumed_length)
-    except Exception, e:
+    except Exception as e:
         return -1 # Error occurred
 
 def run_module_pack(pack_func, skull_txn, skull_txndata):
@@ -39,7 +39,7 @@ def run_module_pack(pack_func, skull_txn, skull_txndata):
 
     try:
         pack_func(txn, txndata)
-    except Exception, e:
+    except Exception as e:
         print "Failed to run_module_pack: {}".format(e)
     finally:
         txn.destroyMsgData()
