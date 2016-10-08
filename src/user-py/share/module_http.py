@@ -54,6 +54,9 @@ def module_unpack(txn, data):
 
     try:
         request = requestHandler.parse()
+    except http.RequestIncomplete as e:
+        print "request body incomplete, need more data: {}".format(e)
+        return 0
     except Exception as e:
         print "request parsing failed: {}".format(e)
         return -1
