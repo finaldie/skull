@@ -19,13 +19,18 @@ In generally, you can setup a proxy/load balancer in front of skull, then use
  server {
      ...
      location /test {
+         proxy_set_header X-Forwarded-For $remote_addr;
          proxy_pass http://backend;
      }
 
  ```
 """
 
-import StringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+
 from wsgiref import simple_server, util
 
 from webob import Request as WebObRequest
@@ -44,11 +49,11 @@ class Request(simple_server.WSGIRequestHandler):
 
         # Wrap input data into stringio
         self._raw_data = data
-        self._input = StringIO.StringIO(data)
+        self._input = StringIO(data)
 
         # Set up required members
         self.rfile  = self._input
-        self.wfile  = StringIO.StringIO() # for error msgs
+        self.wfile  = StringIO() # for error msgs
         self.server = self
         self.base_environ    = {}
         self.client_address  = ['?', 80] # fake client address
@@ -92,6 +97,14 @@ class Request(simple_server.WSGIRequestHandler):
         env['wsgi.multiprocess'] = False
 
         return env
+
+    def address_string(self):
+        """This is used for override the BaseHTTPRequestHandler.address_string
+         Which will be calling the gethostbyaddr() blocking API (leading
+         latency issue)
+        """
+        return 'unknow'
+
 
 class Response(object):
     def __init__(self):
