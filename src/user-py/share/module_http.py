@@ -49,7 +49,6 @@ def module_unpack(txn, data):
     #print "py module unpack: {}".format(data)
     #Logger.info('5', 'receive data: {}'.format(data))
 
-    print "env:"
     requestHandler = http.Request(data)
     request = None
 
@@ -60,9 +59,6 @@ def module_unpack(txn, data):
         return -1
 
     print "request: {}".format(request)
-    #print "1111"
-    #env = requestHandler.getEnv()
-    #print "env: {}".format(env)
 
     # Store data into txn sharedData
     example_msg = txn.data()
