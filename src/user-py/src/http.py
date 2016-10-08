@@ -30,34 +30,67 @@ from wsgiref import simple_server, util
 
 from webob import Request as WebObRequest
 from webob import Response as WebObResponse
+import webob.request as WebObReqModule
+
+import pprint
+
+class RequestIncomplete(Exception):
+    def __init__(self, reason):
+        self.message = reason
 
 class Request(simple_server.WSGIRequestHandler):
     def __init__(self, data):
+        self._env = None
+
         # Wrap input data into stringio
         self._raw_data = data
         self._input = StringIO.StringIO(data)
 
         # Set up required members
-        self.rfile = self._input
-        self.wfile = StringIO.StringIO() # for error msgs
+        self.rfile  = self._input
+        self.wfile  = StringIO.StringIO() # for error msgs
         self.server = self
-        self.base_environ = {}
-        self.client_address = ['?', 80]
+        self.base_environ    = {}
+        self.client_address  = ['?', 80] # fake client address
         self.raw_requestline = self.rfile.readline()
 
     def parse(self):
         try:
             self.parse_request()
-            self.request = WebObRequest(self._getEnv())
+
+            # After parsing, we can setup the environ
+            self._env = self.getEnv()
+            self.request = WebObRequest(self._env)
         except Exception as e:
             raise e
 
+        # Verify the request body is complete
+        content_length = self.request.content_length
+        if content_length is not None and content_length > 0:
+            try:
+                if len(self.request.body) != content_length:
+                    raise RequestIncomplete('Request Body Incomplete')
+            except WebObReqModule.DisconnectionError as de:
+                raise RequestIncomplete('Request Body Incomplete: {}'.format(de))
+
         return self.request
 
-    def _getEnv(self):
-        env = self.get_environ()
-        util.setup_testing_defaults(env)
-        env['wsgi.input'] = self.rfile
+    def getEnv(self):
+        if self._env is not None:
+            return self._env
+
+        # Fill CGI required fields
+        env = self._env = self.get_environ()
+
+        # Fill WSGI required fields
+        env['wsgi.input']        = self.rfile # point to body (The internal position of this IO is currently point to body)
+        env['wsgi.errors']       = self.wfile
+        env['wsgi.version']      = (1, 0)
+        env['wsgi.run_once']     = False
+        env['wsgi.url_scheme']   = util.guess_scheme(env)
+        env['wsgi.multithread']  = True
+        env['wsgi.multiprocess'] = False
+
         return env
 
 class Response(object):
