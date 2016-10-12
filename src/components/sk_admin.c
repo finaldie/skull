@@ -15,12 +15,19 @@
 #include "api/sk_admin.h"
 
 #define ADMIN_CMD_HELP_CONTENT \
-    "commands:\n - help\n - metrics\n - last\n - status\n"
+    "commands:\n" \
+    " - help\n" \
+    " - metrics\n" \
+    " - last\n" \
+    " - status|info\n"
 
 #define ADMIN_CMD_HELP          "help"
 #define ADMIN_CMD_METRICS       "metrics"
 #define ADMIN_CMD_LAST_SNAPSHOT "last"
 #define ADMIN_CMD_STATUS        "status"
+#define ADMIN_CMD_INFO          "info"
+
+#define ADMIN_LINE_MAX_LENGTH   (1024)
 
 static sk_module_t _sk_admin_module;
 static sk_module_cfg_t _sk_admin_module_cfg;
@@ -212,12 +219,33 @@ void _process_status(sk_txn_t* txn)
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
     sk_core_t* core = SK_ENV_CORE;
 
+    // Fill up status
     sk_core_status_t status = sk_core_status(core);
-    char status_str[3];
-    memset(status_str, 0, sizeof(status_str));
-    snprintf(status_str, 3, "%d\n", status);
+    char line[ADMIN_LINE_MAX_LENGTH];
+    memset(line, 0, sizeof(line));
+    int len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "status: %d\n", status);
+    SK_ASSERT(len > 0);
 
-    fmbuf_push(admin_data->response, status_str, 2);
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // Fill up version
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "version: %s\n", core->info.version);
+    SK_ASSERT(len > 0);
+
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // Fill up git sha1
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "git_sha1: %s\n", core->info.git_sha1);
+    SK_ASSERT(len > 0);
+
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // Fill up compiler info
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "compiler: %s %s\n",
+                   core->info.compiler, core->info.compiler_version);
+    SK_ASSERT(len > 0);
+
+    fmbuf_push(admin_data->response, line, (size_t)len);
 }
 
 /********************************* Public APIs ********************************/
@@ -283,7 +311,8 @@ int _admin_run(void* md, sk_txn_t* txn)
         _process_metrics(txn);
     } else if (0 == strcasecmp(ADMIN_CMD_LAST_SNAPSHOT, command)) {
         _process_last_snapshot(txn);
-    } else if (0 == strcasecmp(ADMIN_CMD_STATUS, command)) {
+    } else if (0 == strcasecmp(ADMIN_CMD_STATUS, command) ||
+               0 == strcasecmp(ADMIN_CMD_INFO, command)) {
         _process_status(txn);
     } else {
         _process_help(txn);

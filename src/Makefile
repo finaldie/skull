@@ -25,6 +25,9 @@ SKULL_ENGINE = skull-engine
 # ut library
 SKULL_UTLIB_C = libskull-unittest-c.so
 
+# static macros
+MACRO += $(shell ../scripts/tools/static_macros.sh)
+
 # Objs
 COMMON_OBJS = \
     common/sk_loader.o \

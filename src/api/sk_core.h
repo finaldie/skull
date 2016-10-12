@@ -36,6 +36,13 @@ typedef struct sk_cmd_args_t {
 #endif
 } sk_cmd_args_t;
 
+typedef struct sk_core_info_t {
+    const char* version;
+    const char* git_sha1;
+    const char* compiler;
+    const char* compiler_version;
+} sk_core_info_t;
+
 // Core data structure
 // NOTES: All the members must be thread-safe for read action after
 //  initialization
@@ -45,6 +52,8 @@ typedef struct sk_core_t {
     sk_mon_t*        umon; // user mon
 
     // ======= public  =======
+    sk_core_info_t   info;
+
     sk_cmd_args_t    cmd_args;
     sk_config_t*     config;
 
