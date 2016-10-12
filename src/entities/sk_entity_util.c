@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "api/sk_const.h"
 #include "api/sk_utils.h"
@@ -49,13 +50,16 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     const char* module_name = first_module->cfg->name;
     SK_LOG_SETCOOKIE("module.%s", module_name);
     const void* data = fevbuff_rawget(evbuff);
-    size_t consumed =
+    ssize_t consumed =
         first_module->unpack(first_module->md, txn, data, (size_t)bytes);
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", bytes);
+        return;
+    } else if (consumed < 0) { // error occurred
+        sk_entity_safe_destroy(entity);
         return;
     }
 
@@ -73,7 +77,7 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     sk_sched_send(sched, sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
 
     // 6. consume the evbuff
-    fevbuff_pop(evbuff, consumed);
+    fevbuff_pop(evbuff, (size_t)consumed);
 
     // 7. update metrics
     sk_metrics_worker.request.inc(1);

@@ -121,20 +121,13 @@ function action_cpp_gen_metrics()
     local config=$1
     local tmpdir=/tmp
     local tmp_header_file=$tmpdir/skull_metrics.h
-    local tmp_source_file=$tmpdir/skull_metrics.cpp
     local header_file=$COMMON_CPP_LOCATION/src/skull_metrics.h
-    local source_file=$COMMON_CPP_LOCATION/src/skull_metrics.cpp
 
-    $LANGUAGE_CPP_PATH/bin/skull-metrics-gen.py -c $config \
-        -h $tmp_header_file \
-        -s $tmp_source_file
+    python $LANGUAGE_CPP_PATH/bin/skull-metrics-gen.py -c $config \
+        -o $tmp_header_file \
 
     if ! $(sk_util_compare_file $tmp_header_file $header_file); then
         cp $tmp_header_file $header_file
-    fi
-
-    if ! $(sk_util_compare_file $tmp_source_file $source_file); then
-        cp $tmp_source_file $source_file
     fi
 }
 

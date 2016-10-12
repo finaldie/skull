@@ -8,7 +8,7 @@ function action_deploy()
     if [ $# = 0 ]; then
         deploy_dir=$SKULL_PROJ_ROOT/run
     else
-        deploy_dir="$1"
+        deploy_dir=`readlink -f "$1"`
     fi
 
     cd $SKULL_PROJ_ROOT

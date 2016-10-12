@@ -18,7 +18,11 @@ def trace(msg):
     filename = os.path.basename(info.filename)
 
     log_msg = "%s:%d TRACE - %s" % (filename, info.lineno, str(msg))
-    capi.log(log_msg)
+    try:
+        capi.log(log_msg)
+    except Exception, e:
+        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        pass
 
 def debug(msg):
     if msg is None:
@@ -33,7 +37,11 @@ def debug(msg):
     filename = os.path.basename(info.filename)
 
     log_msg = "%s:%d DEBUG - %s" % (filename, info.lineno, str(msg))
-    capi.log(log_msg)
+    try:
+        capi.log(log_msg)
+    except Exception, e:
+        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        pass
 
 def info(code, msg):
     if code is None:
@@ -51,7 +59,11 @@ def info(code, msg):
     filename = os.path.basename(info.filename)
 
     log_msg = "%s:%d INFO - {%s} %s" % (filename, info.lineno, str(code), str(msg))
-    capi.log(log_msg)
+    try:
+        capi.log(log_msg)
+    except Exception, e:
+        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        pass
 
 def warn(code, msg, suggestion):
     if code is None:
@@ -72,7 +84,11 @@ def warn(code, msg, suggestion):
     filename = os.path.basename(info.filename)
 
     log_msg = "%s:%d WARN - {%s} %s; suggestion: %s" % (filename, info.lineno, str(code), str(msg), str(suggestion))
-    capi.log(log_msg)
+    try:
+        capi.log(log_msg)
+    except Exception, e:
+        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        pass
 
 def error(code, msg, solution):
     if code is None:
@@ -93,7 +109,11 @@ def error(code, msg, solution):
     filename = os.path.basename(info.filename)
 
     log_msg = "%s:%d ERROR - {%s} %s; solution: %s" % (filename, info.lineno, str(code), str(msg), str(solution))
-    capi.log(log_msg)
+    try:
+        capi.log(log_msg)
+    except Exception, e:
+        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        pass
 
 def fatal(code, msg, solution):
     if code is None:
@@ -111,7 +131,11 @@ def fatal(code, msg, solution):
     filename = os.path.basename(info.filename)
 
     log_msg = "%s:%d FATAL - {%s} %s; solution: %s" % (filename, info.lineno, str(code), str(msg), str(solution))
-    capi.log(log_msg)
+    try:
+        capi.log(log_msg)
+    except Exception, e:
+        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        pass
 
 # Level Checking APIs
 def isTraceEnabled():

@@ -1,9 +1,11 @@
 import yaml
 import pprint
+import sys
 
 from skullpy import txn     as Txn
 from skullpy import txndata as TxnData
 from skullpy import logger  as Logger
+from skullpy import http
 
 from skull.common import protos  as Protos
 from skull.common import metrics as Metrics
@@ -41,13 +43,25 @@ def module_release():
 #              invoke `iocall`
 # @param data Input data
 #
-# @return - > 0: How many bytes consumed
-#         - = 0: Need more data
-#         - < 0: Error occurred
+# @return How many bytes be consumed
 #
 def module_unpack(txn, data):
-    print "py module unpack"
-    Logger.info('5', 'receive data: {}'.format(data))
+    #print "py module unpack: {}".format(data)
+    #Logger.info('5', 'receive data: {}'.format(data))
+
+    requestHandler = http.Request(data)
+    request = None
+
+    try:
+        request = requestHandler.parse()
+    except http.RequestIncomplete as e:
+        print "request body incomplete, need more data: {}".format(e)
+        return 0
+    except Exception as e:
+        print "request parsing failed: {}".format(e)
+        return -1
+
+    print "request: {}".format(request)
 
     # Store data into txn sharedData
     example_msg = txn.data()
@@ -78,11 +92,16 @@ def module_pack(txn, txndata):
     if txn.status() != Txn.Txn.TXN_OK:
         txndata.append('error')
     else:
-        example_msg = txn.data()
-        print "pack data: %s" % example_msg.data
-        Logger.info('7', 'module_pack: data sz: {}'.format(len(example_msg.data)))
+        responseHandler = http.Response()
+        response = responseHandler.response
 
-        txndata.append(example_msg.data)
+        response.status = 200
+        response.headerlist = [('Content-type', 'text/html')]
+        response.body = 'test'
+
+        res_str = responseHandler.getFullContent()
+        txndata.append(res_str)
+
 
 ##
 # Module Runnable Entry, be called when this module be picked up in current

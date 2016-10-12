@@ -25,7 +25,6 @@ void* skull_txn_data(const skull_txn_t* skull_txn);
 
 void skull_txn_setdata(skull_txn_t* skull_txn, const void* data);
 
-
 // ===================== Txn Iocall ===================
 typedef enum skull_txn_ioret_t {
     SKULL_TXN_IO_OK            = 0,

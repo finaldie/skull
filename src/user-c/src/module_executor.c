@@ -36,8 +36,8 @@ int    skull_module_run    (void* md, sk_txn_t* txn)
     return ret;
 }
 
-size_t skull_module_unpack (void* md, sk_txn_t* txn,
-                            const void* data, size_t data_len)
+ssize_t skull_module_unpack (void* md, sk_txn_t* txn,
+                             const void* data, size_t data_len)
 {
     SK_ASSERT(sk_txn_udata(txn) == NULL);
 
@@ -47,7 +47,7 @@ size_t skull_module_unpack (void* md, sk_txn_t* txn,
 
     // 2. run unpack
     skull_module_t* module = md;
-    size_t consumed_sz = module->unpack(module->ud, &skull_txn, data, data_len);
+    ssize_t consumed_sz = module->unpack(module->ud, &skull_txn, data, data_len);
 
     // 3. serialize the user layer idl data to binary data
     skull_txn_release(&skull_txn, txn);

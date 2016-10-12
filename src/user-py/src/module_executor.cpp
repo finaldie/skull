@@ -97,8 +97,8 @@ int    skull_module_run    (void* md, skull_txn_t* txn)
     return ret;
 }
 
-size_t skull_module_unpack (void* md, skull_txn_t* txn,
-                            const void* data, size_t data_len)
+ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
+                         const void* data, size_t data_len)
 {
     PyGILState_STATE state = PyGILState_Ensure();
     module_data_t* mdata = (module_data_t*)md;
@@ -117,15 +117,15 @@ size_t skull_module_unpack (void* md, skull_txn_t* txn,
 
     // Call user module_unpack
     PyObject* pyConsumed = PyObject_CallObject(mdata->pyExecutorFunc, pyArgs);
-    size_t consumed = 0;
+    ssize_t consumed = 0;
 
     if (!pyConsumed) {
         if (PyErr_Occurred()) PyErr_Print();
     } else {
         if (PyInt_Check(pyConsumed)) {
-            consumed = PyInt_AsUnsignedLongMask(pyConsumed);
+            consumed = PyInt_AsSsize_t(pyConsumed);
         } else if (PyLong_Check(pyConsumed)) {
-            consumed = PyLong_AsUnsignedLongMask(pyConsumed);
+            consumed = PyLong_AsSsize_t(pyConsumed);
         } else {
             fprintf(stderr, "Error: Cannot parse the pyConsumed object");
             _PyObject_Dump(pyConsumed);

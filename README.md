@@ -34,6 +34,7 @@ Skull provides the following features:
 * Native Background IO
 * Native Timer
 * Multi-Language Support (**_C/C++_**, **_Python_**)
+* Integrated with _Nginx_
 * Service Shareable
 
 It's based on [Google Protobuf][3] and [Flibs][4], target to _Linux_ platform. And _Skull_ is compose of 3 components: **skull-core**, **skull-user-api** and **skull-project-management-scripts**, besides of that logically there are also 3 major concepts in _Skull_: **Workflow**, **Module** and **Service**. Before using _Skull_, let's understand the core concepts first.
@@ -56,8 +57,8 @@ Use Ubuntu14.04 as an example.
 
 ### Install Dependencies
 ```console
-sudo apt-get install valgrind expect libyaml-dev python-dev python2.7-dev python-pip libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler
-sudo pip install PyYAML protobuf
+sudo apt-get install valgrind expect libyaml-dev python-dev python-pip libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler
+sudo pip install PyYAML protobuf pympler WebOb
 
 git clone git@github.com:finaldie/skull.git
 cd skull

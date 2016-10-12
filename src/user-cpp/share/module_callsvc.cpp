@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #include <string>
@@ -8,6 +9,9 @@
 #include "skull_metrics.h"
 #include "skull_protos.h"
 #include "config.h"
+
+// Create Metrics
+static skullcpp::metrics::module moduleMetrics;
 
 static
 void module_init(const skull_config_t* config)
@@ -36,16 +40,17 @@ void module_release()
 }
 
 static
-size_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
+ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 {
-    skull_metrics_module.request.inc(1);
+    moduleMetrics.request.inc(1);
+
     std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
     SKULLCPP_LOG_INFO("2", "module_unpack(test): data sz:" << data_sz);
 
     // deserialize data to transcation data
     auto& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
-    return data_sz;
+    return (ssize_t)data_sz;
 }
 
 static
@@ -100,7 +105,8 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
         return;
     }
 
-    skull_metrics_module.response.inc(1);
+    moduleMetrics.response.inc(1);
+
     std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
     SKULLCPP_LOG_INFO("4", "module_pack(test): data sz:" << example.data().length());
     txndata.append(example.data());

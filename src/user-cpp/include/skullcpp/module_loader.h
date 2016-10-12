@@ -1,6 +1,7 @@
 #ifndef SKULLCPP_MOCULE_LOADER_H
 #define SKULLCPP_MOCULE_LOADER_H
 
+#include <stdio.h>
 #include <skull/config.h>
 #include <skullcpp/txn.h>
 #include <skullcpp/txndata.h>
@@ -8,12 +9,12 @@
 namespace skullcpp {
 
 typedef struct ModuleEntry {
-    void   (*init)    (const skull_config_t*);
-    void   (*release) ();
+    void    (*init)    (const skull_config_t*);
+    void    (*release) ();
 
-    int    (*run)     (Txn&);
-    size_t (*unpack)  (Txn&, const void* data, size_t data_sz);
-    void   (*pack)    (Txn&, TxnData&);
+    int     (*run)     (Txn&);
+    ssize_t (*unpack)  (Txn&, const void* data, size_t data_sz);
+    void    (*pack)    (Txn&, TxnData&);
 } ModuleEntry;
 
 } // End of namespace

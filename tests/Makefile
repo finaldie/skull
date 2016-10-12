@@ -35,12 +35,6 @@ prepare:
 clean:
 
 install:
-	cp ./common/create_project     $(prefix)/bin/skullft_create_project
-	cp ./common/create_workflow    $(prefix)/bin/skullft_create_workflow
-	cp ./common/create_module      $(prefix)/bin/skullft_create_module
-	cp ./common/create_service     $(prefix)/bin/skullft_create_service
-	cp ./common/create_service_api $(prefix)/bin/skullft_create_service_api
-	cp ./common/service_import     $(prefix)/bin/skullft_service_import
 	cp ./common/mock_ep            $(prefix)/bin/skullft_mock_ep
 
 help:
