@@ -1,3 +1,13 @@
+* 2016-10-12 0.9.5
+  * Core
+    * **Fix:** Refactor unpack api return value type, `size_t` -> `ssize_t`
+  * User
+    * **New:** Add _Python_ Http Handler (Integrated with Nginx)
+    * **New:** Refactor _Cpp_ layer `skull-metrics-gen.py`
+    * **Enhancement:** _Python_ APIs robuster
+    * **Enhancement:** _Cpp_ APIs robuster
+  * Test
+    * **Enhancement:** Add an example FT case
 * 2016-09-27 0.9.4
   * User
     * **New:** Add _Python_ API layer

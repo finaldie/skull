@@ -115,7 +115,7 @@ function action_py_gen_metrics()
     local tmp_source_file=$tmpdir/metrics.py
     local source_file=$COMMON_PY_LOCATION/metrics.py
 
-    $LANGUAGE_PY_PATH/bin/skull-metrics-gen.py -c $config \
+    python $LANGUAGE_PY_PATH/bin/skull-metrics-gen.py -c $config \
         -o $tmp_source_file
 
     if ! $(sk_util_compare_file $tmp_source_file $source_file); then
