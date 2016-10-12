@@ -36,6 +36,7 @@ typedef struct sk_cmd_args_t {
 #endif
 } sk_cmd_args_t;
 
+// Static Information
 typedef struct sk_core_info_t {
     // versions
     const char* version;
@@ -50,13 +51,6 @@ typedef struct sk_core_info_t {
 #if __WORDSIZE == 64
     int         _padding;
 #endif
-
-    // engine
-    // config
-    // workflow
-    // module
-    // service
-    // client
 } sk_core_info_t;
 
 // Core data structure

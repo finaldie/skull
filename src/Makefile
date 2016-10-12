@@ -26,8 +26,8 @@ SKULL_ENGINE = skull-engine
 SKULL_UTLIB_C = libskull-unittest-c.so
 
 # static macros
-MACRO += $(shell ../scripts/tools/static_macros.sh)
-MACRO += -DSKULL_COMPILER_OPT=\"$(OPT)\"
+EXTRA_MACRO += $(shell ../scripts/tools/static_macros.sh)
+EXTRA_MACRO += -DSKULL_COMPILER_OPT=\"$(OPT)\"
 
 # Objs
 COMMON_OBJS = \
@@ -193,6 +193,10 @@ $(SKULL_UTLIB_C): $(UT_OBJS)
 # compile protocol file without -Wpadded
 %.pb-c.o: %.pb-c.c
 	$(SKULL_TP_CC) -c $< -o $@
+
+# This file needs extra_macro to build static core information
+common/sk_utils.o: common/sk_utils.c
+	$(SKULL_CC) $(EXTRA_MACRO) -c $< -o $@
 
 %.o: %.c
 	$(SKULL_CC) -c $< -o $@

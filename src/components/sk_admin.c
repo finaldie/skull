@@ -228,36 +228,56 @@ void _process_status(sk_txn_t* txn)
 
     fmbuf_push(admin_data->response, line, (size_t)len);
 
-    // Fill up version
+    // static: Fill up version
     len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "version: %s\n", core->info.version);
-    SK_ASSERT(len > 0);
-
     fmbuf_push(admin_data->response, line, (size_t)len);
 
-    // Fill up git sha1
+    // static: Fill up git sha1
     len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "git_sha1: %s\n", core->info.git_sha1);
-    SK_ASSERT(len > 0);
-
     fmbuf_push(admin_data->response, line, (size_t)len);
 
-    // Fill up compiler info
+    // static: Fill up compiler info
     len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "compiler: %s %s\n",
                    core->info.compiler, core->info.compiler_version);
-    SK_ASSERT(len > 0);
-
     fmbuf_push(admin_data->response, line, (size_t)len);
 
     len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "compiler_options: %s\n",
                    core->info.compiler_options);
-    SK_ASSERT(len > 0);
-
     fmbuf_push(admin_data->response, line, (size_t)len);
 
-    // Fill up pid
+    // static - system: Fill up pid
     len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "pid: %d\n",
                    core->info.pid);
-    SK_ASSERT(len > 0);
+    fmbuf_push(admin_data->response, line, (size_t)len);
 
+    // static - system: open file limitation
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "max_open_files: %d\n",
+                   core->max_fds);
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // config: config file location
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "config: %s\n",
+                   core->config->location);
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // config: worker threads
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "worker_threads: %d\n",
+                   core->config->threads);
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // config: bio threads
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "bio_threads: %d\n",
+                   core->config->bio_cnt);
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // config: log file
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "log_file: %s\n",
+                   core->config->log_name);
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // config: log level
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "log_level: %d\n",
+                   core->config->log_level);
     fmbuf_push(admin_data->response, line, (size_t)len);
 }
 
