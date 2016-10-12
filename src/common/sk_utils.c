@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <execinfo.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "api/sk_const.h"
@@ -74,4 +75,13 @@ void sk_util_setup_coreinfo(sk_core_t* core)
     core->info.compiler = "unknown";
     core->info.compiler_version = "unknown";
 #endif
+
+#ifdef SKULL_COMPILER_OPT
+    core->info.compiler_options = SKULL_COMPILER_OPT;
+#else
+    core->info.compiler_options = "unknown";
+#endif
+
+    // 4. pid
+    core->info.pid = getpid();
 }

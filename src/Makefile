@@ -27,6 +27,7 @@ SKULL_UTLIB_C = libskull-unittest-c.so
 
 # static macros
 MACRO += $(shell ../scripts/tools/static_macros.sh)
+MACRO += -DSKULL_COMPILER_OPT=\"$(OPT)\"
 
 # Objs
 COMMON_OBJS = \

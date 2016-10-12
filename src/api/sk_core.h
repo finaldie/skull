@@ -37,10 +37,26 @@ typedef struct sk_cmd_args_t {
 } sk_cmd_args_t;
 
 typedef struct sk_core_info_t {
+    // versions
     const char* version;
     const char* git_sha1;
     const char* compiler;
     const char* compiler_version;
+    const char* compiler_options;
+
+    // system
+    pid_t       pid;
+
+#if __WORDSIZE == 64
+    int         _padding;
+#endif
+
+    // engine
+    // config
+    // workflow
+    // module
+    // service
+    // client
 } sk_core_info_t;
 
 // Core data structure

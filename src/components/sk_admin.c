@@ -246,6 +246,19 @@ void _process_status(sk_txn_t* txn)
     SK_ASSERT(len > 0);
 
     fmbuf_push(admin_data->response, line, (size_t)len);
+
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "compiler_options: %s\n",
+                   core->info.compiler_options);
+    SK_ASSERT(len > 0);
+
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // Fill up pid
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "pid: %d\n",
+                   core->info.pid);
+    SK_ASSERT(len > 0);
+
+    fmbuf_push(admin_data->response, line, (size_t)len);
 }
 
 /********************************* Public APIs ********************************/
