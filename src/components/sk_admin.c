@@ -241,8 +241,8 @@ void _process_status(sk_txn_t* txn)
                    core->info.compiler, core->info.compiler_version);
     fmbuf_push(admin_data->response, line, (size_t)len);
 
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "compiler_options: %s\n",
-                   core->info.compiler_options);
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "compiling_options: %s\n",
+                   core->info.compiling_options);
     fmbuf_push(admin_data->response, line, (size_t)len);
 
     // static - system: Fill up pid
@@ -278,6 +278,13 @@ void _process_status(sk_txn_t* txn)
     // config: log level
     len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "log_level: %d\n",
                    core->config->log_level);
+    fmbuf_push(admin_data->response, line, (size_t)len);
+
+    // dynamic - system: cpu usage
+    // dynamic - system: memory usage
+    // dynamic: uptime (seconds)
+    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "uptime(s): %ld\n",
+                   time(NULL) - core->starttime);
     fmbuf_push(admin_data->response, line, (size_t)len);
 }
 

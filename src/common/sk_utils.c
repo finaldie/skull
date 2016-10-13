@@ -77,9 +77,9 @@ void sk_util_setup_coreinfo(sk_core_t* core)
 #endif
 
 #ifdef SKULL_COMPILER_OPT
-    core->info.compiler_options = SKULL_COMPILER_OPT;
+    core->info.compiling_options = SKULL_COMPILER_OPT;
 #else
-    core->info.compiler_options = "unknown";
+    core->info.compiling_options = "unknown";
 #endif
 
     // 4. pid

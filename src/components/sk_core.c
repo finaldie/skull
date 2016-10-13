@@ -538,8 +538,9 @@ void sk_core_start(sk_core_t* core)
         sk_trigger_run(trigger);
     }
 
-    // 7. update core status
-    core->status = SK_CORE_RUNNING;
+    // 7. update core status and related information
+    core->status    = SK_CORE_RUNNING;
+    core->starttime = time(NULL);
 
     // 8. start master engine
     SK_LOG_INFO(core->logger,

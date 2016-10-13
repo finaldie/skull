@@ -43,7 +43,7 @@ typedef struct sk_core_info_t {
     const char* git_sha1;
     const char* compiler;
     const char* compiler_version;
-    const char* compiler_options;
+    const char* compiling_options;
 
     // system
     pid_t       pid;
@@ -91,6 +91,8 @@ typedef struct sk_core_t {
 
     // max open files limitation
     int max_fds;
+
+    time_t starttime;
 } sk_core_t;
 
 void sk_core_init(sk_core_t* core);
