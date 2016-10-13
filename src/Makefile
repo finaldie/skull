@@ -50,7 +50,8 @@ COMMON_OBJS = \
     common/sk_service_data.o \
     common/sk_timer_service.o \
     common/sk_object.o \
-    common/sk_mbuf.o
+    common/sk_mbuf.o \
+    common/sk_module.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
@@ -157,6 +158,7 @@ UT_OBJS = \
     common/sk_metrics.o \
     common/sk_object.o \
     common/sk_mbuf.o \
+    common/sk_module.o \
     entities/sk_entity.o \
     entities/sk_entity_net.o \
     entities/sk_entity_stdin.o \

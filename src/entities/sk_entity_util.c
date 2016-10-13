@@ -54,6 +54,8 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
         first_module->unpack(first_module->md, txn, data, (size_t)bytes);
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
+    sk_module_stat_unpack_inc(first_module);
+
     if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", bytes);

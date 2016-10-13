@@ -248,17 +248,40 @@ void _status_workflow(sk_txn_t* txn, sk_core_t* core)
 static
 void _status_module(sk_txn_t* txn, sk_core_t* core)
 {
-    fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
-    sk_module_t* module = NULL;
-    int total = 0;
+    {
+        fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+        sk_module_t* module = NULL;
+        int total = 0;
 
-    while ((module = fhash_str_next(&iter))) {
-        total++;
+        while ((module = fhash_str_next(&iter))) {
+            total++;
+        }
+
+        fhash_str_iter_release(&iter);
+
+        _append_response(txn, "modules: %d\n", total);
     }
 
-    fhash_str_iter_release(&iter);
+    {
+        const char* title = "module_list:";
+        _append_response(txn, title, strlen(title));
+        fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+        sk_module_t* module = NULL;
 
-    _append_response(txn, "modules: %d\n", total);
+        while ((module = fhash_str_next(&iter))) {
+            _append_response(txn, " %s call_times: total %zu | unpack %zu | "
+                "run %zu | pack %zu ;",
+                module->cfg->name,
+                sk_module_stat_total_get(module),
+                sk_module_stat_unpack_get(module),
+                sk_module_stat_run_get(module),
+                sk_module_stat_pack_get(module));
+        }
+
+        fhash_str_iter_release(&iter);
+        _append_response(txn, "\n", 1);
+    }
+
 }
 
 static
