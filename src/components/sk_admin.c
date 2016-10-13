@@ -265,6 +265,7 @@ void _status_module(sk_txn_t* txn, sk_core_t* core)
     {
         const char* title = "module_list:";
         _append_response(txn, title, strlen(title));
+
         fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
         sk_module_t* module = NULL;
 
@@ -287,17 +288,36 @@ void _status_module(sk_txn_t* txn, sk_core_t* core)
 static
 void _status_service(sk_txn_t* txn, sk_core_t* core)
 {
-    fhash_str_iter iter = fhash_str_iter_new(core->services);
-    sk_module_t* module = NULL;
-    int total = 0;
+    {
+        fhash_str_iter iter = fhash_str_iter_new(core->services);
+        sk_service_t* service = NULL;
+        int total = 0;
 
-    while ((module = fhash_str_next(&iter))) {
-        total++;
+        while ((service = fhash_str_next(&iter))) {
+            total++;
+        }
+
+        fhash_str_iter_release(&iter);
+
+        _append_response(txn, "services: %d\n", total);
     }
 
-    fhash_str_iter_release(&iter);
+    {
+        const char* title = "service_list:";
+        _append_response(txn, title, strlen(title));
 
-    _append_response(txn, "services: %d\n", total);
+        fhash_str_iter iter = fhash_str_iter_new(core->services);
+        sk_service_t* service = NULL;
+
+        while ((service = fhash_str_next(&iter))) {
+            _append_response(txn, " %s running tasks: %d ;",
+                             sk_service_name(service),
+                             sk_service_running_taskcnt(service));
+        }
+
+        fhash_str_iter_release(&iter);
+        _append_response(txn, "\n", 1);
+    }
 }
 
 static
