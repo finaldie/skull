@@ -113,6 +113,11 @@ case "$1" in
         ;;
     (help)
         shift
+        if [ $# -eq 0 ]; then
+            echo "Error: need a command entry name. - eg: skull help module" >&2
+            exit 1
+        fi
+
         prepare false
         entry=$1
         shift

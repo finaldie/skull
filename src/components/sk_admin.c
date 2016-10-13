@@ -231,6 +231,53 @@ void _append_response(sk_txn_t* txn, const char* fmt, ...)
 }
 
 static
+void _status_workflow(sk_txn_t* txn, sk_core_t* core)
+{
+    flist_iter iter = flist_new_iter(core->workflows);
+    sk_workflow_t* workflow = NULL;
+    int total = 0;
+
+    while ((workflow = flist_each(&iter))) {
+        total++;
+    }
+
+    _append_response(txn, "workflows: %d\n", total);
+}
+
+
+static
+void _status_module(sk_txn_t* txn, sk_core_t* core)
+{
+    fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+    sk_module_t* module = NULL;
+    int total = 0;
+
+    while ((module = fhash_str_next(&iter))) {
+        total++;
+    }
+
+    fhash_str_iter_release(&iter);
+
+    _append_response(txn, "modules: %d\n", total);
+}
+
+static
+void _status_service(sk_txn_t* txn, sk_core_t* core)
+{
+    fhash_str_iter iter = fhash_str_iter_new(core->services);
+    sk_module_t* module = NULL;
+    int total = 0;
+
+    while ((module = fhash_str_next(&iter))) {
+        total++;
+    }
+
+    fhash_str_iter_release(&iter);
+
+    _append_response(txn, "services: %d\n", total);
+}
+
+static
 void _process_status(sk_txn_t* txn)
 {
     sk_core_t* core = SK_ENV_CORE;
@@ -277,7 +324,17 @@ void _process_status(sk_txn_t* txn)
     // dynamic: uptime (seconds)
     _append_response(txn, "uptime(s): %ld\n", time(NULL) - core->starttime);
 
-    // dynamic: workflow #
+    // static: working dir
+    _append_response(txn, "working_dir: %s\n", core->working_dir);
+
+    // static: workflow
+    _status_workflow(txn, core);
+
+    // static: module
+    _status_module(txn, core);
+
+    // static: service
+    _status_service(txn, core);
 }
 
 /********************************* Public APIs ********************************/
