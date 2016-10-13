@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <time.h>
 
 #include "flibs/flist.h"
@@ -214,78 +215,69 @@ void _process_last_snapshot(sk_txn_t* txn)
 }
 
 static
-void _process_status(sk_txn_t* txn)
+void _append_response(sk_txn_t* txn, const char* fmt, ...)
 {
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
+    char line[ADMIN_LINE_MAX_LENGTH];
+    memset(line, 0, sizeof(line));
+    int len = 0;
+
+    va_list args;
+    va_start(args, fmt);
+    len = vsnprintf(line, ADMIN_LINE_MAX_LENGTH, fmt, args);
+    va_end(args);
+
+    fmbuf_push(admin_data->response, line, (size_t)len);
+}
+
+static
+void _process_status(sk_txn_t* txn)
+{
     sk_core_t* core = SK_ENV_CORE;
 
     // Fill up status
     sk_core_status_t status = sk_core_status(core);
-    char line[ADMIN_LINE_MAX_LENGTH];
-    memset(line, 0, sizeof(line));
-    int len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "status: %d\n", status);
-    SK_ASSERT(len > 0);
-
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "status: %d\n", status);
 
     // static: Fill up version
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "version: %s\n", core->info.version);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "version: %s\n", core->info.version);
 
     // static: Fill up git sha1
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "git_sha1: %s\n", core->info.git_sha1);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "git_sha1: %s\n", core->info.git_sha1);
 
     // static: Fill up compiler info
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "compiler: %s %s\n",
-                   core->info.compiler, core->info.compiler_version);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "compiler: %s %s\n",
+                     core->info.compiler, core->info.compiler_version);
 
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "compiling_options: %s\n",
-                   core->info.compiling_options);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "compiling_options: %s\n", core->info.compiling_options);
 
     // static - system: Fill up pid
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "pid: %d\n",
-                   core->info.pid);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "pid: %d\n", core->info.pid);
 
     // static - system: open file limitation
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "max_open_files: %d\n",
-                   core->max_fds);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "max_open_files: %d\n", core->max_fds);
 
     // config: config file location
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "config: %s\n",
-                   core->config->location);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "config: %s\n", core->config->location);
 
     // config: worker threads
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "worker_threads: %d\n",
-                   core->config->threads);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "worker_threads: %d\n", core->config->threads);
 
     // config: bio threads
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "bio_threads: %d\n",
-                   core->config->bio_cnt);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "bio_threads: %d\n", core->config->bio_cnt);
 
     // config: log file
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "log_file: %s\n",
-                   core->config->log_name);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "log_file: %s\n", core->config->log_name);
 
     // config: log level
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "log_level: %d\n",
-                   core->config->log_level);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "log_level: %d\n", core->config->log_level);
 
     // dynamic - system: cpu usage
     // dynamic - system: memory usage
     // dynamic: uptime (seconds)
-    len = snprintf(line, ADMIN_LINE_MAX_LENGTH, "uptime(s): %ld\n",
-                   time(NULL) - core->starttime);
-    fmbuf_push(admin_data->response, line, (size_t)len);
+    _append_response(txn, "uptime(s): %ld\n", time(NULL) - core->starttime);
+
+    // dynamic: workflow #
 }
 
 /********************************* Public APIs ********************************/
