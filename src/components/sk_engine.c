@@ -47,7 +47,15 @@ void _timerjob_persec(sk_entity_t* entity, int valid, sk_obj_t* ud)
     // 2. update uptime
     sk_metrics_global.uptime.inc(1);
 
-    // 3. destroy the timer entity
+    // 3. record resource usage
+    sk_core_t* core = SK_ENV_CORE;
+    struct rusage self_ru;
+    getrusage(RUSAGE_SELF, &self_ru);
+
+    core->info.prev_self_ru  = core->info.self_ru;
+    core->info.self_ru  = self_ru;
+
+    // 4. destroy the timer entity
     sk_entity_safe_destroy(entity);
 }
 

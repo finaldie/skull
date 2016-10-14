@@ -356,13 +356,45 @@ void _status_entity(sk_txn_t* txn, sk_core_t* core)
 }
 
 static
+void _status_resources(sk_txn_t* txn, sk_core_t* core)
+{
+    float cpu_sys  = (float)core->info.self_ru.ru_stime.tv_sec +
+                     (float)core->info.self_ru.ru_stime.tv_usec / 1000000;
+    float cpu_user = (float)core->info.self_ru.ru_utime.tv_sec +
+                     (float)core->info.self_ru.ru_utime.tv_usec / 1000000;
+
+    float prev_cpu_sys  = (float)core->info.prev_self_ru.ru_stime.tv_sec +
+                          (float)core->info.prev_self_ru.ru_stime.tv_usec / 1000000;
+    float prev_cpu_user = (float)core->info.prev_self_ru.ru_utime.tv_sec +
+                          (float)core->info.prev_self_ru.ru_utime.tv_usec / 1000000;
+
+    float last_cpu_user = cpu_user - prev_cpu_user;
+    float last_cpu_sys  = cpu_sys  - prev_cpu_sys;
+
+    _append_response(txn, "cpu_user: %.2f\n", last_cpu_user);
+    _append_response(txn, "cpu_sys: %.2f\n",  last_cpu_sys);
+    _append_response(txn, "cpu_user/sys: %.2f\n", last_cpu_user / last_cpu_sys);
+
+    _append_response(txn, "memory_rss(bytes): %zu\n", core->info.self_ru.ru_maxrss);
+    _append_response(txn, "swaps: %ld\n", core->info.self_ru.ru_nswap);
+    _append_response(txn, "page_faults: %ld\n", core->info.self_ru.ru_majflt);
+    _append_response(txn, "block_input: %ld\n", core->info.self_ru.ru_inblock);
+    _append_response(txn, "block_output: %ld\n", core->info.self_ru.ru_oublock);
+    _append_response(txn, "signals: %ld\n", core->info.self_ru.ru_nsignals);
+    _append_response(txn, "voluntary_context_switches: %ld\n", core->info.self_ru.ru_nvcsw);
+    _append_response(txn, "involuntary_context_switches: %ld\n", core->info.self_ru.ru_nivcsw);
+
+}
+
+static
 void _process_status(sk_txn_t* txn)
 {
     sk_core_t* core = SK_ENV_CORE;
 
     // Fill up status
     sk_core_status_t status = sk_core_status(core);
-    _append_response(txn, "status: %d\n", status);
+    _append_response(txn, "status: %d (0: init 1: starting 2: running "
+                     "3: stopping 4: destroying)\n", status);
 
     // static: Fill up version
     _append_response(txn, "version: %s\n", core->info.version);
@@ -395,7 +427,8 @@ void _process_status(sk_txn_t* txn)
     _append_response(txn, "log_file: %s\n", core->config->log_name);
 
     // config: log level
-    _append_response(txn, "log_level: %d\n", core->config->log_level);
+    _append_response(txn, "log_level: %d (0: trace 1: debug 2: info "
+                     "3: warn 4: error 5: fatal)\n", core->config->log_level);
 
     // dynamic - system: cpu usage
     // dynamic - system: memory usage
@@ -416,6 +449,9 @@ void _process_status(sk_txn_t* txn)
 
     // dynamic: entities
     _status_entity(txn, core);
+
+    // dynamic: resources
+    _status_resources(txn, core);
 }
 
 /********************************* Public APIs ********************************/

@@ -2,6 +2,7 @@
 #define SK_CORE_H
 
 #include <stdbool.h>
+#include <sys/resource.h>
 
 #include "flibs/flist.h"
 #include "flibs/fhash.h"
@@ -51,6 +52,11 @@ typedef struct sk_core_info_t {
 #if __WORDSIZE == 64
     int         _padding;
 #endif
+
+    // system - dynamic: resource useage
+    // Notes: The interval between prev_ and curr_ is 1 second
+    struct rusage prev_self_ru;
+    struct rusage self_ru;
 } sk_core_info_t;
 
 // Core data structure
