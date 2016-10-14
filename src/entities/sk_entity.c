@@ -149,7 +149,7 @@ void sk_entity_destroy(sk_entity_t* entity)
     }
 }
 
-int sk_entity_tag(sk_entity_t* entity)
+int sk_entity_tag(const sk_entity_t* entity)
 {
     return entity->tag;
 }

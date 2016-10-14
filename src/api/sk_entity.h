@@ -46,7 +46,7 @@ ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len);
 ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len);
 
 sk_entity_type_t sk_entity_type(sk_entity_t* entity);
-int sk_entity_tag(sk_entity_t* entity);
+int sk_entity_tag(const sk_entity_t* entity);
 sk_entity_status_t sk_entity_status(sk_entity_t* entity);
 struct sk_workflow_t* sk_entity_workflow(sk_entity_t* entity);
 

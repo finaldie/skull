@@ -310,7 +310,7 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
         sk_service_t* service = NULL;
 
         while ((service = fhash_str_next(&iter))) {
-            _append_response(txn, " %s running tasks: %d ;",
+            _append_response(txn, " %s running_tasks: %d ;",
                              sk_service_name(service),
                              sk_service_running_taskcnt(service));
         }
@@ -318,6 +318,41 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
         fhash_str_iter_release(&iter);
         _append_response(txn, "\n", 1);
     }
+}
+
+static
+void _merge_stat(sk_entity_mgr_stat_t* stat, const sk_entity_mgr_stat_t* merging)
+{
+    stat->total    += merging->total;
+    stat->inactive += merging->inactive;
+    stat->entity_none  += merging->entity_none;
+    stat->entity_net   += merging->entity_net;
+    stat->entity_timer += merging->entity_timer;
+    stat->entity_ep    += merging->entity_ep;
+    stat->entity_ep_txn_timer += merging->entity_ep_txn_timer;
+}
+
+static
+void _status_entity(sk_txn_t* txn, sk_core_t* core)
+{
+    sk_entity_mgr_stat_t stat = sk_entity_mgr_stat(core->master->entity_mgr);
+
+    for (int i = 0; i < core->config->threads; i++) {
+        sk_entity_mgr_stat_t tmp = sk_entity_mgr_stat(core->workers[i]->entity_mgr);
+        _merge_stat(&stat, &tmp);
+    }
+
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_entity_mgr_stat_t tmp = sk_entity_mgr_stat(core->bio[i]->entity_mgr);
+        _merge_stat(&stat, &tmp);
+    }
+
+    _append_response(txn, "entities: total: %d inactive: %d entity_none: %d "
+        "entity_net: %d entity_timer: %d entity_ep: %d entity_ep_timer: %d "
+        "entity_ep_txn_timer: %d\n",
+        stat.total, stat.inactive, stat.entity_none, stat.entity_net,
+        stat.entity_timer, stat.entity_ep, stat.entity_ep_timer,
+        stat.entity_ep_txn_timer);
 }
 
 static
@@ -378,6 +413,9 @@ void _process_status(sk_txn_t* txn)
 
     // static: service
     _status_service(txn, core);
+
+    // dynamic: entities
+    _status_entity(txn, core);
 }
 
 /********************************* Public APIs ********************************/
