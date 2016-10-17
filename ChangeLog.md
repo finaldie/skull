@@ -1,3 +1,6 @@
+* 2016-10-17 0.9.6
+  * Core
+    * **Enhancement:** Enhance 'info' admin command to expose more information
 * 2016-10-12 0.9.5
   * Core
     * **Fix:** Refactor unpack api return value type, `size_t` -> `ssize_t`
