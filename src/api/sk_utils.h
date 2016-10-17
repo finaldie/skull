@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "api/sk_core.h"
 #include "flibs/compiler.h"
 
 // INTERNALs
@@ -58,6 +59,11 @@ void sk_assert_exit_with_msg(const char* format, ...);
  * Dump backtrace to stderr
  */
 void sk_backtrace_print();
+
+/**
+ * Fill up the core info
+ */
+void sk_util_setup_coreinfo(sk_core_t* core);
 
 #endif // end of SK_UTILS_H
 

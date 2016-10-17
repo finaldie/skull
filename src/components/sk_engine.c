@@ -14,21 +14,20 @@
 #include "api/sk_entity_util.h"
 #include "api/sk_engine.h"
 
-#define SK_ENGINE_UPTIME_TIMER_INTERVAL 1000
-#define SK_ENGINE_SNAPSHOT_TIMER_INTERVAL (1000 * 60)
+#define SK_ENGINE_SECOND_INTERVAL (1000)
+#define SK_ENGINE_MINUTE_INTERVAL (1000 * 60)
 
 static
-sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
+sk_timer_t* _create_timer(sk_engine_t* engine,
                                   uint32_t expiration, // unit: millisecond
                                   sk_timer_triggered timer_cb);
 
 // Triggered every 60 seconds
 static
-void _snapshot_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
+void _timerjob_permin(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
     // 1. create next timer
-    _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_SNAPSHOT_TIMER_INTERVAL,
-                          _snapshot_timer_triggered);
+    _create_timer(SK_ENV_ENGINE, SK_ENGINE_MINUTE_INTERVAL, _timerjob_permin);
 
     // 2. make a snapshot
     sk_core_t* core = SK_ENV_CORE;
@@ -40,16 +39,23 @@ void _snapshot_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 
 // Triggered every 1 second
 static
-void _uptime_timer_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
+void _timerjob_persec(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
     // 1. create next timer
-    _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_UPTIME_TIMER_INTERVAL,
-                          _uptime_timer_triggered);
+    _create_timer(SK_ENV_ENGINE, SK_ENGINE_SECOND_INTERVAL, _timerjob_persec);
 
     // 2. update uptime
     sk_metrics_global.uptime.inc(1);
 
-    // 3. destroy the timer entity
+    // 3. record resource usage
+    sk_core_t* core = SK_ENV_CORE;
+    struct rusage self_ru;
+    getrusage(RUSAGE_SELF, &self_ru);
+
+    core->info.prev_self_ru  = core->info.self_ru;
+    core->info.self_ru  = self_ru;
+
+    // 4. destroy the timer entity
     sk_entity_safe_destroy(entity);
 }
 
@@ -66,7 +72,7 @@ void _timer_data_destroy(sk_ud_t ud)
 }
 
 static
-sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
+sk_timer_t* _create_timer(sk_engine_t* engine,
                                   uint32_t expiration, // unit: millisecond
                                   sk_timer_triggered timer_cb)
 {
@@ -76,11 +82,11 @@ sk_timer_t* _create_metrics_timer(sk_engine_t* engine,
 
     sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
 
-    sk_timer_t* metrics_timer = sk_timersvc_timer_create(engine->timer_svc,
+    sk_timer_t* timer = sk_timersvc_timer_create(engine->timer_svc,
                     timer_entity, expiration, timer_cb, param_obj);
 
-    SK_ASSERT(metrics_timer);
-    return metrics_timer;
+    SK_ASSERT(timer);
+    return timer;
 }
 
 sk_engine_t* sk_engine_create(sk_engine_type_t type, int max_fds, int flags)
@@ -126,13 +132,13 @@ void* _sk_engine_thread(void* arg)
 
     // 3. Create a internal timer for metrics update & snapshot
     if (SK_ENV_ENGINE->type == SK_ENGINE_MASTER) {
-        sk_print("start uptime metrics timer\n");
-        _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_UPTIME_TIMER_INTERVAL,
-                              _uptime_timer_triggered);
+        sk_print("start 1 second interval timer\n");
+        _create_timer(SK_ENV_ENGINE, SK_ENGINE_SECOND_INTERVAL,
+                              _timerjob_persec);
 
-        sk_print("start metrics snapshot timer\n");
-        _create_metrics_timer(SK_ENV_ENGINE, SK_ENGINE_SNAPSHOT_TIMER_INTERVAL,
-                              _snapshot_timer_triggered);
+        sk_print("start 1 minute interval timer\n");
+        _create_timer(SK_ENV_ENGINE, SK_ENGINE_MINUTE_INTERVAL,
+                              _timerjob_permin);
     } else {
 #ifdef _GNU_SOURCE
         // Set the thread name

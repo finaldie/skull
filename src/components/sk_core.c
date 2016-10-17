@@ -419,6 +419,12 @@ void _sk_init_sys(sk_core_t* core)
     }
 }
 
+static
+void _sk_init_coreinfo(sk_core_t* core)
+{
+    sk_util_setup_coreinfo(core);
+}
+
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
@@ -464,6 +470,9 @@ void sk_core_init(sk_core_t* core)
 
     // 11. load workflows and related triggers
     _sk_setup_workflows(core);
+
+    // 12. fill up static information
+    _sk_init_coreinfo(core);
 }
 
 void sk_core_start(sk_core_t* core)
@@ -529,8 +538,9 @@ void sk_core_start(sk_core_t* core)
         sk_trigger_run(trigger);
     }
 
-    // 7. update core status
-    core->status = SK_CORE_RUNNING;
+    // 7. update core status and related information
+    core->status    = SK_CORE_RUNNING;
+    core->starttime = time(NULL);
 
     // 8. start master engine
     SK_LOG_INFO(core->logger,

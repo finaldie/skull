@@ -44,6 +44,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
     // Run the module
     int ret = module->run(module->md, txn);
     sk_print("module execution return code=%d\n", ret);
+    sk_module_stat_run_inc(module);
 
     unsigned long long alivetime = sk_txn_alivetime(txn);
     sk_txn_log_add(txn, "-> m:%s:run start: %llu end: %llu ",
@@ -135,6 +136,7 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
     SK_LOG_SETCOOKIE("module.%s", module_name);
     last_module->pack(last_module->md, txn);
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+    sk_module_stat_pack_inc(last_module);
 
     size_t packed_data_sz = 0;
     const char* packed_data = sk_txn_output(txn, &packed_data_sz);

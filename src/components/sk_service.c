@@ -385,6 +385,11 @@ const sk_service_cfg_t* sk_service_config(const sk_service_t* service)
     return service->cfg;
 }
 
+int sk_service_running_taskcnt(const sk_service_t* service)
+{
+    return service->running_task_cnt;
+}
+
 sk_srv_status_t sk_service_push_task(sk_service_t* service,
                                     const sk_srv_task_t* task)
 {

@@ -20,15 +20,19 @@ struct sk_sched_t* sk_entity_mgr_sched(const sk_entity_mgr_t* mgr);
 void sk_entity_mgr_setsched(sk_entity_mgr_t* mgr,
                             struct sk_sched_t* owner_sched);
 
-// return 0: continue iterating
-// return non-zero: stop iterating
-typedef int (*sk_entity_each_cb)(sk_entity_mgr_t* mgr,
-                               sk_entity_t* entity,
-                               void* ud);
+typedef struct sk_entity_mgr_stat_t {
+    int total;
+    int inactive;
 
-void sk_entity_mgr_foreach(sk_entity_mgr_t* mgr,
-                           sk_entity_each_cb each_cb,
-                           void* ud);
+    int entity_none;
+    int entity_net;
+    int entity_timer;
+    int entity_ep;
+    int entity_ep_timer;
+    int entity_ep_txn_timer;
+} sk_entity_mgr_stat_t;
+
+sk_entity_mgr_stat_t sk_entity_mgr_stat(const sk_entity_mgr_t*);
 
 #endif
 

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "flibs/fhash.h"
 #include "flibs/flist.h"
@@ -8,13 +9,67 @@
 #include "api/sk_metrics.h"
 #include "api/sk_entity_mgr.h"
 
+// return 0: continue iterating
+// return non-zero: stop iterating
+typedef int (*sk_entity_each_cb)(sk_entity_mgr_t* mgr,
+                               sk_entity_t* entity,
+                               void* ud);
+
+void sk_entity_mgr_foreach(sk_entity_mgr_t* mgr,
+                           sk_entity_each_cb each_cb,
+                           void* ud);
+
 // Entity Manager
 struct sk_entity_mgr_t {
     fhash* entity_mgr;
     flist* inactive_entities;
     flist* tmp_entities;
     struct sk_sched_t* owner_sched;
+
+    sk_entity_mgr_stat_t stat;
 };
+
+static
+void _update_stat(sk_entity_mgr_t* mgr, const sk_entity_t* entity,
+                  bool inactive, int value)
+{
+    if (!value) return;
+
+    if (inactive) {
+        mgr->stat.inactive += value;
+
+        if (value > 0) {
+            return;
+        }
+    }
+
+    mgr->stat.total += value;
+
+    int tag = sk_entity_tag(entity);
+    switch (tag) {
+    case SK_ENTITY_TAG_NONE:
+        mgr->stat.entity_none += value;
+        break;
+    case SK_ENTITY_TAG_NET:
+        mgr->stat.entity_net += value;
+        break;
+    case SK_ENTITY_TAG_TIMER:
+        mgr->stat.entity_timer += value;
+        break;
+    case SK_ENTITY_TAG_EP:
+        mgr->stat.entity_ep += value;
+        break;
+    case SK_ENTITY_TAG_EP_TIMER:
+        mgr->stat.entity_ep_timer += value;
+        break;
+    case SK_ENTITY_TAG_EP_TXN_TIMER:
+        mgr->stat.entity_ep_txn_timer++;
+        break;
+    default:
+        SK_ASSERT_MSG(0, "Unknown entity tag: %d\n", tag);
+        break;
+    }
+}
 
 static
 int _mark_dead(sk_entity_mgr_t* mgr, sk_entity_t* entity, void* ud)
@@ -27,44 +82,8 @@ int _mark_dead(sk_entity_mgr_t* mgr, sk_entity_t* entity, void* ud)
 static
 void _cleanup_dead_entities(sk_entity_mgr_t* mgr, int force)
 {
-    int total_inactive      = 0;
-    int entity_none         = 0;
-    int entity_net          = 0;
-    int entity_timer        = 0;
-    int entity_ep           = 0;
-    int entity_ep_timer     = 0;
-    int entity_ep_txn_timer = 0;
-    int entity_unknown      = 0;
-    int cleaned             = 0;
-
     while (!flist_empty(mgr->inactive_entities)) {
         sk_entity_t* entity = flist_pop(mgr->inactive_entities);
-        total_inactive++;
-
-        int tag = sk_entity_tag(entity);
-        switch (tag) {
-        case SK_ENTITY_TAG_NONE:
-            entity_none++;
-            break;
-        case SK_ENTITY_TAG_NET:
-            entity_net++;
-            break;
-        case SK_ENTITY_TAG_TIMER:
-            entity_timer++;
-            break;
-        case SK_ENTITY_TAG_EP:
-            entity_ep++;
-            break;
-        case SK_ENTITY_TAG_EP_TIMER:
-            entity_ep_timer++;
-            break;
-        case SK_ENTITY_TAG_EP_TXN_TIMER:
-            entity_ep_txn_timer++;
-            break;
-        default:
-            entity_unknown++;
-            break;
-        }
 
         // 1. Check whehter it can be destroyed
         int taskcnt = sk_entity_taskcnt(entity);
@@ -72,6 +91,8 @@ void _cleanup_dead_entities(sk_entity_mgr_t* mgr, int force)
             //sk_entity_dump_txns(entity);
             //sk_print("entity(%p) taskcnt(%d) > 0, try to destroy it in next "
             //         "round\n", (void*)entity, taskcnt);
+
+            // Still has task incompleted, push back and waiting for next round
             flist_push(mgr->tmp_entities, entity);
             continue;
         }
@@ -83,20 +104,13 @@ void _cleanup_dead_entities(sk_entity_mgr_t* mgr, int force)
         }
 
         // 3. Destroy entity totally
+        _update_stat(mgr, entity, true, -1);
+
         sk_entity_t* deleted_entity =
             fhash_u64_del(mgr->entity_mgr, (uint64_t) (uintptr_t) entity);
         SK_ASSERT(deleted_entity == entity);
         sk_entity_destroy(entity);
         sk_print("clean up dead entity: %p\n", (void*)entity);
-        cleaned++;
-    }
-
-    if (total_inactive) {
-        sk_print("cleanup dead: total inactive: %d, cleaned: %d, entity_none: %d, "
-                 "entity_net: %d, entity_timer: %d, entity_ep: %d, "
-                 "entity_ep_timer: %d, entity_ep_txn_timer: %d, force: %d\n",
-                 total_inactive, cleaned, entity_none, entity_net, entity_timer,
-                 entity_ep, entity_ep_timer, entity_ep_txn_timer, force);
     }
 
     // Swap inactive queue and temp queue
@@ -139,6 +153,8 @@ void sk_entity_mgr_add(sk_entity_mgr_t* mgr, sk_entity_t* entity)
     if (SK_ENTITY_NET == sk_entity_type(entity)) {
         sk_metrics_worker.connection_create.inc(1);
     }
+
+    _update_stat(mgr, entity, false, 1);
 }
 
 sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
@@ -147,7 +163,8 @@ sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
         return NULL;
     }
 
-    SK_ASSERT_MSG(sk_entity_owner(entity) == mgr, "entity: %p\n", (void*)entity);
+    SK_ASSERT_MSG(sk_entity_owner(entity) == mgr,
+                  "Incorrect owner of this entity: %p\n", (void*)entity);
 
     if (sk_entity_status(entity) == SK_ENTITY_DEAD) {
         // already dead, it will be destroy totally when the clean_dead be
@@ -164,6 +181,7 @@ sk_entity_t* sk_entity_mgr_del(sk_entity_mgr_t* mgr, sk_entity_t* entity)
     int ret = flist_push(mgr->inactive_entities, entity);
     SK_ASSERT(!ret);
 
+    _update_stat(mgr, entity, true, 1);
     return entity;
 }
 
@@ -199,3 +217,7 @@ void sk_entity_mgr_setsched(sk_entity_mgr_t* mgr, struct sk_sched_t* owner_sched
     mgr->owner_sched = owner_sched;
 }
 
+sk_entity_mgr_stat_t sk_entity_mgr_stat(const sk_entity_mgr_t* mgr)
+{
+    return mgr->stat;
+}

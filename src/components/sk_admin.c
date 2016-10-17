@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <time.h>
 
 #include "flibs/flist.h"
@@ -15,12 +16,19 @@
 #include "api/sk_admin.h"
 
 #define ADMIN_CMD_HELP_CONTENT \
-    "commands:\n - help\n - metrics\n - last\n - status\n"
+    "commands:\n" \
+    " - help\n" \
+    " - metrics\n" \
+    " - last\n" \
+    " - status|info\n"
 
 #define ADMIN_CMD_HELP          "help"
 #define ADMIN_CMD_METRICS       "metrics"
 #define ADMIN_CMD_LAST_SNAPSHOT "last"
 #define ADMIN_CMD_STATUS        "status"
+#define ADMIN_CMD_INFO          "info"
+
+#define ADMIN_LINE_MAX_LENGTH   (1024)
 
 static sk_module_t _sk_admin_module;
 static sk_module_cfg_t _sk_admin_module_cfg;
@@ -207,17 +215,243 @@ void _process_last_snapshot(sk_txn_t* txn)
 }
 
 static
-void _process_status(sk_txn_t* txn)
+void _append_response(sk_txn_t* txn, const char* fmt, ...)
 {
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
+    char line[ADMIN_LINE_MAX_LENGTH];
+    memset(line, 0, sizeof(line));
+    int len = 0;
+
+    va_list args;
+    va_start(args, fmt);
+    len = vsnprintf(line, ADMIN_LINE_MAX_LENGTH, fmt, args);
+    va_end(args);
+
+    fmbuf_push(admin_data->response, line, (size_t)len);
+}
+
+static
+void _status_workflow(sk_txn_t* txn, sk_core_t* core)
+{
+    flist_iter iter = flist_new_iter(core->workflows);
+    sk_workflow_t* workflow = NULL;
+    int total = 0;
+
+    while ((workflow = flist_each(&iter))) {
+        total++;
+    }
+
+    _append_response(txn, "workflows: %d\n", total);
+}
+
+
+static
+void _status_module(sk_txn_t* txn, sk_core_t* core)
+{
+    {
+        fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+        sk_module_t* module = NULL;
+        int total = 0;
+
+        while ((module = fhash_str_next(&iter))) {
+            total++;
+        }
+
+        fhash_str_iter_release(&iter);
+
+        _append_response(txn, "modules: %d\n", total);
+    }
+
+    {
+        const char* title = "module_list:";
+        _append_response(txn, title, strlen(title));
+
+        fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+        sk_module_t* module = NULL;
+
+        while ((module = fhash_str_next(&iter))) {
+            _append_response(txn, " %s call_times: total %zu | unpack %zu | "
+                "run %zu | pack %zu ;",
+                module->cfg->name,
+                sk_module_stat_total_get(module),
+                sk_module_stat_unpack_get(module),
+                sk_module_stat_run_get(module),
+                sk_module_stat_pack_get(module));
+        }
+
+        fhash_str_iter_release(&iter);
+        _append_response(txn, "\n", 1);
+    }
+
+}
+
+static
+void _status_service(sk_txn_t* txn, sk_core_t* core)
+{
+    {
+        fhash_str_iter iter = fhash_str_iter_new(core->services);
+        sk_service_t* service = NULL;
+        int total = 0;
+
+        while ((service = fhash_str_next(&iter))) {
+            total++;
+        }
+
+        fhash_str_iter_release(&iter);
+
+        _append_response(txn, "services: %d\n", total);
+    }
+
+    {
+        const char* title = "service_list:";
+        _append_response(txn, title, strlen(title));
+
+        fhash_str_iter iter = fhash_str_iter_new(core->services);
+        sk_service_t* service = NULL;
+
+        while ((service = fhash_str_next(&iter))) {
+            _append_response(txn, " %s running_tasks: %d ;",
+                             sk_service_name(service),
+                             sk_service_running_taskcnt(service));
+        }
+
+        fhash_str_iter_release(&iter);
+        _append_response(txn, "\n", 1);
+    }
+}
+
+static
+void _merge_stat(sk_entity_mgr_stat_t* stat, const sk_entity_mgr_stat_t* merging)
+{
+    stat->total    += merging->total;
+    stat->inactive += merging->inactive;
+    stat->entity_none  += merging->entity_none;
+    stat->entity_net   += merging->entity_net;
+    stat->entity_timer += merging->entity_timer;
+    stat->entity_ep    += merging->entity_ep;
+    stat->entity_ep_txn_timer += merging->entity_ep_txn_timer;
+}
+
+static
+void _status_entity(sk_txn_t* txn, sk_core_t* core)
+{
+    sk_entity_mgr_stat_t stat = sk_entity_mgr_stat(core->master->entity_mgr);
+
+    for (int i = 0; i < core->config->threads; i++) {
+        sk_entity_mgr_stat_t tmp = sk_entity_mgr_stat(core->workers[i]->entity_mgr);
+        _merge_stat(&stat, &tmp);
+    }
+
+    for (int i = 0; i < core->config->bio_cnt; i++) {
+        sk_entity_mgr_stat_t tmp = sk_entity_mgr_stat(core->bio[i]->entity_mgr);
+        _merge_stat(&stat, &tmp);
+    }
+
+    _append_response(txn, "entities: total: %d inactive: %d entity_none: %d "
+        "entity_net: %d entity_timer: %d entity_ep: %d entity_ep_timer: %d "
+        "entity_ep_txn_timer: %d\n",
+        stat.total, stat.inactive, stat.entity_none, stat.entity_net,
+        stat.entity_timer, stat.entity_ep, stat.entity_ep_timer,
+        stat.entity_ep_txn_timer);
+}
+
+static
+void _status_resources(sk_txn_t* txn, sk_core_t* core)
+{
+    float cpu_sys  = (float)core->info.self_ru.ru_stime.tv_sec +
+                     (float)core->info.self_ru.ru_stime.tv_usec / 1000000;
+    float cpu_user = (float)core->info.self_ru.ru_utime.tv_sec +
+                     (float)core->info.self_ru.ru_utime.tv_usec / 1000000;
+
+    float prev_cpu_sys  = (float)core->info.prev_self_ru.ru_stime.tv_sec +
+                          (float)core->info.prev_self_ru.ru_stime.tv_usec / 1000000;
+    float prev_cpu_user = (float)core->info.prev_self_ru.ru_utime.tv_sec +
+                          (float)core->info.prev_self_ru.ru_utime.tv_usec / 1000000;
+
+    float last_cpu_user = cpu_user - prev_cpu_user;
+    float last_cpu_sys  = cpu_sys  - prev_cpu_sys;
+
+    _append_response(txn, "cpu_user: %.2f\n", last_cpu_user);
+    _append_response(txn, "cpu_sys: %.2f\n",  last_cpu_sys);
+    _append_response(txn, "cpu_user/sys: %.2f\n", last_cpu_user / last_cpu_sys);
+
+    _append_response(txn, "memory_rss(bytes): %zu\n", core->info.self_ru.ru_maxrss);
+    _append_response(txn, "swaps: %ld\n", core->info.self_ru.ru_nswap);
+    _append_response(txn, "page_faults: %ld\n", core->info.self_ru.ru_majflt);
+    _append_response(txn, "block_input: %ld\n", core->info.self_ru.ru_inblock);
+    _append_response(txn, "block_output: %ld\n", core->info.self_ru.ru_oublock);
+    _append_response(txn, "signals: %ld\n", core->info.self_ru.ru_nsignals);
+    _append_response(txn, "voluntary_context_switches: %ld\n", core->info.self_ru.ru_nvcsw);
+    _append_response(txn, "involuntary_context_switches: %ld\n", core->info.self_ru.ru_nivcsw);
+
+}
+
+static
+void _process_status(sk_txn_t* txn)
+{
     sk_core_t* core = SK_ENV_CORE;
 
+    // Fill up status
     sk_core_status_t status = sk_core_status(core);
-    char status_str[3];
-    memset(status_str, 0, sizeof(status_str));
-    snprintf(status_str, 3, "%d\n", status);
+    _append_response(txn, "status: %d (0: init 1: starting 2: running "
+                     "3: stopping 4: destroying)\n", status);
 
-    fmbuf_push(admin_data->response, status_str, 2);
+    // static: Fill up version
+    _append_response(txn, "version: %s\n", core->info.version);
+
+    // static: Fill up git sha1
+    _append_response(txn, "git_sha1: %s\n", core->info.git_sha1);
+
+    // static: Fill up compiler info
+    _append_response(txn, "compiler: %s %s\n",
+                     core->info.compiler, core->info.compiler_version);
+
+    _append_response(txn, "compiling_options: %s\n", core->info.compiling_options);
+
+    // static - system: Fill up pid
+    _append_response(txn, "pid: %d\n", core->info.pid);
+
+    // static - system: open file limitation
+    _append_response(txn, "max_open_files: %d\n", core->max_fds);
+
+    // config: config file location
+    _append_response(txn, "config: %s\n", core->config->location);
+
+    // config: worker threads
+    _append_response(txn, "worker_threads: %d\n", core->config->threads);
+
+    // config: bio threads
+    _append_response(txn, "bio_threads: %d\n", core->config->bio_cnt);
+
+    // config: log file
+    _append_response(txn, "log_file: %s\n", core->config->log_name);
+
+    // config: log level
+    _append_response(txn, "log_level: %d (0: trace 1: debug 2: info "
+                     "3: warn 4: error 5: fatal)\n", core->config->log_level);
+
+    // dynamic - system: cpu usage
+    // dynamic - system: memory usage
+    // dynamic: uptime (seconds)
+    _append_response(txn, "uptime(s): %ld\n", time(NULL) - core->starttime);
+
+    // static: working dir
+    _append_response(txn, "working_dir: %s\n", core->working_dir);
+
+    // static: workflow
+    _status_workflow(txn, core);
+
+    // static: module
+    _status_module(txn, core);
+
+    // static: service
+    _status_service(txn, core);
+
+    // dynamic: entities
+    _status_entity(txn, core);
+
+    // dynamic: resources
+    _status_resources(txn, core);
 }
 
 /********************************* Public APIs ********************************/
@@ -283,7 +517,8 @@ int _admin_run(void* md, sk_txn_t* txn)
         _process_metrics(txn);
     } else if (0 == strcasecmp(ADMIN_CMD_LAST_SNAPSHOT, command)) {
         _process_last_snapshot(txn);
-    } else if (0 == strcasecmp(ADMIN_CMD_STATUS, command)) {
+    } else if (0 == strcasecmp(ADMIN_CMD_STATUS, command) ||
+               0 == strcasecmp(ADMIN_CMD_INFO, command)) {
         _process_status(txn);
     } else {
         _process_help(txn);

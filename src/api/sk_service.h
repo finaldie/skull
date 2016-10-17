@@ -144,6 +144,7 @@ sk_srv_status_t sk_service_push_task(sk_service_t*, const sk_srv_task_t*);
 size_t sk_service_schedule_tasks(sk_service_t*);
 void sk_service_schedule_task(sk_service_t*, const sk_srv_task_t*);
 void sk_service_task_setcomplete(sk_service_t*);
+int sk_service_running_taskcnt(const sk_service_t*);
 
 // APIs for worker
 sk_srv_status_t sk_service_run_iocall(sk_service_t*, const sk_txn_t* txn,

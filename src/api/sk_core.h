@@ -2,6 +2,7 @@
 #define SK_CORE_H
 
 #include <stdbool.h>
+#include <sys/resource.h>
 
 #include "flibs/flist.h"
 #include "flibs/fhash.h"
@@ -36,6 +37,28 @@ typedef struct sk_cmd_args_t {
 #endif
 } sk_cmd_args_t;
 
+// Static Information
+typedef struct sk_core_info_t {
+    // versions
+    const char* version;
+    const char* git_sha1;
+    const char* compiler;
+    const char* compiler_version;
+    const char* compiling_options;
+
+    // system
+    pid_t       pid;
+
+#if __WORDSIZE == 64
+    int         _padding;
+#endif
+
+    // system - dynamic: resource useage
+    // Notes: The interval between prev_ and curr_ is 1 second
+    struct rusage prev_self_ru;
+    struct rusage self_ru;
+} sk_core_info_t;
+
 // Core data structure
 // NOTES: All the members must be thread-safe for read action after
 //  initialization
@@ -45,6 +68,8 @@ typedef struct sk_core_t {
     sk_mon_t*        umon; // user mon
 
     // ======= public  =======
+    sk_core_info_t   info;
+
     sk_cmd_args_t    cmd_args;
     sk_config_t*     config;
 
@@ -72,6 +97,8 @@ typedef struct sk_core_t {
 
     // max open files limitation
     int max_fds;
+
+    time_t starttime;
 } sk_core_t;
 
 void sk_core_init(sk_core_t* core);
