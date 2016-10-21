@@ -224,6 +224,11 @@ function _action_service_add()
     # 4. Add basic folder structure if the target module does not exist
     sk_util_run_lang_action $language $SKULL_LANG_SERVICE_ADD $service
 
+    if [ $? != 0 ]; then
+        echo "Error: Service creation failed" >&2
+        exit 1
+    fi
+
     # 5. Add service into main config
     $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
         -a add -s $service -b true -d $data_mode -l $language

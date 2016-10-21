@@ -195,7 +195,9 @@ function action_py_service_valid()
 function action_py_service_add()
 {
     # Do not support service so far
-    return 0
+    echo "Error: DO NOT support Python service creation so far, create a" \
+         "Cpp service instead" >&2
+    return 1
 }
 
 function _generate_py_protos()
