@@ -6,22 +6,22 @@ Skull
 =====
 A fast to start, easy to maintain, high productivity serving framework<br>
 
-- [Introduction](#Introduction)
- - [Module](#Module)
- - [Workflow](#Workflow)
- - [Service](#Service)
-- [Releases](#Releases)
-- [How to Build](#How to Build)
- - [Install Dependencies](#Install Dependencies)
- - [Build and Install](#Build and Install)
-- [A Quick Demo](#A Quick Demo)
- - [Create a skull project](#Create a skull project)
- - [Play with skull](#Play with skull)
-- [How to Create a Service](#How to Create a Service)
-- [How to Check Metrics](#How to Check Metrics)
-- [Existing Services](#Existing Services)
-- [Other Resources](#Other Resources)
-- [Contribution](#Contribution)
+- [Introduction](#introduction)
+ - [Module](#module)
+ - [Workflow](#workflow)
+ - [Service](#service)
+- [Releases](#releases)
+- [How to Build](#how-to-build)
+ - [Install Dependencies](#install-dependencies)
+ - [Build and Install](#build-and-install)
+- [A Quick Demo](#a-quick-demo)
+ - [Create a skull project](#create-a-skull-project)
+ - [Play with skull](#play-with-skull)
+- [How to Create a Service](#how-to-create-a-service)
+- [How to Check Metrics](#how-to-check-metrics)
+- [Existing Services](#existing-services)
+- [Other Resources](#other-resources)
+- [Contribution](#contribution)
 
 ## Introduction
 Skull provides the following features:
@@ -51,6 +51,12 @@ _Service_ is designed for managing the data, and provide a group of APIs to acce
 
 ## Releases
 [Changelog](ChangeLog.md)
+
+## Documentations
+* [High Level Introduction][6]
+* [How To Start][7]
+* [API Docs - Cpp][8]
+* [API Docs - Python][9]
 
 ## How to Build
 Use Ubuntu14.04 as an example.
@@ -167,6 +173,10 @@ Name                  | Description |
 [3]: https://developers.google.com/protocol-buffers/
 [4]: https://github.com/finaldie/final_libs
 [5]: https://github.com/finaldie/skull-perf
+[6]: https://github.com/finaldie/skull/wiki
+[7]: https://github.com/finaldie/skull/wiki/How-To-Start
+[8]: https://github.com/finaldie/skull/wiki/API-Doc-:-Cpp
+[9]: https://github.com/finaldie/skull/wiki/API-Doc-:-Python
 
 # Contribution
 Fork the repo, then apply your fixes/features via a PR. Important things before sending a PR, be sure you have added/fixed a(n) new/existing test case, and passed it :)
