@@ -41,6 +41,10 @@ function _skull_create()
     # Create a example FT test case
     mkdir -p $workspace/tests/cases/example
     cp $SKULL_ROOT/share/skull/skull_ft_case.yml $workspace/tests/cases/example
+
+    # Replace ChangeLog date placeholder
+    local today=`date "+%Y-%m-%d"`
+    sed -i "s/CREATION_DATE/$today/g" $workspace/ChangeLog.md
 }
 
 function action_create()

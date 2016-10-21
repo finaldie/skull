@@ -8,8 +8,8 @@ function action_version()
     local changelog=$SKULL_ROOT/etc/skull/ChangeLog.md
     local version=`cat $changelog | head -1 | awk '{print $3}'`
 
-    echo -n "Skull $version - A fast to start, easy to maintain, "
-    echo "high productivity serving framework."
+    echo "Skull $version - A fast to start, easy to maintain," \
+         "high productivity serving framework."
     echo "More information see https://github.com/finaldie/skull"
 }
 
