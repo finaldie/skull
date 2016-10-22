@@ -90,8 +90,8 @@ public:
      * @param apiName
      * @param request       request protobuf message
      * @param bioIdx        background io index
-     *                      - (-1)  : random pick up a background io to run
-     *                      - (0)   : do not use background io
+     *                      - (< 0)  : random pick up a background io to run
+     *                      - (= 0)   : do not use background io
      *                      - (> 0) : run on the index of background io
      * @param cb            api callback function
      *
