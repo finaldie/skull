@@ -243,7 +243,7 @@ void _api_validator(const void* req, size_t req_sz,
                     const void* resp, size_t resp_sz, void* ud) {
     // 1. Fill up the response message
     ServiceAPIData* apiData = (ServiceAPIData*)ud;
-    ServiceApiRespData apiResp(apiData->service_.svcName(),
+    ServiceApiRespData apiResp(apiData->service_.name(),
                                apiData->apiName_,
                                resp, resp_sz);
 
@@ -269,7 +269,7 @@ void UTService::run(const std::string& apiName,
                         _api_validator, &apiData);
 }
 
-const std::string& UTService::svcName() {
+const std::string& UTService::name() const {
     return this->svcName_;
 }
 
