@@ -1,3 +1,11 @@
+* 2016-10-22 0.9.7
+  * Core
+    * **Fix:** Refactor ep.unpack api return value type, `size_t` -> `ssize_t`
+  * Script
+    * **Fix:** Fix some command output
+  * User
+    * **Fix:** Refactor cpp ep.unpack api return value type, `size_t` -> `ssize_t`
+    * **Fix:** Force link `common-lib` in cpp module
 * 2016-10-17 0.9.6
   * Core
     * **Enhancement:** Enhance 'info' admin command to expose more information
