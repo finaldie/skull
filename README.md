@@ -57,6 +57,7 @@ _Service_ is designed for managing the data, and provide a group of APIs to acce
 * [How To Start][7]
 * [API Docs - Cpp][8]
 * [API Docs - Python][9]
+* [Integrate with Nginx][10]
 
 ## How to Build
 Use Ubuntu14.04 as an example.
@@ -177,6 +178,7 @@ Name                  | Description |
 [7]: https://github.com/finaldie/skull/wiki/How-To-Start
 [8]: https://github.com/finaldie/skull/wiki/API-Doc-:-Cpp
 [9]: https://github.com/finaldie/skull/wiki/API-Doc-:-Python
+[10]: https://github.com/finaldie/skull/wiki/Integrate-with-Nginx
 
 # Contribution
 Fork the repo, then apply your fixes/features via a PR. Important things before sending a PR, be sure you have added/fixed a(n) new/existing test case, and passed it :)
