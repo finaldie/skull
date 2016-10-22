@@ -123,6 +123,11 @@ function _action_module_add()
     local lang_names=`echo ${langs[*]} | sed 's/ /|/g'`
     local total_workflows=`action_workflow_show | tail -1 | awk '{print $2}'`
 
+    if ! $(sk_util_is_number $total_workflows); then
+        echo "Error: create a workflow first" >&2
+        return 1
+    fi
+
     # 2. get user input and verify them
     while true; do
         read -p "module name? " module
