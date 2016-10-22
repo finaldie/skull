@@ -46,7 +46,7 @@ public:
     typedef std::function<void (const Service&, EPClientRet& ret)>   EpCb;
     typedef std::function<void (const Service&, EPClientNPRet& ret)> EpNPCb;
 
-    typedef std::function<size_t (const void* data, size_t len)> UnpackFn;
+    typedef std::function<ssize_t (const void* data, size_t len)> UnpackFn;
 
 // Use these macro to make a unpack/epCb easily. And you still can use *lambda*
 //  instead of these

@@ -24,11 +24,11 @@ void skull_service_release(skullcpp::Service& service)
 }
 
 static
-size_t _ep_unpack(const void* data, size_t len)
+ssize_t _ep_unpack(const void* data, size_t len)
 {
     std::cout << "ep received data len: " << len << std::endl;
     SKULLCPP_LOG_INFO("ep_unpack", "ep received data len: " << len);
-    return len;
+    return (ssize_t)len;
 }
 
 static
