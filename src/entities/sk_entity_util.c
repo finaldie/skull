@@ -40,7 +40,7 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     // get or create a sk_txn
     sk_txn_t* txn = sk_entity_halftxn(entity);
     if (!txn) {
-        sk_print("create a new transcation\n");
+        sk_print("create a new transaction\n");
         txn = sk_txn_create(workflow, entity);
         SK_ASSERT(txn);
         sk_entity_sethalftxn(entity, txn);
@@ -71,7 +71,7 @@ void sk_entity_util_unpack(fev_state* fev, fev_buff* evbuff,
     sk_txn_setstate(txn, SK_TXN_UNPACKED);
     sk_entity_sethalftxn(entity, NULL);
 
-    // 4.1 Add transcation log
+    // 4.1 Add transaction log
     sk_txn_log_add(txn, "m:%s:unpack start: %llu end: %llu ",
         module_name, sk_txn_starttime(txn), sk_txn_alivetime(txn));
 

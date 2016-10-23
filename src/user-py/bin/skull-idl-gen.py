@@ -52,7 +52,7 @@ def generate_headers(api_file_list, pkg_name, addReflection):
     return content
 
 def generate_workflow_header(addReflection):
-    content = "# Workflow transcation shared data protos\n"
+    content = "# Workflow transaction shared data protos\n"
     content += generate_headers(wf_file_list, 'workflow', addReflection)
     return content
 

@@ -18,18 +18,18 @@ typedef struct sk_event_t {
     uint32_t hop    :8;
     uint32_t flags  :24;
 
-    // data size
+    // Data size
     size_t   sz;
 
-    // entity object, some major protos use it, a field for it here because it
-    // would improve the performance
+    // Entity object, some major protos use it, a field for it here because it
+    //  would improve the performance
     void*    entity;
 
-    // transcation data, some major protos use it, a field for it here because
-    // it would improve the performance
+    // Transaction data, some major protos use it, a field for it here because
+    //  it would improve the performance
     void*    txn;
 
-    // protobuf data
+    // Protobuf data
     void*    data;
 } sk_event_t;
 

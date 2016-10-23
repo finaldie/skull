@@ -132,12 +132,12 @@ unsigned long long sk_txn_task_lifetime(const sk_txn_t*, uint64_t task_id);
 unsigned long long sk_txn_task_livetime(const sk_txn_t*, uint64_t task_id);
 
 /**
- * Add a transcation log
+ * Add a transaction log
  */
 void sk_txn_log_add(sk_txn_t*, const char* fmt, ...);
 
 /**
- * Get full transcation log
+ * Get full transaction log
  */
 const char* sk_txn_log(const sk_txn_t*);
 

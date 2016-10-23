@@ -45,7 +45,7 @@ def generate_headers(api_file_list):
     return content
 
 def generate_workflow_header():
-    content = "// Workflow transcation shared data protos\n"
+    content = "// Workflow transaction shared data protos\n"
     content += generate_headers(wf_file_list)
     return content
 
