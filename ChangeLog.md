@@ -1,3 +1,6 @@
+* 2016-10-23 0.9.8
+  * MISC
+    * **Enhancement:** Fix Typos
 * 2016-10-22 0.9.7
   * Core
     * **Fix:** Refactor ep.unpack api return value type, `size_t` -> `ssize_t`
