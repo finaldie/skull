@@ -6,11 +6,11 @@ module:
         response:
             desc: module response counter
 
-# every transcation have its own metrics
-transcation:
+# Every transaction has its own counters
+transaction:
     type: dynamic
     metrics:
         request:
-            desc: transcation request count
+            desc: transaction request count
         response:
-            desc: transcation response count
+            desc: transaction response count

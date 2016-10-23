@@ -9,7 +9,7 @@ function action_version()
     local version=`cat $changelog | head -1 | awk '{print $3}'`
 
     echo "Skull $version - A fast to start, easy to maintain," \
-         "high productivity serving framework."
+         "high productive serving framework."
     echo "More information see https://github.com/finaldie/skull"
 }
 

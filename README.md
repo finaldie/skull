@@ -82,7 +82,7 @@ sudo make install
 
 **Notes:**
  * To disable `jemalloc`, use `make -j4 disable_jemalloc=true` to build it
- * For some _Linux_ Releases, user might need to use `CFLAGS`, `CXXFLAGS`, `LDFLAGS` to finish the build
+ * For some _Linux_ Releases, we might need to use `CFLAGS`, `CXXFLAGS`, `LDFLAGS` to finish the build
 
 ## A Quick Demo
 After installing _Skull_ into the system, run the following steps to
