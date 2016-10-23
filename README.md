@@ -4,7 +4,7 @@
 
 Skull
 =====
-A fast to start, easy to maintain, high productivity serving framework<br>
+A fast to start, easy to maintain, high productive serving framework<br>
 
 - [Introduction](#introduction)
  - [Module](#module)
@@ -18,13 +18,13 @@ A fast to start, easy to maintain, high productivity serving framework<br>
  - [Create a skull project](#create-a-skull-project)
  - [Play with skull](#play-with-skull)
 - [How to Create a Service](#how-to-create-a-service)
-- [How to Check Metrics](#how-to-check-metrics)
+- [How to Check Counters](#how-to-check-counters)
 - [Existing Services](#existing-services)
 - [Other Resources](#other-resources)
 - [Contribution](#contribution)
 
 ## Introduction
-Skull provides the following features:
+Skull provides the following key features:
 * Modular Development Environment
 * Project Management
 * Processize
@@ -37,17 +37,17 @@ Skull provides the following features:
 * Integrated with _Nginx_
 * Service Shareable
 
-It's based on [Google Protobuf][3] and [Flibs][4], target to _Linux_ platform. And _Skull_ is compose of 3 components: **skull-core**, **skull-user-api** and **skull-project-management-scripts**, besides of that logically there are also 3 major concepts in _Skull_: **Workflow**, **Module** and **Service**. Before using _Skull_, let's understand the core concepts first.
+It's based on [Google Protobuf][3] and [Flibs][4], target to _Linux_ platform. _Skull_ is consist of 3 components: **skull-core**, **skull-user-api** and **skull-project-management-scripts**, and there are 3 major concepts in _Skull_: **Workflow**, **Module** and **Service**. Before using it, let's understand the core concepts first.
 
 ### Module
 _Module_ is a independent logic set, it defines what kind of data/things we should use/do in this step.
 
 ### Workflow
-_Workflow_ is more like a *transcation rules*, *oriented automator* or *pipeline*, it controls how the transcation works, execute the modules one by one until be finished. Multiple modules can be chosed to join in a workflow, and there also can be multiple workflows in _Skull_.
+_Workflow_ is more like a *transaction rules*, *oriented automator* or *pipeline*, it controls how the transaction works, execute the modules one by one until be finished. Multiple modules can be chosen to join in a workflow, and there also can be multiple workflows in _Skull_.
 Each _Workflow_ has its own _SharedData_, every _Module_ belongs to this _Workflow_ can read/write it.
 
 ### Service
-_Service_ is designed for managing the data, and provide a group of APIs to access the data. _Module_ can use these APIs to access/consume the data, then decide what you want to do. Also the _Service_ is shareable, it's highly recommended you to share your _Service_ to other *skull projects*, to make the world better.
+_Service_ is designed for managing the data, and provide a group of APIs to access the data. _Module_ can use these APIs to access/consume the data, then decide what you want to do. Also the _Service_ is shareable, it's highly recommended that user to share their _Service_ to other *skull projects*, to make the world better.
 
 ## Releases
 [Changelog](ChangeLog.md)
@@ -81,25 +81,25 @@ sudo make install
 ```
 
 **Notes:**
- * If you do not want to enable `jemalloc`, use `make -j4 disable_jemalloc=true` to build it
- * For some _Linux_ Releases, you might need to use `CFLAGS`, `CXXFLAGS`, `LDFLAGS` to finish the build
+ * To disable `jemalloc`, use `make -j4 disable_jemalloc=true` to build it
+ * For some _Linux_ Releases, user might need to use `CFLAGS`, `CXXFLAGS`, `LDFLAGS` to finish the build
 
 ## A Quick Demo
-After you installed _Skull_ into your system, you can run the following steps to
-create your skull project.
+After installing _Skull_ into the system, run the following steps to
+create a skull project.
 
 ### Create a skull project
 [![skull demo 1](http://g.recordit.co/6yGrVG7i0s.gif)]()
 
 **Notes:**
- * By default, the new module with a example code which is used for echo-back message
- * Above creation is for C++ module, type `py` in language selection step if you want
+ * By default, a new module contains the example code which is used to echo-back message
+ * Above creation is for C++ module, type `py` in language selection step if needed
 
 ### Play with skull
 [![skull demo 2](http://g.recordit.co/vSON9N6nuV.gif)]()
 
 ## How to Create a Service
-The following is the example of adding a service **s1**, and then add a api **get** for it.
+The following is an example of adding a service **s1**, and then add a API **get** to it.
 ```console
 bash $> skull service -add
 service name? s1
@@ -114,14 +114,14 @@ s1-get_req added
 s1-get_resp added
 service api get added successfully
 ```
-After that, you can use service apis which defined in `skull/service.h` from a module to communicate a service :)
+After that, use service APIs defined in `skullcpp/service.h` from a module to communicate with service :)
 
 ## Share your Service and Import from Others
-Service is designed for sharing, each service is built for one single purpose or solve specific problem, share to others which help people to build the project easier than ever.
+Service is designed for sharing, each service is built for one single purpose or solving a specific problem, share to others, help people to build their project easier than ever.
 
 
-## How to Check Metrics
-Currently, the [AdminModule][1] is a builtin module in skull, just connect to port `7759`, then you will see them.
+## How to Check Counters
+Currently, the [AdminModule][1] is a builtin module in skull, just connect to port `7759`:
 ```console
 final@ubuntu: ~>telnet 0 7759
 Trying 0.0.0.0...
@@ -135,7 +135,7 @@ commands:
  - help
  - metrics
  - last
- - status
+ - status|info
 metrics
 2015:12:26_01:36:54 to 2015:12:26_01:37:33
 skull.core.g.global.timer_complete: 39.000000
