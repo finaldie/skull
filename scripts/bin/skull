@@ -12,7 +12,7 @@ SKULL_ROOT=
 ##################################### Utility ##################################
 function print_usage()
 {
-    echo "usage:"
+    echo "Usage:"
     echo " \_ skull create"
     echo " \_ skull config"
     echo " \_ skull common"
@@ -24,6 +24,14 @@ function print_usage()
     echo " \_ skull start"
     echo " \_ skull version"
     echo " \_ skull help"
+    echo ""
+    echo "Run 'skull help command_name' for the usage of the command"
+}
+
+function action_help_usage()
+{
+    echo "Usage:"
+    echo "  skull help command_name"
 }
 
 # Get the skull scripts root directory folder, it should be run only once

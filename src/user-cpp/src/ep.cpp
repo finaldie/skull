@@ -49,13 +49,13 @@ typedef struct EpCbData {
 } EpCbData;
 
 static
-size_t rawUnpackCb(void* ud, const void* data, size_t len) {
+ssize_t rawUnpackCb(void* ud, const void* data, size_t len) {
     EpCbData* epData = (EpCbData*)ud;
 
     if (epData->clientImp_.unpack_) {
         return epData->clientImp_.unpack_(data, len);
     } else {
-        return len;
+        return (ssize_t)len;
     }
 }
 

@@ -7,7 +7,9 @@ INC +=
 # User ldflags and dependency libraries
 DEPS_LDFLAGS +=
 DEPS_LIBS += \
-    -lskullcpp-api
+    -lskullcpp-api \
+    -Wl,--no-as-needed \
+    -lprotobuf
 
 TEST_DEPS_LIBS += \
     -lskull-unittest-cpp \

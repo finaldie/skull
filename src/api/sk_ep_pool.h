@@ -52,12 +52,13 @@ typedef struct sk_ep_handler_t {
     int          flags;
 
     /**
-     * Unpack response
+     * Unpack endpoint response
      *
-     * @return - (0):  The response data has not finished yet
-     *         - (>0): The response data has finished
+     * @return - (< 0): Error occurred
+     *         - (= 0): The response data has not finished yet
+     *         - (> 0): The response data has finished
      */
-    size_t       (*unpack)  (void* ud, const void* data, size_t len);
+    ssize_t      (*unpack)  (void* ud, const void* data, size_t len);
 
     /**
      * Release user resource

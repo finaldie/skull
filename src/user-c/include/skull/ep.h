@@ -41,9 +41,11 @@ typedef struct skull_ep_handler_t {
     // Reserved
     int          flags;
 
-    // return 0:   The response data has not finished yet
+
+    // return < 0: Error occurred
+    // return = 0: The response data has not finished yet
     // return > 0: The response data has finished
-    size_t       (*unpack)  (void* ud, const void* data, size_t len);
+    ssize_t      (*unpack)  (void* ud, const void* data, size_t len);
     void         (*release) (void* ud);
 } skull_ep_handler_t;
 

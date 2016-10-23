@@ -35,7 +35,7 @@ typedef struct ep_job_t {
 } ep_job_t;
 
 static
-size_t _unpack(void* ud, const void* data, size_t len)
+ssize_t _unpack(void* ud, const void* data, size_t len)
 {
     ep_job_t* job = ud;
     return job->handler.unpack(job->ud, data, len);

@@ -102,7 +102,7 @@ typedef struct sk_ep_data_t {
 typedef struct sk_ep_readarg_t {
     const void*   data;     // in
     size_t        len;      // in
-    size_t        consumed; // out
+    ssize_t       consumed; // out
 } sk_ep_readarg_t;
 
 struct sk_ep_mgr_t;
@@ -688,8 +688,12 @@ int _try_unpack(fdlist_node_t* ep_node, void* ud)
     const void*      data    = readarg->data;
     size_t           len     = readarg->len;
 
-    size_t consumed = ep_data->handler.unpack(ep_data->ud, data, len);
-    if (consumed == 0) {
+    ssize_t consumed = ep_data->handler.unpack(ep_data->ud, data, len);
+    if (consumed < 0) {
+        // Error occurred
+        readarg->consumed = consumed;
+        return 1;
+    } else if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", len);
         return 0;
@@ -746,11 +750,16 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         return;
     }
 
-    size_t consumed = readarg.consumed;
-    sk_print("ep txn unpack succeed, consumed: %zu\n", consumed);
-    fevbuff_pop(evbuff, consumed);
+    ssize_t consumed = readarg.consumed;
+    if (consumed < 0) {
+        _handle_error(ep);
+        return;
+    }
 
-    _handle_ok(succeed_node, data, consumed);
+    sk_print("ep txn unpack succeed, consumed: %zu\n", consumed);
+    fevbuff_pop(evbuff, (size_t)consumed);
+
+    _handle_ok(succeed_node, data, (size_t)consumed);
     SK_METRICS_EP_RECV();
     SK_LOG_TRACE(SK_ENV_LOGGER, "ep recv");
 }

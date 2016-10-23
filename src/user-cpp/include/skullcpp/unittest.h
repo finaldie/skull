@@ -64,7 +64,7 @@ public:
              google::protobuf::Message& resp);
 
 public:
-    const std::string& svcName();
+    const std::string& name() const;
 };
 
 } // End of namespace

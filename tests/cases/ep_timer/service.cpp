@@ -10,10 +10,10 @@
 #include "config.h"
 
 static
-size_t _ep_unpack(const void* data, size_t len)
+ssize_t _ep_unpack(const void* data, size_t len)
 {
     std::cout << "ep received data len: " << len << std::endl;
-    return len;
+    return (ssize_t)len;
 }
 
 static

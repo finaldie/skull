@@ -8,14 +8,15 @@ INC += \
 DEPS_LDFLAGS += -L../../common/cpp/lib
 
 DEPS_LIBS += \
-    -lskull-common-cpp \
+    -lprotobuf \
     -lskullcpp-api \
-    -lprotobuf
+    -Wl,--no-as-needed \
+    -lskull-common-cpp
 
 TEST_DEPS_LIBS += \
+    -lprotobuf \
     -lskull-common-cpp \
     -lskull-unittest-cpp \
-    -lprotobuf \
     -lskull-unittest-c
 
 # Objs and deployment related items
