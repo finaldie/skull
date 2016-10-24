@@ -68,7 +68,7 @@ ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
     SKULLCPP_LOG_INFO("2", "module_unpack(test): data sz:" << data_sz);
 
-    // Deserialize data to transcation data
+    // Deserialize data to transaction data
     auto& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
     return (ssize_t)data_sz;
@@ -80,7 +80,7 @@ ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
  *
  * @return
  *  -     0: Everything is ok, transation will move to next module
- *  - non-0: Error occurred, transcation will be cancelled, and will run the
+ *  - non-0: Error occurred, transaction will be cancelled, and will run the
  *          `pack` function of the last module
  */
 static
@@ -103,7 +103,7 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {
     auto& example = (skull::workflow::example&)txn.data();
 
-    // If the transcation status is not OK, return a 'error' message
+    // If the transaction status is not OK, return a 'error' message
     if (txn.status() != skullcpp::Txn::TXN_OK) {
         SKULLCPP_LOG_ERROR("5", "module_pack(test): error status occurred: "
                            << txn.status() << ". txn data: "

@@ -31,7 +31,7 @@ typedef struct sk_workflow_cfg_t {
     flist* modules;       // sk_module_cfg_t list
 
     // unit: millisecond, if the execute time > this threshold, engine will
-    //  cancel this transcation. Default value is 0 (unlimited)
+    //  cancel this transaction. Default value is 0 (unlimited)
     int    timeout;
 
 #if __WORDSIZE == 64

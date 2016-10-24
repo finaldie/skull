@@ -610,7 +610,7 @@ void _handle_ok(fdlist_node_t* ep_node, const void* data, size_t len)
 {
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
 
-    // Try run the ep transcation's callback
+    // Try run the ep transaction's callback
     if (ep_data->cb) {
         sk_ep_ret_t ret = {SK_EP_OK, (int)sk_ep_txn_time_consumed(ep_data)};
         ep_data->cb(ret, data, len, ep_data->ud);
@@ -623,7 +623,7 @@ void _handle_ok(fdlist_node_t* ep_node, const void* data, size_t len)
 
     _ep_create_shutdown_timer(ep, shutdown_timeout);
 
-    // Destroy this ep transcation, then this ep can be used by other request
+    // Destroy this ep transaction, then this ep can be used by other request
     _ep_node_destroy(ep_node, 1);
     SK_METRICS_EP_OK();
 }

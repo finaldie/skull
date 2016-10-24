@@ -9,12 +9,12 @@
 #  'post-verify' - Execute commands after 'verify'. Generally cleanup the environment
 #
 # * Basic Macros (Use these macros instead of write the absolute path)
-#  {COMMON} - This is standand for the '$project/tests/common' folder
-#  {RUN}    - This is standand for the '$project/tests/run/$caseName/' folder
-#  {CASE}   - This is standand for the '$project/tests/cases/$caseName' folder
+#  {COMMON} - This stands for the '$project/tests/common' folder
+#  {RUN}    - This stands for the '$project/tests/run/$caseName/' folder
+#  {CASE}   - This stands for the '$project/tests/cases/$caseName' folder
 #
 # * Start Location
-#  When user run `skull build ft-check`, it will invoke the tests/Makefile to
+#  When users run `skull build ft-check`, it will invoke the tests/Makefile to
 #   execute the FT cases, and for each case, the framework will goto the
 #   '$project/tests/run/$caseName' folder first, then run the case
 #

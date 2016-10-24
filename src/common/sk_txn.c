@@ -52,9 +52,9 @@ struct sk_txn_t {
     int             pending_tasks;
     void*           udata;
 
-    // Store the detail transcations, which is used for writing the
-    // transcation log
-    sk_mbuf_t*      transcation;
+    // Store the detail transactions, which is used for writing the
+    // transaction log
+    sk_mbuf_t*      transaction;
 
     // If the txn has error occurred, then this field will be set to 1
     uint32_t        error     : 1;
@@ -112,7 +112,7 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
     txn->latest_taskid = 0;
     txn->start_time    = ftime_gettime();
     txn->state         = SK_TXN_INIT;
-    txn->transcation   = sk_mbuf_create(SK_TXN_DEFAULT_INIT_SIZE,
+    txn->transaction   = sk_mbuf_create(SK_TXN_DEFAULT_INIT_SIZE,
                                         SK_TXN_DEFAULT_MAX_SIZE);
 
     return txn;
@@ -153,8 +153,8 @@ void sk_txn_destroy(sk_txn_t* txn)
 
     fhash_u64_delete(txn->task_tbl);
 
-    // Release the transcations
-    sk_mbuf_destroy(txn->transcation);
+    // Release the transactions
+    sk_mbuf_destroy(txn->transaction);
 
     free(txn);
 }
@@ -402,14 +402,14 @@ void sk_txn_log_add(sk_txn_t* txn, const char* fmt, ...)
     va_end(ap);
 
     // Push txn log full content to internal buffer
-    int ret = sk_mbuf_push(txn->transcation, content, strlen(content));
+    int ret = sk_mbuf_push(txn->transaction, content, strlen(content));
     SK_ASSERT_MSG(!ret, "Add txn log failed: content: %s, size: %zu\n",
                   content, strlen(content));
 }
 
 const char* sk_txn_log(const sk_txn_t* txn)
 {
-    return sk_mbuf_rawget(txn->transcation, 0);
+    return sk_mbuf_rawget(txn->transaction, 0);
 }
 
 int sk_txn_timeout(const sk_txn_t* txn)

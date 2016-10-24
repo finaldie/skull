@@ -37,8 +37,8 @@ def module_release():
 # Input data unpack function, be called if this module is the 'first' module in
 #  the workflow and there is input data incoming
 #
-# @param txn  Transcation context which is used for get shared transcation data,
-#              invoke `iocall`
+# @param txn  Transaction context which is used for getting shared transaction
+#              data or invoking service `iocall`
 # @param data Input data
 #
 # @return - > 0: How many bytes consumed
@@ -58,8 +58,8 @@ def module_unpack(txn, data):
 # Input data unpack function, be called if this module is the 'last' module in
 #  the workflow (It would no effect if there is no response needed)
 #
-# @param txn  Transcation context which is used for get shared transcation data,
-#              invoke `iocall`
+# @param txn  Transaction context which is used for getting shared transaction
+#              data or invoking service `iocall`
 # @param data Input data
 #
 # @return How many bytes be consumed
@@ -71,7 +71,7 @@ def module_pack(txn, txndata):
     mod_metrics = Metrics.module()
     mod_metrics.response.inc(1)
 
-    mod_dymetrics = Metrics.transcation('test')
+    mod_dymetrics = Metrics.transaction('test')
     mod_dymetrics.response.inc(1)
 
     # Assemble response
@@ -88,7 +88,7 @@ def module_pack(txn, txndata):
 # Module Runnable Entry, be called when this module be picked up in current
 #  workflow
 #
-# @param txn Transcation context
+# @param txn Transaction context
 #
 # @return - True if no error
 #         - False if error occurred
@@ -99,6 +99,6 @@ def module_run(txn):
     mod_metrics = Metrics.module()
     mod_metrics.request.inc(1)
 
-    mod_dymetrics = Metrics.transcation('test')
+    mod_dymetrics = Metrics.transaction('test')
     mod_dymetrics.request.inc(1)
     return True

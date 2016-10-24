@@ -8,7 +8,7 @@ log_level: debug
 workflows:
 
 # Optional service item 'max_qsize': control the max_queue_size, by default is 1024
-# Optional workflow item 'timeout': transcation timeout, unit is millisecond, by default is 0 (no timeout)
+# Optional workflow item 'timeout': transaction timeout, unit is millisecond, by default is 0 (no timeout)
 services:
 
 languages: [cpp, py]

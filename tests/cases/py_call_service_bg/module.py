@@ -38,7 +38,7 @@ def module_pack(txn, txndata):
     mod_metrics = Metrics.module()
     mod_metrics.response.inc(1)
 
-    mod_dymetrics = Metrics.transcation('test')
+    mod_dymetrics = Metrics.transaction('test')
     mod_dymetrics.response.inc(1)
 
     if txn.status() != Txn.Txn.TXN_OK:
@@ -56,7 +56,7 @@ def module_run(txn):
     mod_metrics = Metrics.module()
     mod_metrics.request.inc(1)
 
-    mod_dymetrics = Metrics.transcation('test')
+    mod_dymetrics = Metrics.transaction('test')
     mod_dymetrics.request.inc(1)
 
     # Assemble api request

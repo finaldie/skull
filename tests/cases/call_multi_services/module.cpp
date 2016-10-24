@@ -42,7 +42,7 @@ ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
     SKULL_LOG_INFO("2", "module_unpack(test): data sz:%zu", data_sz);
 
-    // deserialize data to transcation data
+    // deserialize data to transaction data
     auto& example = (skull::workflow::example&)txn.data();
     example.set_data(data, data_sz);
     return (ssize_t)data_sz;

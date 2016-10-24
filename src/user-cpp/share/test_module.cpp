@@ -6,7 +6,7 @@
 
 /**
  * Basic Unit Test Rules for skull module:
- * 1. Test the transcation share data
+ * 1. Test the transaction share data
  * 2. Test the important algorithm
  * 3. DO NOT Test the log content, since it's inconstant and FT may covered it
  * 4. DO NOT Test metrics, since FT may covered it

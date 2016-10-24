@@ -55,7 +55,7 @@ function _action_prepare()
     echo "Generating metrics..."
     action_common --metrics-gen || exit 1
 
-    echo "Generating transcation/service IDLs..."
+    echo "Generating transaction/service IDLs..."
     action_common --idl-gen || exit 1
 
     echo "Generating configs..."

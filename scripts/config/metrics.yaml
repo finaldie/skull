@@ -6,7 +6,7 @@ global:
         response:
             desc: Everytime we send a response, this counter will +1
         latency:
-            desc: "This is the sum of the latency for each transcation (unit: micro-second)"
+            desc: "This is the sum of the latency for each transaction (unit: micro-second)"
         entity_create:
             desc: The total amount of entities be created
         entity_destroy:
@@ -60,7 +60,7 @@ worker:
         response:
             desc: When the worker thread send a response, this coutner will +1
         latency:
-            desc: "The sum of the latency for each transcation in the thread (unit: micro-second)"
+            desc: "The sum of the latency for each transaction in the thread (unit: micro-second)"
         entity_create:
             desc: The total amount of entities be created
         entity_destroy:
