@@ -180,4 +180,4 @@ Name                  | Description |
 [10]: https://github.com/finaldie/skull/wiki/Integrate-with-Nginx
 
 # Contribution
-Fork the repo, then apply your fixes/features via a PR. Important things before sending a PR, be sure you have added/fixed a(n) new/existing test case, and passed it :)
+Fork the repo, then apply your fixes/features via a PR. Before sending a _Pull Request_, make sure you have added/fixed a(n) new/existing test case, and passed it :)
