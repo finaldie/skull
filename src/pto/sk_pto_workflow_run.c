@@ -181,6 +181,13 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
     }
 
     switch (state) {
+    case SK_TXN_INIT: {
+        // For the 'immediately' trigger, adjust the state first
+        sk_print("txn - INIT\n");
+        sk_txn_setstate(txn, SK_TXN_UNPACKED);
+        sk_txn_setstate(txn, SK_TXN_RUNNING);
+        return _run(sched, src, entity, txn, proto_msg);
+    }
     case SK_TXN_UNPACKED: {
         sk_print("txn - UNPACKED\n");
         sk_txn_setstate(txn, SK_TXN_RUNNING);
@@ -217,7 +224,7 @@ int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
     }
     default:
         sk_print("Unexpect txn state: %d, ignored\n", state);
-        SK_LOG_FATAL(SK_ENV_LOGGER, "Unexpect txn state: %d, ignored", state);
+        SK_LOG_FATAL(SK_ENV_LOGGER, "Unexpect txn state: %d, exit", state);
         SK_ASSERT(0);
         break;
     }

@@ -108,6 +108,9 @@ function _action_workflow_add()
                     break
                 fi
             done
+        else
+            echo "Error: Type 'y' or 'n'" >&2
+            exit 1
         fi
     fi
 

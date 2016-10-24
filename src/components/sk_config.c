@@ -193,7 +193,10 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
 
                 SK_ASSERT_MSG(enabled_stdin == 0,
                               "Only one workflow can enable stdin\n");
-                enabled_stdin = 1;
+
+                if (workflow->enable_stdin) {
+                    enabled_stdin = 1;
+                }
             } else if (0 == strcmp(key, "bind4")) {
                 free((void*)workflow->bind4);
                 workflow->bind4 = strdup(sk_config_getstring(child));
