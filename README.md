@@ -15,7 +15,7 @@ A fast to start, easy to maintain, high productive serving framework<br>
  - [Install Dependencies](#install-dependencies)
  - [Build and Install](#build-and-install)
 - [A Quick Demo](#a-quick-demo)
- - [Create a skull project](#create-a-skull-project)
+ - [Create a Skull Project](#create-a-skull-project)
  - [Play with skull](#play-with-skull)
 - [How to Create a Service](#how-to-create-a-service)
 - [How to Check Counters](#how-to-check-counters)
@@ -86,20 +86,20 @@ sudo make install
 
 ## A Quick Demo
 After installing _Skull_ into the system, run the following steps to
-create a skull project.
+create a _Skull_ project.
 
-### Create a skull project
+### Create a Skull Project
 [![skull demo 1](http://g.recordit.co/6yGrVG7i0s.gif)]()
 
 **Notes:**
  * By default, a new module contains the example code which is used to echo-back message
  * Above creation is for C++ module, type `py` in language selection step if needed
 
-### Play with skull
+### Play with Skull
 [![skull demo 2](http://g.recordit.co/vSON9N6nuV.gif)]()
 
 ## How to Create a Service
-The following is an example of adding a service **s1**, and then add a API **get** to it.
+The following is an example of adding a service `s1`, and then add an API `get` to it.
 ```console
 bash $> skull service -add
 service name? s1
@@ -114,14 +114,13 @@ s1-get_req added
 s1-get_resp added
 service api get added successfully
 ```
-After that, use service APIs defined in `skullcpp/service.h` from a module to communicate with service :)
+After that, use service APIs defined in `skullcpp/service.h` from a module to communicate with the service :)
 
 ## Share your Service and Import from Others
 Service is designed for sharing, each service is built for one single purpose or solving a specific problem, share to others, help people to build their project easier than ever.
 
-
 ## How to Check Counters
-Currently, the [AdminModule][1] is a builtin module in skull, just connect to port `7759`:
+Currently, the [AdminModule][1] is a builtin module in _Skull_, just connect to port `7759`:
 ```console
 final@ubuntu: ~>telnet 0 7759
 Trying 0.0.0.0...
