@@ -25,6 +25,42 @@ function sk_util_get_proj_root()
     return 0
 }
 
+function sk_util_yn_valid()
+{
+    if [ $# = 0 ]; then
+        return 1
+    fi
+
+    local yn_list=(y Y n N)
+    local input="$1"
+
+    for ca in ${yn_list[@]}; do
+        if [ "$ca" = "$input" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+function sk_util_yn_yes()
+{
+    if [ $# = 0 ]; then
+        return 1
+    fi
+
+    local y_list=(y Y)
+    local input="$1"
+
+    for ca in ${y_list[@]}; do
+        if [ "$ca" = "$input" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 function sk_util_preload_language_actions()
 {
     # Load Language action scripts, for now, we only have C language
