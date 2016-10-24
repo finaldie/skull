@@ -55,12 +55,15 @@ _Service_ is designed for managing the data, and provide a group of APIs to acce
 ## Documentations
 * [High Level Introduction][6]
 * [How To Start][7]
-* [API Docs - Cpp][8]
-* [API Docs - Python][9]
-* [Integrate with Nginx][10]
+* [How to Test][8]
+* [How to Deploy][9]
+* [Monitoring][10]
+* [API Docs - Cpp][11]
+* [API Docs - Python][12]
+* [Integrate with Nginx][13]
 
 ## How to Build
-Use Ubuntu14.04 as an example.
+Use _Ubuntu14.04_ as an example.
 
 ### Install Dependencies
 ```console
@@ -93,7 +96,7 @@ create a _Skull_ project.
 
 **Notes:**
  * By default, a new module contains the example code which is used to echo-back message
- * Above creation is for C++ module, type `py` in language selection step if needed
+ * Above creation is for `C++` module, type `py` in language selection step if needed
 
 ### Play with Skull
 [![skull demo 2](http://g.recordit.co/vSON9N6nuV.gif)]()
@@ -175,9 +178,12 @@ Name                  | Description |
 [5]: https://github.com/finaldie/skull-perf
 [6]: https://github.com/finaldie/skull/wiki
 [7]: https://github.com/finaldie/skull/wiki/How-To-Start
-[8]: https://github.com/finaldie/skull/wiki/API-Doc-:-Cpp
-[9]: https://github.com/finaldie/skull/wiki/API-Doc-:-Python
-[10]: https://github.com/finaldie/skull/wiki/Integrate-with-Nginx
+[8]: https://github.com/finaldie/skull/wiki/How-To-Test
+[9]: https://github.com/finaldie/skull/wiki/How-To-Deploy
+[10]: https://github.com/finaldie/skull/wiki/Monitoring
+[11]: https://github.com/finaldie/skull/wiki/API-Doc-:-Cpp
+[12]: https://github.com/finaldie/skull/wiki/API-Doc-:-Python
+[13]: https://github.com/finaldie/skull/wiki/Integrate-with-Nginx
 
 # Contribution
 Fork the repo, then apply your fixes/features via a PR. Before sending a _Pull Request_, make sure you have added/fixed a(n) new/existing test case, and passed it :)
