@@ -375,7 +375,7 @@ void _status_resources(sk_txn_t* txn, sk_core_t* core)
     _append_response(txn, "cpu_sys: %.2f\n",  last_cpu_sys);
     _append_response(txn, "cpu_user/sys: %.2f\n", last_cpu_user / last_cpu_sys);
 
-    _append_response(txn, "memory_rss(bytes): %zu\n", core->info.self_ru.ru_maxrss);
+    _append_response(txn, "memory_rss(KB): %zu\n", core->info.self_ru.ru_maxrss);
     _append_response(txn, "swaps: %ld\n", core->info.self_ru.ru_nswap);
     _append_response(txn, "page_faults: %ld\n", core->info.self_ru.ru_majflt);
     _append_response(txn, "block_input: %ld\n", core->info.self_ru.ru_inblock);
