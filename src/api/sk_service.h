@@ -67,14 +67,18 @@ typedef struct sk_srv_task_t {
     // Body: source scheduler of service call
     sk_sched_t*          src;
 
+#if __WORDSIZE == 32
+    int _padding;
+#endif
+
     // Body: Api or Timer call data
     union {
         struct api {
             sk_service_t*  service;
             sk_txn_t*      txn;
             const char*    name;
-            uint64_t       task_id;
             sk_txn_taskdata_t* txn_task;
+            uint64_t       task_id;
         } api;
 
         struct timer {

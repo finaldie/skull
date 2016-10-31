@@ -80,7 +80,7 @@ void sk_mon_inc(sk_mon_t* sk_mon, const char* name, double value)
     pthread_mutex_lock(&sk_mon->lock);
     {
         double* raw = fhash_get(sk_mon->mon_tbl, name, name_len, NULL);
-        double raw_value = raw ? *raw : 0;
+        double raw_value = raw ? *raw : 0.0f;
 
         double new_value = raw_value + value;
         fhash_set(sk_mon->mon_tbl, name, name_len,
@@ -98,11 +98,11 @@ double sk_mon_get(sk_mon_t* sk_mon, const char* name)
     key_sz_t name_len = (key_sz_t)strlen(name);
     SK_ASSERT(name_len);
 
-    double raw_value = 0;
+    double raw_value = 0.0f;
     pthread_mutex_lock(&sk_mon->lock);
     {
         double* raw = fhash_get(sk_mon->mon_tbl, name, name_len, NULL);
-        raw_value = raw ? *raw : 0;
+        raw_value = raw ? *raw : 0.0f;
     }
     pthread_mutex_unlock(&sk_mon->lock);
 
@@ -133,7 +133,7 @@ void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
                       iter.value, iter.value_sz);
 
             // 3.2 Reset data
-            double value = 0;
+            double value = 0.0f;
             fhash_set(sk_mon->mon_tbl, iter.key, iter.key_sz,
                       &value, sizeof(value));
         }

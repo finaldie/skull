@@ -67,7 +67,7 @@ Use _Ubuntu14.04_ as an example.
 
 ### Install Dependencies
 ```console
-sudo apt-get install valgrind expect libyaml-dev python-dev python-pip libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler
+sudo apt-get install autoconf valgrind expect libyaml-dev python-dev python-pip libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler
 sudo pip install PyYAML protobuf pympler WebOb
 
 git clone git@github.com:finaldie/skull.git

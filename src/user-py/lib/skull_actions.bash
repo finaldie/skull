@@ -97,10 +97,6 @@ function action_py_common_create()
     # generate idl source code according to the idls
     local config=$SKULL_PROJ_ROOT/config/skull-config.yaml
     action_py_gen_idl $config
-
-    # Copy valgrind suppresion file to project/bin folder (all files under this
-    #  folder will be copy to deployment folder automatically
-    cp $LANGUAGE_PY_PATH/share/python.supp $SKULL_PROJ_ROOT/bin
 }
 
 function action_py_gen_metrics()
