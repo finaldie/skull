@@ -97,6 +97,10 @@ typedef struct sk_ep_data_t {
     size_t             count;   // size of data (bytes)
     sk_ep_nst_t        status;
     char               data[4]; // data for sending
+
+#if __WORDSIZE == 32
+    int _padding;
+#endif
 } sk_ep_data_t;
 
 typedef struct sk_ep_readarg_t {
@@ -107,7 +111,6 @@ typedef struct sk_ep_readarg_t {
 
 struct sk_ep_mgr_t;
 typedef struct sk_ep_t {
-    struct sk_ep_mgr_t* owner;
     uint64_t            ekey;
     char                ipkey[SK_EP_KEY_MAX];
     sk_ep_type_t        type;
@@ -121,6 +124,7 @@ typedef struct sk_ep_t {
     unsigned long long  start;
     sk_timer_t*         conn_timer;
     sk_timer_t*         shutdown_timer;
+    struct sk_ep_mgr_t* owner;
 
     int                 fd;
 

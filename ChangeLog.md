@@ -1,3 +1,8 @@
+* 2016-10-30 0.9.10
+  * Core
+    * **Fix:** Fix padded issue in 32bit platform. Compatible with `Raspberry Pi`
+  * MISC
+    * **Enhancement:** Upgrade flibs to 0.9.4
 * 2016-10-24 0.9.9
   * Core
     * **Fix:** Fix crash issue for stdin and immediately triggers

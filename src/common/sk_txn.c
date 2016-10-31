@@ -24,9 +24,7 @@ struct sk_txn_task_t {
 
     sk_txn_task_status_t status;
 
-#if __WORDSIZE == 64
     int _padding;
-#endif
 };
 
 struct sk_txn_t {
@@ -36,9 +34,17 @@ struct sk_txn_t {
     void*           input;
     size_t          input_sz;
     fmbuf*          output;
-    flist_iter      workflow_idx;
     sk_module_t*    current;
+    flist_iter      workflow_idx;
     fhash*          task_tbl;   // key: task_id, value: sk_txn_task_t
+
+    // If the txn has error occurred, then this field will be set to 1
+    uint32_t        error     : 1;
+    uint32_t        __padding : 31;
+
+#if __WORDSIZE == 64
+    int             __padding1;
+#endif
 
     uint64_t        latest_taskid;
     int             total_tasks;
@@ -55,14 +61,6 @@ struct sk_txn_t {
     // Store the detail transactions, which is used for writing the
     // transaction log
     sk_mbuf_t*      transaction;
-
-    // If the txn has error occurred, then this field will be set to 1
-    uint32_t        error     : 1;
-    uint32_t        __padding : 31;
-
-#if __WORDSIZE == 64
-    int             __padding1;
-#endif
 };
 
 // Internal APIs

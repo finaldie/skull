@@ -1,5 +1,6 @@
 MAKE ?= make
 prefix ?= /usr/local
+disable_jemalloc ?= false
 
 MAKE_FLAGS += "--no-print-directory"
 
@@ -8,7 +9,11 @@ all: api-cpp api-py
 api-cpp: core
 api-py: core
 
+ifeq ($(disable_jemalloc), false)
 dep: flibs protos metrics skull-ft jemalloc
+else
+dep: flibs protos metrics skull-ft
+endif
 
 core:
 	cd src && $(MAKE)

@@ -3,13 +3,7 @@ include Makefile.inc
 # dependency library list
 SKULL_LIBS = \
     -lyaml \
-    -lfev \
-    -lfnet \
-    -lflog \
-    -lfhash \
-    -lfmbuf \
-    -lflist \
-    -lftime \
+    -lflibs \
     $(JEMALLOC_STATIC) \
     -lprotobuf-c \
     -pthread \
