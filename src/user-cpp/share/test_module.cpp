@@ -22,11 +22,11 @@ void test_example()
     // 2. set the global txn share data before execution
     // notes: A module needs a serialized txn data, so after we call the api
     //  'skullut_module_data_reset', the 'example' structure will be useless
-    skull::workflow::example example;
-    example.set_data("hello");
+    skull::workflow::{IDL_NAME} sharedData;
+    sharedData.set_data("hello");
 
     // 2.1 reset the ut env's share data
-    env.setTxnSharedData(example);
+    env.setTxnSharedData(sharedData);
 
     // 3. execute this env, and assert the expectation results
     // 3.1 assert the module return code is 0
@@ -34,10 +34,10 @@ void test_example()
     SKULL_CUNIT_ASSERT(ret == 0);
 
     // 3.2 assert the txn share data is "hello"
-    const auto& new_example =
-        (const skull::workflow::example&)env.getTxnSharedData();
-    SKULL_CUNIT_ASSERT(new_example.data() == "hello");
-    SKULL_CUNIT_ASSERT(new_example.data() == example.data());
+    const auto& newSharedData =
+        (const skull::workflow::{IDL_NAME}&)env.getTxnSharedData();
+    SKULL_CUNIT_ASSERT(newSharedData.data() == "hello");
+    SKULL_CUNIT_ASSERT(newSharedData.data() == sharedData.data());
 }
 
 int main(int argc, char** argv)

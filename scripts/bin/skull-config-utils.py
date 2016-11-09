@@ -42,9 +42,41 @@ def process_workflow_actions():
             _process_show_workflow()
         elif action == "gen_idl":
             _process_gen_workflow_idl()
+        elif action == "value":
+            _process_show_workflow_item()
+        elif action == "count":
+            _process_workflow_count()
 
-    except Exception, e:
+    except Exception as e:
         print "Fatal: process_add_workflow: " + str(e)
+        raise
+
+def _process_workflow_count():
+    global yaml_obj
+    global config_name
+
+    workflows = yaml_obj['workflows']
+    return workflows and 0 or len(workflows)
+
+def _process_show_workflow_item():
+    global yaml_obj
+    global config_name
+
+    try:
+        opts, args = getopt.getopt(sys.argv[7:], 'i:d:')
+        workflow_idx = 0
+
+        for op, value in opts:
+            if op == "-i":
+                workflow_idx = int(value)
+            elif op == "-d":
+                workflow_field = value
+
+        workflow_frame = yaml_obj['workflows'][workflow_idx]
+        print "{}".format(workflow_frame[workflow_field])
+
+    except Exception as e:
+        print "Fatal: _process_show_workflow_item: " + str(e)
         raise
 
 def _process_show_workflow():
@@ -128,7 +160,7 @@ def _process_add_workflow():
         yaml_obj['workflows'].append(workflow_frame)
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
-    except Exception, e:
+    except Exception as e:
         print "Fatal: _process_add_workflow: " + str(e)
         raise
 
@@ -188,7 +220,7 @@ def process_module_actions():
         if action == "add":
             _process_add_module()
 
-    except Exception, e:
+    except Exception as e:
         print "Fatal: process_module_actions: " + str(e)
         raise
 
@@ -240,7 +272,7 @@ def _process_add_module():
 
         print "add module done"
 
-    except Exception, e:
+    except Exception as e:
         print "Fatal: _process_add_module: " + str(e)
         raise
 
@@ -266,7 +298,7 @@ def process_service_actions():
             print "Fatal: Unknown service action: %s" % action
             raise
 
-    except Exception, e:
+    except Exception as e:
         print "Fatal: process_service_actions: " + str(e)
         raise
 
@@ -350,7 +382,7 @@ def _process_add_service():
 
         yaml.dump(yaml_obj, file(config_name, 'w'))
 
-    except Exception, e:
+    except Exception as e:
         print "Fatal: _process_add_service: " + str(e)
         raise
 
@@ -393,7 +425,7 @@ if __name__ == "__main__":
         else:
             print "Fatal: Unknown action: %s" % action
 
-    except Exception, e:
+    except Exception as e:
         print "Fatal: " + str(e)
         usage()
         raise

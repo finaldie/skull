@@ -128,6 +128,9 @@ function _action_module_add()
         return 1
     fi
 
+    local min_wf_idx=0
+    local max_wf_idx=$((total_workflows - 1))
+
     # 2. get user input and verify them
     while true; do
         read -p "module name? " module
@@ -144,12 +147,22 @@ function _action_module_add()
     fi
 
     # 4. add it into a specific workflow
-    while true; do
-        read -p "which workflow you want add it to? " workflow_idx
+    local idx_range="$min_wf_idx"
+    if [ $min_wf_idx -ne $max_wf_idx ]; then
+        idx_range="${min_wf_idx}-${max_wf_idx}"
+    fi
 
-        if [ "$workflow_idx" -ge "$total_workflows" ] ||
-           [ "$workflow_idx" -lt "0" ]; then
-            echo "Fatal: module add failed, input the correct workflow index" >&2
+    while true; do
+        read -p "which workflow you want add it to? ($idx_range) " workflow_idx
+
+        if ! $(sk_util_is_number $workflow_idx); then
+            echo "Error: The input workflow index must be a number" >&2
+            continue
+        fi
+
+        if [ $workflow_idx -gt $max_wf_idx ] ||
+           [ $workflow_idx -lt $min_wf_idx ]; then
+            echo "Error: module add failed, input the correct workflow index" >&2
         else
             break;
         fi
@@ -166,7 +179,10 @@ function _action_module_add()
     done
 
     # 3. Add basic folder structure if the target module does not exist
-    action_${language}_module_add $module
+    local IDL=`$SKULL_ROOT/bin/skull-config-utils.py -m workflow \
+                -c $SKULL_CONFIG_FILE -a value -i $workflow_idx -d idl`
+
+    action_${language}_module_add "$module" "$IDL"
 
     # 4. Add module into main config
     $SKULL_ROOT/bin/skull-config-utils.py -m module -c $SKULL_CONFIG_FILE \

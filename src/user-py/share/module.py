@@ -50,8 +50,8 @@ def module_unpack(txn, data):
     Logger.info('5', 'receive data: {}'.format(data))
 
     # Store data into txn sharedData
-    example_msg = txn.data()
-    example_msg.data = data
+    sharedData = txn.data()
+    sharedData.data = data
     return len(data)
 
 ##
@@ -78,11 +78,11 @@ def module_pack(txn, txndata):
     if txn.status() != Txn.Txn.TXN_OK:
         txndata.append('error')
     else:
-        example_msg = txn.data()
-        print "pack data: %s" % example_msg.data
-        Logger.info('7', 'module_pack: data sz: {}'.format(len(example_msg.data)))
+        sharedData = txn.data()
+        print "pack data: %s" % sharedData.data
+        Logger.info('7', 'module_pack: data sz: {}'.format(len(sharedData.data)))
 
-        txndata.append(example_msg.data)
+        txndata.append(sharedData.data)
 
 ##
 # Module Runnable Entry, be called when this module be picked up in current
