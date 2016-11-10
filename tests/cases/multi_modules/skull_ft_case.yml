@@ -12,6 +12,8 @@ pre-run:
     - cp ${CASE}/module.cpp ${RUN}/project/src/modules/test/src/
     - cp ${CASE}/module.cpp ${RUN}/project/src/modules/test1/src/
     - cp ${CASE}/module.py ${RUN}/project/src/modules/test2/
+    - cp ${COMMON}/templates/service.cpp ${RUN}/project/src/services/s1/src/
+    - cp ${COMMON}/templates/test_service.cpp ${RUN}/project/src/services/s1/tests/
     - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
 
 run:
