@@ -60,8 +60,39 @@ void _std_destroy(sk_entity_t* entity, void* ud)
     free(data);
 }
 
+static
+void* _std_rbufget(sk_entity_t* entity, void* ud)
+{
+    sk_entity_stdin_data_t* data = ud;
+    fev_buff* evbuff = data->evbuff;
+
+    return fevbuff_rawget(evbuff);
+}
+
+static
+size_t _std_rbufsz(const sk_entity_t* entity, void* ud)
+{
+    sk_entity_stdin_data_t* data = ud;
+    fev_buff* evbuff = data->evbuff;
+
+    return fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
+}
+
+static
+size_t _std_rbufpop(sk_entity_t* entity, size_t popsz, void* ud)
+{
+    sk_entity_stdin_data_t* data = ud;
+    fev_buff* evbuff = data->evbuff;
+
+    return fevbuff_pop(evbuff, popsz);
+}
+
 sk_entity_opt_t sk_entity_stdin_opt = {
     .read    = _stdin_read,
     .write   = _stdout_write,
-    .destroy = _std_destroy
+    .destroy = _std_destroy,
+
+    .rbufget = _std_rbufget,
+    .rbufsz  = _std_rbufsz,
+    .rbufpop = _std_rbufpop
 };

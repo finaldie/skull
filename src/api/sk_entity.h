@@ -4,16 +4,18 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <arpa/inet.h>
 
 #include "api/sk_object.h"
 
 // debug tags
 #define SK_ENTITY_TAG_NONE         0
-#define SK_ENTITY_TAG_NET          1
-#define SK_ENTITY_TAG_TIMER        2
-#define SK_ENTITY_TAG_EP           3
-#define SK_ENTITY_TAG_EP_TIMER     4
-#define SK_ENTITY_TAG_EP_TXN_TIMER 5
+#define SK_ENTITY_TAG_NET          1  // V4 TCP
+#define SK_ENTITY_TAG_V4_UDP       2
+#define SK_ENTITY_TAG_TIMER        3
+#define SK_ENTITY_TAG_EP           4  // V4 TCP and UDP
+#define SK_ENTITY_TAG_EP_TIMER     5
+#define SK_ENTITY_TAG_EP_TXN_TIMER 6
 
 typedef enum sk_entity_type_t {
     SK_ENTITY_NONE = 0,
@@ -37,6 +39,10 @@ typedef struct sk_entity_opt_t {
     ssize_t (*read)    (sk_entity_t*, void* buf, size_t len, void* ud);
     ssize_t (*write)   (sk_entity_t*, const void* buf, size_t len, void* ud);
     void    (*destroy) (sk_entity_t*, void* ud);
+
+    void*   (*rbufget) (sk_entity_t*, void* ud);
+    size_t  (*rbufsz)  (const sk_entity_t*, void* ud);
+    size_t  (*rbufpop) (sk_entity_t*, size_t popsz, void* ud);
 } sk_entity_opt_t;
 
 sk_entity_t* sk_entity_create(struct sk_workflow_t* workflow, int tag);
@@ -44,6 +50,10 @@ void sk_entity_destroy(sk_entity_t* entity);
 
 ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len);
 ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len);
+
+void*   sk_entity_rbufget(sk_entity_t*);
+size_t  sk_entity_rbufsz(const sk_entity_t* entity);
+size_t  sk_entity_rbufpop(sk_entity_t* entity, size_t popsz);
 
 sk_entity_type_t sk_entity_type(sk_entity_t* entity);
 int sk_entity_tag(const sk_entity_t* entity);
@@ -67,8 +77,11 @@ void sk_entity_timeradd(sk_entity_t*, const sk_obj_t*);
 void sk_entity_timerdel(sk_entity_t*, const sk_obj_t*);
 
 // create network entity from a base entity
-void sk_entity_net_create(sk_entity_t* entity, void* ud);
 void sk_entity_stdin_create(sk_entity_t* entity, void* ud);
+void sk_entity_net_create  (sk_entity_t* entity, void* ud);
+void sk_entity_udp_create  (sk_entity_t* entity, int rootfd,
+                            const void* buf, uint16_t buf_sz,
+                            struct sockaddr* src_addr, socklen_t src_addr_len);
 
 // Debugging API
 void sk_entity_dump_txns(sk_entity_t* entity);

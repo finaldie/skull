@@ -66,10 +66,34 @@ void _default_destroy(sk_entity_t* entity, void* ud)
     return;
 }
 
+static
+void* _default_rbufget(sk_entity_t* entity, void* ud)
+{
+    errno = ENOSYS;
+    return NULL;
+}
+
+static
+size_t _default_rbufsz(const sk_entity_t* entity, void* ud)
+{
+    errno = ENOSYS;
+    return 0;
+}
+
+static
+size_t _default_rbufpop(sk_entity_t* entity, size_t popsz, void* ud)
+{
+    errno = ENOSYS;
+    return 0;
+}
+
 sk_entity_opt_t default_entity_opt = {
     .read    = _default_read,
     .write   = _default_write,
-    .destroy = _default_destroy
+    .destroy = _default_destroy,
+    .rbufget = _default_rbufget,
+    .rbufsz  = _default_rbufsz,
+    .rbufpop = _default_rbufpop
 };
 
 // APIs
@@ -94,6 +118,9 @@ void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
     entity->opt.read  = opt.read  ? opt.read  : default_entity_opt.read;
     entity->opt.write = opt.write ? opt.write : default_entity_opt.write;
     entity->opt.destroy = opt.destroy ? opt.destroy : default_entity_opt.destroy;
+    entity->opt.rbufget = opt.rbufget ? opt.rbufget : default_entity_opt.rbufget;
+    entity->opt.rbufsz  = opt.rbufsz  ? opt.rbufsz  : default_entity_opt.rbufsz;
+    entity->opt.rbufpop = opt.rbufpop ? opt.rbufpop : default_entity_opt.rbufpop;
 
     entity->ud = ud;
 }
@@ -162,6 +189,21 @@ ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len)
 ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len)
 {
     return entity->opt.write(entity, buf, buf_len, entity->ud);
+}
+
+void*   sk_entity_rbufget(sk_entity_t* entity)
+{
+    return entity->opt.rbufget(entity, entity->ud);
+}
+
+size_t  sk_entity_rbufsz(const sk_entity_t* entity)
+{
+    return entity->opt.rbufsz(entity, entity->ud);
+}
+
+size_t  sk_entity_rbufpop(sk_entity_t* entity, size_t popsz)
+{
+    return entity->opt.rbufpop(entity, popsz, entity->ud);
 }
 
 void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr)

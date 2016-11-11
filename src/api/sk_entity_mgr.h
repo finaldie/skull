@@ -26,10 +26,12 @@ typedef struct sk_entity_mgr_stat_t {
 
     int entity_none;
     int entity_net;
+    int entity_v4_udp;
     int entity_timer;
     int entity_ep;
     int entity_ep_timer;
     int entity_ep_txn_timer;
+    int _padding;
 } sk_entity_mgr_stat_t;
 
 sk_entity_mgr_stat_t sk_entity_mgr_stat(const sk_entity_mgr_t*);

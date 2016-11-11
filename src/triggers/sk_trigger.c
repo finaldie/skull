@@ -6,17 +6,22 @@
 extern sk_trigger_opt_t sk_trigger_sock;
 extern sk_trigger_opt_t sk_trigger_immedia;
 extern sk_trigger_opt_t sk_trigger_stdin;
+extern sk_trigger_opt_t sk_trigger_udp;
 
-sk_trigger_t* sk_trigger_create(sk_engine_t* engine, sk_workflow_t* workflow,
-                                sk_workflow_cfg_t* cfg)
+sk_trigger_t* sk_trigger_create(sk_engine_t* engine, sk_workflow_t* workflow)
 {
     sk_trigger_t* trigger = calloc(1, sizeof(*trigger));
+    const sk_workflow_cfg_t* cfg = workflow->cfg;
 
     // 1. set type first
     if (cfg->enable_stdin) {
         trigger->type = SK_TRIGGER_BY_STDIN;
     } else if (cfg->port > 0) {
-        trigger->type = SK_TRIGGER_BY_SOCK;
+        if (cfg->sock_type == SK_SOCK_TCP) {
+            trigger->type = SK_TRIGGER_BY_SOCK;
+        } else {
+            trigger->type = SK_TRIGGER_BY_UDP;
+        }
     } else {
         trigger->type = SK_TRIGGER_IMMEDIATELY;
     }
@@ -30,18 +35,21 @@ sk_trigger_t* sk_trigger_create(sk_engine_t* engine, sk_workflow_t* workflow,
     case SK_TRIGGER_IMMEDIATELY:
         trigger->opt = sk_trigger_immedia;
         break;
+    case SK_TRIGGER_BY_STDIN:
+        trigger->opt = sk_trigger_stdin;
+        break;
     case SK_TRIGGER_BY_SOCK:
         trigger->opt = sk_trigger_sock;
         break;
-    case SK_TRIGGER_BY_STDIN:
-        trigger->opt = sk_trigger_stdin;
+    case SK_TRIGGER_BY_UDP:
+        trigger->opt = sk_trigger_udp;
         break;
     default:
         SK_ASSERT_MSG(0, "unhandled trigger type: %d\n", trigger->type);
     }
 
     // 4. run the opt.create to initialize data field
-    trigger->opt.create(trigger, cfg);
+    trigger->opt.create(trigger);
 
     return trigger;
 }

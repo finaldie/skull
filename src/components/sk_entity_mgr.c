@@ -53,6 +53,9 @@ void _update_stat(sk_entity_mgr_t* mgr, const sk_entity_t* entity,
     case SK_ENTITY_TAG_NET:
         mgr->stat.entity_net += value;
         break;
+    case SK_ENTITY_TAG_V4_UDP:
+        mgr->stat.entity_v4_udp += value;
+        break;
     case SK_ENTITY_TAG_TIMER:
         mgr->stat.entity_timer += value;
         break;

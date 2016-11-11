@@ -9,11 +9,12 @@
 #include "api/sk_pto.h"
 #include "api/sk_workflow.h"
 #include "api/sk_entity.h"
-#include "api/sk_entity_util.h"
 #include "api/sk_txn.h"
 #include "api/sk_env.h"
 #include "api/sk_metrics.h"
 #include "api/sk_sched.h"
+#include "api/sk_entity_util.h"
+#include "api/sk_trigger_utils.h"
 
 // -----------------------------------------------------------------------------
 // EventLoop trigger this callback
@@ -31,7 +32,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         return;
     }
 
-    sk_entity_util_unpack(fev, evbuff, entity);
+    sk_trigger_util_unpack(entity);
 }
 
 // send a destroy msg, so that the scheduler will destroy it later

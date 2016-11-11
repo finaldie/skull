@@ -5,7 +5,7 @@
 #include "api/sk_trigger.h"
 
 static
-void _trigger_immedia_create(sk_trigger_t* trigger, sk_workflow_cfg_t* cfg)
+void _trigger_immedia_create(sk_trigger_t* trigger)
 {
     return;
 }

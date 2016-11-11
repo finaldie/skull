@@ -11,6 +11,10 @@
 #include "api/sk_types.h"
 #include "api/sk_service_data.h"
 
+#define SK_SOCK_TCP 0
+#define SK_SOCK_UDP 1
+#define SK_SOCK_MAX 2 // Keep this at the end of all types
+
 typedef struct sk_module_cfg_t {
     const char* name;
     const char* type;
@@ -19,23 +23,23 @@ typedef struct sk_module_cfg_t {
 typedef struct sk_workflow_cfg_t {
     uint32_t concurrent   :1;
     uint32_t enable_stdin :1;
-    uint32_t _reserved    :30;
+    uint32_t sock_type    :5;   // Transport layer type: TCP (by default), UDP
+    uint32_t _reserved    :25;
 
-    int port;
+    int      port;
 
     // which IPv4 address we want to bind (by default is 127.0.0.1)
     const char* bind4;
-
 
     const char* idl_name; // workflow idl name
     flist* modules;       // sk_module_cfg_t list
 
     // unit: millisecond, if the execute time > this threshold, engine will
     //  cancel this transaction. Default value is 0 (unlimited)
-    int    timeout;
+    int      timeout;
 
 #if __WORDSIZE == 64
-    int    __padding;
+    int      __padding;
 #endif
 } sk_workflow_cfg_t;
 

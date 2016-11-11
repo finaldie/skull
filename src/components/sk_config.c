@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <errno.h>
 
 #include "flibs/flog.h"
@@ -202,6 +203,19 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
                 workflow->bind4 = strdup(sk_config_getstring(child));
             } else if (0 == strcmp(key, "timeout")) {
                 workflow->timeout = sk_config_getint(child);
+            } else if (0 == strcmp(key, "sock_type")) {
+                int sock_type = SK_SOCK_TCP;
+                const char* cfg_sock_type = sk_config_getstring(child);
+
+                if (0 == strcasecmp("tcp", cfg_sock_type)) {
+                    sock_type = SK_SOCK_TCP;
+                } else if (0 == strcasecmp("udp", cfg_sock_type)) {
+                    sock_type = SK_SOCK_UDP;
+                } else {
+                    SK_ASSERT_MSG(0, "sock_type must be 'tcp' or 'udp'\n");
+                }
+
+                workflow->sock_type = (uint32_t)sock_type & 0x1F;
             }
         }
         fhash_str_iter_release(&item_iter);

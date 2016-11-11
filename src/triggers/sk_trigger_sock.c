@@ -48,8 +48,9 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
 }
 
 static
-void _trigger_sock_create(sk_trigger_t* trigger, sk_workflow_cfg_t* cfg)
+void _trigger_sock_create(sk_trigger_t* trigger)
 {
+    const sk_workflow_cfg_t* cfg = trigger->workflow->cfg;
     SK_ASSERT_MSG(cfg->port > 0 && cfg->port <= 65535,
                   "trigger port(%d) must be in (0, 65535]\n", cfg->port);
 

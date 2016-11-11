@@ -58,8 +58,39 @@ void _net_destroy(sk_entity_t* entity, void* ud)
     free(net_data);
 }
 
+static
+void* _net_rbufget(sk_entity_t* entity, void* ud)
+{
+    sk_net_data_t* net_data = ud;
+    fev_buff* evbuff = net_data->evbuff;
+
+    return fevbuff_rawget(evbuff);
+}
+
+static
+size_t _net_rbufsz(const sk_entity_t* entity, void* ud)
+{
+    sk_net_data_t* net_data = ud;
+    fev_buff* evbuff = net_data->evbuff;
+
+    return fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
+}
+
+static
+size_t _net_rbufpop(sk_entity_t* entity, size_t popsz, void* ud)
+{
+    sk_net_data_t* net_data = ud;
+    fev_buff* evbuff = net_data->evbuff;
+
+    return fevbuff_pop(evbuff, popsz);
+}
+
 sk_entity_opt_t sk_entity_net_opt = {
     .read    = _net_read,
     .write   = _net_write,
-    .destroy = _net_destroy
+    .destroy = _net_destroy,
+
+    .rbufget = _net_rbufget,
+    .rbufsz  = _net_rbufsz,
+    .rbufpop = _net_rbufpop
 };
