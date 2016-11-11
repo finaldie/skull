@@ -28,10 +28,10 @@ typedef struct sk_entity_mgr_stat_t {
     int entity_sock_v4tcp;  // Client entity, v4 tcp
     int entity_sock_v4udp;  // Client entity, v4 udp
     int entity_timer;
-    int entity_ep;
+    int entity_ep_v4tcp;
+    int entity_ep_v4udp;
     int entity_ep_timer;
     int entity_ep_txn_timer;
-    int _padding;
 } sk_entity_mgr_stat_t;
 
 sk_entity_mgr_stat_t sk_entity_mgr_stat(const sk_entity_mgr_t*);

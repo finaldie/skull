@@ -59,8 +59,11 @@ void _update_stat(sk_entity_mgr_t* mgr, const sk_entity_t* entity,
     case SK_ENTITY_TIMER:
         mgr->stat.entity_timer += value;
         break;
-    case SK_ENTITY_EP:
-        mgr->stat.entity_ep += value;
+    case SK_ENTITY_EP_V4TCP:
+        mgr->stat.entity_ep_v4tcp += value;
+        break;
+    case SK_ENTITY_EP_V4UDP:
+        mgr->stat.entity_ep_v4udp += value;
         break;
     case SK_ENTITY_EP_TIMER:
         mgr->stat.entity_ep_timer += value;

@@ -997,13 +997,16 @@ sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                     uint64_t ekey, const char* ipkey,
                     unsigned long long start)
 {
+    sk_entity_type_t etype =
+        handler->type == SK_EP_TCP ? SK_ENTITY_EP_V4TCP : SK_ENTITY_EP_V4UDP;
+
     sk_ep_t* ep = calloc(1, sizeof(*ep));
     ep->ekey    = ekey;
     strncpy(ep->ipkey, ipkey, SK_EP_KEY_MAX);
     ep->type    = handler->type;
     ep->status  = SK_EP_ST_INIT;
     ep->owner   = mgr;
-    ep->entity  = sk_entity_create(NULL, SK_ENTITY_EP);
+    ep->entity  = sk_entity_create(NULL, etype);
     ep->txns    = fdlist_create();
     ep->ntxn    = 0;
     ep->flags   = 0;
