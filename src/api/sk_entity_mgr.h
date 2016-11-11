@@ -25,8 +25,8 @@ typedef struct sk_entity_mgr_stat_t {
     int inactive;
 
     int entity_none;
-    int entity_net;
-    int entity_v4_udp;
+    int entity_sock_v4tcp;  // Client entity, v4 tcp
+    int entity_sock_v4udp;  // Client entity, v4 udp
     int entity_timer;
     int entity_ep;
     int entity_ep_timer;

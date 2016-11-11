@@ -454,7 +454,7 @@ sk_timer_t* _ep_create_timer(sk_ep_t* ep,
     sk_ep_mgr_t* mgr = ep->owner;
 
     sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
-    timerdata->timer_entity = sk_entity_create(NULL, SK_ENTITY_TAG_EP_TIMER);
+    timerdata->timer_entity = sk_entity_create(NULL, SK_ENTITY_EP_TIMER);
     timerdata->data.ep = ep;
 
     sk_ud_t cb_data  = {.ud = timerdata};
@@ -483,7 +483,7 @@ sk_timer_t* _ep_node_create_timer(fdlist_node_t* ep_node,
     sk_ep_mgr_t*  mgr     = ep_data->owner->owner;
 
     sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
-    timerdata->timer_entity = sk_entity_create(NULL, SK_ENTITY_TAG_EP_TXN_TIMER);
+    timerdata->timer_entity = sk_entity_create(NULL, SK_ENTITY_EP_TXN_TIMER);
     timerdata->data.ep_node = ep_node;
 
     sk_ud_t cb_data  = {.ud = timerdata};
@@ -1003,7 +1003,7 @@ sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     ep->type    = handler->type;
     ep->status  = SK_EP_ST_INIT;
     ep->owner   = mgr;
-    ep->entity  = sk_entity_create(NULL, SK_ENTITY_TAG_EP);
+    ep->entity  = sk_entity_create(NULL, SK_ENTITY_EP);
     ep->txns    = fdlist_create();
     ep->ntxn    = 0;
     ep->flags   = 0;

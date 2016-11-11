@@ -19,7 +19,7 @@ struct sk_entity_t {
     sk_entity_opt_t         opt;
     fhash*                  txns;
     fhash*                  timers;
-    int                     tag;
+    sk_entity_type_t        type;
 
 #if __WORDSIZE == 64
     int                     __padding;
@@ -67,7 +67,7 @@ void _default_destroy(sk_entity_t* entity, void* ud)
 }
 
 static
-void* _default_rbufget(sk_entity_t* entity, void* ud)
+void* _default_rbufget(const sk_entity_t* entity, void* ud)
 {
     errno = ENOSYS;
     return NULL;
@@ -97,7 +97,7 @@ sk_entity_opt_t default_entity_opt = {
 };
 
 // APIs
-sk_entity_t* sk_entity_create(sk_workflow_t* workflow, int tag)
+sk_entity_t* sk_entity_create(sk_workflow_t* workflow, sk_entity_type_t type)
 {
     sk_entity_t* entity = calloc(1, sizeof(*entity));
     entity->owner    = NULL;
@@ -106,7 +106,7 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow, int tag)
     entity->txns     = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     entity->timers   = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     entity->status   = SK_ENTITY_ACTIVE;
-    entity->tag      = tag;
+    entity->type     = type;
 
     sk_metrics_global.entity_create.inc(1);
     sk_print("create entity %p\n", (void*)entity);
@@ -126,7 +126,7 @@ void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
 }
 
 // Debugging Api
-void sk_entity_dump_txns(sk_entity_t* entity)
+void sk_entity_dump_txns(const sk_entity_t* entity)
 {
     fhash_u64_iter iter = fhash_u64_iter_new(entity->txns);
     sk_txn_t* txn = NULL;
@@ -176,11 +176,6 @@ void sk_entity_destroy(sk_entity_t* entity)
     }
 }
 
-int sk_entity_tag(const sk_entity_t* entity)
-{
-    return entity->tag;
-}
-
 ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len)
 {
     return entity->opt.read(entity, buf, buf_len, entity->ud);
@@ -191,7 +186,7 @@ ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len)
     return entity->opt.write(entity, buf, buf_len, entity->ud);
 }
 
-void*   sk_entity_rbufget(sk_entity_t* entity)
+void*   sk_entity_rbufget(const sk_entity_t* entity)
 {
     return entity->opt.rbufget(entity, entity->ud);
 }
@@ -204,6 +199,11 @@ size_t  sk_entity_rbufsz(const sk_entity_t* entity)
 size_t  sk_entity_rbufpop(sk_entity_t* entity, size_t popsz)
 {
     return entity->opt.rbufpop(entity, popsz, entity->ud);
+}
+
+sk_entity_type_t sk_entity_type(const sk_entity_t* entity)
+{
+    return entity->type;
 }
 
 void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr)
@@ -227,17 +227,17 @@ struct sk_entity_mgr_t* sk_entity_owner(const sk_entity_t* entity)
     return entity->owner;
 }
 
-sk_workflow_t* sk_entity_workflow(sk_entity_t* entity)
+sk_workflow_t* sk_entity_workflow(const sk_entity_t* entity)
 {
     return entity->workflow;
 }
 
-sk_txn_t* sk_entity_halftxn(sk_entity_t* entity)
+sk_txn_t* sk_entity_halftxn(const sk_entity_t* entity)
 {
     return entity->half_txn;
 }
 
-sk_entity_status_t sk_entity_status(sk_entity_t* entity)
+sk_entity_status_t sk_entity_status(const sk_entity_t* entity)
 {
     return entity->status;
 }
@@ -256,7 +256,7 @@ void sk_entity_txndel(sk_entity_t* entity, const struct sk_txn_t* txn)
 }
 
 // get task cnt
-int sk_entity_taskcnt(sk_entity_t* entity)
+int sk_entity_taskcnt(const sk_entity_t* entity)
 {
     return entity->task_cnt;
 }
@@ -272,16 +272,3 @@ void sk_entity_timerdel(sk_entity_t* entity, const sk_obj_t* obj)
     SK_ASSERT(deleted == obj);
 }
 
-extern sk_entity_opt_t sk_entity_stdin_opt;
-extern sk_entity_opt_t sk_entity_net_opt;
-
-sk_entity_type_t sk_entity_type(sk_entity_t* entity)
-{
-    if (entity->opt.read == sk_entity_net_opt.read) {
-        return SK_ENTITY_NET;
-    } else if (entity->opt.read == sk_entity_stdin_opt.read) {
-        return SK_ENTITY_STD;
-    } else {
-        return SK_ENTITY_NONE;
-    }
-}

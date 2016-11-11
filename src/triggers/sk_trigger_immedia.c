@@ -22,7 +22,7 @@ void _trigger_immedia_run(sk_trigger_t* trigger)
         return;
     }
 
-    sk_entity_t* entity = sk_entity_create(workflow, SK_ENTITY_TAG_NONE);
+    sk_entity_t* entity = sk_entity_create(workflow, SK_ENTITY_NONE);
     sk_txn_t* txn = sk_txn_create(workflow, entity);
 
     sk_sched_send(sched, NULL, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);

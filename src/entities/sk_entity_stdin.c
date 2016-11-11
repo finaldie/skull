@@ -61,7 +61,7 @@ void _std_destroy(sk_entity_t* entity, void* ud)
 }
 
 static
-void* _std_rbufget(sk_entity_t* entity, void* ud)
+void* _std_rbufget(const sk_entity_t* entity, void* ud)
 {
     sk_entity_stdin_data_t* data = ud;
     fev_buff* evbuff = data->evbuff;

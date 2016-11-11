@@ -15,7 +15,7 @@ void _trigger_stdin_run(sk_trigger_t* trigger)
 {
     sk_engine_t*   engine   = trigger->engine;
     sk_workflow_t* workflow = trigger->workflow;
-    sk_entity_t*   entity   = sk_entity_create(workflow, SK_ENTITY_TAG_NONE);
+    sk_entity_t*   entity   = sk_entity_create(workflow, SK_ENTITY_STD);
     sk_sched_t*    sched    = engine->sched;
 
     sk_sched_send(sched, NULL, entity, NULL, SK_PTO_STDIN_START, NULL, 0);

@@ -57,7 +57,7 @@ void _readcb(fev_state* fev, int fd, int mask, void* ud)
 
     // Everything is normal, create an entity
     sk_workflow_t* workflow = trigger->workflow;
-    sk_entity_t*   entity   = sk_entity_create(workflow, SK_ENTITY_TAG_V4_UDP);
+    sk_entity_t*   entity   = sk_entity_create(workflow, SK_ENTITY_SOCK_V4UDP);
 
     // Set entity opt
     sk_entity_udp_create(entity, fd, readbuf, (uint16_t)bytes,

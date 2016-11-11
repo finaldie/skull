@@ -75,7 +75,7 @@ void _entity_destroy(sk_entity_t* entity, void* ud)
 }
 
 static
-void* _udp_rbufget(sk_entity_t* entity, void* ud)
+void* _udp_rbufget(const sk_entity_t* entity, void* ud)
 {
     sk_udp_data_t* udp_data = ud;
     return udp_data->readbuf + udp_data->sidx;
