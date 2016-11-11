@@ -17,7 +17,7 @@ sk_workflow_cfg_t* _create_workflow_cfg()
     sk_workflow_cfg_t* workflow = calloc(1, sizeof(*workflow));
     workflow->port = SK_CONFIG_NO_PORT;
     workflow->modules = flist_create();
-    workflow->bind4   = strdup("127.0.0.1");
+    workflow->bind    = strdup("127.0.0.1");
     return workflow;
 }
 
@@ -32,7 +32,7 @@ void _delete_workflow_cfg(sk_workflow_cfg_t* workflow)
     }
     flist_delete(workflow->modules);
 
-    free((void*)workflow->bind4);
+    free((void*)workflow->bind);
     free((void*)workflow->idl_name);
     free(workflow);
 }
@@ -198,9 +198,9 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
                 if (workflow->enable_stdin) {
                     enabled_stdin = 1;
                 }
-            } else if (0 == strcmp(key, "bind4")) {
-                free((void*)workflow->bind4);
-                workflow->bind4 = strdup(sk_config_getstring(child));
+            } else if (0 == strcmp(key, "bind")) {
+                free((void*)workflow->bind);
+                workflow->bind = strdup(sk_config_getstring(child));
             } else if (0 == strcmp(key, "timeout")) {
                 workflow->timeout = sk_config_getint(child);
             } else if (0 == strcmp(key, "sock_type")) {

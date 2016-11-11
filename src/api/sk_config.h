@@ -28,8 +28,9 @@ typedef struct sk_workflow_cfg_t {
 
     int      port;
 
-    // which IPv4 address we want to bind (by default is 127.0.0.1)
-    const char* bind4;
+    // The IPv4 address we want to bind (by default is 127.0.0.1)
+    // TODO: Support IPv6 address
+    const char* bind;
 
     const char* idl_name; // workflow idl name
     flist* modules;       // sk_module_cfg_t list

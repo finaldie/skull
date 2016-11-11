@@ -103,7 +103,7 @@ void _trigger_udp_run(sk_trigger_t* trigger)
     memset(&s_addr, 0, sizeof(s_addr));
     s_addr.sin_family      = AF_INET;
     s_addr.sin_port        = htons((in_port_t)cfg->port);
-    s_addr.sin_addr.s_addr = inet_addr(cfg->bind4);
+    s_addr.sin_addr.s_addr = inet_addr(cfg->bind);
 
     if (bind(rootfd, (struct sockaddr*)&s_addr, sizeof(s_addr))) {
         SK_ASSERT_MSG(0, "Bind UDP rootfd failed, error: %d, %s",

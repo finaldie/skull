@@ -56,7 +56,7 @@ void _trigger_tcp_create(sk_trigger_t* trigger)
 
     sk_trigger_tcp_data_t* data = calloc(1, sizeof(*data));
     data->port      = (in_port_t)cfg->port;
-    data->listen_fd = fnet_listen(cfg->bind4, data->port, 1024, 0);
+    data->listen_fd = fnet_listen(cfg->bind, data->port, SK_MAX_LISTEN_BACKLOG, 0);
 
     trigger->data = data;
 }

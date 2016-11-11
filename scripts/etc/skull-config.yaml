@@ -4,7 +4,7 @@ bio: 1
 log_name: skull.log
 log_level: debug
 
-# Optional workflow item 'bind4': which IPv4 address we want to bind, by default is 127.0.0.1
+# Optional workflow item 'bind': which IPv4 address we want to bind, by default is 127.0.0.1
 workflows:
 
 # Optional service item 'max_qsize': control the max_queue_size, by default is 1024

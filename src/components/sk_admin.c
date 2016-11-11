@@ -465,7 +465,7 @@ sk_workflow_cfg_t* sk_admin_workflowcfg_create(int port)
     cfg->concurrent   = 0;
     cfg->enable_stdin = 0;
     cfg->port         = port;
-    cfg->bind4        = "127.0.0.1";
+    cfg->bind         = "127.0.0.1";
     cfg->idl_name     = NULL;
     cfg->modules      = flist_create();
 
