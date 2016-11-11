@@ -8,7 +8,7 @@
 typedef enum sk_trigger_type_t {
     SK_TRIGGER_IMMEDIATELY = 0,
     SK_TRIGGER_BY_STDIN,
-    SK_TRIGGER_BY_SOCK,
+    SK_TRIGGER_BY_TCP,
     SK_TRIGGER_BY_UDP
 } sk_trigger_type_t;
 

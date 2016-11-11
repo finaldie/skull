@@ -57,8 +57,8 @@ ENTITY_OBJS = \
 TRIGGER_OBJS = \
     triggers/sk_trigger.o \
     triggers/sk_trigger_immedia.o \
-    triggers/sk_trigger_sock.o \
     triggers/sk_trigger_stdin.o \
+    triggers/sk_trigger_tcp.o \
     triggers/sk_trigger_udp.o \
     triggers/sk_trigger_utils.o
 
