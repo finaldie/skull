@@ -122,7 +122,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
     if cfgYamlObj.get('languages'):
         content.write('languages: {}\n\n'.format(cfgYamlObj['languages']))
     else:
-        content.write('#languages: [cpp, py]\n\n')
+        content.write('languages: [\'cpp\', \'py\']\n\n')
 
     # 7. Dump 'max_fds'
     content.write('##\n')
