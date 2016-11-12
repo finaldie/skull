@@ -20,25 +20,21 @@ struct sk_entity_t {
     fhash*                  txns;
     fhash*                  timers;
     sk_entity_type_t        type;
-
-#if __WORDSIZE == 64
-    int                     __padding;
-#endif
-
-    sk_entity_status_t status;
-    int   task_cnt;
-    void* ud;
+    sk_entity_status_t      status;
+    int                     flags;
+    int                     task_cnt;
+    void*                   ud;
 };
 
 // increase the query count
-static
+static inline
 void _entity_taskcnt_inc(sk_entity_t* entity)
 {
     entity->task_cnt++;
 }
 
 // decrease the query count
-static
+static inline
 void _entity_taskcnt_dec(sk_entity_t* entity)
 {
     entity->task_cnt--;
@@ -220,6 +216,14 @@ void sk_entity_sethalftxn(sk_entity_t* entity, sk_txn_t* half_txn)
 void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status)
 {
     entity->status = status;
+}
+
+void sk_entity_setflags(sk_entity_t* entity, int flags) {
+    entity->flags = flags;
+}
+
+int  sk_entity_flags(const sk_entity_t* entity) {
+    return entity->flags;
 }
 
 struct sk_entity_mgr_t* sk_entity_owner(const sk_entity_t* entity)

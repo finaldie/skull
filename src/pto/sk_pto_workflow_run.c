@@ -7,6 +7,7 @@
 #include "api/sk_const.h"
 #include "api/sk_event.h"
 #include "api/sk_entity_mgr.h"
+#include "api/sk_entity_util.h"
 #include "api/sk_pto.h"
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
@@ -109,11 +110,24 @@ void _write_txn_log(const sk_txn_t* txn) {
 
 static
 void _txn_log_and_destroy(sk_txn_t* txn) {
+    sk_entity_t* entity = sk_txn_entity(txn);
+
+    // 1. Log and try to destroy txn
     if (sk_txn_alltask_complete(txn)) {
         _write_txn_log(txn);
     }
 
-    sk_txn_safe_destroy(txn);
+    int r = sk_txn_safe_destroy(txn);
+
+    // 2. Destroy entity if its flags contain SK_ENTITY_F_DESTROY_NOTXN
+    if (r) return;
+
+    int txncnt = sk_entity_taskcnt(entity);
+    int eflags = sk_entity_flags(entity);
+
+    if (eflags & SK_ENTITY_F_DESTROY_NOTXN && txncnt == 0) {
+        sk_entity_safe_destroy(entity);
+    }
 }
 
 static

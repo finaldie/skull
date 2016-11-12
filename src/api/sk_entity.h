@@ -44,39 +44,44 @@ typedef struct sk_entity_opt_t {
 
 sk_entity_t* sk_entity_create(struct sk_workflow_t* workflow,
                               sk_entity_type_t type);
-void sk_entity_destroy(sk_entity_t* entity);
+void sk_entity_destroy(sk_entity_t*);
 
-ssize_t sk_entity_read(sk_entity_t* entity, void* buf, size_t buf_len);
-ssize_t sk_entity_write(sk_entity_t* entity, const void* buf, size_t buf_len);
+ssize_t sk_entity_read(sk_entity_t*, void* buf, size_t buf_len);
+ssize_t sk_entity_write(sk_entity_t*, const void* buf, size_t buf_len);
 
 void*   sk_entity_rbufget(const sk_entity_t*);
-size_t  sk_entity_rbufsz(const sk_entity_t* entity);
-size_t  sk_entity_rbufpop(sk_entity_t* entity, size_t popsz);
+size_t  sk_entity_rbufsz(const sk_entity_t*);
+size_t  sk_entity_rbufpop(sk_entity_t*, size_t popsz);
 
-sk_entity_type_t sk_entity_type(const sk_entity_t* entity);
-sk_entity_status_t sk_entity_status(const sk_entity_t* entity);
-struct sk_workflow_t* sk_entity_workflow(const sk_entity_t* entity);
+sk_entity_type_t sk_entity_type(const sk_entity_t*);
+sk_entity_status_t sk_entity_status(const sk_entity_t*);
+struct sk_workflow_t* sk_entity_workflow(const sk_entity_t*);
 
-void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud);
-void sk_entity_mark(sk_entity_t* entity, sk_entity_status_t status);
+void sk_entity_setopt(sk_entity_t*, sk_entity_opt_t opt, void* ud);
+void sk_entity_mark(sk_entity_t*, sk_entity_status_t status);
 
-struct sk_entity_mgr_t* sk_entity_owner(const sk_entity_t* entity);
-void sk_entity_setowner(sk_entity_t* entity, struct sk_entity_mgr_t* mgr);
+#define SK_ENTITY_F_DESTROY_NOTXN 0x1
 
-struct sk_txn_t* sk_entity_halftxn(const sk_entity_t* entity);
-void sk_entity_sethalftxn(sk_entity_t* entity, struct sk_txn_t* txn);
+void sk_entity_setflags(sk_entity_t*, int flags);
+int  sk_entity_flags(const sk_entity_t*);
+
+struct sk_entity_mgr_t* sk_entity_owner(const sk_entity_t*);
+void sk_entity_setowner(sk_entity_t*, struct sk_entity_mgr_t* mgr);
+
+struct sk_txn_t* sk_entity_halftxn(const sk_entity_t*);
+void sk_entity_sethalftxn(sk_entity_t*, struct sk_txn_t* txn);
 
 void sk_entity_txnadd(sk_entity_t*, const struct sk_txn_t*);
 void sk_entity_txndel(sk_entity_t*, const struct sk_txn_t*);
-int  sk_entity_taskcnt(const sk_entity_t* entity);
+int  sk_entity_taskcnt(const sk_entity_t*);
 
 void sk_entity_timeradd(sk_entity_t*, const sk_obj_t*);
 void sk_entity_timerdel(sk_entity_t*, const sk_obj_t*);
 
 // create network entity from a base entity
-void sk_entity_stdin_create(sk_entity_t* entity, void* ud);
-void sk_entity_net_create  (sk_entity_t* entity, void* ud);
-void sk_entity_udp_create  (sk_entity_t* entity, int rootfd,
+void sk_entity_stdin_create(sk_entity_t*, void* ud);
+void sk_entity_net_create  (sk_entity_t*, void* ud);
+void sk_entity_udp_create  (sk_entity_t*, int rootfd,
                             const void* buf, uint16_t buf_sz,
                             struct sockaddr* src_addr, socklen_t src_addr_len);
 

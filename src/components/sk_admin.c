@@ -18,12 +18,13 @@
 #define ADMIN_CMD_HELP_CONTENT \
     "commands:\n" \
     " - help\n" \
-    " - metrics\n" \
+    " - counter | metrics\n" \
     " - last\n" \
-    " - status|info\n"
+    " - info | status\n"
 
 #define ADMIN_CMD_HELP          "help"
 #define ADMIN_CMD_METRICS       "metrics"
+#define ADMIN_CMD_COUNTER       "counter"
 #define ADMIN_CMD_LAST_SNAPSHOT "last"
 #define ADMIN_CMD_STATUS        "status"
 #define ADMIN_CMD_INFO          "info"
@@ -517,7 +518,8 @@ int _admin_run(void* md, sk_txn_t* txn)
 
     if (0 == strcasecmp(ADMIN_CMD_HELP, command)) {
         _process_help(txn);
-    } else if (0 == strcasecmp(ADMIN_CMD_METRICS, command)) {
+    } else if (0 == strcasecmp(ADMIN_CMD_METRICS, command) ||
+               0 == strcasecmp(ADMIN_CMD_COUNTER, command)) {
         _process_metrics(txn);
     } else if (0 == strcasecmp(ADMIN_CMD_LAST_SNAPSHOT, command)) {
         _process_last_snapshot(txn);

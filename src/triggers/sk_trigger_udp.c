@@ -120,6 +120,9 @@ static
 void _trigger_udp_destroy(sk_trigger_t* trigger)
 {
     sk_trigger_udp_data_t* data = trigger->data;
+    fev_state* fev = trigger->engine->evlp;
+
+    fev_del_event(fev, data->rootfd, FEV_READ | FEV_WRITE);
     close(data->rootfd);
     free(trigger->data);
 }
