@@ -8,23 +8,165 @@ import getopt
 import string
 import pprint
 import yaml
+import StringIO
 
 yaml_obj = None
 config_name = ""
 
+# Config headers
+CONFIG_HEADER = """
+##
+# Skull-Engine Top Config
+##\n
+"""
+
+CONFIG_WF_HEADER = """
+##
+# Skull Workflows
+# Example:
+#
+#     workflows:
+#      - concurrent: 1
+#        idl: example
+#        modules: ['test:cpp']
+#        port: 7758
+#        stdin: 0
+#        #bind: 0.0.0.0
+#        #timeout: 100
+#
+# The 'bind' item is optional, and by default it will bind to '127.0.0.1'
+# The 'timeout' item is optional, it controls the transaction timeout,
+#   unit is milliseconds, and by default is 0 (no timeout)
+#
+"""
+
+CONFIG_SVC_HEADER = """
+##
+# Skull Services
+# Example:
+#
+#     services:
+#       foo: {data_mode: rw-pr, enable: 'true', type: cpp}
+#
+# The 'foo' is service name, and there is also an optional item 'max_qsize',
+#   it controls the max service task queue size, by default is 1024
+#
+"""
+
 def _load_yaml_config(config_name):
     yaml_file = file(config_name, 'r')
     yml_obj = yaml.load(yaml_file)
+
+    yaml_file.close()
     return yml_obj
 
 def _create_workflow():
     return {
-    'concurrent' : 1,
-    'idl': "",
-    'stdin': 0,
-    'port' : -1,
-    'modules' : []
+        'concurrent' : 1,
+        'idl'        : "",
+        'stdin'      : 0,
+        'port'       : -1,
+        'modules'    : []
     }
+
+def _dump_config_to_file(cfgYamlObj, filename):
+    content = StringIO.StringIO()
+    content.write(CONFIG_HEADER)
+
+    # 1. Dump 'thread_num'
+    content.write('# How many worker threads\n')
+
+    if cfgYamlObj.get('worker_threads'):
+        content.write('worker_threads: {}\n\n'.format(cfgYamlObj['worker_threads']))
+    else:
+        content.write('#worker_threads: 1\n\n')
+
+    # 2. Dump 'bio'
+    content.write('# How many background IO threads\n')
+
+    if cfgYamlObj.get('bg_iothreads'):
+        content.write('bg_iothreads: {}\n\n'.format(cfgYamlObj['bg_iothreads']))
+    else:
+        content.write('#bg_iothreads: 1\n\n')
+
+    # 3. Dump 'command_port'
+    content.write('# Command port, which is used for exposing more skull information\n')
+
+    if cfgYamlObj.get('command_port'):
+        content.write('command_port: {}\n\n'.format(cfgYamlObj['command_port']))
+    else:
+        content.write('#command_port: 7759\n\n')
+
+    # 4. Dump 'log_name'
+    content.write('# Log File Name\n')
+
+    if cfgYamlObj.get('log_name'):
+        content.write('log_name: {}\n\n'.format(cfgYamlObj['log_name']))
+    else:
+        content.write('#log_name: skull.log\n\n')
+
+    # 5. Dump 'log_level'
+    content.write('##\n')
+    content.write('# Log Level\n')
+    content.write('#   trace, debug, info. warn, error, fatal are available\n')
+    content.write('#\n');
+
+    if cfgYamlObj.get('log_level'):
+        content.write('log_level: {}\n\n'.format(cfgYamlObj['log_level']))
+    else:
+        content.write('#log_level: info\n\n')
+
+    # 6. Dump 'languages'
+    content.write('# Supported Languages: cpp, py\n')
+
+    if cfgYamlObj.get('languages'):
+        content.write('languages: {}\n\n'.format(cfgYamlObj['languages']))
+    else:
+        content.write('#languages: [cpp, py]\n\n')
+
+    # 7. Dump 'max_fds'
+    content.write('##\n')
+    content.write('# Max open file limitation\n')
+    content.write('#  By default, this value is depend on the ulimit of the process\n')
+    content.write('#  If failed to set due to permission reason, will fallback to the default value\n')
+    content.write('#\n');
+
+    if cfgYamlObj.get('max_fds'):
+        content.write('max_fds: {}\n\n'.format(cfgYamlObj['max_fds']))
+    else:
+        content.write('#max_fds: 65535\n\n')
+
+    # 8. Dump 'workflows'
+    content.write(CONFIG_WF_HEADER)
+
+    if cfgYamlObj.get('workflows'):
+        tmpYamlObj = {}
+        tmpYamlObj['workflows'] = cfgYamlObj['workflows']
+        yaml.dump(tmpYamlObj, content)
+    else:
+        content.write('workflows:\n')
+
+    content.write('\n')
+
+    # 9. Dump 'services'
+    content.write(CONFIG_SVC_HEADER)
+
+    if cfgYamlObj.get('services'):
+        tmpYamlObj = {}
+        tmpYamlObj['services'] = cfgYamlObj['services']
+        yaml.dump(tmpYamlObj, content)
+    else:
+        content.write('services:\n')
+
+    content.write('\n')
+
+    # Dump entire content into file
+    output = content.getvalue()
+    content.close()
+
+    yaml_file = file(filename, 'w')
+    yaml_file.write(output)
+    yaml_file.close()
 
 ################################# Workflow Actions #############################
 def process_workflow_actions():
@@ -158,13 +300,15 @@ def _process_add_workflow():
 
         # 3. update the skull-config.yaml
         yaml_obj['workflows'].append(workflow_frame)
-        yaml.dump(yaml_obj, file(config_name, 'w'))
+        _dump_config_to_file(yaml_obj, config_name)
 
     except Exception as e:
         print "Fatal: _process_add_workflow: " + str(e)
         raise
 
 def _process_gen_workflow_idl():
+    global yaml_obj
+
     workflows = yaml_obj['workflows']
 
     if workflows is None:
@@ -268,7 +412,7 @@ def _process_add_module():
             print "Error: there is already a module with different type"
             raise
 
-        yaml.dump(yaml_obj, file(config_name, 'w'))
+        _dump_config_to_file(yaml_obj, config_name)
 
         print "add module done"
 
@@ -380,7 +524,7 @@ def _process_add_service():
 
         services[service_name] = service_obj;
 
-        yaml.dump(yaml_obj, file(config_name, 'w'))
+        _dump_config_to_file(yaml_obj, config_name)
 
     except Exception as e:
         print "Fatal: _process_add_service: " + str(e)

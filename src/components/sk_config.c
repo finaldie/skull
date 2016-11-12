@@ -63,10 +63,14 @@ static
 sk_config_t* _create_config()
 {
     sk_config_t* config = calloc(1, sizeof(*config));
+    config->threads   = 1;
     config->workflows = flist_create();
     config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     config->langs     = flist_create();
     config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
+    config->log_level = FLOG_LEVEL_INFO;
+    strncpy(config->log_name, "skull.log", sizeof("skull.log"));
+
     return config;
 }
 
@@ -370,7 +374,7 @@ void _load_bios(sk_cfg_node_t* node, sk_config_t* config)
     }
 
     config->bio_cnt = sk_config_getint(node);
-    SK_ASSERT_MSG(config->bio_cnt >= 0, "config: bio must >= 0\n");
+    SK_ASSERT_MSG(config->bio_cnt >= 0, "config: bg_iothreads must >= 0\n");
 }
 
 static
@@ -404,9 +408,9 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         const char* key = iter.key;
 
         // load thread_num
-        if (0 == strcmp(key, "thread_num")) {
+        if (0 == strcmp(key, "worker_threads")) {
             config->threads = sk_config_getint(child);
-            SK_ASSERT_MSG(config->threads > 0, "config: thread_num must > 0\n");
+            SK_ASSERT_MSG(config->threads > 0, "config: worker_threads must > 0\n");
         } else if (0 == strcmp(key, "workflows")) {
             // load working flows
             _load_workflow(child, config);
@@ -419,7 +423,7 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         } else if (0 == strcmp(key, "services")) {
             // load services
             _load_services(child, config);
-        } else if (0 == strcmp(key, "bio")) {
+        } else if (0 == strcmp(key, "bg_iothreads")) {
             // load bio(s)
             _load_bios(child, config);
         } else if (0 == strcmp(key, "languages")) {
