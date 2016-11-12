@@ -1,3 +1,12 @@
+* 2016-11-13 0.9.11
+  * Core
+    * **New:** Add UDP Trigger
+    * **New:** Entity can be auto cleanup
+    * **Enhancement:** Rename sk_trigger_sock to sk_trigger_tcp
+    * **Enhancement:** Refactor entity type
+    * **Enhancement:** Workflow config, rename 'bind4' to 'bind'
+  * Scripts
+    * **Enhancement:** Better format of generating 'skull-config.yaml'
 * 2016-10-30 0.9.10
   * Core
     * **Fix:** Fix padded issue in 32bit platform. Compatible with `Raspberry Pi`
