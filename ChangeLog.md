@@ -7,6 +7,8 @@
     * **Enhancement:** Workflow config, rename 'bind4' to 'bind'
   * Scripts
     * **Enhancement:** Better format of generating 'skull-config.yaml'
+  * MISC
+    * **Enhancement:** Only search for the top level Makefiles for building the common/module/service
 * 2016-10-30 0.9.10
   * Core
     * **Fix:** Fix padded issue in 32bit platform. Compatible with `Raspberry Pi`
