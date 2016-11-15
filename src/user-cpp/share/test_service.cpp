@@ -13,22 +13,35 @@
  * 5. DO NOT strive for 100% test coverage, set a meaningful goal, like 80%
  */
 
+/**
+ * The following is an example test case, we assume that there is a existing
+ *  API 'get', then its message proto would be 'get_req' and 'get_resp', then
+ *  we run this API, and expect the response contain the content what we want.
+ *
+ *  More information here: https://github.com/finaldie/skull/wiki/How-To-Test
+ *
+ * static
+ * void test_example()
+ * {
+ *     // 1. Create a ut service env
+ *     skullcpp::UTService utSvc("{SERVICE_NAME}", "tests/test_config.yaml");
+ *
+ *     // 2. Construct api request message
+ *     skull::service::{SERVICE_NAME}::get_req  apiReq;
+ *     skull::service::{SERVICE_NAME}::get_resp apiResp;
+ *     apiReq.set_name("hello api");
+ *
+ *     // 3. Run service
+ *     utSvc.run("get", apiReq, apiResp);
+ *
+ *     // 4. Validate api response data
+ *     SKULL_CUNIT_ASSERT(apiResp.response() == "Hi new bie");
+ * }
+ */
+
 static
-void test_example()
-{
-    // 1. create a ut service env
-    skullcpp::UTService utSvc("{SERVICE_NAME}", "tests/test_config.yaml");
-
-    // 2. construct api request message
-    skull::service::{SERVICE_NAME}::get_resp apiResp;
-    skull::service::{SERVICE_NAME}::get_req apiReq;
-    apiReq.set_name("hello api");
-
-    // 3. Run service
-    utSvc.run("get", apiReq, apiResp);
-
-    // 4. validate api response data
-    SKULL_CUNIT_ASSERT(apiResp.response() == "Hi new bie");
+void test_example() {
+    // Write the test case logic here
 }
 
 int main(int argc, char** argv)

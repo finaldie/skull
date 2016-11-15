@@ -49,15 +49,18 @@ COMMON_OBJS = \
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
-    entities/sk_entity_net.o \
     entities/sk_entity_stdin.o \
+    entities/sk_entity_tcp.o \
+    entities/sk_entity_udp.o \
     entities/sk_entity_util.o
 
 TRIGGER_OBJS = \
     triggers/sk_trigger.o \
     triggers/sk_trigger_immedia.o \
-    triggers/sk_trigger_sock.o \
-    triggers/sk_trigger_stdin.o
+    triggers/sk_trigger_stdin.o \
+    triggers/sk_trigger_tcp.o \
+    triggers/sk_trigger_udp.o \
+    triggers/sk_trigger_utils.o
 
 COMPONENTS_OBJS = \
     components/sk_sched.o \
@@ -154,8 +157,9 @@ UT_OBJS = \
     common/sk_mbuf.o \
     common/sk_module.o \
     entities/sk_entity.o \
-    entities/sk_entity_net.o \
     entities/sk_entity_stdin.o \
+    entities/sk_entity_tcp.o \
+    entities/sk_entity_udp.o \
     pto/idls/service_iocall.pb-c.o \
     pto/idls/service_task.pb-c.o
 

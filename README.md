@@ -6,6 +6,8 @@ Skull
 =====
 A fast to start, easy to maintain, high productive serving framework<br>
 
+Mailing list: skull-engine@googlegroups.com
+
 - [Introduction](#introduction)
  - [Module](#module)
  - [Workflow](#workflow)
@@ -21,7 +23,7 @@ A fast to start, easy to maintain, high productive serving framework<br>
 - [How to Check Counters](#how-to-check-counters)
 - [Existing Services](#existing-services)
 - [Other Resources](#other-resources)
-- [Contribution](#contribution)
+- [Contribution and Discussion](#contribution-and-discussion)
 
 ## Introduction
 Skull provides the following key features:
@@ -67,10 +69,11 @@ Use _Ubuntu14.04_ as an example.
 
 ### Install Dependencies
 ```console
+# Install System Dependencies
 sudo apt-get install autoconf valgrind expect libyaml-dev python-dev python-pip libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler
 sudo pip install PyYAML protobuf pympler WebOb
 
-git clone git@github.com:finaldie/skull.git
+# Clone and Build Dependencies (For example: project folder is 'skull')
 cd skull
 git submodule update --init --recursive
 make dep
@@ -135,9 +138,9 @@ Escape character is '^]'.
 help
 commands:
  - help
- - metrics
+ - counter | metrics
  - last
- - status|info
+ - info | status
 metrics
 2015:12:26_01:36:54 to 2015:12:26_01:37:33
 skull.core.g.global.timer_complete: 39.000000
@@ -159,17 +162,24 @@ skull.core.t.worker.worker-0.response: 1.000000
 skull.core.t.worker.worker-0.request: 2.000000
 ```
 
-# Existing Services
+## Existing Services
 Name                  | Description |
 ----------------------|-------------|
 [Async DNS Client][2] | Example service, to show how to write a basic async DNS client |
+[Async Http Client][15] | Async http client service, easy to send/receive http request/response |
 
-# Other Resources
+## Other Resources
 Name                  | Description |
 ----------------------|-------------|
 [Skull-Perf Cases][5] | Including some basic perf cases |
 
+## Contribution and Discussion
+To discuss any issues, there are some ways we can use:
+ - Open an issue on Github directly
+ - Send an email to skull-engine@googlegroups.com
+ - Go directly to the [Mail Group][14], and post the questions.
 
+To fix a bug or add a new feature, just **`Fork`** the repo, then apply the fixes/features via a PR.
 
 [1]: https://github.com/finaldie/skull-admin-c
 [2]: https://github.com/finaldie/skull-service-dns
@@ -184,6 +194,5 @@ Name                  | Description |
 [11]: https://github.com/finaldie/skull/wiki/API-Doc-:-Cpp
 [12]: https://github.com/finaldie/skull/wiki/API-Doc-:-Python
 [13]: https://github.com/finaldie/skull/wiki/Integrate-with-Nginx
-
-# Contribution
-Fork the repo, then apply your fixes/features via a PR. Before sending a _Pull Request_, make sure you have added/fixed a(n) new/existing test case, and passed it :)
+[14]: https://groups.google.com/forum/#!forum/skull-engine
+[15]: https://github.com/finaldie/skull-service-httpcli

@@ -18,12 +18,13 @@
 #define ADMIN_CMD_HELP_CONTENT \
     "commands:\n" \
     " - help\n" \
-    " - metrics\n" \
+    " - counter | metrics\n" \
     " - last\n" \
-    " - status|info\n"
+    " - info | status\n"
 
 #define ADMIN_CMD_HELP          "help"
 #define ADMIN_CMD_METRICS       "metrics"
+#define ADMIN_CMD_COUNTER       "counter"
 #define ADMIN_CMD_LAST_SNAPSHOT "last"
 #define ADMIN_CMD_STATUS        "status"
 #define ADMIN_CMD_INFO          "info"
@@ -323,12 +324,14 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
 static
 void _merge_stat(sk_entity_mgr_stat_t* stat, const sk_entity_mgr_stat_t* merging)
 {
-    stat->total    += merging->total;
-    stat->inactive += merging->inactive;
-    stat->entity_none  += merging->entity_none;
-    stat->entity_net   += merging->entity_net;
-    stat->entity_timer += merging->entity_timer;
-    stat->entity_ep    += merging->entity_ep;
+    stat->total               += merging->total;
+    stat->inactive            += merging->inactive;
+    stat->entity_none         += merging->entity_none;
+    stat->entity_sock_v4tcp   += merging->entity_sock_v4tcp;
+    stat->entity_sock_v4udp   += merging->entity_sock_v4udp;
+    stat->entity_timer        += merging->entity_timer;
+    stat->entity_ep_v4tcp     += merging->entity_ep_v4tcp;
+    stat->entity_ep_v4udp     += merging->entity_ep_v4udp;
     stat->entity_ep_txn_timer += merging->entity_ep_txn_timer;
 }
 
@@ -348,11 +351,13 @@ void _status_entity(sk_txn_t* txn, sk_core_t* core)
     }
 
     _append_response(txn, "entities: total: %d inactive: %d entity_none: %d "
-        "entity_net: %d entity_timer: %d entity_ep: %d entity_ep_timer: %d "
-        "entity_ep_txn_timer: %d\n",
-        stat.total, stat.inactive, stat.entity_none, stat.entity_net,
-        stat.entity_timer, stat.entity_ep, stat.entity_ep_timer,
-        stat.entity_ep_txn_timer);
+        "entity_v4tcp: %d entity_v4udp: %d entity_timer: %d "
+        "entity_ep_v4tcp: %d entity_ep_v4udp: %d "
+        "entity_ep_timer: %d entity_ep_txn_timer: %d\n",
+        stat.total, stat.inactive, stat.entity_none,
+        stat.entity_sock_v4tcp, stat.entity_sock_v4udp,
+        stat.entity_timer, stat.entity_ep_v4tcp, stat.entity_ep_v4udp,
+        stat.entity_ep_timer, stat.entity_ep_txn_timer);
 }
 
 static
@@ -461,7 +466,7 @@ sk_workflow_cfg_t* sk_admin_workflowcfg_create(int port)
     cfg->concurrent   = 0;
     cfg->enable_stdin = 0;
     cfg->port         = port;
-    cfg->bind4        = "127.0.0.1";
+    cfg->bind         = "127.0.0.1";
     cfg->idl_name     = NULL;
     cfg->modules      = flist_create();
 
@@ -513,7 +518,8 @@ int _admin_run(void* md, sk_txn_t* txn)
 
     if (0 == strcasecmp(ADMIN_CMD_HELP, command)) {
         _process_help(txn);
-    } else if (0 == strcasecmp(ADMIN_CMD_METRICS, command)) {
+    } else if (0 == strcasecmp(ADMIN_CMD_METRICS, command) ||
+               0 == strcasecmp(ADMIN_CMD_COUNTER, command)) {
         _process_metrics(txn);
     } else if (0 == strcasecmp(ADMIN_CMD_LAST_SNAPSHOT, command)) {
         _process_last_snapshot(txn);

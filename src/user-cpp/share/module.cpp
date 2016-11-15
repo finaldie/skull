@@ -22,8 +22,8 @@ static skullcpp::metrics::module moduleMetrics;
 static
 void module_init(const skull_config_t* config)
 {
-    std::cout << "module(test): init" << std::endl;
-    SKULLCPP_LOG_INFO("1", "module(test): init");
+    std::cout << "module({MODULE_NAME}): init" << std::endl;
+    SKULLCPP_LOG_INFO("1", "module({MODULE_NAME}): init");
 
     // Load skull_config to skullcpp::Config
     auto& conf = skullcpp::Config::instance();
@@ -44,8 +44,8 @@ void module_init(const skull_config_t* config)
 static
 void module_release()
 {
-    std::cout << "module(test): released" << std::endl;
-    SKULLCPP_LOG_INFO("5", "module(test): released");
+    std::cout << "module({MODULE_NAME}): released" << std::endl;
+    SKULLCPP_LOG_INFO("5", "module({MODULE_NAME}): released");
 }
 
 /**
@@ -65,12 +65,12 @@ ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     // Increase the 'module.request' metrics counter
     moduleMetrics.request.inc(1);
 
-    std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
-    SKULLCPP_LOG_INFO("2", "module_unpack(test): data sz:" << data_sz);
+    std::cout << "module_unpack({MODULE_NAME}): data sz: " << data_sz << std::endl;
+    SKULLCPP_LOG_INFO("2", "module_unpack({MODULE_NAME}): data sz:" << data_sz);
 
     // Deserialize data to transaction data
-    auto& example = (skull::workflow::example&)txn.data();
-    example.set_data(data, data_sz);
+    auto& sharedData = (skull::workflow::{IDL_NAME}&)txn.data();
+    sharedData.set_data(data, data_sz);
     return (ssize_t)data_sz;
 }
 
@@ -86,11 +86,11 @@ ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 static
 int module_run(skullcpp::Txn& txn)
 {
-    auto& example = (skull::workflow::example&)txn.data();
+    auto& sharedData = (skull::workflow::{IDL_NAME}&)txn.data();
 
     // Print and Log the current shared data value
-    std::cout << "receive data: " << example.data() << std::endl;
-    SKULLCPP_LOG_INFO("3", "receive data: " << example.data());
+    std::cout << "receive data: " << sharedData.data() << std::endl;
+    SKULLCPP_LOG_INFO("3", "receive data: " << sharedData.data());
     return 0;
 }
 
@@ -101,13 +101,13 @@ int module_run(skullcpp::Txn& txn)
 static
 void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 {
-    auto& example = (skull::workflow::example&)txn.data();
+    auto& sharedData = (skull::workflow::{IDL_NAME}&)txn.data();
 
     // If the transaction status is not OK, return a 'error' message
     if (txn.status() != skullcpp::Txn::TXN_OK) {
-        SKULLCPP_LOG_ERROR("5", "module_pack(test): error status occurred: "
+        SKULLCPP_LOG_ERROR("5", "module_pack({MODULE_NAME}): error status occurred: "
                            << txn.status() << ". txn data: "
-                           << example.data(), "This error is expected");
+                           << sharedData.data(), "This error is expected");
         txndata.append("error");
         return;
     }
@@ -116,9 +116,9 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
     moduleMetrics.response.inc(1);
 
     // Log and return response message
-    std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
-    SKULLCPP_LOG_INFO("4", "module_pack(test): data sz:" << example.data().length());
-    txndata.append(example.data());
+    std::cout << "module_pack({MODULE_NAME}): data sz: " << sharedData.data().length() << std::endl;
+    SKULLCPP_LOG_INFO("4", "module_pack({MODULE_NAME}): data sz:" << sharedData.data().length());
+    txndata.append(sharedData.data());
 }
 
 /******************************** Register Module *****************************/

@@ -35,7 +35,8 @@ function action_cpp_module_valid()
 
 function action_cpp_module_add()
 {
-    local module=$1
+    local module="$1"
+    local idl="$2"
     local module_path=$SKULL_PROJ_ROOT/src/modules/$module
 
     if [ -d "$module_path" ]; then
@@ -58,6 +59,8 @@ function action_cpp_module_add()
 
     sed -i "s/{MODULE_NAME}/$module/g" $module_path/src/module.cpp
     sed -i "s/{MODULE_NAME}/$module/g" $module_path/tests/test_module.cpp
+    sed -i "s/{IDL_NAME}/$idl/g"       $module_path/src/module.cpp
+    sed -i "s/{IDL_NAME}/$idl/g"       $module_path/tests/test_module.cpp
 
     # copy makefile templates
     cp $LANGUAGE_CPP_PATH/share/Makefile.mod     $module_path/Makefile
@@ -95,9 +98,15 @@ function action_cpp_common_create()
             $COMMON_CPP_LOCATION/.gitignore
     fi
 
-    # copy common makefile targets
+    # copy common makefile includes and targets
+    cp $LANGUAGE_CPP_PATH/share/Makefile.inc \
+        $SKULL_MAKEFILE_FOLDER/Makefile.cpp.inc
+
     cp $LANGUAGE_CPP_PATH/share/Makefile.common.targets \
         $SKULL_MAKEFILE_FOLDER/Makefile.common.cpp.targets
+
+    cp $LANGUAGE_CPP_PATH/share/Makefile.targets \
+        $SKULL_MAKEFILE_FOLDER/Makefile.cpp.targets
 
     # generate the metrics
     action_cpp_gen_metrics $SKULL_METRICS_FILE

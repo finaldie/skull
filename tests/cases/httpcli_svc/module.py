@@ -101,4 +101,27 @@ def module_run(txn):
 
     mod_dymetrics = Metrics.transaction('test')
     mod_dymetrics.request.inc(1)
+
+    # Assemble api request
+    http_query = service_http_query_req_pto.query_req()
+    http_query.isHttps = False
+    http_query.method  = 'GET'
+    http_query.host    = '216.58.194.196'  # google's ip
+    http_query.port    = 80
+    http_query.uri     = '/'
+    http_query.header.add(name = 'Host', value = 'google.com')
+    http_query.timeout = 1000
+
+    # invoke iocall to s1 service
+    ret = txn.iocall('http', 'query', http_query, 0, _api_cb)
+    print "iocall ret: {}".format(ret)
+
+    return True
+
+def _api_cb(txn, iostatus, api_name, request_msg, response_msg):
+    print "api_cb: iostatus: {}, api_name: {}, request_msg: {}, response_msg: {}".format(
+            iostatus, api_name, request_msg, response_msg)
+
+    example_msg = txn.data()
+    example_msg.data = str(response_msg.body)
     return True

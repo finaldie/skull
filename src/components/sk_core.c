@@ -40,8 +40,7 @@ void _sk_init_admin(sk_core_t* core)
     sk_module_t* admin_module = sk_admin_module();
     sk_workflow_add_module(core->admin_wf, admin_module);
 
-    sk_trigger_t* trigger = sk_trigger_create(core->master, core->admin_wf,
-                                              core->admin_wf_cfg);
+    sk_trigger_t* trigger = sk_trigger_create(core->master, core->admin_wf);
     int ret = flist_push(core->triggers, trigger);
     SK_ASSERT(!ret);
 }
@@ -161,8 +160,7 @@ void _sk_setup_workflows(sk_core_t* core)
         SK_ASSERT(!ret);
 
         // setup triggers
-        sk_trigger_t* trigger = sk_trigger_create(core->master, workflow,
-                                                  workflow_cfg);
+        sk_trigger_t* trigger = sk_trigger_create(core->master, workflow);
         ret = flist_push(core->triggers, trigger);
         SK_ASSERT(!ret);
 

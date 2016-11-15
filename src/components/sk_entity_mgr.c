@@ -45,28 +45,34 @@ void _update_stat(sk_entity_mgr_t* mgr, const sk_entity_t* entity,
 
     mgr->stat.total += value;
 
-    int tag = sk_entity_tag(entity);
-    switch (tag) {
-    case SK_ENTITY_TAG_NONE:
+    sk_entity_type_t type = sk_entity_type(entity);
+    switch (type) {
+    case SK_ENTITY_NONE:
         mgr->stat.entity_none += value;
         break;
-    case SK_ENTITY_TAG_NET:
-        mgr->stat.entity_net += value;
+    case SK_ENTITY_SOCK_V4TCP:
+        mgr->stat.entity_sock_v4tcp += value;
         break;
-    case SK_ENTITY_TAG_TIMER:
+    case SK_ENTITY_SOCK_V4UDP:
+        mgr->stat.entity_sock_v4udp += value;
+        break;
+    case SK_ENTITY_TIMER:
         mgr->stat.entity_timer += value;
         break;
-    case SK_ENTITY_TAG_EP:
-        mgr->stat.entity_ep += value;
+    case SK_ENTITY_EP_V4TCP:
+        mgr->stat.entity_ep_v4tcp += value;
         break;
-    case SK_ENTITY_TAG_EP_TIMER:
+    case SK_ENTITY_EP_V4UDP:
+        mgr->stat.entity_ep_v4udp += value;
+        break;
+    case SK_ENTITY_EP_TIMER:
         mgr->stat.entity_ep_timer += value;
         break;
-    case SK_ENTITY_TAG_EP_TXN_TIMER:
+    case SK_ENTITY_EP_TXN_TIMER:
         mgr->stat.entity_ep_txn_timer++;
         break;
     default:
-        SK_ASSERT_MSG(0, "Unknown entity tag: %d\n", tag);
+        SK_ASSERT_MSG(0, "Unknown entity type: %d\n", type);
         break;
     }
 }
@@ -99,7 +105,7 @@ void _cleanup_dead_entities(sk_entity_mgr_t* mgr, int force)
 
         // 2. Update metrics
         sk_metrics_worker.entity_destroy.inc(1);
-        if (SK_ENTITY_NET == sk_entity_type(entity)) {
+        if (SK_ENTITY_SOCK_V4TCP == sk_entity_type(entity)) {
             sk_metrics_worker.connection_destroy.inc(1);
         }
 
@@ -150,7 +156,7 @@ void sk_entity_mgr_add(sk_entity_mgr_t* mgr, sk_entity_t* entity)
 
     // Recored metrics
     sk_metrics_worker.entity_create.inc(1);
-    if (SK_ENTITY_NET == sk_entity_type(entity)) {
+    if (SK_ENTITY_SOCK_V4TCP == sk_entity_type(entity)) {
         sk_metrics_worker.connection_create.inc(1);
     }
 

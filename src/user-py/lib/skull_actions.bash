@@ -35,7 +35,8 @@ function action_py_module_valid()
 
 function action_py_module_add()
 {
-    local module=$1
+    local module="$1"
+    local idl="$2"
     local module_path=$SKULL_PROJ_ROOT/src/modules/$module
 
     if [ -d "$module_path" ]; then

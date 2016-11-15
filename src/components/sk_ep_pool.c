@@ -454,7 +454,7 @@ sk_timer_t* _ep_create_timer(sk_ep_t* ep,
     sk_ep_mgr_t* mgr = ep->owner;
 
     sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
-    timerdata->timer_entity = sk_entity_create(NULL, SK_ENTITY_TAG_EP_TIMER);
+    timerdata->timer_entity = sk_entity_create(NULL, SK_ENTITY_EP_TIMER);
     timerdata->data.ep = ep;
 
     sk_ud_t cb_data  = {.ud = timerdata};
@@ -483,7 +483,7 @@ sk_timer_t* _ep_node_create_timer(fdlist_node_t* ep_node,
     sk_ep_mgr_t*  mgr     = ep_data->owner->owner;
 
     sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
-    timerdata->timer_entity = sk_entity_create(NULL, SK_ENTITY_TAG_EP_TXN_TIMER);
+    timerdata->timer_entity = sk_entity_create(NULL, SK_ENTITY_EP_TXN_TIMER);
     timerdata->data.ep_node = ep_node;
 
     sk_ud_t cb_data  = {.ud = timerdata};
@@ -726,9 +726,9 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
     size_t read_len = 0;
     size_t used_len = fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
     if (used_len == 0) {
-        read_len = 1024;
+        read_len = SK_DEFAULT_READBUF_LEN;
     } else {
-        read_len = used_len * 2;
+        read_len = used_len * SK_DEFAULT_READBUF_FACTOR;
     }
 
     ssize_t bytes = sk_entity_read(ep->entity, NULL, read_len);
@@ -969,13 +969,13 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(handler->port);
+    server_addr.sin_family      = AF_INET;
+    server_addr.sin_port        = htons(handler->port);
     server_addr.sin_addr.s_addr = inet_addr(handler->ip);
 
     ep->status = SK_EP_ST_CONNECTING;
     int ret = connect(fd, (struct sockaddr *)(&server_addr),
-                     sizeof(struct sockaddr));
+                      sizeof(struct sockaddr));
     if (ret != 0) {
         return -1;
     }
@@ -997,13 +997,16 @@ sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                     uint64_t ekey, const char* ipkey,
                     unsigned long long start)
 {
+    sk_entity_type_t etype =
+        handler->type == SK_EP_TCP ? SK_ENTITY_EP_V4TCP : SK_ENTITY_EP_V4UDP;
+
     sk_ep_t* ep = calloc(1, sizeof(*ep));
     ep->ekey    = ekey;
     strncpy(ep->ipkey, ipkey, SK_EP_KEY_MAX);
     ep->type    = handler->type;
     ep->status  = SK_EP_ST_INIT;
     ep->owner   = mgr;
-    ep->entity  = sk_entity_create(NULL, SK_ENTITY_TAG_EP);
+    ep->entity  = sk_entity_create(NULL, etype);
     ep->txns    = fdlist_create();
     ep->ntxn    = 0;
     ep->flags   = 0;

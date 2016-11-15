@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <errno.h>
 
 #include "flibs/flog.h"
@@ -16,7 +17,7 @@ sk_workflow_cfg_t* _create_workflow_cfg()
     sk_workflow_cfg_t* workflow = calloc(1, sizeof(*workflow));
     workflow->port = SK_CONFIG_NO_PORT;
     workflow->modules = flist_create();
-    workflow->bind4   = strdup("127.0.0.1");
+    workflow->bind    = strdup("127.0.0.1");
     return workflow;
 }
 
@@ -31,7 +32,7 @@ void _delete_workflow_cfg(sk_workflow_cfg_t* workflow)
     }
     flist_delete(workflow->modules);
 
-    free((void*)workflow->bind4);
+    free((void*)workflow->bind);
     free((void*)workflow->idl_name);
     free(workflow);
 }
@@ -62,10 +63,14 @@ static
 sk_config_t* _create_config()
 {
     sk_config_t* config = calloc(1, sizeof(*config));
+    config->threads   = 1;
     config->workflows = flist_create();
     config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     config->langs     = flist_create();
     config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
+    config->log_level = FLOG_LEVEL_INFO;
+    strncpy(config->log_name, "skull.log", sizeof("skull.log"));
+
     return config;
 }
 
@@ -197,11 +202,24 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
                 if (workflow->enable_stdin) {
                     enabled_stdin = 1;
                 }
-            } else if (0 == strcmp(key, "bind4")) {
-                free((void*)workflow->bind4);
-                workflow->bind4 = strdup(sk_config_getstring(child));
+            } else if (0 == strcmp(key, "bind")) {
+                free((void*)workflow->bind);
+                workflow->bind = strdup(sk_config_getstring(child));
             } else if (0 == strcmp(key, "timeout")) {
                 workflow->timeout = sk_config_getint(child);
+            } else if (0 == strcmp(key, "sock_type")) {
+                int sock_type = SK_SOCK_TCP;
+                const char* cfg_sock_type = sk_config_getstring(child);
+
+                if (0 == strcasecmp("tcp", cfg_sock_type)) {
+                    sock_type = SK_SOCK_TCP;
+                } else if (0 == strcasecmp("udp", cfg_sock_type)) {
+                    sock_type = SK_SOCK_UDP;
+                } else {
+                    SK_ASSERT_MSG(0, "sock_type must be 'tcp' or 'udp'\n");
+                }
+
+                workflow->sock_type = (uint32_t)sock_type & 0x1F;
             }
         }
         fhash_str_iter_release(&item_iter);
@@ -356,7 +374,7 @@ void _load_bios(sk_cfg_node_t* node, sk_config_t* config)
     }
 
     config->bio_cnt = sk_config_getint(node);
-    SK_ASSERT_MSG(config->bio_cnt >= 0, "config: bio must >= 0\n");
+    SK_ASSERT_MSG(config->bio_cnt >= 0, "config: bg_iothreads must >= 0\n");
 }
 
 static
@@ -390,9 +408,9 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         const char* key = iter.key;
 
         // load thread_num
-        if (0 == strcmp(key, "thread_num")) {
+        if (0 == strcmp(key, "worker_threads")) {
             config->threads = sk_config_getint(child);
-            SK_ASSERT_MSG(config->threads > 0, "config: thread_num must > 0\n");
+            SK_ASSERT_MSG(config->threads > 0, "config: worker_threads must > 0\n");
         } else if (0 == strcmp(key, "workflows")) {
             // load working flows
             _load_workflow(child, config);
@@ -405,7 +423,7 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         } else if (0 == strcmp(key, "services")) {
             // load services
             _load_services(child, config);
-        } else if (0 == strcmp(key, "bio")) {
+        } else if (0 == strcmp(key, "bg_iothreads")) {
             // load bio(s)
             _load_bios(child, config);
         } else if (0 == strcmp(key, "languages")) {

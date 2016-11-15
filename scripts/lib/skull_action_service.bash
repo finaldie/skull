@@ -446,14 +446,17 @@ function _action_service_import()
         exit 1
     fi
 
-    # 5. Generate service config related code
+    # 5. Add common folder if possible
+    sk_util_run_lang_action $language $SKULL_LANG_COMMON_CREATE
+
+    # 6. Generate service config related code
     sk_util_service_config_gen $service
     if [ $? != 0 ]; then
         echo "Error: import service failed, cannot generate config" >&2
         exit 1
     fi
 
-    # 6. Add service into skull-config
+    # 7. Add service into skull-config
     $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
         -a add -s $service -b true -d $data_mode -l $language
 

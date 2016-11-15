@@ -17,9 +17,9 @@ DEPLOY_LOG_ROOT := $(DEPLOY_DIR_ROOT)/log
 DEPLOY_ETC_ROOT := $(DEPLOY_DIR_ROOT)/etc
 
 # Get all the sub dirs which have Makefile
-COMMONS := $(shell find src/common -name Makefile)
-MODS := $(shell find src/modules -name Makefile)
-SRVS := $(shell find src/services -name Makefile)
+COMMONS := $(shell find src/common -maxdepth 2 -name Makefile)
+MODS := $(shell find src/modules -maxdepth 2 -name Makefile)
+SRVS := $(shell find src/services -maxdepth 2 -name Makefile)
 
 SUBS = \
     $(COMMONS) \

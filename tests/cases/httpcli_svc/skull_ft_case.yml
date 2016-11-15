@@ -1,15 +1,13 @@
-description: Test a module callout a service
+description: Regression test for skull-service-dns
 
 pre-run:
     - echo "pre-run"
     - ${COMMON}/create_project
     - ${COMMON}/create_workflow -c y -I example -i n -n y -p 7758
     - ${COMMON}/create_module -n test -i 0 -l py
-    - ${COMMON}/create_service -n s1 -l cpp -m rw-pr
-    - ${COMMON}/create_service_api -s s1 -n get
+    - 'cd ${RUN}/project/src/services && git clone git://github.com/finaldie/skull-service-httpcli.git http && cd http && git submodule update --init --recursive'
+    - ${COMMON}/service_import -n http -m rw-pr
     - cp ${CASE}/module.py ${RUN}/project/src/modules/test/
-    - cp ${COMMON}/templates/service.cpp ${RUN}/project/src/services/s1/src/
-    - cp ${COMMON}/templates/test_service.cpp ${RUN}/project/src/services/s1/tests/
     - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
 
 run:
@@ -19,10 +17,10 @@ run:
 
 verify:
     - echo "verify"
-    - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie"
+    - echo "hello skull" | nc 127.0.0.1 7758
+    - sleep 1
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
-    - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep TxnLog | awk ''{print $8}'' | grep 0'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "Google has many special features"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
 
 post-verify:
