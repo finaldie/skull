@@ -98,9 +98,15 @@ function action_cpp_common_create()
             $COMMON_CPP_LOCATION/.gitignore
     fi
 
-    # copy common makefile targets
+    # copy common makefile includes and targets
+    cp $LANGUAGE_CPP_PATH/share/Makefile.inc \
+        $SKULL_MAKEFILE_FOLDER/Makefile.cpp.inc
+
     cp $LANGUAGE_CPP_PATH/share/Makefile.common.targets \
         $SKULL_MAKEFILE_FOLDER/Makefile.common.cpp.targets
+
+    cp $LANGUAGE_CPP_PATH/share/Makefile.targets \
+        $SKULL_MAKEFILE_FOLDER/Makefile.cpp.targets
 
     # generate the metrics
     action_cpp_gen_metrics $SKULL_METRICS_FILE
