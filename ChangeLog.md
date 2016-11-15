@@ -6,7 +6,10 @@
     * **Enhancement:** Refactor entity type
     * **Enhancement:** Workflow config, rename 'bind4' to 'bind'
   * Scripts
+    * **Fix:** Fix service importing failure issue
     * **Enhancement:** Better format of generating 'skull-config.yaml'
+  * Test
+    * **New:** Add `httpclient` FT case
   * MISC
     * **Enhancement:** Only search for the top level Makefiles for building the common/module/service
 * 2016-10-30 0.9.10
