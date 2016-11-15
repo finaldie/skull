@@ -166,6 +166,7 @@ skull.core.t.worker.worker-0.request: 2.000000
 Name                  | Description |
 ----------------------|-------------|
 [Async DNS Client][2] | Example service, to show how to write a basic async DNS client |
+[Async Http Client][15] | Async http client service, easy to send/receive http request/response |
 
 ## Other Resources
 Name                  | Description |
@@ -194,3 +195,4 @@ To fix a bug or add a new feature, just **`Fork`** the repo, then apply the fixe
 [12]: https://github.com/finaldie/skull/wiki/API-Doc-:-Python
 [13]: https://github.com/finaldie/skull/wiki/Integrate-with-Nginx
 [14]: https://groups.google.com/forum/#!forum/skull-engine
+[15]: https://github.com/finaldie/skull-service-httpcli
