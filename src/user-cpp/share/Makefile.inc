@@ -15,7 +15,7 @@ EXTRA += -Wdisabled-optimization
 EXTRA += -fstack-protector -fno-omit-frame-pointer
 
 # Enable the following line to build a strong program
-EXTRA += -pedantic -Wconversion
+#EXTRA += -pedantic -Wconversion
 
 # Enable compiling checking the padded/inline issue
 # EXTRA += -Wpadded -Winline
