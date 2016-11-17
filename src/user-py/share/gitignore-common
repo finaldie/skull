@@ -7,7 +7,7 @@ metrics.py
 
 # generated idl header files
 protos.py
-protos/*
+proto/*
 
 # compiled file for ycm
 .ycm_extra_conf.pyc
