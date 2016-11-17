@@ -37,8 +37,6 @@ from webob import Request as WebObRequest
 from webob import Response as WebObResponse
 import webob.request as WebObReqModule
 
-import pprint
-
 class RequestIncomplete(Exception):
     def __init__(self, reason):
         self.message = reason
