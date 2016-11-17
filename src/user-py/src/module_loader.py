@@ -85,12 +85,10 @@ def module_load(module_name):
         return False
 
     # 2.4 Load module_pack
-    if _load_user_entry(module_name, MODULE_PACK_FUNCNAME, uModule, userModule, False) is None:
-        return False
+    _load_user_entry(module_name, MODULE_PACK_FUNCNAME, uModule, userModule, False)
 
     # 2.5 Load module_unpack
-    if _load_user_entry(module_name, MODULE_UNPACK_FUNCNAME, uModule, userModule, False) is None:
-        return False
+    _load_user_entry(module_name, MODULE_UNPACK_FUNCNAME, uModule, userModule, False)
 
     # 3. Assembe user module into Global Module Table
     UserModuleTables[module_name] = userModule
