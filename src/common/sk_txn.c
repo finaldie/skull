@@ -405,6 +405,11 @@ void sk_txn_log_add(sk_txn_t* txn, const char* fmt, ...)
                   content, strlen(content));
 }
 
+void sk_txn_log_end(sk_txn_t* txn) {
+    int ret = sk_mbuf_push(txn->transaction, "\0", 1);
+    SK_ASSERT_MSG(!ret, "Add txn log endding str failed");
+}
+
 const char* sk_txn_log(const sk_txn_t* txn)
 {
     return sk_mbuf_rawget(txn->transaction, 0);

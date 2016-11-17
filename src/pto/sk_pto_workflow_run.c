@@ -101,7 +101,11 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 }
 
 static
-void _write_txn_log(const sk_txn_t* txn) {
+void _write_txn_log(sk_txn_t* txn) {
+    // 1. Push a null-str
+    sk_txn_log_end(txn);
+
+    // 2. Log the full txn log
     unsigned long long alivetime = sk_txn_alivetime(txn);
 
     SK_LOG_INFO(SK_ENV_LOGGER, "TxnLog: status: %d duration: %.3f ms | %s",

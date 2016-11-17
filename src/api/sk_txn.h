@@ -135,6 +135,7 @@ unsigned long long sk_txn_task_livetime(const sk_txn_t*, uint64_t task_id);
  * Add a transaction log
  */
 void sk_txn_log_add(sk_txn_t*, const char* fmt, ...);
+void sk_txn_log_end(sk_txn_t*);
 
 /**
  * Get full transaction log
