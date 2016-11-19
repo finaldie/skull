@@ -22,18 +22,11 @@ static skullcpp::metrics::module moduleMetrics;
 static
 void module_init(const skull_config_t* config)
 {
-    std::cout << "module({MODULE_NAME}): init" << std::endl;
-    SKULLCPP_LOG_INFO("1", "module({MODULE_NAME}): init");
+    SKULLCPP_LOG_INFO("ModuleInit", "module({MODULE_NAME}): init");
 
     // Load skull_config to skullcpp::Config
     auto& conf = skullcpp::Config::instance();
     conf.load(config);
-
-    // Log the config item values (Feel free to remove them)
-    SKULLCPP_LOG_DEBUG("config test_item: " << conf.test_item());
-    SKULLCPP_LOG_DEBUG("config test_rate: " << conf.test_rate());
-    SKULLCPP_LOG_DEBUG("config test_name: " << conf.test_name());
-    SKULLCPP_LOG_DEBUG("config test_bool: " << conf.test_bool());
 }
 
 /**
@@ -44,8 +37,7 @@ void module_init(const skull_config_t* config)
 static
 void module_release()
 {
-    std::cout << "module({MODULE_NAME}): released" << std::endl;
-    SKULLCPP_LOG_INFO("5", "module({MODULE_NAME}): released");
+    SKULLCPP_LOG_INFO("ModuleRelease", "module({MODULE_NAME}): released");
 }
 
 /**
@@ -65,8 +57,7 @@ ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     // Increase the 'module.request' metrics counter
     moduleMetrics.request.inc(1);
 
-    std::cout << "module_unpack({MODULE_NAME}): data sz: " << data_sz << std::endl;
-    SKULLCPP_LOG_INFO("2", "module_unpack({MODULE_NAME}): data sz:" << data_sz);
+    SKULLCPP_LOG_INFO("ModuleUnpack", "module_unpack({MODULE_NAME}): data sz:" << data_sz);
 
     // Deserialize data to transaction data
     auto& sharedData = (skull::workflow::{IDL_NAME}&)txn.data();
@@ -89,8 +80,7 @@ int module_run(skullcpp::Txn& txn)
     auto& sharedData = (skull::workflow::{IDL_NAME}&)txn.data();
 
     // Print and Log the current shared data value
-    std::cout << "receive data: " << sharedData.data() << std::endl;
-    SKULLCPP_LOG_INFO("3", "receive data: " << sharedData.data());
+    SKULLCPP_LOG_INFO("ModuleRun", "receive data: " << sharedData.data());
     return 0;
 }
 
@@ -105,7 +95,7 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
 
     // If the transaction status is not OK, return a 'error' message
     if (txn.status() != skullcpp::Txn::TXN_OK) {
-        SKULLCPP_LOG_ERROR("5", "module_pack({MODULE_NAME}): error status occurred: "
+        SKULLCPP_LOG_ERROR("ModulePack", "module_pack({MODULE_NAME}): error status occurred: "
                            << txn.status() << ". txn data: "
                            << sharedData.data(), "This error is expected");
         txndata.append("error");
@@ -116,8 +106,7 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
     moduleMetrics.response.inc(1);
 
     // Log and return response message
-    std::cout << "module_pack({MODULE_NAME}): data sz: " << sharedData.data().length() << std::endl;
-    SKULLCPP_LOG_INFO("4", "module_pack({MODULE_NAME}): data sz:" << sharedData.data().length());
+    SKULLCPP_LOG_INFO("ModulePack", "module_pack({MODULE_NAME}): data sz:" << sharedData.data().length());
     txndata.append(sharedData.data());
 }
 

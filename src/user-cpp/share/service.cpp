@@ -15,7 +15,6 @@
 static
 void skull_service_init(skullcpp::Service& service, const skull_config_t* config)
 {
-    std::cout << "skull service init" << std::endl;
     SKULLCPP_LOG_INFO("svc.{SERVICE_NAME}", "Skull service initializing");
 
     // Load skull_config to skullcpp::Config
@@ -28,7 +27,6 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
 static
 void skull_service_release(skullcpp::Service& service)
 {
-    std::cout << "skull service release" << std::endl;
     SKULLCPP_LOG_INFO("svc.{SERVICE_NAME}", "Skull service releasd");
 }
 

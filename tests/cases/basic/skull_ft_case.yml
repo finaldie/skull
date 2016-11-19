@@ -21,10 +21,6 @@ verify:
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello skull"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "module_pack(test): data sz:12"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep "config test_item: 123"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep "config test_rate: 1"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep "config test_name: module"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep "config test_bool: 1"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'
 
 post-verify:
