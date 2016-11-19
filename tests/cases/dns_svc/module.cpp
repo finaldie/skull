@@ -58,9 +58,13 @@ int _dns_query_cb(skullcpp::Txn& txn, skullcpp::Txn::IOStatus status,
 
     if (!query_resp.code()) {
         // correct
-        std::cout << "return ip: " << query_resp.ip() << std::endl;
-        SKULLCPP_LOG_INFO("dns_query_cb-1", "query reponse: ip = "
-                          << query_resp.ip());
+        for (int i = 0; i < query_resp.record_size(); i++) {
+            auto& record = query_resp.record(i);
+
+            std::cout << "return ip: " << record.ip() << std::endl;
+            SKULLCPP_LOG_INFO("dns_query_cb-1", "query reponse: ip = "
+                              << record.ip());
+        }
     } else {
         // error ocurred
         std::cout << "dns error reason: " << query_resp.error() << std::endl;
@@ -81,7 +85,7 @@ int module_run(skullcpp::Txn& txn)
 
     // Call dns service
     skull::service::dns::query_req query_req;
-    query_req.set_domain("www.google.com");
+    query_req.set_question("www.google.com");
 
     skullcpp::Txn::IOStatus ret =
         txn.iocall("dns", "query", query_req, 0, _dns_query_cb);
