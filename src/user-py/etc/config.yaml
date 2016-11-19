@@ -1,4 +1,8 @@
-test_item: 123
-test_rate: 1.0
-test_name: module
-test_bool: true
+# Config Items
+# e.g.
+#
+#   test_item: 123
+#   test_rate: 1.0
+#   test_name: module
+#   test_bool: true
+#
