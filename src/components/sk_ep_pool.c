@@ -480,7 +480,7 @@ sk_timer_t* _ep_node_create_timer(fdlist_node_t* ep_node,
     SK_ASSERT(ep_data);
     SK_ASSERT(ep_data->owner);
     SK_ASSERT(ep_data->owner->owner);
-    sk_ep_mgr_t*  mgr     = ep_data->owner->owner;
+    sk_ep_mgr_t* mgr = ep_data->owner->owner;
 
     sk_ep_timerdata_t* timerdata = calloc(1, sizeof(*timerdata));
     timerdata->timer_entity = sk_entity_create(NULL, SK_ENTITY_EP_TXN_TIMER);
