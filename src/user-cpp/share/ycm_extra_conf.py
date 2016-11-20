@@ -46,7 +46,7 @@ flags = [
 '-Wfloat-equal',
 '-Winline',
 '-Wdisabled-optimization',
-'-Wpadded',
+#'-Wpadded',
 '-pedantic',
 '-fexceptions',
 '-Wconversion',
