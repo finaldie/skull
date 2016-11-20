@@ -133,7 +133,11 @@ function action_cpp_gen_metrics()
     local header_file=$COMMON_CPP_LOCATION/src/skull_metrics.h
 
     python $LANGUAGE_CPP_PATH/bin/skull-metrics-gen.py -c $config \
-        -o $tmp_header_file \
+        -o $tmp_header_file
+
+    if [ ! -d "$COMMON_CPP_LOCATION/src/" ]; then
+        mkdir -p $COMMON_CPP_LOCATION/src/
+    fi
 
     if ! $(sk_util_compare_file $tmp_header_file $header_file); then
         cp $tmp_header_file $header_file
