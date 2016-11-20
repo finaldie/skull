@@ -67,7 +67,7 @@ function _action_metrics_gen()
 
     for language in ${langs[@]}; do
         if [ -d "$SKULL_PROJ_ROOT/src/common/$language" ]; then
-            echo " - generating $language metrcis..."
+            echo " - Generating $language counters..."
             action_${language}_gen_metrics $metrics_config
         fi
     done
@@ -87,6 +87,7 @@ function _action_idl_gen()
     #  so preparing the building environment job handled by language-
     #  level script
     for language in ${langs[@]}; do
+        echo " - Generating $language IDLs..."
         action_${language}_gen_idl $SKULL_CONFIG_FILE
     done
 }

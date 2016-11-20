@@ -52,7 +52,7 @@ function action_build_usage()
 
 function _action_prepare()
 {
-    echo "Generating metrics..."
+    echo "Generating counters..."
     action_common --metrics-gen || exit 1
 
     echo "Generating transaction/service IDLs..."
