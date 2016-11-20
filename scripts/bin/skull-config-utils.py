@@ -32,7 +32,7 @@ CONFIG_WF_HEADER = """
 #        port: 7758
 #        stdin: 0
 #        #bind: 0.0.0.0
-         #sock_type: tcp
+#        #sock_type: tcp
 #        #timeout: 100
 #
 # The 'bind' item is optional, and by default it will bind to '127.0.0.1'
