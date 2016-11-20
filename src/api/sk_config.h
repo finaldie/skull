@@ -95,9 +95,10 @@ typedef struct sk_config_t {
     // max open fds
     int    max_fds;
 
-#if __WORDSIZE == 64
-    int    __padding;
-#endif
+    bool   txn_logging;
+
+    bool   __padding1;
+    short  __padding2;
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);

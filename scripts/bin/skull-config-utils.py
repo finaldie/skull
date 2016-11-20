@@ -118,6 +118,17 @@ def _dump_config_to_file(cfgYamlObj, filename):
     else:
         content.write('#log_level: info\n\n')
 
+    # 6. 'Txn Logging'
+    content.write('##\n')
+    content.write('# Transaction Logging\n')
+    content.write('#   Enable to see the detail execution flow of each transaction\n')
+    content.write('#\n')
+    if cfgYamlObj.get('txn_logging'):
+        content.write('txn_logging: {}\n\n'.format(cfgYamlObj['txn_logging']))
+    else:
+        content.write('#txn_logging: false\n\n')
+
+
     # 6. Dump 'languages'
     content.write('# Supported Languages: cpp, py\n')
 

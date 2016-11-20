@@ -102,6 +102,10 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
 static
 void _write_txn_log(sk_txn_t* txn) {
+    if (!SK_ENV_CONFIG->txn_logging) {
+        return;
+    }
+
     // 1. Push a null-str
     sk_txn_log_end(txn);
 
