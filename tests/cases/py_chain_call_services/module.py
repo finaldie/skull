@@ -1,8 +1,8 @@
 import yaml
 import pprint
 
-from skullpy import txn as Txn
-from skullpy import txndata as TxnData
+from skullpy.txn import *
+from skullpy.txndata import *
 from skullpy import logger as Logger
 
 from skull.common import protos as Protos
