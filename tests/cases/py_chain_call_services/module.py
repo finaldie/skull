@@ -41,7 +41,7 @@ def module_pack(txn, txndata):
     mod_dymetrics = Metrics.transaction('test')
     mod_dymetrics.response.inc(1)
 
-    if txn.status() != Txn.Txn.TXN_OK:
+    if txn.status() != Txn.TXN_OK:
         txndata.append('error')
         Logger.error('6', 'module_pack error', 'no solution')
     else:
