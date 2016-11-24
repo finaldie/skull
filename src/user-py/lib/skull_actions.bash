@@ -68,13 +68,16 @@ function action_py_module_add()
 function action_py_common_create()
 {
     if [ -d "$COMMON_PY_LOCATION" ]; then
-        echo "notice: the common/py folder has already exist, ignore it"
+        echo "Notice: the common/py folder has already exist, ignore it"
         return 0
     fi
 
     # create common folders
     mkdir -p $COMMON_PY_LOCATION
-    touch $COMMON_PY_LOCATION/__init__.py
+    if [ ! -f $COMMON_PY_LOCATION/__init__.py ]; then
+        cp $LANGUAGE_PY_PATH/share/init_common.py \
+            $COMMON_PY_LOCATION/__init__.py
+    fi
 
     # move the Makefile to common/py only when there is no Makefile in there
     if [ ! -f $COMMON_PY_LOCATION/Makefile ]; then
@@ -215,7 +218,6 @@ function _generate_py_protos()
     fi
 
     $LANGUAGE_PY_PATH/bin/skull-idl-gen.py -p $PROTO_PY_FOLDER_NAME \
-        -o $COMMON_PY_LOCATION/protos.py \
         -i $PROTO_PY_FOLDER/__init__.py \
         $param_list
 }

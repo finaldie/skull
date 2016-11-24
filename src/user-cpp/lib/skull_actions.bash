@@ -77,7 +77,7 @@ function action_cpp_module_add()
 function action_cpp_common_create()
 {
     if [ -d "$COMMON_CPP_LOCATION" ]; then
-        echo "notice: the common/cpp folder has already exist, ignore it"
+        echo "Notice: the common/cpp folder has already exist, ignore it"
         return 0
     fi
 

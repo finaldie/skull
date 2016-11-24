@@ -1,12 +1,10 @@
 import yaml
 import pprint
 
-from skullpy.txn     import *
-from skullpy.txndata import *
-from skullpy         import logger as Logger
+from skullpy     import *
+from skullpy.txn import *
 
-from skull.common import protos  as Protos
-from skull.common import metrics as Metrics
+from skull.common import *
 from skull.common.proto import *
 
 ##
@@ -15,14 +13,14 @@ from skull.common.proto import *
 # @param config  A parsed yamlObj
 #
 def module_init(config):
-    Logger.info('ModuleInit', 'config: {}'.format(pprint.pformat(config)))
+    logger.info('ModuleInit', 'config: {}'.format(pprint.pformat(config)))
     return
 
 ##
 # Module Release Function, be called when shutdown phase
 #
 def module_release():
-    Logger.debug("py module release")
+    logger.debug("py module release")
     return
 
 ##
@@ -38,7 +36,7 @@ def module_release():
 #         - < 0: Error occurred
 #
 def module_unpack(txn, data):
-    Logger.debug('ModuleUnpack: receive data: {}'.format(data))
+    logger.debug('ModuleUnpack: receive data: {}'.format(data))
 
     # Store data into txn sharedData
     sharedData = txn.data()
@@ -56,10 +54,10 @@ def module_unpack(txn, data):
 # @return How many bytes be consumed
 #
 def module_pack(txn, txndata):
-    Logger.debug("py module pack")
+    logger.debug("py module pack")
 
     # Increase counters
-    mod_metrics = Metrics.module()
+    mod_metrics = metrics.module()
     mod_metrics.response.inc(1)
 
     # Assemble response
@@ -67,8 +65,8 @@ def module_pack(txn, txndata):
         txndata.append('error')
     else:
         sharedData = txn.data()
-        Logger.debug("pack data: %s" % sharedData.data)
-        Logger.info('ModulePack', 'module_pack: data sz: {}'.format(len(sharedData.data)))
+        logger.debug("pack data: %s" % sharedData.data)
+        logger.info('ModulePack', 'module_pack: data sz: {}'.format(len(sharedData.data)))
 
         txndata.append(sharedData.data)
 
@@ -81,10 +79,10 @@ def module_pack(txn, txndata):
 # @return - True if no error
 #         - False if error occurred
 def module_run(txn):
-    Logger.debug("py module run")
+    logger.debug("py module run")
 
     # Increase counters
-    mod_metrics = Metrics.module()
+    mod_metrics = metrics.module()
     mod_metrics.request.inc(1)
     return True
 
