@@ -57,7 +57,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
     if (ret) {
         sk_print("module (%s) encounter error\n", module_name);
-        SK_LOG_ERROR(SK_ENV_LOGGER,
+        SK_LOG_DEBUG(SK_ENV_LOGGER,
             "module (%s) encounter error", module_name);
 
         sk_txn_setstate(txn, SK_TXN_ERROR);
@@ -83,7 +83,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
         sk_print("module (%s) encounter error, goto pack directly\n",
                  module_name);
 
-        SK_LOG_ERROR(SK_ENV_LOGGER,
+        SK_LOG_DEBUG(SK_ENV_LOGGER,
             "module (%s) encounter error, goto pack directly", module_name);
         return _run(sched, src, entity, txn, proto_msg);
     }

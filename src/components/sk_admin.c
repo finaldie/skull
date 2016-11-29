@@ -513,7 +513,7 @@ int _admin_run(void* md, sk_txn_t* txn)
 
     const char* command = admin_data->command;
     sk_print("receive command: %s\n", command);
-    SK_LOG_INFO(SK_ENV_LOGGER, "receive command: %s", command);
+    SK_LOG_INFO(SK_ENV_LOGGER, "Received command: %s", command);
 
     if (0 == strcasecmp(ADMIN_CMD_HELP, command)) {
         _process_help(txn);
@@ -537,7 +537,7 @@ ssize_t _admin_unpack(void* md, struct sk_txn_t* txn,
                       const void* data, size_t data_sz)
 {
     sk_print("admin_unpack, data sz: %zu\n", data_sz);
-    SK_LOG_INFO(SK_ENV_LOGGER,
+    SK_LOG_DEBUG(SK_ENV_LOGGER,
                 "admin module_unpack: data sz:%zu", data_sz);
 
     const char* cmd = data;
