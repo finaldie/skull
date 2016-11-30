@@ -8,6 +8,7 @@
 #define SK_ENV              (sk_thread_env())
 #define SK_ENV_CORE         (sk_thread_env()->core)
 
+#define SK_ENV_CONFIG       (sk_thread_env()->core->config)
 #define SK_ENV_WORKFLOWS    (sk_thread_env()->core->workflows)
 #define SK_ENV_LOGGER       (sk_thread_env()->core->logger)
 #define SK_ENV_ENGINE       (sk_thread_env()->engine)

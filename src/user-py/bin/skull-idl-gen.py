@@ -62,6 +62,9 @@ def generate_svc_header(addReflection):
     return content
 
 def generate_idl_file(header_file_name):
+    if not header_file_name or len(header_file_name) == 0:
+        return
+
     # Open file
     header_file = file(header_file_name, 'w')
 
@@ -81,6 +84,9 @@ def generate_idl_file(header_file_name):
     header_file.close()
 
 def generate_init_file(init_file_name):
+    if not init_file_name or len(init_file_name) == 0:
+        return
+
     init_file = file(init_file_name, 'w')
 
     # Fill top title

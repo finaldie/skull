@@ -165,7 +165,7 @@ skull.core.t.worker.worker-0.request: 2.000000
 ## Existing Services
 Name                  | Description |
 ----------------------|-------------|
-[Async DNS Client][2] | Example service, to show how to write a basic async DNS client |
+[Async DNS Client][2] | Async DNS client for A record |
 [Async Http Client][15] | Async http client service, easy to send/receive http request/response |
 
 ## Other Resources

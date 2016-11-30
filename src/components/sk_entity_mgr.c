@@ -69,7 +69,7 @@ void _update_stat(sk_entity_mgr_t* mgr, const sk_entity_t* entity,
         mgr->stat.entity_ep_timer += value;
         break;
     case SK_ENTITY_EP_TXN_TIMER:
-        mgr->stat.entity_ep_txn_timer++;
+        mgr->stat.entity_ep_txn_timer += value;
         break;
     default:
         SK_ASSERT_MSG(0, "Unknown entity type: %d\n", type);

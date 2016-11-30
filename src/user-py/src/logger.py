@@ -20,7 +20,7 @@ def trace(msg):
     log_msg = "%s:%d TRACE - %s" % (filename, info.lineno, str(msg))
     try:
         capi.log(log_msg)
-    except Exception, e:
+    except Exception as e:
         print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
         pass
 
@@ -39,7 +39,7 @@ def debug(msg):
     log_msg = "%s:%d DEBUG - %s" % (filename, info.lineno, str(msg))
     try:
         capi.log(log_msg)
-    except Exception, e:
+    except Exception as e:
         print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
         pass
 
@@ -61,7 +61,7 @@ def info(code, msg):
     log_msg = "%s:%d INFO - {%s} %s" % (filename, info.lineno, str(code), str(msg))
     try:
         capi.log(log_msg)
-    except Exception, e:
+    except Exception as e:
         print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
         pass
 
@@ -86,7 +86,7 @@ def warn(code, msg, suggestion):
     log_msg = "%s:%d WARN - {%s} %s; suggestion: %s" % (filename, info.lineno, str(code), str(msg), str(suggestion))
     try:
         capi.log(log_msg)
-    except Exception, e:
+    except Exception as e:
         print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
         pass
 
@@ -111,7 +111,7 @@ def error(code, msg, solution):
     log_msg = "%s:%d ERROR - {%s} %s; solution: %s" % (filename, info.lineno, str(code), str(msg), str(solution))
     try:
         capi.log(log_msg)
-    except Exception, e:
+    except Exception as e:
         print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
         pass
 
@@ -133,7 +133,7 @@ def fatal(code, msg, solution):
     log_msg = "%s:%d FATAL - {%s} %s; solution: %s" % (filename, info.lineno, str(code), str(msg), str(solution))
     try:
         capi.log(log_msg)
-    except Exception, e:
+    except Exception as e:
         print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
         pass
 

@@ -10,7 +10,8 @@
 int sk_entity_safe_destroy(sk_entity_t* entity)
 {
     if (!entity) return 0;
-    sk_print("sk_entity_safe_destroy: entity %p\n", (void*)entity);
+    sk_print("sk_entity_safe_destroy: entity %p, type: %d\n",
+             (void*)entity, sk_entity_type(entity));
 
     sk_entity_mgr_t* owner = sk_entity_owner(entity);
     if (!owner) {

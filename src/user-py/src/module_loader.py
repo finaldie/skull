@@ -3,10 +3,10 @@
 import os
 import sys
 import types
-import pprint
 
 import yaml
 import skullpy.module_executor as skull_module_executor
+import skullpy.logger as Logger
 
 # Define required user module entries
 MODULE_INIT_FUNCNAME    = 'module_init'
@@ -32,7 +32,10 @@ def _load_user_entry(moduleName, entryName, uModule, userModule, isPrintError):
         userModule['entries'][entryName] = func
         return func
     else:
-        if isPrintError: print "Error: Not found %s entry" % entryName
+        if isPrintError:
+            Logger.fatal('user_entry', 'Not found {} entry'.format(entryName),
+                    'Please check the source file')
+
         return None
 
 # Public APIs
@@ -51,13 +54,13 @@ def module_load(module_name):
 
     # User Module Table
     userModule = {
-        'env':          EnvVars,
-        'name':         module_name,
-        'fullname':     full_name,
-        'module_obj':   None,
-        'config':       None,
+        'env'         : EnvVars,
+        'name'        : module_name,
+        'fullname'    : full_name,
+        'module_obj'  : None,
+        'config'      : None,
         'config_name:': '',
-        'entries':      {}
+        'entries'     : {}
     }
 
     # 1. Load user module
@@ -65,8 +68,9 @@ def module_load(module_name):
         #print "Loading user module: %s" % full_name
 
         uModule = __import__(full_name)
-    except Exception, e:
-        print "Error: Cannot load user module %s: %s" % (module_name, str(e))
+    except Exception as e:
+        Logger.fatal('module_load', 'Cannot load user module {}: {}'.format(module_name, str(e)),
+            'please check the module whether exist')
         raise
 
     userModule['module_obj'] = uModule
@@ -85,12 +89,10 @@ def module_load(module_name):
         return False
 
     # 2.4 Load module_pack
-    if _load_user_entry(module_name, MODULE_PACK_FUNCNAME, uModule, userModule, False) is None:
-        return False
+    _load_user_entry(module_name, MODULE_PACK_FUNCNAME, uModule, userModule, False)
 
     # 2.5 Load module_unpack
-    if _load_user_entry(module_name, MODULE_UNPACK_FUNCNAME, uModule, userModule, False) is None:
-        return False
+    _load_user_entry(module_name, MODULE_UNPACK_FUNCNAME, uModule, userModule, False)
 
     # 3. Assembe user module into Global Module Table
     UserModuleTables[module_name] = userModule
@@ -105,7 +107,8 @@ def module_load_config(module_name, config_file_name):
 
     user_module = UserModuleTables.get(module_name)
     if user_module is None:
-        print "Cannot find user module: %s" % module_name
+        Logger.fatal('load_config', 'Cannot find user module: {}'.format(module_name),
+                'please check the module has contained correct entries')
         raise
 
     # Loading the config yaml file
@@ -113,8 +116,10 @@ def module_load_config(module_name, config_file_name):
 
     try:
         yaml_file = file(config_file_name, 'r')
-    except Exception, e:
-        print "Error: Cannot load user module %s config %s : %s" % (module_name, config_file_name, str(e))
+    except Exception as e:
+        Logger.fatal('load_config',
+            'Cannot load user module {} config {} : {}'.format(module_name, config_file_name, str(e)),
+            'please check the config content format')
         raise
 
     conf_yml_obj = yaml.load(yaml_file)
@@ -131,7 +136,8 @@ def module_execute(module_name, entry_name, skull_txn=None, data=None, skull_txn
 
     user_module = UserModuleTables.get(module_name)
     if user_module is None:
-        print "Cannot find user module: %s" % module_name
+        Logger.fatal('module_execute', 'Cannot find user module: {}'.format(module_name),
+            'please check the module has contained correct entries')
         return
 
     entry_func = user_module['entries'][entry_name]
@@ -148,5 +154,7 @@ def module_execute(module_name, entry_name, skull_txn=None, data=None, skull_txn
     elif entry_name == MODULE_PACK_FUNCNAME:
         skull_module_executor.run_module_pack(entry_func, skull_txn, skull_txndata)
     else:
-        print "Unknown entry name for execution: %s" % entry_name
+        Logger.error('module_execute', 'Unknown entry name for execution: {}'.format(entry_name),
+            'Please check the engine code, it shouldn\'t be')
+        raise
 

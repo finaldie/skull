@@ -70,6 +70,7 @@ sk_config_t* _create_config()
     config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
     config->log_level = FLOG_LEVEL_INFO;
     strncpy(config->log_name, "skull.log", sizeof("skull.log"));
+    config->txn_logging = false;
 
     return config;
 }
@@ -439,6 +440,8 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
             // load max_fds
             int max_fds = sk_config_getint(child);
             config->max_fds = max_fds;
+        } else if (0 == strcmp(key, "txn_logging")) {
+            config->txn_logging = sk_config_getbool(child);
         }
     }
 

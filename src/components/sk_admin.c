@@ -350,10 +350,9 @@ void _status_entity(sk_txn_t* txn, sk_core_t* core)
         _merge_stat(&stat, &tmp);
     }
 
-    _append_response(txn, "entities: total: %d inactive: %d entity_none: %d "
-        "entity_v4tcp: %d entity_v4udp: %d entity_timer: %d "
-        "entity_ep_v4tcp: %d entity_ep_v4udp: %d "
-        "entity_ep_timer: %d entity_ep_txn_timer: %d\n",
+    _append_response(txn, "entities: total: %d inactive: %d ; none: %d "
+        "v4tcp: %d v4udp: %d timer: %d ep_v4tcp: %d ep_v4udp: %d "
+        "ep_timer: %d ep_txn_timer: %d\n",
         stat.total, stat.inactive, stat.entity_none,
         stat.entity_sock_v4tcp, stat.entity_sock_v4udp,
         stat.entity_timer, stat.entity_ep_v4tcp, stat.entity_ep_v4udp,
@@ -514,7 +513,7 @@ int _admin_run(void* md, sk_txn_t* txn)
 
     const char* command = admin_data->command;
     sk_print("receive command: %s\n", command);
-    SK_LOG_INFO(SK_ENV_LOGGER, "receive command: %s", command);
+    SK_LOG_INFO(SK_ENV_LOGGER, "Received command: %s", command);
 
     if (0 == strcasecmp(ADMIN_CMD_HELP, command)) {
         _process_help(txn);
@@ -538,7 +537,7 @@ ssize_t _admin_unpack(void* md, struct sk_txn_t* txn,
                       const void* data, size_t data_sz)
 {
     sk_print("admin_unpack, data sz: %zu\n", data_sz);
-    SK_LOG_INFO(SK_ENV_LOGGER,
+    SK_LOG_DEBUG(SK_ENV_LOGGER,
                 "admin module_unpack: data sz:%zu", data_sz);
 
     const char* cmd = data;

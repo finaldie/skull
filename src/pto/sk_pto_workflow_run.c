@@ -57,7 +57,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 
     if (ret) {
         sk_print("module (%s) encounter error\n", module_name);
-        SK_LOG_ERROR(SK_ENV_LOGGER,
+        SK_LOG_DEBUG(SK_ENV_LOGGER,
             "module (%s) encounter error", module_name);
 
         sk_txn_setstate(txn, SK_TXN_ERROR);
@@ -83,7 +83,7 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
         sk_print("module (%s) encounter error, goto pack directly\n",
                  module_name);
 
-        SK_LOG_ERROR(SK_ENV_LOGGER,
+        SK_LOG_DEBUG(SK_ENV_LOGGER,
             "module (%s) encounter error, goto pack directly", module_name);
         return _run(sched, src, entity, txn, proto_msg);
     }
@@ -101,7 +101,15 @@ int _module_run(sk_sched_t* sched, sk_sched_t* src,
 }
 
 static
-void _write_txn_log(const sk_txn_t* txn) {
+void _write_txn_log(sk_txn_t* txn) {
+    if (!SK_ENV_CONFIG->txn_logging) {
+        return;
+    }
+
+    // 1. Push a null-str
+    sk_txn_log_end(txn);
+
+    // 2. Log the full txn log
     unsigned long long alivetime = sk_txn_alivetime(txn);
 
     SK_LOG_INFO(SK_ENV_LOGGER, "TxnLog: status: %d duration: %.3f ms | %s",

@@ -32,7 +32,7 @@ CONFIG_WF_HEADER = """
 #        port: 7758
 #        stdin: 0
 #        #bind: 0.0.0.0
-         #sock_type: tcp
+#        #sock_type: tcp
 #        #timeout: 100
 #
 # The 'bind' item is optional, and by default it will bind to '127.0.0.1'
@@ -117,6 +117,17 @@ def _dump_config_to_file(cfgYamlObj, filename):
         content.write('log_level: {}\n\n'.format(cfgYamlObj['log_level']))
     else:
         content.write('#log_level: info\n\n')
+
+    # 6. 'Txn Logging'
+    content.write('##\n')
+    content.write('# Transaction Logging\n')
+    content.write('#   Enable to see the detail execution flow of each transaction\n')
+    content.write('#\n')
+    if cfgYamlObj.get('txn_logging'):
+        content.write('txn_logging: {}\n\n'.format(cfgYamlObj['txn_logging']))
+    else:
+        content.write('#txn_logging: false\n\n')
+
 
     # 6. Dump 'languages'
     content.write('# Supported Languages: cpp, py\n')

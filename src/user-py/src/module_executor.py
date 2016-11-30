@@ -2,6 +2,7 @@
 
 import skullpy.txn as Txn
 import skullpy.txndata as TxnData
+import skullpy.logger as Logger
 
 def run_module_init(init_func, config):
     init_func(config)
@@ -17,6 +18,8 @@ def run_module_run(run_func, skull_txn):
         txn.storeMsgData()
         return ret
     except Exception as e:
+        Logger.error('module_run', 'module_run failed due to: {}'.format(e),
+                'Please check the logic why return False or Exception occurred')
         return False
 
 def run_module_unpack(unpack_func, skull_txn, data):
@@ -31,6 +34,8 @@ def run_module_unpack(unpack_func, skull_txn, data):
 
         return int(consumed_length)
     except Exception as e:
+        Logger.error('module_unpack', 'module_unpack failed due to: {}'.format(e),
+                'Please check the logic why return False or Exception occurred')
         return -1 # Error occurred
 
 def run_module_pack(pack_func, skull_txn, skull_txndata):
@@ -40,6 +45,7 @@ def run_module_pack(pack_func, skull_txn, skull_txndata):
     try:
         pack_func(txn, txndata)
     except Exception as e:
-        print "Failed to run_module_pack: {}".format(e)
+        Logger.error('module_pack', 'module_pack failed due to: {}'.format(e),
+                'Please check the logic why return False or Exception occurred')
     finally:
         txn.destroyMsgData()

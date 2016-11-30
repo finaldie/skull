@@ -1,3 +1,14 @@
+* 2016-11-29 0.9.12
+  * Core
+    * **Fix:** Fix the memory issue when the txn log is too long (>256 bytes)
+    * **Fix:** Fix nopending read/write service job be triggered incorrectly
+    * **Enhancement:** Refine admin output and logs
+    * **Enhancement:** Disable txn logging by default
+  * Scripts
+    * **Enhancement:** Refine skull-config.yaml format
+  * User
+    * **Enhancement:** Refine _Python_ module templates and init files
+    * **Enhancement:** _Python_ module unpack/pack functions are optional
 * 2016-11-13 0.9.11
   * Core
     * **New:** Add UDP Trigger

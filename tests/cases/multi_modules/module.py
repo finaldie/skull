@@ -5,7 +5,6 @@ from skullpy import txn as Txn
 from skullpy import txndata as TxnData
 from skullpy import logger as Logger
 
-from skull.common import protos as Protos
 from skull.common import metrics as Metrics
 from skull.common.proto import *
 

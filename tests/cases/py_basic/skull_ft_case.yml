@@ -20,7 +20,6 @@ verify:
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello skull"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "module_pack: data sz: 12"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep "config: {''test_bool'': True, ''test_item'': 123, ''test_name'': ''module'', ''test_rate'': 1.0}"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
 
 post-verify:
