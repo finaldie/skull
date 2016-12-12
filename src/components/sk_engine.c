@@ -52,8 +52,8 @@ void _timerjob_persec(sk_entity_t* entity, int valid, sk_obj_t* ud)
     struct rusage self_ru;
     getrusage(RUSAGE_SELF, &self_ru);
 
-    core->info.prev_self_ru  = core->info.self_ru;
-    core->info.self_ru  = self_ru;
+    core->info.prev_self_ru = core->info.self_ru;
+    core->info.self_ru = self_ru;
 
     // 4. destroy the timer entity
     sk_entity_safe_destroy(entity);
@@ -126,7 +126,7 @@ void* _sk_engine_thread(void* arg)
         sk_thread_env_set(thread_env);
     }
 
-    // 2. Now, after `sk_thread_env_set`, we can use SK_THREAD_ENV_xxx macros.
+    // 2. Now, after `sk_thread_env_set`, we can use SK_ENV_xxx macros.
     //    Set logger cookie
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 

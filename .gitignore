@@ -39,3 +39,6 @@ cscope.*
 # generated metrics source files
 src/api/sk_metrics.h
 src/common/sk_metrics.c
+
+# skull-engine binary
+src/skull-engine
