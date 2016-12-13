@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "flibs/fev_buff.h"
 #include "api/sk_utils.h"
 #include "api/sk_const.h"
 #include "api/sk_event.h"
@@ -16,14 +15,12 @@
 #include "api/sk_metrics.h"
 #include "api/sk_sched.h"
 
-#define SK_MAX_COOKIE_LEN 256
-
-static int _run(sk_sched_t* sched, sk_sched_t* src,
+static int _run(const sk_sched_t* sched, const sk_sched_t* src,
                 sk_entity_t* entity, sk_txn_t* txn,
                 void* proto_msg);
 
 static
-int _module_run(sk_sched_t* sched, sk_sched_t* src,
+int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
                 sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     unsigned long long start_time = sk_txn_alivetime(txn);
@@ -139,7 +136,7 @@ void _txn_log_and_destroy(sk_txn_t* txn) {
 }
 
 static
-int _module_pack(sk_sched_t* sched, sk_sched_t* src,
+int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
                  sk_entity_t* entity, sk_txn_t* txn,
                  void* proto_msg)
 {
@@ -191,8 +188,8 @@ int _module_pack(sk_sched_t* sched, sk_sched_t* src,
 // the its `run` method. If reach the last module of the workflow, then will
 // execute the `pack` method
 static
-int _run(sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
-         void* proto_msg)
+int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
+         sk_txn_t* txn, void* proto_msg)
 {
     SK_ASSERT(sched && entity && txn);
     sk_txn_state_t state = sk_txn_state(txn);

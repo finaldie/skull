@@ -61,7 +61,7 @@ void _event_destroy(sk_event_t* event)
     free(event->data);
 }
 
-sk_proto_t* _get_pto(sk_sched_t* sched, uint32_t pto_id)
+sk_proto_t* _get_pto(const sk_sched_t* sched, uint32_t pto_id)
 {
     return &sched->pto_tbl[pto_id];
 }
@@ -176,7 +176,7 @@ void _check_ptos(sk_proto_t* pto_tbl)
 }
 
 static inline
-sk_io_t* _get_io(sk_sched_t* sched, int priority)
+sk_io_t* _get_io(const sk_sched_t* sched, int priority)
 {
     return sched->io_tbl[priority];
 }
@@ -194,7 +194,8 @@ void _io_bridget_notify(sk_io_bridge_t* io_bridge, uint64_t cnt)
 }
 
 static
-sk_io_bridge_t* _find_affinity_bridge(sk_sched_t* sched, sk_sched_t* target,
+sk_io_bridge_t* _find_affinity_bridge(const sk_sched_t* sched,
+                                      const sk_sched_t* target,
                                       uint32_t* index)
 {
     SK_ASSERT(sched);
@@ -287,7 +288,7 @@ void _deliver_one_io(sk_sched_t* sched, sk_io_t* src_io,
 
         // 3. get the affinity or round-robin io bridge
         sk_io_bridge_t* io_bridge = NULL;
-        sk_sched_t* dst = event.dst;
+        const sk_sched_t* dst = event.dst;
         uint32_t bridge_index = 0;
 
         if (dst) {
@@ -375,7 +376,7 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 
     // 3. Run event
     sk_txn_t*   txn = event->txn;
-    sk_sched_t* src = event->src;
+    const sk_sched_t* src = event->src;
     pto->opt->run(sched, src, entity, txn, msg);
 
     // 4. Release message resources
@@ -433,7 +434,7 @@ int _process_events(sk_sched_t* sched)
 }
 
 static
-int _emit_event(sk_sched_t* sched, sk_sched_t* dst, sk_io_type_t io_type,
+int _emit_event(const sk_sched_t* sched, const sk_sched_t* dst, sk_io_type_t io_type,
                 const sk_entity_t* entity, const sk_txn_t* txn,
                 uint32_t pto_id, void* proto_msg, int flags)
 {
@@ -578,7 +579,7 @@ int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst)
     return 0;
 }
 
-int sk_sched_send(sk_sched_t* sched, sk_sched_t* dst,
+int sk_sched_send(const sk_sched_t* sched, const sk_sched_t* dst,
                   const sk_entity_t* entity, const sk_txn_t* txn,
                   uint32_t pto_id, void* proto_msg, int flag)
 {

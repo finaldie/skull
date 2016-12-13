@@ -8,7 +8,7 @@
 #include "api/sk_entity_util.h"
 #include "api/sk_trigger_utils.h"
 
-ssize_t sk_trigger_util_unpack(sk_entity_t* entity)
+ssize_t sk_trigger_util_unpack(sk_entity_t* entity, const sk_sched_t* deliver_to)
 {
     sk_sched_t* sched = SK_ENV_SCHED;
     sk_workflow_t* workflow = sk_entity_workflow(entity);
@@ -72,7 +72,7 @@ ssize_t sk_trigger_util_unpack(sk_entity_t* entity)
         module_name, sk_txn_starttime(txn), sk_txn_alivetime(txn));
 
     // 5. prepare and send a workflow processing event
-    sk_sched_send(sched, sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
+    sk_sched_send(sched, deliver_to, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
 
     // 6. consume the evbuff
     sk_entity_rbufpop(entity, (size_t)consumed);

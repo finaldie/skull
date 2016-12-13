@@ -17,7 +17,7 @@
  * @note This method will run in the master thread
  */
 static
-int _run(sk_sched_t* sched, sk_sched_t* src,
+int _run(const sk_sched_t* sched, const sk_sched_t* src,
          sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     SK_ASSERT(sched);

@@ -64,7 +64,7 @@ void _readcb(fev_state* fev, int fd, int mask, void* ud)
                          (struct sockaddr*)&c_addr, c_addr_len);
 
     // Unpack data and trigger workflow if possible
-    sk_trigger_util_unpack(entity);
+    sk_trigger_util_unpack(entity, NULL);
 }
 
 static

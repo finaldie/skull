@@ -65,7 +65,7 @@ typedef struct sk_srv_task_t {
     int bidx;
 
     // Body: source scheduler of service call
-    sk_sched_t*          src;
+    const sk_sched_t*    src;
 
 #if __WORDSIZE == 32
     int _padding;
