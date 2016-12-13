@@ -2,7 +2,7 @@ MAKE ?= make
 prefix ?= /usr/local
 disable_jemalloc ?= false
 
-MAKE_FLAGS += "--no-print-directory"
+MAKE_FLAGS +=
 
 all: api-cpp api-py
 
