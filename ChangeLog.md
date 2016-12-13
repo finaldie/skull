@@ -1,3 +1,14 @@
+* 2016-12-15 0.9.13
+  * Core
+    * **New:** Support IPv6 for client entity and endpoint entity
+    * **Fix:** Fix UDP entity cannot be routed to worker io issue
+    * **Enhancement:** Refine the sk_sched_send api
+  * Scripts
+    * **Fix:** Correct return code for 'skull deploy'
+  * MISC
+    * **Fix:** Prevent errors for 'clean-jemalloc' target if the makefile non-exist
+    * **Enhancement:** Upgrade jemalloc to 4.4.0
+    * **Enhancement:** Fix typos and add skull-engine binary into gitignore file
 * 2016-11-29 0.9.12
   * Core
     * **Fix:** Fix the memory issue when the txn log is too long (>256 bytes)
