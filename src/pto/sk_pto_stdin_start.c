@@ -27,7 +27,7 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         return;
     }
 
-    sk_trigger_util_unpack(entity, NULL);
+    sk_trigger_util_unpack(entity, SK_ENV_SCHED);
 }
 
 static
