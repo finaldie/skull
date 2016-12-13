@@ -56,5 +56,6 @@ clean-skull-ft:
 
 clean-jemalloc:
 	! test -f ./deps/jemalloc/Makefile || $(MAKE) $(MAKE_FLAGS) -C ./deps/jemalloc clean || exit "$$?"
+	rm -f ./deps/jemalloc/Makefile
 
 .PHONY: clean-flibs clean-protos clean-skull-ft clean-jemalloc
