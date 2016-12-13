@@ -969,6 +969,7 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         return -1;
     }
 
+    ep->fd = fd;
     ep->status = SK_EP_ST_CONNECTING;
     int ret = connect(fd, &addr.sa, addrlen);
     if (ret != 0) {
@@ -992,9 +993,16 @@ sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                     uint64_t ekey, const char* ipkey,
                     unsigned long long start)
 {
-    sk_entity_type_t etype =
-        handler->type == SK_EP_TCP ? SK_ENTITY_EP_V4TCP : SK_ENTITY_EP_V4UDP;
+    // Decide entity sock type
+    sk_entity_type_t etype = SK_ENTITY_NONE;
+    char* quote = strchr(handler->ip, ':');
+    if (handler->type == SK_EP_TCP) {
+        etype = !quote ? SK_ENTITY_EP_V4TCP : SK_ENTITY_EP_V6TCP;
+    } else {
+        etype = !quote ? SK_ENTITY_EP_V4UDP : SK_ENTITY_EP_V6UDP;
+    }
 
+    // Create sk_ep
     sk_ep_t* ep = calloc(1, sizeof(*ep));
     ep->ekey    = ekey;
     strncpy(ep->ipkey, ipkey, SK_EP_KEY_MAX);

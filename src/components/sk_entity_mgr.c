@@ -48,29 +48,31 @@ void _update_stat(sk_entity_mgr_t* mgr, const sk_entity_t* entity,
     sk_entity_type_t type = sk_entity_type(entity);
     switch (type) {
     case SK_ENTITY_NONE:
-        mgr->stat.entity_none += value;
-        break;
+        mgr->stat.entity_none += value; break;
+    case SK_ENTITY_STD:
+        mgr->stat.entity_std += value; break;
     case SK_ENTITY_SOCK_V4TCP:
-        mgr->stat.entity_sock_v4tcp += value;
-        break;
+        mgr->stat.entity_sock_v4tcp += value; break;
     case SK_ENTITY_SOCK_V4UDP:
-        mgr->stat.entity_sock_v4udp += value;
-        break;
+        mgr->stat.entity_sock_v4udp += value; break;
+    case SK_ENTITY_SOCK_V6TCP:
+        mgr->stat.entity_sock_v6tcp += value; break;
+    case SK_ENTITY_SOCK_V6UDP:
+        mgr->stat.entity_sock_v6udp += value; break;
     case SK_ENTITY_TIMER:
-        mgr->stat.entity_timer += value;
-        break;
+        mgr->stat.entity_timer += value; break;
     case SK_ENTITY_EP_V4TCP:
-        mgr->stat.entity_ep_v4tcp += value;
-        break;
+        mgr->stat.entity_ep_v4tcp += value; break;
     case SK_ENTITY_EP_V4UDP:
-        mgr->stat.entity_ep_v4udp += value;
-        break;
+        mgr->stat.entity_ep_v4udp += value; break;
+    case SK_ENTITY_EP_V6TCP:
+        mgr->stat.entity_ep_v6tcp += value; break;
+    case SK_ENTITY_EP_V6UDP:
+        mgr->stat.entity_ep_v6udp += value; break;
     case SK_ENTITY_EP_TIMER:
-        mgr->stat.entity_ep_timer += value;
-        break;
+        mgr->stat.entity_ep_timer += value; break;
     case SK_ENTITY_EP_TXN_TIMER:
-        mgr->stat.entity_ep_txn_timer += value;
-        break;
+        mgr->stat.entity_ep_txn_timer += value; break;
     default:
         SK_ASSERT_MSG(0, "Unknown entity type: %d\n", type);
         break;

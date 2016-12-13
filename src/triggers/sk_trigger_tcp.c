@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <errno.h>
 
 #include "flibs/fnet.h"
 #include "flibs/fev.h"
@@ -12,7 +14,8 @@
 
 typedef struct sk_trigger_tcp_data_t {
     in_port_t port;
-    short     _reserved;
+    uint32_t  is_v4     :1;
+    uint32_t  _reserved :15;
 
     int listen_fd;
     fev_listen_info* listener;
@@ -38,8 +41,10 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
     sk_engine_t*   engine   = trigger->engine;
     sk_workflow_t* workflow = trigger->workflow;
     sk_sched_t*    sched    = engine->sched;
+    bool           is_v4    = ((sk_trigger_tcp_data_t*)trigger->data)->is_v4;
 
-    sk_entity_t* entity = sk_entity_create(workflow, SK_ENTITY_SOCK_V4TCP);
+    sk_entity_t* entity = sk_entity_create(workflow,
+                           is_v4 ? SK_ENTITY_SOCK_V4TCP : SK_ENTITY_SOCK_V6TCP);
     sk_print("create a new entity(%d)\n", fd);
 
     NetAccept accept_msg = NET_ACCEPT__INIT;
@@ -57,6 +62,8 @@ void _trigger_tcp_create(sk_trigger_t* trigger)
     sk_trigger_tcp_data_t* data = calloc(1, sizeof(*data));
     data->port      = (in_port_t)cfg->port;
     data->listen_fd = fnet_listen(cfg->bind, data->port, SK_MAX_LISTEN_BACKLOG, 0);
+    SK_ASSERT_MSG(data->listen_fd >= 0, "Cannot listen to %s: %s\n", cfg->bind, strerror(errno));
+    data->is_v4      = !strchr(cfg->bind, ':');
 
     trigger->data = data;
 }

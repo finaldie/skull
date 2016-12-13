@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+#include "flibs/fnet.h"
 #include "flibs/fev_buff.h"
 #include "api/sk_utils.h"
 #include "api/sk_metrics.h"
@@ -19,7 +20,7 @@ typedef struct sk_udp_data_t {
     uint16_t  buf_sz;
     uint16_t  _padding;
 
-    struct sockaddr src_addr;
+    fnet_sockaddr_t src_addr;
     socklen_t src_addr_len;
 
     uint16_t  sidx;
@@ -36,7 +37,7 @@ void sk_entity_udp_create(sk_entity_t* entity, int rootfd,
     udp_data->rootfd        = rootfd;
     udp_data->buf_sz        = buf_sz;
     udp_data->src_addr_len  = src_addr_len;
-    udp_data->src_addr      = *src_addr;
+    memcpy(&udp_data->src_addr, src_addr, src_addr_len);
     memcpy(udp_data->readbuf, buf, buf_sz);
 
     sk_entity_setopt(entity, sk_entity_udp_opt, udp_data);
@@ -63,7 +64,7 @@ ssize_t _udp_write(sk_entity_t* entity, const void* buf, size_t len, void* ud)
     if (!ud) return -1;
 
     sk_udp_data_t* udp_data = ud;
-    return sendto(udp_data->rootfd, buf, len, MSG_NOSIGNAL, &udp_data->src_addr,
+    return sendto(udp_data->rootfd, buf, len, MSG_NOSIGNAL, &udp_data->src_addr.sa,
                   udp_data->src_addr_len);
 }
 

@@ -350,12 +350,15 @@ void _status_entity(sk_txn_t* txn, sk_core_t* core)
         _merge_stat(&stat, &tmp);
     }
 
-    _append_response(txn, "entities: total: %d inactive: %d ; none: %d "
-        "v4tcp: %d v4udp: %d timer: %d ep_v4tcp: %d ep_v4udp: %d "
+    _append_response(txn, "entities: total: %d inactive: %d ; none: %d std: %d "
+        "v4tcp: %d v4udp: %d v6tcp: %d v6udp: %d timer: %d "
+        "ep_v4tcp: %d ep_v4udp: %d ep_v6tcp: %d ep_v6udp: %d "
         "ep_timer: %d ep_txn_timer: %d\n",
-        stat.total, stat.inactive, stat.entity_none,
+        stat.total, stat.inactive, stat.entity_none, stat.entity_std,
         stat.entity_sock_v4tcp, stat.entity_sock_v4udp,
+        stat.entity_sock_v6tcp, stat.entity_sock_v6udp,
         stat.entity_timer, stat.entity_ep_v4tcp, stat.entity_ep_v4udp,
+        stat.entity_ep_v6tcp, stat.entity_ep_v6udp,
         stat.entity_ep_timer, stat.entity_ep_txn_timer);
 }
 
