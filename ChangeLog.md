@@ -1,3 +1,7 @@
+* 2016-12-17 0.9.14
+  * Core
+    * **Enhancement:** Optimize the timer service, reduce cpu usage
+    * **Enhancement:** Increase admin response buffer size
 * 2016-12-15 0.9.13
   * Core
     * **New:** Support IPv6 for client entity and endpoint entity
