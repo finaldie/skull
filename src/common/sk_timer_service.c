@@ -126,7 +126,7 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
     sk_print("tmsvc: create timer %p\n", (void*)timer);
     timer->owner  = svc;
     timer->entity = entity;
-    timer->timer  = fev_tmsvc_timer_add(svc->timer_service, expiration,
+    timer->timer  = fev_tmsvc_timer_add(svc->timer_service, (long)expiration,
                                         _timer_triggered, timer);
     //sk_print("fev_timer %p\n", (void*) timer->timer);
     timer->trigger = trigger;
@@ -203,7 +203,7 @@ int sk_timer_resetn(sk_timer_t* timer, uint32_t expiration) {
     if (timer->triggered) return 1;
 
 
-    int ret = fev_tmsvc_timer_resetn(timer->timer, expiration);
+    int ret = fev_tmsvc_timer_resetn(timer->timer, (long)expiration);
     SK_ASSERT_MSG(!ret, "Reset timer failed\n");
     return 0;
 }
