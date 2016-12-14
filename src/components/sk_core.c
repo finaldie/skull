@@ -573,15 +573,18 @@ void sk_core_stop(sk_core_t* core)
     core->status = SK_CORE_STOPPING;
 
     // 1. stop master
+    SK_LOG_INFO(core->logger, "Stopping engine master...");
     sk_engine_stop(core->master);
 
     // 2. stop workers
     for (int i = 0; i < core->config->threads; i++) {
+        SK_LOG_INFO(core->logger, "Stopping engine worker[%d]...", i);
         sk_engine_stop(core->workers[i]);
     }
 
     // 3. stop bio(s)
     for (int i = 0; i < core->config->bio_cnt; i++) {
+        SK_LOG_INFO(core->logger, "Stopping engine bio[%d]...", i);
         sk_engine_stop(core->bio[i]);
     }
 }

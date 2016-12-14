@@ -10,7 +10,7 @@
 #include "api/sk_metrics.h"
 #include "api/sk_timer_service.h"
 
-#define TIMER_CHECK_INTERVAL 1
+#define TIMER_CHECK_DISABLED 0
 
 struct sk_timersvc_t {
     fev_timer_svc* timer_service;
@@ -45,7 +45,7 @@ sk_timersvc_t* sk_timersvc_create(void* evlp)
 {
     sk_timersvc_t* svc = calloc(1, sizeof(*svc));
     svc->timer_service =
-        fev_tmsvc_create(evlp, TIMER_CHECK_INTERVAL, FEV_TMSVC_SINGLE_LINKED);
+        fev_tmsvc_create(evlp, TIMER_CHECK_DISABLED, FEV_TMSVC_SINGLE_LINKED);
     svc->timers = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
 
     SK_ASSERT(svc->timer_service);
@@ -73,6 +73,19 @@ void sk_timersvc_destroy(sk_timersvc_t* svc)
     // 2. destroy timer service
     fev_tmsvc_destroy(svc->timer_service);
     free(svc);
+}
+
+int  sk_timersvc_process(sk_timersvc_t* svc) {
+    return fev_tmsvc_process(svc->timer_service);
+}
+
+sk_timer_t* sk_timersvc_first(sk_timersvc_t* svc) {
+    ftimer_node* node = fev_tmsvc_first(svc->timer_service);
+    return fev_tmsvc_timer_data(node);
+}
+
+long sk_timersvc_timer_expiration(sk_timer_t* timer) {
+    return fev_tmsvc_timer_expiration(timer->timer);
 }
 
 uint32_t sk_timersvc_timeralive_cnt(sk_timersvc_t* svc)
@@ -130,7 +143,6 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
     // update metrics
     sk_metrics_global.timer_emit.inc(1);
     sk_metrics_worker.timer_emit.inc(1);
-
     return timer;
 }
 
@@ -158,11 +170,12 @@ void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
 
 int sk_timer_valid(sk_timer_t* timer)
 {
-    return timer->valid;
+    return timer && timer->valid;
 }
 
 void sk_timer_cancel(sk_timer_t* timer)
 {
+    if (!timer) return;
     timer->valid = 0;
 }
 
