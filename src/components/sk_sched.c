@@ -575,11 +575,7 @@ void sk_sched_start(sk_sched_t* sched)
                 long texp = sk_timersvc_timer_expiration(first_timer);
                 sk_print("texp: %ld, nalive_timers: %u\n", texp, nalive_timers);
 
-                if (texp > 0) {
-                    waitms = (int)texp;
-                } else {
-                    waitms = 0;
-                }
+                waitms = texp > 0 ? (int)texp : 0;
             } else {
                 sk_print("first timer invalid, first_timer: %p\n", (void*)first_timer);
             }
