@@ -35,7 +35,12 @@ CONFIG_WF_HEADER = """
 #        #sock_type: tcp
 #        #timeout: 100
 #
-# The 'bind' item is optional, and by default it will bind to '127.0.0.1'
+# The 'bind' item is optional, and by default it will bind to '127.0.0.1', and
+#   for other examples, like:
+#    - bind: '0.0.0.0'
+#    - bind: '127.0.0.1'
+#    - bind: '::'
+#    - bind: '::1'
 # The 'sock_type' item is optional, specific 'tcp' or 'udp'. By default is 'tcp'
 # The 'timeout' item is optional, it controls the transaction timeout,
 #   unit is milliseconds, and by default is 0 (no timeout)

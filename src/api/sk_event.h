@@ -11,8 +11,8 @@
 struct sk_sched_t;
 
 typedef struct sk_event_t {
-    struct sk_sched_t* src;
-    struct sk_sched_t* dst;
+    const struct sk_sched_t* src;
+    const struct sk_sched_t* dst;
 
     uint32_t pto_id;
     uint32_t hop    :8;

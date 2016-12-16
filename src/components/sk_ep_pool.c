@@ -962,20 +962,16 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                        sk_ep_t* ep, unsigned long long start,
                        fdlist_node_t* ep_node)
 {
-    int fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
+    fnet_sockaddr_t addr;
+    socklen_t addrlen = 0;
+    int fd = fnet_socket(handler->ip, handler->port, SOCK_DGRAM | SOCK_NONBLOCK, &addr, &addrlen);
     if (fd < 0) {
         return -1;
     }
 
-    struct sockaddr_in server_addr;
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family      = AF_INET;
-    server_addr.sin_port        = htons(handler->port);
-    server_addr.sin_addr.s_addr = inet_addr(handler->ip);
-
+    ep->fd = fd;
     ep->status = SK_EP_ST_CONNECTING;
-    int ret = connect(fd, (struct sockaddr *)(&server_addr),
-                      sizeof(struct sockaddr));
+    int ret = connect(fd, &addr.sa, addrlen);
     if (ret != 0) {
         return -1;
     }
@@ -997,9 +993,16 @@ sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                     uint64_t ekey, const char* ipkey,
                     unsigned long long start)
 {
-    sk_entity_type_t etype =
-        handler->type == SK_EP_TCP ? SK_ENTITY_EP_V4TCP : SK_ENTITY_EP_V4UDP;
+    // Decide entity sock type
+    sk_entity_type_t etype = SK_ENTITY_NONE;
+    char* quote = strchr(handler->ip, ':');
+    if (handler->type == SK_EP_TCP) {
+        etype = !quote ? SK_ENTITY_EP_V4TCP : SK_ENTITY_EP_V6TCP;
+    } else {
+        etype = !quote ? SK_ENTITY_EP_V4UDP : SK_ENTITY_EP_V6UDP;
+    }
 
+    // Create sk_ep
     sk_ep_t* ep = calloc(1, sizeof(*ep));
     ep->ekey    = ekey;
     strncpy(ep->ipkey, ipkey, SK_EP_KEY_MAX);

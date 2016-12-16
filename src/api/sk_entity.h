@@ -13,11 +13,15 @@ typedef enum sk_entity_type_t {
     SK_ENTITY_STD          = 1,
     SK_ENTITY_SOCK_V4TCP   = 2,
     SK_ENTITY_SOCK_V4UDP   = 3,
-    SK_ENTITY_TIMER        = 4,
-    SK_ENTITY_EP_V4TCP     = 5,
-    SK_ENTITY_EP_V4UDP     = 6,
-    SK_ENTITY_EP_TIMER     = 7,
-    SK_ENTITY_EP_TXN_TIMER = 8
+    SK_ENTITY_SOCK_V6TCP   = 4,
+    SK_ENTITY_SOCK_V6UDP   = 5,
+    SK_ENTITY_TIMER        = 6,
+    SK_ENTITY_EP_V4TCP     = 7,
+    SK_ENTITY_EP_V4UDP     = 8,
+    SK_ENTITY_EP_V6TCP     = 9,
+    SK_ENTITY_EP_V6UDP     = 10,
+    SK_ENTITY_EP_TIMER     = 11,
+    SK_ENTITY_EP_TXN_TIMER = 12
 } sk_entity_type_t;
 
 typedef enum sk_entity_status_t {

@@ -130,9 +130,9 @@ void _destroy_apis(fhash* apis)
 }
 
 static
-sk_sched_t* _find_target_sched(sk_sched_t* src, int bidx)
+const sk_sched_t* _find_target_sched(const sk_sched_t* src, int bidx)
 {
-    sk_sched_t* target = NULL;
+    const sk_sched_t* target = NULL;
 
     if (bidx == 0) {
         target = src;
@@ -153,7 +153,7 @@ static
 void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
 {
     // 1. Construct protocol
-    sk_sched_t* src     = task->src;
+    const sk_sched_t* src = task->src;
     int         bidx    = task->bidx;
     uint64_t    task_id = task->data.api.task_id;
     sk_txn_t*   txn     = task->data.api.txn;
@@ -167,7 +167,7 @@ void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
     task_run_pto.taskdata     = (uint64_t) (uintptr_t) taskdata;
 
     // 2. Find a bio if needed
-    sk_sched_t* target = _find_target_sched(src, bidx);
+    const sk_sched_t* target = _find_target_sched(src, bidx);
     SK_ASSERT(target);
 
     // 3. Deliver the protocol
@@ -183,8 +183,8 @@ static
 void _schedule_api_errortask(sk_service_t* service, const sk_srv_task_t* task)
 {
     // 1. Construct protocol
-    sk_sched_t* src     = task->src;
-    sk_txn_t*   txn     = task->data.api.txn;
+    const sk_sched_t* src = task->src;
+    sk_txn_t*         txn = task->data.api.txn;
     sk_txn_taskdata_t* taskdata = task->data.api.txn_task;
 
     ServiceTaskCb task_cb_msg = SERVICE_TASK_CB__INIT;
@@ -203,12 +203,12 @@ static
 void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
 {
     // 1. Create timer message
-    int            bidx   = task->bidx;
-    sk_sched_t*    src    = task->src;
-    sk_service_job job    = task->data.timer.job;
-    sk_entity_t*   entity = task->data.timer.entity;
-    sk_obj_t*      ud     = task->data.timer.ud;
-    int            valid  = task->data.timer.valid;
+    int               bidx   = task->bidx;
+    const sk_sched_t* src    = task->src;
+    sk_service_job    job    = task->data.timer.job;
+    sk_entity_t*      entity = task->data.timer.entity;
+    sk_obj_t*         ud     = task->data.timer.ud;
+    int               valid  = task->data.timer.valid;
     sk_service_job_ret_t status = task->io_status == SK_SRV_IO_STATUS_OK
         ? SK_SRV_JOB_OK : SK_SRV_JOB_ERROR_BUSY;
 
@@ -221,7 +221,7 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
     msg.status    = status;
 
     // 2. Find a bio if needed
-    sk_sched_t* target = status == SK_SRV_JOB_OK
+    const sk_sched_t* target = status == SK_SRV_JOB_OK
         ? _find_target_sched(src, bidx) : src;
     SK_ASSERT(target);
 

@@ -13,7 +13,13 @@ function action_deploy()
 
     cd $SKULL_PROJ_ROOT
     make deploy DEPLOY_DIR_ROOT=$deploy_dir
-    echo "Deploy done, use \"skull start\" to launch the skull-engine"
+    retCode=$?
+
+    if [ $retCode -eq 0 ]; then
+        echo "Deploy done, use \"skull start\" to launch the skull-engine"
+    else
+        echo "Deploy failed, exit code: $retCode"
+    fi
 }
 
 function action_deploy_usage()

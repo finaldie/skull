@@ -24,8 +24,8 @@ struct sk_sched_t;
 typedef struct sk_proto_opt_t {
     const void* descriptor; // the message descriptor
 
-    int (*run) (struct sk_sched_t* sched,
-                struct sk_sched_t* src,
+    int (*run) (const struct sk_sched_t* sched,
+                const struct sk_sched_t* src,
                 sk_entity_t* entity,
                 sk_txn_t* txn,
                 void* proto_msg);

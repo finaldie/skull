@@ -12,8 +12,8 @@
 #include "api/sk_timer_service.h"
 
 static
-int _run (sk_sched_t* sched, sk_sched_t* src, sk_entity_t* entity, sk_txn_t* txn,
-          void* proto_msg)
+int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
+          sk_txn_t* txn, void* proto_msg)
 {
     TimerTriggered* timer_pto = proto_msg;
     sk_timer_t* timer = (sk_timer_t*) (uintptr_t) timer_pto->timer_obj;
