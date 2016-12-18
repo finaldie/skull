@@ -30,6 +30,7 @@
 #define ADMIN_CMD_INFO          "info"
 
 #define ADMIN_LINE_MAX_LENGTH   (1024)
+#define ADMIN_RESP_MAX_LENGTH   (2048)
 
 static sk_module_t _sk_admin_module;
 static sk_module_cfg_t _sk_admin_module_cfg;
@@ -50,7 +51,7 @@ static
 sk_admin_data_t* _sk_admin_data_create()
 {
     sk_admin_data_t* admin_data = calloc(1, sizeof(*admin_data));
-    admin_data->response = fmbuf_create(1024);
+    admin_data->response = fmbuf_create(ADMIN_RESP_MAX_LENGTH);
 
     return admin_data;
 }
@@ -377,6 +378,7 @@ void _status_resources(sk_txn_t* txn, sk_core_t* core)
 
     float last_cpu_user = cpu_user - prev_cpu_user;
     float last_cpu_sys  = cpu_sys  - prev_cpu_sys;
+    last_cpu_sys        = last_cpu_sys > 0.000001f ? last_cpu_sys : 0.000001f;
 
     _append_response(txn, "cpu_user: %.2f\n", last_cpu_user);
     _append_response(txn, "cpu_sys: %.2f\n",  last_cpu_sys);

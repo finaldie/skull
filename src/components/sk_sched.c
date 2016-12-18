@@ -36,6 +36,7 @@ struct sk_sched_t {
     void* evlp;
     sk_entity_mgr_t* entity_mgr;
     sk_proto_t*      pto_tbl;
+    sk_timersvc_t*   tmsvc;
     sk_io_t*         io_tbl[SK_PTO_PRI_SZ];
     sk_io_bridge_t*  bridge_tbl[SK_SCHED_MAX_IO_BRIDGE];
     flist*           workflows;
@@ -508,13 +509,15 @@ sk_proto_t* _create_proto_tbl(sk_proto_t* tbl)
 }
 
 // APIs
-sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr, int flags)
+sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr,
+                            sk_timersvc_t* tmsvc, int flags)
 {
     sk_sched_t* sched = calloc(1, sizeof(*sched) +
                                SK_EVENT_SZ * SK_SCHED_PULL_NUM);
     sched->evlp       = evlp;
     sched->entity_mgr = entity_mgr;
     sched->pto_tbl    = _create_proto_tbl(sk_pto_tbl);
+    sched->tmsvc      = tmsvc;
     sched->running    = 0;
     sched->flags      = flags;
 
@@ -553,12 +556,36 @@ void sk_sched_start(sk_sched_t* sched)
     sched->running = 1;
 
     do {
-        // here, all the active events in all the priority queues should be
-        // executed, or the event may be delayed for a long time
+        // 1. Trigger expired timers
+        sk_timersvc_process(sched->tmsvc);
+
+        // 2. Here, all the active events in all the priority queues should be
+        //  executed, or the event may be delayed for a long time
         _process_events(sched);
 
-        // pull all io events and convert them to sched events
-        sk_eventloop_dispatch(sched->evlp, 1000);
+        // 3. Calculate the dispatch sleeping time
+        int waitms = SK_SCHED_DEFAULT_WAITMS;
+        uint32_t nalive_timers = sk_timersvc_timeralive_cnt(sched->tmsvc);
+        sk_print("nalive_timers: %u\n", nalive_timers);
+
+        if (nalive_timers) {
+            sk_timer_t* first_timer = sk_timersvc_first(sched->tmsvc);
+
+            if (first_timer) {
+                long texp = sk_timersvc_timer_expiration(first_timer);
+                sk_print("texp: %ld, nalive_timers: %u\n", texp, nalive_timers);
+
+                waitms = texp > 0 ? (int)texp : 0;
+            } else {
+                sk_print("first timer invalid, first_timer: %p\n", (void*)first_timer);
+            }
+        }
+
+        // 4. Poll all io events and convert them to sched events
+        sk_print("waitms: %d\n", waitms);
+        sk_eventloop_dispatch(sched->evlp, waitms);
+
+        sk_print("sched running: %d\n", sched->running);
     } while (sched->running);
 }
 

@@ -18,6 +18,11 @@ sk_timersvc_t* sk_timer_svc(sk_timer_t*);
 
 sk_timersvc_t* sk_timersvc_create(void* evlp);
 void sk_timersvc_destroy(sk_timersvc_t*);
+int  sk_timersvc_process(sk_timersvc_t*);
+
+sk_timer_t* sk_timersvc_first(sk_timersvc_t*);
+long sk_timersvc_timer_expiration(sk_timer_t*);
+
 uint32_t sk_timersvc_timeralive_cnt(sk_timersvc_t*);
 
 sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t*,
