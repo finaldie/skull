@@ -29,8 +29,9 @@
 #define ADMIN_CMD_STATUS        "status"
 #define ADMIN_CMD_INFO          "info"
 
-#define ADMIN_LINE_MAX_LENGTH   (1024)
-#define ADMIN_RESP_MAX_LENGTH   (2048)
+#define ADMIN_LINE_MAX_LENGTH     (1024)
+#define ADMIN_RESP_MAX_LENGTH     (2048)
+#define ADMIN_COUNTER_LINE_LENGTH (256)
 
 static sk_module_t _sk_admin_module;
 static sk_module_cfg_t _sk_admin_module_cfg;
@@ -82,15 +83,15 @@ void _mon_cb(const char* name, double value, void* ud)
     sk_admin_data_t* admin_data = ud;
     fmbuf* buf = admin_data->response;
 
-    char metrics_str[128];
-    int printed = snprintf(metrics_str, 128, "%s: %f\n", name, value);
+    char metrics_str[ADMIN_COUNTER_LINE_LENGTH];
+    int printed = snprintf(metrics_str, ADMIN_COUNTER_LINE_LENGTH, "%s: %f\n", name, value);
 
     if (printed < 0) {
-        sk_print("metrics buffer is too small(128), name: %s, value: %f\n",
-                 name, value);
+        sk_print("metrics buffer is too small(%d), name: %s, value: %f\n",
+                 ADMIN_COUNTER_LINE_LENGTH, name, value);
         SK_LOG_WARN(SK_ENV_LOGGER,
-            "metrics buffer is too small(128), name: %s, value: %f",
-            name, value);
+            "metrics buffer is too small(%d), name: %s, value: %f",
+            ADMIN_COUNTER_LINE_LENGTH, name, value);
         return;
     }
 
@@ -330,9 +331,13 @@ void _merge_stat(sk_entity_mgr_stat_t* stat, const sk_entity_mgr_stat_t* merging
     stat->entity_none         += merging->entity_none;
     stat->entity_sock_v4tcp   += merging->entity_sock_v4tcp;
     stat->entity_sock_v4udp   += merging->entity_sock_v4udp;
+    stat->entity_sock_v6tcp   += merging->entity_sock_v6tcp;
+    stat->entity_sock_v6udp   += merging->entity_sock_v6udp;
     stat->entity_timer        += merging->entity_timer;
     stat->entity_ep_v4tcp     += merging->entity_ep_v4tcp;
     stat->entity_ep_v4udp     += merging->entity_ep_v4udp;
+    stat->entity_ep_v6tcp     += merging->entity_ep_v6tcp;
+    stat->entity_ep_v6udp     += merging->entity_ep_v6udp;
     stat->entity_ep_txn_timer += merging->entity_ep_txn_timer;
 }
 

@@ -60,8 +60,7 @@ class _MetricsDynamic(_MetricsBase):\n\
     PREFIX = 'skull.user.d'\n\
 \n\
     def __init__(self, top_name, name, dynamic_name):\n\
-        self._seq = (self.PREFIX, top_name, name, dynamic_name)\n\
-        self._combined_name = '.'.join(self._seq)\n\
+        self._combined_name = '{}.{}.{{{}}}.{}'.format(self.PREFIX, top_name, dynamic_name, name)\n\
         super(_MetricsDynamic, self).__init__()\n\
 \n\
     def get(self):\n\
