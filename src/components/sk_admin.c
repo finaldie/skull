@@ -22,16 +22,21 @@
     " - last\n" \
     " - info | status\n"
 
-#define ADMIN_CMD_HELP          "help"
-#define ADMIN_CMD_METRICS       "metrics"
-#define ADMIN_CMD_COUNTER       "counter"
-#define ADMIN_CMD_LAST_SNAPSHOT "last"
-#define ADMIN_CMD_STATUS        "status"
-#define ADMIN_CMD_INFO          "info"
+#define ADMIN_CMD_HELP            "help"
+#define ADMIN_CMD_METRICS         "metrics"
+#define ADMIN_CMD_COUNTER         "counter"
+#define ADMIN_CMD_LAST_SNAPSHOT   "last"
+#define ADMIN_CMD_STATUS          "status"
+#define ADMIN_CMD_INFO            "info"
 
 #define ADMIN_LINE_MAX_LENGTH     (1024)
 #define ADMIN_RESP_MAX_LENGTH     (2048)
 #define ADMIN_COUNTER_LINE_LENGTH (256)
+
+#define ADMIN_MODULE_FMT1         " %s - unpack %zu | run %zu | pack %zu ;"
+#define ADMIN_MODULE_FMT2         " %s - unpack %zu | run %zu ;"
+#define ADMIN_MODULE_FMT3         " %s - run %zu | pack %zu ;"
+#define ADMIN_MODULE_FMT4         " %s - run %zu ;"
 
 static sk_module_t _sk_admin_module;
 static sk_module_cfg_t _sk_admin_module_cfg;
@@ -273,13 +278,23 @@ void _status_module(sk_txn_t* txn, sk_core_t* core)
         sk_module_t* module = NULL;
 
         while ((module = fhash_str_next(&iter))) {
-            _append_response(txn, " %s call_times: total %zu | unpack %zu | "
-                "run %zu | pack %zu ;",
-                module->cfg->name,
-                sk_module_stat_total_get(module),
-                sk_module_stat_unpack_get(module),
-                sk_module_stat_run_get(module),
-                sk_module_stat_pack_get(module));
+            size_t unpacking_cnt = sk_module_stat_unpack_get(module);
+            size_t running_cnt   = sk_module_stat_run_get(module);
+            size_t packing_cnt   = sk_module_stat_pack_get(module);
+
+            if (unpacking_cnt > 0 && packing_cnt > 0) {
+                _append_response(txn, ADMIN_MODULE_FMT1, module->cfg->name,
+                    unpacking_cnt, running_cnt, packing_cnt);
+            } else if (unpacking_cnt > 0 && !packing_cnt) {
+                _append_response(txn, ADMIN_MODULE_FMT2, module->cfg->name,
+                    unpacking_cnt, running_cnt);
+            } else if (!unpacking_cnt && packing_cnt > 0) {
+                _append_response(txn, ADMIN_MODULE_FMT3, module->cfg->name,
+                    running_cnt, packing_cnt);
+            } else {
+                _append_response(txn, ADMIN_MODULE_FMT4, module->cfg->name,
+                    running_cnt);
+            }
         }
 
         fhash_str_iter_release(&iter);
