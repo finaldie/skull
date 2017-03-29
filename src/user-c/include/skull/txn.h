@@ -6,10 +6,11 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <netinet/in.h>
 
 typedef struct _skull_txn_t skull_txn_t;
 
-// get idl name from txn
+// Get idl name from txn
 const char* skull_txn_idlname(const skull_txn_t* txn);
 
 typedef enum skull_txn_status_t {
@@ -18,12 +19,22 @@ typedef enum skull_txn_status_t {
     SKULL_TXN_TIMEOUT = 2
 } skull_txn_status_t;
 
-// get txn status
+// Get txn status
 skull_txn_status_t skull_txn_status(const skull_txn_t* txn);
 
 void* skull_txn_data(const skull_txn_t* skull_txn);
 
 void skull_txn_setdata(skull_txn_t* skull_txn, const void* data);
+
+// Get peer info
+typedef struct skull_txn_peer_t {
+    int  port;
+    int  family;
+    char name[INET6_ADDRSTRLEN];
+    short __padding;
+} skull_txn_peer_t;
+
+int skull_txn_peer(const skull_txn_t* skull_txn, skull_txn_peer_t* peer);
 
 // ===================== Txn Iocall ===================
 typedef enum skull_txn_ioret_t {

@@ -36,3 +36,12 @@ skull_txn_iocall (skull_txn_t* txn, const char* service_name,
 
     return SKULL_TXN_IO_OK;
 }
+
+int skull_txn_peer(const skull_txn_t* skull_txn, skull_txn_peer_t* peer)
+{
+    sk_txn_t* txn = skull_txn->txn;
+    sk_entity_t* entity = sk_txn_entity(txn);
+
+    return sk_entity_peer(entity, (sk_entity_peer_t*)peer);
+}
+
