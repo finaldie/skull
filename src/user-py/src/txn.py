@@ -2,13 +2,14 @@
 
 import types
 import skull_capi as capi
+import skullpy.descpool as descpool
 
 from google.protobuf import message
 from google.protobuf import message_factory
 from google.protobuf import descriptor_pool
 
 # Global message factory (Notes: Should not create it dynamically, or it will lead memleak)
-_MESSAGE_FACTORY = message_factory.MessageFactory(descriptor_pool.Default())
+_MESSAGE_FACTORY = message_factory.MessageFactory(descpool.Default())
 
 class Txn():
     # Txn Status
