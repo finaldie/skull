@@ -826,7 +826,7 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
                 fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep);
             SK_ASSERT(evbuff);
 
-            sk_entity_net_create(ep->entity, evbuff);
+            sk_entity_tcp_create(ep->entity, evbuff);
             ep->status = SK_EP_ST_CONNECTED;
             SK_LOG_TRACE(SK_ENV_LOGGER, "ep connected (async)");
 
@@ -916,7 +916,7 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         fev_buff* evbuff =
             fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep);
         SK_ASSERT(evbuff);
-        sk_entity_net_create(net_entity, evbuff);
+        sk_entity_tcp_create(net_entity, evbuff);
 
         if (ep->conn_timer) {
             sk_timer_cancel(ep->conn_timer);
@@ -982,7 +982,7 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     fev_buff* evbuff =
         fevbuff_new(mgr->owner->evlp, fd, _read_cb, _error, ep);
     SK_ASSERT(evbuff);
-    sk_entity_net_create(net_entity, evbuff);
+    sk_entity_tcp_create(net_entity, evbuff);
 
     ep->status = SK_EP_ST_CONNECTED;
     return 0;

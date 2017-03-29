@@ -94,7 +94,7 @@ void sk_entity_timerdel(sk_entity_t*, const sk_obj_t*);
 
 // create network entity from a base entity
 void sk_entity_stdin_create(sk_entity_t*, void* ud);
-void sk_entity_net_create  (sk_entity_t*, void* ud);
+void sk_entity_tcp_create  (sk_entity_t*, void* ud);
 void sk_entity_udp_create  (sk_entity_t*, int rootfd,
                             const void* buf, uint16_t buf_sz,
                             struct sockaddr* src_addr, socklen_t src_addr_len);

@@ -61,7 +61,7 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
     fev_buff* evbuff = fevbuff_new(fev, client_fd, _read_cb, _error, entity);
     SK_ASSERT(evbuff);
 
-    sk_entity_net_create(entity, evbuff);
+    sk_entity_tcp_create(entity, evbuff);
 
     sk_metrics_worker.accept.inc(1);
     return 0;
