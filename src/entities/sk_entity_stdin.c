@@ -94,5 +94,6 @@ sk_entity_opt_t sk_entity_stdin_opt = {
 
     .rbufget = _std_rbufget,
     .rbufsz  = _std_rbufsz,
-    .rbufpop = _std_rbufpop
+    .rbufpop = _std_rbufpop,
+    .peer    = NULL
 };

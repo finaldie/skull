@@ -101,6 +101,23 @@ size_t _udp_rbufpop(sk_entity_t* entity, size_t popsz, void* ud)
     return final_popsz;
 }
 
+static
+int _udp_peer(const sk_entity_t* entity, sk_entity_peer_t* peer, void* ud)
+{
+    sk_udp_data_t* udp_data = ud;
+
+    peer->family = udp_data->src_addr.sa.sa_family;
+    if (sk_entity_type(entity) == SK_ENTITY_SOCK_V4TCP) {
+        inet_ntop(AF_INET, (void*)&udp_data->src_addr.in.sin_addr, peer->name, INET6_ADDRSTRLEN);
+        peer->port = ntohs(udp_data->src_addr.in.sin_port);
+    } else {
+        inet_ntop(AF_INET6, (void*)&udp_data->src_addr.in6.sin6_addr, peer->name, INET6_ADDRSTRLEN);
+        peer->port = ntohs(udp_data->src_addr.in6.sin6_port);
+    }
+
+    return 0;
+}
+
 sk_entity_opt_t sk_entity_udp_opt = {
     .read    = _udp_read,
     .write   = _udp_write,
@@ -108,5 +125,6 @@ sk_entity_opt_t sk_entity_udp_opt = {
 
     .rbufget = _udp_rbufget,
     .rbufsz  = _udp_rbufsz,
-    .rbufpop = _udp_rbufpop
+    .rbufpop = _udp_rbufpop,
+    .peer    = _udp_peer
 };

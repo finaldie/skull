@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include "flibs/fev_buff.h"
+#include "flibs/fnet.h"
 #include "api/sk_utils.h"
 #include "api/sk_metrics.h"
 #include "api/sk_entity.h"
@@ -85,6 +86,16 @@ size_t _net_rbufpop(sk_entity_t* entity, size_t popsz, void* ud)
     return fevbuff_pop(evbuff, popsz);
 }
 
+static
+int _net_peer(const sk_entity_t* entity, sk_entity_peer_t* peer, void* ud)
+{
+    sk_tcp_data_t* net_data = ud;
+    int fd = fevbuff_get_fd(net_data->evbuff);
+
+    fnet_peername(fd, peer->name, INET6_ADDRSTRLEN, &peer->port, &peer->family);
+    return 0;
+}
+
 sk_entity_opt_t sk_entity_tcp_opt = {
     .read    = _net_read,
     .write   = _net_write,
@@ -92,5 +103,6 @@ sk_entity_opt_t sk_entity_tcp_opt = {
 
     .rbufget = _net_rbufget,
     .rbufsz  = _net_rbufsz,
-    .rbufpop = _net_rbufpop
+    .rbufpop = _net_rbufpop,
+    .peer    = _net_peer
 };
