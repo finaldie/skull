@@ -39,7 +39,10 @@ ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
     moduleMetrics.request.inc(1);
 
     std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
-    SKULL_LOG_INFO("2", "module_unpack(test): data sz:%zu", data_sz);
+    SKULLCPP_LOG_INFO("2", "module_unpack(test): data sz: " << data_sz);
+    SKULLCPP_LOG_INFO("Cpp PeerInfo", "peer name: " << txn.peerName() << ", "
+                          << "peer port: " << txn.peerPort() << ", "
+                          << "peer type: " << txn.peerType());
 
     // deserialize data to transaction data
     auto& example = (skull::workflow::example&)txn.data();
@@ -71,7 +74,7 @@ int module_run(skullcpp::Txn& txn)
     auto& example = (skull::workflow::example&)txn.data();
 
     std::cout << "receive data: " << example.data() << std::endl;
-    SKULL_LOG_INFO("3", "receive data: %s", example.data().c_str());
+    SKULLCPP_LOG_INFO("3", "receive data: " << example.data());
 
     // Call service
     skull::service::s1::get_req req;
@@ -90,7 +93,7 @@ void module_pack(skullcpp::Txn& txn, skullcpp::TxnData& txndata)
     auto& example = (skull::workflow::example&)txn.data();
 
     std::cout << "module_pack(test): data sz: " << example.data().length() << std::endl;
-    SKULL_LOG_INFO("4", "module_pack(test): data sz:%zu", example.data().length());
+    SKULLCPP_LOG_INFO("4", "module_pack(test): data sz: " << example.data().length());
     txndata.append(example.data().c_str(), example.data().length());
 }
 
