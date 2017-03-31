@@ -252,6 +252,27 @@ end:
 }
 
 static
+PyObject* py_txn_peer(PyObject* self, PyObject* args) {
+    PyObject* pyTxn = NULL;
+    skull_txn_t* txn = NULL;
+
+    if (!PyArg_ParseTuple(args, "O", &pyTxn)) {
+        return NULL;
+    }
+
+    txn = (skull_txn_t*) PyCapsule_GetPointer(pyTxn, "skull_txn");
+    if (!txn) {
+        return NULL;
+    }
+
+    skull_txn_peer_t peer;
+    skull_txn_peer(txn, &peer);
+    skull_txn_peer_type_t ptype = skull_txn_peertype(txn);
+
+    return Py_BuildValue("(sii)", peer.name, peer.port, ptype);
+}
+
+static
 PyObject* py_metrics_inc(PyObject* self, PyObject* args) {
     const char* name = NULL;
     double value = 0.0f;
@@ -365,6 +386,7 @@ static PyMethodDef SkullMethods[] = {
     {"txn_status",        py_txn_status,        METH_VARARGS, "txn_status"},
     {"txn_iocall",        py_txn_iocall,        METH_VARARGS, "txn_iocall"},
     {"txndata_append",    py_txndata_append,    METH_VARARGS, "txndata_append"},
+    {"txn_peer",          py_txn_peer,          METH_VARARGS, "txn_peer"},
 
     // Metrics APIs
     {"metrics_inc",       py_metrics_inc,       METH_VARARGS, "metrics_inc"},
