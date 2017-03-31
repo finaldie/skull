@@ -40,7 +40,7 @@ class Txn():
 
         self._peer_name = None
         self._peer_port = -1
-        self._peer_type = PEER_NONE
+        self._peer_type = Txn.PEER_NONE
 
     def data(self):
         idl_name = 'skull.workflow.' + capi.txn_idlname(self._skull_txn)
@@ -51,15 +51,15 @@ class Txn():
         return capi.txn_status(self._skull_txn)
 
     def peerName(self):
-        __setupPeerInfo()
+        self.__setupPeerInfo()
         return self._peer_name
 
     def peerPort(self):
-        __setupPeerInfo()
+        self.__setupPeerInfo()
         return self._peer_port
 
     def peerType(self):
-        __setupPeerInfo()
+        self.__setupPeerInfo()
         return self._peer_type
 
     ##

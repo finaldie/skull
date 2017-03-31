@@ -15,9 +15,7 @@ namespace skullcpp {
 
 using namespace google::protobuf;
 
-TxnImp::TxnImp(skull_txn_t* sk_txn) {
-    TxnImp(sk_txn, false);
-
+TxnImp::TxnImp(skull_txn_t* sk_txn) : TxnImp(sk_txn, false) {
 #if __WORDSIZE == 64
     (void)__padding;
     (void)__padding1;
