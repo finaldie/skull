@@ -23,6 +23,9 @@ private:
     uint32_t __padding :24;
 #endif
 
+private:
+    void init(skull_txn_t*, bool destroyRawData);
+
 public:
     TxnImp(skull_txn_t*);
     TxnImp(skull_txn_t*, bool destroyRawData);
