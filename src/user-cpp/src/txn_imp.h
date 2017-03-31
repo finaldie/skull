@@ -9,6 +9,11 @@ class TxnImp : public Txn {
 private:
     google::protobuf::Message* msg_;
     skull_txn_t* txn_;
+
+    std::string peerName_;
+    PeerType    peerType_;
+    int         peerPort_;
+
     bool destroyRawData_;
 
 #if __WORDSIZE == 64
@@ -25,6 +30,10 @@ public:
 
     google::protobuf::Message& data();
     Status status() const;
+
+    const std::string& peerName() const;
+    int peerPort() const;
+    PeerType peerType() const;
 
     /**
      * Invoke a service async call

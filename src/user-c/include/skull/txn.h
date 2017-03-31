@@ -20,11 +20,11 @@ typedef enum skull_txn_status_t {
 } skull_txn_status_t;
 
 // Get txn status
-skull_txn_status_t skull_txn_status(const skull_txn_t* txn);
+skull_txn_status_t skull_txn_status(const skull_txn_t*);
 
-void* skull_txn_data(const skull_txn_t* skull_txn);
+void* skull_txn_data(const skull_txn_t*);
 
-void skull_txn_setdata(skull_txn_t* skull_txn, const void* data);
+void skull_txn_setdata(skull_txn_t*, const void* data);
 
 // Get peer info
 typedef struct skull_txn_peer_t {
@@ -34,7 +34,18 @@ typedef struct skull_txn_peer_t {
     short __padding;
 } skull_txn_peer_t;
 
-int skull_txn_peer(const skull_txn_t* skull_txn, skull_txn_peer_t* peer);
+int skull_txn_peer(const skull_txn_t*, skull_txn_peer_t* peer);
+
+typedef enum skull_txn_peer_type_t {
+    SKULL_TXN_PEER_T_NONE  = 0,
+    SKULL_TXN_PEER_T_STD   = 1,
+    SKULL_TXN_PEER_T_TCPV4 = 2,
+    SKULL_TXN_PEER_T_TCPV6 = 3,
+    SKULL_TXN_PEER_T_UDPV4 = 4,
+    SKULL_TXN_PEER_T_UDPV6 = 5
+} skull_txn_peer_type_t;
+
+skull_txn_peer_type_t skull_txn_peertype(const skull_txn_t*);
 
 // ===================== Txn Iocall ===================
 typedef enum skull_txn_ioret_t {

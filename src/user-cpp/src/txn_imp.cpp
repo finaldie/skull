@@ -16,9 +16,7 @@ namespace skullcpp {
 using namespace google::protobuf;
 
 TxnImp::TxnImp(skull_txn_t* sk_txn) {
-    this->txn_ = sk_txn;
-    this->msg_ = NULL;
-    this->destroyRawData_ = false;
+    TxnImp(sk_txn, false);
 
 #if __WORDSIZE == 64
     (void)__padding;
@@ -32,6 +30,13 @@ TxnImp::TxnImp(skull_txn_t* sk_txn, bool destroyRawData) {
     this->txn_ = sk_txn;
     this->msg_ = NULL;
     this->destroyRawData_ = destroyRawData;
+
+    skull_txn_peer_t peer;
+    skull_txn_peer(sk_txn, &peer);
+    this->peerName_ = peer.name;
+    this->peerPort_ = peer.port;
+
+    this->peerType_ = (PeerType)skull_txn_peertype(sk_txn);
 }
 
 TxnImp::~TxnImp() {
@@ -95,6 +100,18 @@ Txn::Status TxnImp::status() const {
     } else {
         return Txn::TXN_OK;
     }
+}
+
+const std::string& TxnImp::peerName() const {
+    return this->peerName_;
+}
+
+int TxnImp::peerPort() const {
+    return this->peerPort_;
+}
+
+Txn::PeerType TxnImp::peerType() const {
+    return this->peerType_;
 }
 
 static
