@@ -53,7 +53,7 @@ sk_logger_t* sk_logger_create(const char* workdir,
     snprintf(full_log_name, full_name_sz, "%s/log/%s",
              workdir, log_name);
 
-    flog_file_t* logger = flog_create(full_log_name, FLOG_ASYNC_MODE);
+    flog_file_t* logger = flog_create(full_log_name, FLOG_F_ASYNC);
     SK_ASSERT_MSG(logger, "logger create failure");
 
     // 2. set log level
