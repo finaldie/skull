@@ -1,3 +1,14 @@
+* 2017-04-11 0.9.15
+  * Core
+    * **Fix:** Fix admin output for `module_list` part
+    * **Enhancement:** Add more logs during starting phase for a better experience
+    * **Enhancement:** Reorder dynamic counter output format
+  * User
+    * **New:** Add `peer_xxx` APIs
+  * MISC
+    * **Enhancement:** Upgrade flibs to latest version
+    * **Enhancement:** Lock down protobuf version to 2.6.1
+    * **Enhancement:** Cleanup useless files
 * 2016-12-17 0.9.14
   * Core
     * **Enhancement:** Optimize the timer service, reduce cpu usage
