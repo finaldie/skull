@@ -9,7 +9,7 @@ _Skull_ is a event-driven serving framework with multiple modern designs to allo
 * Easy to maintain even a huge project
 * Write code in lock-free environment
 
-It helps people to build an application/server extremely fast and strong, high scalability and flexibility in application layer, and with powerful performance in engine level. Read more [here][6].
+It helps people to build an application/server extremely fast and strong, high scalability and flexibility in application layer, and with strong performance in engine level. Read more [here][6].
 
 _Skull_ can be used in generic serving layer or embedded device. E.g. _web logic server_, _game server_, etc.
 
