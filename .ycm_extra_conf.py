@@ -77,6 +77,8 @@ flags = [
 '-I',
 './deps/flibs/include',
 '-I',
+'./deps/jemalloc/include',
+'-I',
 './tests/',
 '-isystem',
 '/usr/bin/../lib/gcc/x86_64-linux-gnu/4.8/include',

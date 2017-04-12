@@ -14,6 +14,7 @@ MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE -D_GNU_SOURCE
 INC = \
     -I. \
     -I../deps/flibs/include \
+    -I../deps/jemalloc/include \
     -Iuser-c/include/ \
     -isystem./pto/idls
 

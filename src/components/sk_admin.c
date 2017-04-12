@@ -4,6 +4,8 @@
 #include <stdarg.h>
 #include <time.h>
 
+#include "jemalloc/jemalloc.h"
+
 #include "flibs/flist.h"
 #include "flibs/fmbuf.h"
 
@@ -20,7 +22,8 @@
     " - help\n" \
     " - counter | metrics\n" \
     " - last\n" \
-    " - info | status\n"
+    " - info | status\n" \
+    " - memory\n"
 
 #define ADMIN_CMD_HELP            "help"
 #define ADMIN_CMD_METRICS         "metrics"
@@ -28,9 +31,10 @@
 #define ADMIN_CMD_LAST_SNAPSHOT   "last"
 #define ADMIN_CMD_STATUS          "status"
 #define ADMIN_CMD_INFO            "info"
+#define ADMIN_CMD_MEMORY          "memory"
 
 #define ADMIN_LINE_MAX_LENGTH     (1024)
-#define ADMIN_RESP_MAX_LENGTH     (2048)
+#define ADMIN_RESP_MAX_LENGTH     (4096)
 #define ADMIN_COUNTER_LINE_LENGTH (256)
 
 #define ADMIN_MODULE_FMT1         " %s - unpack %zu | run %zu | pack %zu ;"
@@ -483,6 +487,18 @@ void _process_status(sk_txn_t* txn)
     _status_resources(txn, core);
 }
 
+static
+void __append_memory_stat(void* txn, const char * content)
+{
+    _append_response(txn, "%s", content);
+}
+
+static
+void _process_memory(sk_txn_t* txn)
+{
+    malloc_stats_print(__append_memory_stat, txn, NULL);
+}
+
 /********************************* Public APIs ********************************/
 sk_workflow_cfg_t* sk_admin_workflowcfg_create(int port)
 {
@@ -550,6 +566,8 @@ int _admin_run(void* md, sk_txn_t* txn)
     } else if (0 == strcasecmp(ADMIN_CMD_STATUS, command) ||
                0 == strcasecmp(ADMIN_CMD_INFO, command)) {
         _process_status(txn);
+    } else if (0 == strcasecmp(ADMIN_CMD_MEMORY, command)) {
+        _process_memory(txn);
     } else {
         _process_help(txn);
     }
