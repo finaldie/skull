@@ -13,32 +13,8 @@ It helps people to build an application/server extremely fast and strong, high s
 
 _Skull_ can be used in generic serving layer or embedded device. E.g. _web logic server_, _game server_, etc.
 
-Mailing list: skull-engine@googlegroups.com
-
-- [Releases](#releases)
-- [Documentations](#documentations)
-- [How to Build](#how-to-build)
-  - [Install Dependencies](#install-dependencies)
-  - [Build and Install](#build-and-install)
-- [A Quick Demo](#a-quick-demo)
-  - [Create a Skull Project](#create-a-skull-project)
-  - [Play with skull](#play-with-skull)
-- [Existing Services](#existing-services)
-- [Other Resources](#other-resources)
-- [Contribution and Discussion](#contribution-and-discussion)
-
 ## Releases
 [Changelog](ChangeLog.md)
-
-## Documentations
-* [High Level Introduction][6]
-* [How To Start][7]
-* [How to Test][8]
-* [How to Deploy][9]
-* [Monitoring][10]
-* [API Docs - Cpp][11]
-* [API Docs - Python][12]
-* [Integrate with Nginx][13]
 
 ## How to Build
 Use _Ubuntu14.04_ as an example. (Tested on `Ubuntu 12.04/14.04/16.04`, `RHEL6.x` and `Raspberry OS`)
@@ -77,7 +53,7 @@ create a _Skull_ project, have fun :)
  * By default, a new module contains the example code which is used to echo-back message
  * Above creation is for `C++` module, type `py` in language selection step if needed
 
-### Play with Skull
+### Playing with Skull
 [![skull demo 2](http://g.recordit.co/vSON9N6nuV.gif)]()
 
 ## Existing Services
@@ -91,6 +67,16 @@ Name                  | Description |
 ----------------------|-------------|
 [Skull-Perf Cases][5] | Including some basic perf cases |
 [DNSTurbo][16]        | Smart DNS Client based on _Skull_. [Trailer][17] |
+
+## Documentations
+* [High Level Introduction][6]
+* [How To Start][7]
+* [How to Test][8]
+* [How to Deploy][9]
+* [Monitoring][10]
+* [API Docs - Cpp][11]
+* [API Docs - Python][12]
+* [Integrate with Nginx][13]
 
 ## Contribution and Discussion
 To discuss any issues, there are some ways we can use:
