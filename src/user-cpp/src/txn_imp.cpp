@@ -15,10 +15,27 @@ namespace skullcpp {
 
 using namespace google::protobuf;
 
-TxnImp::TxnImp(skull_txn_t* sk_txn) {
+/**
+ * gcc 4.6.x doesn't support calling another constructor in the same class
+ *  upgrade to gcc 4.7 would solve this issue.
+ *
+ * So currently use another `init()` instead.
+ */
+void TxnImp::init(skull_txn_t* sk_txn, bool destroyRawData) {
     this->txn_ = sk_txn;
     this->msg_ = NULL;
-    this->destroyRawData_ = false;
+    this->destroyRawData_ = destroyRawData;
+
+    skull_txn_peer_t peer;
+    skull_txn_peer(sk_txn, &peer);
+    this->peerName_ = peer.name;
+    this->peerPort_ = peer.port;
+
+    this->peerType_ = (PeerType)skull_txn_peertype(sk_txn);
+}
+
+TxnImp::TxnImp(skull_txn_t* sk_txn) {
+    init(sk_txn, false);
 
 #if __WORDSIZE == 64
     (void)__padding;
@@ -29,9 +46,7 @@ TxnImp::TxnImp(skull_txn_t* sk_txn) {
 }
 
 TxnImp::TxnImp(skull_txn_t* sk_txn, bool destroyRawData) {
-    this->txn_ = sk_txn;
-    this->msg_ = NULL;
-    this->destroyRawData_ = destroyRawData;
+    init(sk_txn, destroyRawData);
 }
 
 TxnImp::~TxnImp() {
@@ -95,6 +110,18 @@ Txn::Status TxnImp::status() const {
     } else {
         return Txn::TXN_OK;
     }
+}
+
+const std::string& TxnImp::peerName() const {
+    return this->peerName_;
+}
+
+int TxnImp::peerPort() const {
+    return this->peerPort_;
+}
+
+Txn::PeerType TxnImp::peerType() const {
+    return this->peerType_;
 }
 
 static

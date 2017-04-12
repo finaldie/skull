@@ -36,3 +36,36 @@ skull_txn_iocall (skull_txn_t* txn, const char* service_name,
 
     return SKULL_TXN_IO_OK;
 }
+
+int skull_txn_peer(const skull_txn_t* skull_txn, skull_txn_peer_t* peer)
+{
+    sk_txn_t* txn = skull_txn->txn;
+    sk_entity_t* entity = sk_txn_entity(txn);
+
+    return sk_entity_peer(entity, (sk_entity_peer_t*)peer);
+}
+
+skull_txn_peer_type_t skull_txn_peertype(const skull_txn_t* skull_txn)
+{
+    sk_txn_t* txn = skull_txn->txn;
+    sk_entity_t* entity = sk_txn_entity(txn);
+
+    sk_entity_type_t etype = sk_entity_type(entity);
+    switch (etype) {
+    case SK_ENTITY_NONE:
+        return SKULL_TXN_PEER_T_NONE;
+    case SK_ENTITY_STD:
+        return SKULL_TXN_PEER_T_STD;
+    case SK_ENTITY_SOCK_V4TCP:
+        return SKULL_TXN_PEER_T_TCPV4;
+    case SK_ENTITY_SOCK_V6TCP:
+        return SKULL_TXN_PEER_T_TCPV6;
+    case SK_ENTITY_SOCK_V4UDP:
+        return SKULL_TXN_PEER_T_UDPV4;
+    case SK_ENTITY_SOCK_V6UDP:
+        return SKULL_TXN_PEER_T_UDPV6;
+    default:
+        return SKULL_TXN_PEER_T_NONE;
+    }
+}
+

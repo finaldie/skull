@@ -19,6 +19,7 @@ HEADER_CONTENT_START = "\n"
 HEADER_CONTENT_INIT_START = "\
 from google.protobuf import descriptor_pb2\n\
 from google.protobuf import descriptor_pool\n\
+import skullpy.descpool as descpool\n\
 \n\
 "
 
@@ -47,7 +48,7 @@ def generate_headers(api_file_list, pkg_name, addReflection):
             # We use add addReflection = True when generate __init__.py file,
             #  so no need to import the full path
             content += "import %s_pb2 as %s\n" % (api_basename, alias_name)
-            content += "descriptor_pool.Default().Add(descriptor_pb2.FileDescriptorProto.FromString(%s.DESCRIPTOR.serialized_pb))\n\n" % alias_name
+            content += "descpool.Default().Add(descriptor_pb2.FileDescriptorProto.FromString(%s.DESCRIPTOR.serialized_pb))\n\n" % alias_name
 
     return content
 

@@ -500,7 +500,7 @@ void sk_core_start(sk_core_t* core)
 
     for (int i = 0; i < config->threads; i++) {
         sk_engine_t* worker = core->workers[i];
-        // this *worker_thread_env* will be deleted when thread exit
+        // This *worker_thread_env* will be deleted when thread exit
         sk_thread_env_t* worker_env = sk_thread_env_create(core, worker,
                                                            "worker-%d", i);
         int ret = sk_engine_start(worker, worker_env, 1);
@@ -508,6 +508,8 @@ void sk_core_start(sk_core_t* core)
             sk_print("Start worker io engine failed, errno: %d\n", errno);
             exit(ret);
         }
+
+        SK_LOG_INFO(core->logger, "Start worker engine [%d] successfully", i);
     }
 
     // 5. start bio engines
@@ -584,7 +586,7 @@ void sk_core_stop(sk_core_t* core)
 
     // 3. stop bio(s)
     for (int i = 0; i < core->config->bio_cnt; i++) {
-        SK_LOG_INFO(core->logger, "Stopping engine bio[%d]...", i);
+        SK_LOG_INFO(core->logger, "Stopping engine bio[%d]...", i + 1);
         sk_engine_stop(core->bio[i]);
     }
 }

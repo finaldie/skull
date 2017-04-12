@@ -30,7 +30,7 @@ public:
     Metrics() {}
     Metrics(const std::string& topName, const std::string& name) {
         std::ostringstream os;
-        os << "skull.user.s" << "."
+        os << "skull.user.s."
            << topName << "."
            << name;
 
@@ -57,10 +57,10 @@ public:
     MetricsDynamic() {}
     MetricsDynamic(const std::string& topName, const std::string& name, const std::string& dynamicName) {
         std::ostringstream os;
-        os << "skull.user.d" << "."
-           << topName << "."
-           << name << "."
-           << dynamicName;
+        os << "skull.user.d."
+           << topName << ".{"
+           << dynamicName << "}."
+           << name;
 
         this->fullName_ = os.str();
     }

@@ -83,13 +83,26 @@ size_t _default_rbufpop(sk_entity_t* entity, size_t popsz, void* ud)
     return 0;
 }
 
-sk_entity_opt_t default_entity_opt = {
+static
+int _default_peer(const sk_entity_t* entity, sk_entity_peer_t* peer, void* ud)
+{
+    if (!peer) return 0;
+    memset(peer, 0, sizeof(*peer));
+
+    peer->port   = -1;
+    peer->family = -1;
+    strncpy(peer->name, "Unknown", INET6_ADDRSTRLEN);
+    return 0;
+}
+
+sk_entity_opt_t default_opt = {
     .read    = _default_read,
     .write   = _default_write,
     .destroy = _default_destroy,
     .rbufget = _default_rbufget,
     .rbufsz  = _default_rbufsz,
-    .rbufpop = _default_rbufpop
+    .rbufpop = _default_rbufpop,
+    .peer    = _default_peer
 };
 
 // APIs
@@ -98,7 +111,7 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow, sk_entity_type_t type)
     sk_entity_t* entity = calloc(1, sizeof(*entity));
     entity->owner    = NULL;
     entity->workflow = workflow;
-    entity->opt      = default_entity_opt;
+    entity->opt      = default_opt;
     entity->txns     = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     entity->timers   = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     entity->status   = SK_ENTITY_ACTIVE;
@@ -111,12 +124,13 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow, sk_entity_type_t type)
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
 {
-    entity->opt.read  = opt.read  ? opt.read  : default_entity_opt.read;
-    entity->opt.write = opt.write ? opt.write : default_entity_opt.write;
-    entity->opt.destroy = opt.destroy ? opt.destroy : default_entity_opt.destroy;
-    entity->opt.rbufget = opt.rbufget ? opt.rbufget : default_entity_opt.rbufget;
-    entity->opt.rbufsz  = opt.rbufsz  ? opt.rbufsz  : default_entity_opt.rbufsz;
-    entity->opt.rbufpop = opt.rbufpop ? opt.rbufpop : default_entity_opt.rbufpop;
+    entity->opt.read  = opt.read  ? opt.read  : default_opt.read;
+    entity->opt.write = opt.write ? opt.write : default_opt.write;
+    entity->opt.destroy = opt.destroy ? opt.destroy : default_opt.destroy;
+    entity->opt.rbufget = opt.rbufget ? opt.rbufget : default_opt.rbufget;
+    entity->opt.rbufsz  = opt.rbufsz  ? opt.rbufsz  : default_opt.rbufsz;
+    entity->opt.rbufpop = opt.rbufpop ? opt.rbufpop : default_opt.rbufpop;
+    entity->opt.peer    = opt.peer ? opt.peer : default_opt.peer;
 
     entity->ud = ud;
 }
@@ -195,6 +209,12 @@ size_t  sk_entity_rbufsz(const sk_entity_t* entity)
 size_t  sk_entity_rbufpop(sk_entity_t* entity, size_t popsz)
 {
     return entity->opt.rbufpop(entity, popsz, entity->ud);
+}
+
+int sk_entity_peer(const sk_entity_t* entity, sk_entity_peer_t* peer)
+{
+    if (!peer) return 1;
+    return entity->opt.peer(entity, peer, entity->ud);
 }
 
 sk_entity_type_t sk_entity_type(const sk_entity_t* entity)

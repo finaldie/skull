@@ -229,6 +229,21 @@ sk_thread_env_t* sk_thread_env()
     return &_fake_env;
 }
 
+int skull_txn_peer(const skull_txn_t* skull_txn, skull_txn_peer_t* peer)
+{
+    if (!peer) return 1;
+
+    peer->port   = -1;
+    peer->family = -1;
+    strncpy(peer->name, "Unknown", INET6_ADDRSTRLEN);
+    return 0;
+}
+
+skull_txn_peer_type_t skull_txn_peertype(const skull_txn_t* skull_txn)
+{
+    return SKULL_TXN_PEER_T_NONE;
+}
+
 // Mock API for running mock service api in module ut
 skull_txn_ioret_t
 skull_txn_iocall (skull_txn_t* txn,

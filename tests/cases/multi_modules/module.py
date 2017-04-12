@@ -52,6 +52,10 @@ def module_pack(txn, txndata):
 
 def module_run(txn):
     print "module_run"
+
+    Logger.info('Py PeerInfo', 'peer name: {}, peer port: {}, peer type: {}'.format(
+        txn.peerName(), txn.peerPort(), txn.peerType()))
+
     mod_metrics = Metrics.module()
     mod_metrics.request.inc(1)
 
