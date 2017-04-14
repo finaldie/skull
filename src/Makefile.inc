@@ -14,6 +14,7 @@ MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE -D_GNU_SOURCE
 INC = \
     -I. \
     -I../deps/flibs/include \
+    -I../deps/jemalloc/include \
     -Iuser-c/include/ \
     -isystem./pto/idls
 
@@ -53,6 +54,7 @@ disable_jemalloc ?= false
 
 ifeq ($(disable_jemalloc), false)
     JEMALLOC_STATIC := ../deps/jemalloc/lib/libjemalloc_pic.a
+    MACRO += -DSKULL_JEMALLOC_LINKED
 else
     JEMALLOC_STATIC :=
 endif
