@@ -1,3 +1,5 @@
+* 2017-04-14 1.0-rc1
+  * Version 1.0 first release candidate
 * 2017-04-13 0.9.16
   * Core
     * **New:** Dump memory stats when static linked with jemalloc
