@@ -1,6 +1,8 @@
 * 2017-04-13 0.9.16
   * Core
     * **New:** Dump memory stats when static linked with jemalloc
+  * MISC
+    * **Enhancement:** Upgrade jemalloc to 4.5.0
 * 2017-04-11 0.9.15
   * Core
     * **Fix:** Fix admin output for `module_list` part
