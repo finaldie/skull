@@ -54,6 +54,7 @@ disable_jemalloc ?= false
 
 ifeq ($(disable_jemalloc), false)
     JEMALLOC_STATIC := ../deps/jemalloc/lib/libjemalloc_pic.a
+    MACRO += -DSKULL_JEMALLOC_LINKED
 else
     JEMALLOC_STATIC :=
 endif
