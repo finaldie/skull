@@ -124,6 +124,17 @@ Txn::PeerType TxnImp::peerType() const {
     return this->peerType_;
 }
 
+const std::string& TxnImp::peerTypeName(Txn::PeerType type) const {
+    static const std::string peerTypeNames[] = {"NONE", "STD", "TCPV4", "TCPV6", "UDPV4", "UDPV6"};
+    static const std::string unknownPeerType = "UNKNOWN";
+
+    if ((int)type < Txn::PeerType::NONE || (int)type > Txn::PeerType::UDPV6) {
+        return unknownPeerType;
+    }
+
+    return peerTypeNames[type];
+}
+
 static
 int _skull_svc_api_callback(skull_txn_t* sk_txn, skull_txn_ioret_t ret,
                             const char* serviceName,

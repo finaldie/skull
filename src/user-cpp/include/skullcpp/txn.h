@@ -59,6 +59,7 @@ public:
     virtual const std::string& peerName() const = 0;
     virtual int peerPort() const = 0;
     virtual PeerType peerType() const = 0;
+    virtual const std::string& peerTypeName(PeerType type) const = 0;
 
     /**
      * Invoke a service async call (no pending)

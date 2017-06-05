@@ -34,6 +34,16 @@ class Txn():
     PEER_UDPV4 = 4
     PEER_UDPV6 = 5
 
+    # Peer Type Name Mapping
+    _PEER_TYPE_NAME_MAP = {
+        PEER_NONE:  "NONE",
+        PEER_STD:   "STD",
+        PEER_TCPV4: "TCPV4",
+        PEER_TCPV6: "TCPV6",
+        PEER_UDPV4: "UDPV4",
+        PEER_UDPV6: "UDPV6"
+    }
+
     def __init__(self, skull_txn):
         self._skull_txn = skull_txn
         self._msg = None
@@ -61,6 +71,11 @@ class Txn():
     def peerType(self):
         self.__setupPeerInfo()
         return self._peer_type
+
+    def peerTypeName(self, type):
+        self.__setupPeerInfo()
+
+        return self._PEER_TYPE_NAME_MAP.get(type) or "UNKNOWN"
 
     ##
     # Send a iocall to service

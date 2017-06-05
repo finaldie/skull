@@ -37,6 +37,7 @@ public:
     const std::string& peerName() const;
     int peerPort() const;
     PeerType peerType() const;
+    const std::string& peerTypeName(PeerType type) const;
 
     /**
      * Invoke a service async call
