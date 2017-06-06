@@ -10,6 +10,7 @@
 #include "srv_utils.h"
 #include "msg_factory.h"
 #include "txn_imp.h"
+#include "client_imp.h"
 
 namespace skullcpp {
 
@@ -25,13 +26,6 @@ void TxnImp::init(skull_txn_t* sk_txn, bool destroyRawData) {
     this->txn_ = sk_txn;
     this->msg_ = NULL;
     this->destroyRawData_ = destroyRawData;
-
-    skull_txn_peer_t peer;
-    skull_txn_peer(sk_txn, &peer);
-    this->peerName_ = peer.name;
-    this->peerPort_ = peer.port;
-
-    this->peerType_ = (PeerType)skull_txn_peertype(sk_txn);
 }
 
 TxnImp::TxnImp(skull_txn_t* sk_txn) {
@@ -71,8 +65,9 @@ TxnImp::~TxnImp() {
         skull_txn_setdata(this->txn_, NULL);
     }
 
-    // 2. clean up msg
+    // 2. clean up resources
     delete this->msg_;
+    delete this->client_;
 }
 
 google::protobuf::Message& TxnImp::data() {
@@ -112,27 +107,16 @@ Txn::Status TxnImp::status() const {
     }
 }
 
-const std::string& TxnImp::peerName() const {
-    return this->peerName_;
-}
+const Client& TxnImp::client() {
+    if (!this->client_) {
+        skull_txn_peer_t peer;
+        skull_txn_peer(this->txn_, &peer);
 
-int TxnImp::peerPort() const {
-    return this->peerPort_;
-}
-
-Txn::PeerType TxnImp::peerType() const {
-    return this->peerType_;
-}
-
-const std::string& TxnImp::peerTypeName(Txn::PeerType type) const {
-    static const std::string peerTypeNames[] = {"NONE", "STD", "TCPV4", "TCPV6", "UDPV4", "UDPV6"};
-    static const std::string unknownPeerType = "UNKNOWN";
-
-    if ((int)type < Txn::PeerType::NONE || (int)type > Txn::PeerType::UDPV6) {
-        return unknownPeerType;
+        Client::Type type = (Client::Type)skull_txn_peertype(this->txn_);
+        this->client_ = new ClientImp(type, peer.name, peer.port);
     }
 
-    return peerTypeNames[type];
+    return *this->client_;
 }
 
 static

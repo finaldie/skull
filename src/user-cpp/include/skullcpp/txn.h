@@ -8,6 +8,7 @@
 #include <google/protobuf/message.h>
 
 #include <skull/txn.h>
+#include <skullcpp/client.h>
 
 namespace skullcpp {
 
@@ -35,15 +36,6 @@ public:
         ERROR_SRVBUSY = 5
     } IOStatus;
 
-    typedef enum PeerType {
-        NONE  = 0,
-        STD   = 1,
-        TCPV4 = 2,
-        TCPV6 = 3,
-        UDPV4 = 4,
-        UDPV6 = 5
-    } PeerType;
-
     typedef int (*ApiCB) (Txn&, IOStatus, const std::string& apiName,
                           const google::protobuf::Message& request,
                           const google::protobuf::Message& response);
@@ -55,11 +47,7 @@ public:
 public:
     virtual google::protobuf::Message& data() = 0;
     virtual Status status() const = 0;
-
-    virtual const std::string& peerName() const = 0;
-    virtual int peerPort() const = 0;
-    virtual PeerType peerType() const = 0;
-    virtual const std::string& peerTypeName(PeerType type) const = 0;
+    virtual const Client& client() = 0;
 
     /**
      * Invoke a service async call (no pending)

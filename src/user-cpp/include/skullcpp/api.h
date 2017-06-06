@@ -10,6 +10,7 @@
 #include <skullcpp/service_loader.h>
 #include <skullcpp/ep.h>
 #include <skullcpp/logger.h>
+#include <skullcpp/client.h>
 
 #endif
 

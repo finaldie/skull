@@ -47,6 +47,7 @@ SKULL_OBJS = \
     src/txn_imp.o \
     src/txndata_imp.o \
     src/txn_idldata.o \
+    src/client_imp.o \
     src/api_loader.o
 
 SKULL_UT_OBJS = \
@@ -61,6 +62,7 @@ SKULL_UT_OBJS = \
     src/txn_imp.o \
     src/txn_idldata.o \
     src/txndata_imp.o \
+    src/client_imp.o \
     src/unittest_mockapis.o
 
 all: $(SKULL_CPP_LIB) $(SKULL_UT_LIB)
