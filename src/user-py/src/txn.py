@@ -1,8 +1,9 @@
 # Python Txn Class
 
 import types
-import skull_capi as capi
+import skull_capi       as capi
 import skullpy.descpool as descpool
+import skullpy.client   as client
 
 from google.protobuf import message
 from google.protobuf import message_factory
@@ -11,7 +12,7 @@ from google.protobuf import descriptor_pool
 # Global message factory (Notes: Should not create it dynamically, or it will lead memleak)
 _MESSAGE_FACTORY = message_factory.MessageFactory(descpool.Default())
 
-class Txn():
+class Txn(object):
     # Txn Status
     TXN_OK      = 0
     TXN_ERROR   = 1
@@ -26,31 +27,10 @@ class Txn():
     IO_ERROR_SVCBUSY = 5
     IO_ERROR_REQUEST = 6
 
-    # Peer Type
-    PEER_NONE  = 0
-    PEER_STD   = 1
-    PEER_TCPV4 = 2
-    PEER_TCPV6 = 3
-    PEER_UDPV4 = 4
-    PEER_UDPV6 = 5
-
-    # Peer Type Name Mapping
-    _PEER_TYPE_NAME_MAP = {
-        PEER_NONE:  "NONE",
-        PEER_STD:   "STD",
-        PEER_TCPV4: "TCPV4",
-        PEER_TCPV6: "TCPV6",
-        PEER_UDPV4: "UDPV4",
-        PEER_UDPV6: "UDPV6"
-    }
-
     def __init__(self, skull_txn):
         self._skull_txn = skull_txn
-        self._msg = None
-
-        self._peer_name = None
-        self._peer_port = -1
-        self._peer_type = Txn.PEER_NONE
+        self._msg       = None
+        self._client    = None
 
     def data(self):
         idl_name = 'skull.workflow.' + capi.txn_idlname(self._skull_txn)
@@ -60,22 +40,11 @@ class Txn():
     def status(self):
         return capi.txn_status(self._skull_txn)
 
-    def peerName(self):
-        self.__setupPeerInfo()
-        return self._peer_name
+    def client(self):
+        if self._client is None:
+            self._client = Client()
 
-    def peerPort(self):
-        self.__setupPeerInfo()
-        return self._peer_port
-
-    def peerType(self):
-        self.__setupPeerInfo()
-        return self._peer_type
-
-    def peerTypeName(self, type):
-        self.__setupPeerInfo()
-
-        return self._PEER_TYPE_NAME_MAP.get(type) or "UNKNOWN"
+        return self._client
 
     ##
     # Send a iocall to service
@@ -133,14 +102,6 @@ class Txn():
 
         self._msg.ParseFromString(msgBinData)
         return self._msg
-
-    def __setupPeerInfo(self):
-        if self._peer_name is not None: return
-
-        peer = capi.txn_peer(self._skull_txn)
-        self._peer_name = peer[0]
-        self._peer_port = peer[1]
-        self._peer_type = peer[2]
 
     # Store the binary message data back to skull_txn
     def storeMsgData(self):

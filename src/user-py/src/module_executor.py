@@ -1,8 +1,8 @@
 # Skull Module Executor
 
-import skullpy.txn as Txn
+import skullpy.txn     as Txn
 import skullpy.txndata as TxnData
-import skullpy.logger as Logger
+import skullpy.logger  as Logger
 
 def run_module_init(init_func, config):
     init_func(config)
