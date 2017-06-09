@@ -117,7 +117,10 @@ ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
 
     // Call user module_unpack
     PyObject* pyConsumed = PyObject_CallObject(mdata->pyExecutorFunc, pyArgs);
-    ssize_t consumed = 0;
+
+    // Set to -1 by default, so if error occurred, like un-handled excpetions,
+    //  then the entity will be destroyed soon
+    ssize_t consumed = -1;
 
     if (!pyConsumed) {
         if (PyErr_Occurred()) PyErr_Print();

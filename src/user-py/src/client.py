@@ -27,7 +27,7 @@ class Client(object):
 
         self._name = None
         self._port = -1
-        self._type = Txn.NONE
+        self._type = self.NONE
 
     def name(self):
         self.__setupPeerInfo()

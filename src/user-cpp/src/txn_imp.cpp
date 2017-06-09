@@ -23,8 +23,9 @@ using namespace google::protobuf;
  * So currently use another `init()` instead.
  */
 void TxnImp::init(skull_txn_t* sk_txn, bool destroyRawData) {
-    this->txn_ = sk_txn;
-    this->msg_ = NULL;
+    this->msg_    = NULL;
+    this->txn_    = sk_txn;
+    this->client_ = NULL;
     this->destroyRawData_ = destroyRawData;
 }
 

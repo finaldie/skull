@@ -42,7 +42,7 @@ class Txn(object):
 
     def client(self):
         if self._client is None:
-            self._client = Client()
+            self._client = client.Client(self._skull_txn)
 
         return self._client
 

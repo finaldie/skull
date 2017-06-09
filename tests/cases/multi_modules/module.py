@@ -1,11 +1,10 @@
 import yaml
 import pprint
 
-from skullpy import txn as Txn
-from skullpy import txndata as TxnData
-from skullpy import logger as Logger
+from skullpy     import *
+from skullpy.txn import *
 
-from skull.common import metrics as Metrics
+from skull.common import *
 from skull.common.proto import *
 
 def module_init(config):
@@ -13,12 +12,12 @@ def module_init(config):
     print "config: ",
     pprint.pprint(config)
 
-    Logger.trace('py module init: trace test')
-    Logger.debug('py module init: debug test')
-    Logger.info('1', 'py module init: info test')
-    Logger.warn('2', 'py module init: warn test', 'no suggestion')
-    Logger.error('3', 'py module init: error test', 'no solution')
-    Logger.fatal('4', 'py module init: fatal test', 'no solution')
+    logger.trace('py module init: trace test')
+    logger.debug('py module init: debug test')
+    logger.info('1', 'py module init: info test')
+    logger.warn('2', 'py module init: warn test', 'no suggestion')
+    logger.error('3', 'py module init: error test', 'no solution')
+    logger.fatal('4', 'py module init: fatal test', 'no solution')
     return
 
 def module_release():
@@ -27,39 +26,40 @@ def module_release():
 
 def module_unpack(txn, data):
     print "data: %s" % data,
-    Logger.info('5', 'receive data: {}'.format(data))
+    logger.info('5', 'receive data: {}'.format(data))
     example_msg = txn.data()
     example_msg.data = data
 
     return len(data)
 
 def module_pack(txn, txndata):
-    mod_metrics = Metrics.module()
+    mod_metrics = metrics.module()
     mod_metrics.response.inc(1)
 
-    mod_dymetrics = Metrics.transaction('test')
+    mod_dymetrics = metrics.transaction('test')
     mod_dymetrics.response.inc(1)
 
-    if txn.status() != Txn.Txn.TXN_OK:
+    if txn.status() != Txn.TXN_OK:
         txndata.append('error')
-        Logger.error('6', 'module_pack error', 'no solution')
+        logger.error('6', 'module_pack error', 'no solution')
     else:
         example_msg = txn.data()
         print "pack data: %s" % example_msg.data
-        Logger.info('7', 'module_pack: data sz: {}'.format(len(example_msg.data)))
+        logger.info('7', 'module_pack: data sz: {}'.format(len(example_msg.data)))
 
         txndata.append(example_msg.data)
 
 def module_run(txn):
-    print "module_run"
+    print "py module_run"
 
-    Logger.info('Py PeerInfo', 'peer name: {}, peer port: {}, peer type: {}'.format(
-        txn.peerName(), txn.peerPort(), txn.peerType()))
+    client = txn.client()
+    logger.info('Py PeerInfo', 'peer name: {}, peer port: {}, peer type: {}, peer type name: {}'.format(
+        client.name(), client.port(), client.type(), client.typeName()))
 
-    mod_metrics = Metrics.module()
+    mod_metrics = metrics.module()
     mod_metrics.request.inc(1)
 
-    mod_dymetrics = Metrics.transaction('test')
+    mod_dymetrics = metrics.transaction('test')
     mod_dymetrics.request.inc(1)
 
     # Assemble api request
