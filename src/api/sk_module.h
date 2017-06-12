@@ -22,7 +22,7 @@ typedef struct sk_module_t {
     sk_module_stat_t stat;
 
     // Interfaces
-    void    (*init)   (void* md);
+    int     (*init)   (void* md);
     int     (*run)    (void* md, struct sk_txn_t* txn);
     ssize_t (*unpack) (void* md, struct sk_txn_t* txn,
                        const void* data, size_t data_len);

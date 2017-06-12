@@ -8,10 +8,10 @@
 
 #include "module_executor.h"
 
-void   skull_module_init   (void* md)
+int    skull_module_init   (void* md)
 {
     skull_module_t* module = md;
-    module->init(module->ud);
+    return module->init(module->ud);
 }
 
 void   skull_module_release(void* md)

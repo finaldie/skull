@@ -534,9 +534,10 @@ sk_module_t* sk_admin_module()
 
 /****************************** Admin Module **********************************/
 static
-void _admin_init(void* md)
+int  _admin_init(void* md)
 {
     sk_print("admin module: init\n");
+    return 0;
 }
 
 static

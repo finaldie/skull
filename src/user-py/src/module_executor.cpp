@@ -17,7 +17,7 @@
 
 namespace skullpy {
 
-void   skull_module_init(void* md)
+int    skull_module_init(void* md)
 {
     PyGILState_STATE state = PyGILState_Ensure();
     module_data_t* mdata = (module_data_t*)md;
@@ -31,14 +31,19 @@ void   skull_module_init(void* md)
     PyTuple_SetItem(pyArgs, 1, pyEntryName);
 
     // Call user module_init
-    PyObject* ret = PyObject_CallObject(mdata->pyExecutorFunc, pyArgs);
-    if (!ret) {
+    PyObject* pyRet = PyObject_CallObject(mdata->pyExecutorFunc, pyArgs);
+    int ret = 1;
+
+    if (!pyRet) {
         if (PyErr_Occurred()) PyErr_Print();
+    } else {
+        ret = PyObject_IsTrue(pyRet) ? 0 : 1;
     }
 
-    Py_XDECREF(ret);
+    Py_XDECREF(pyRet);
     Py_DECREF(pyArgs);
     PyGILState_Release(state);
+    return ret;
 }
 
 void   skull_module_release(void* md)

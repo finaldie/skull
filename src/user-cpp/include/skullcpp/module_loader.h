@@ -9,7 +9,7 @@
 namespace skullcpp {
 
 typedef struct ModuleEntry {
-    void    (*init)    (const skull_config_t*);
+    int     (*init)    (const skull_config_t*);
     void    (*release) ();
 
     int     (*run)     (Txn&);
