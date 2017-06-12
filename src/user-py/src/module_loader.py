@@ -144,7 +144,7 @@ def module_execute(module_name, entry_name, skull_txn=None, data=None, skull_txn
 
     if entry_name == MODULE_INIT_FUNCNAME:
         config = user_module['config']
-        skull_module_executor.run_module_init(entry_func, config)
+        return skull_module_executor.run_module_init(entry_func, config)
     elif entry_name == MODULE_RELEASE_FUNCNAME:
         skull_module_executor.run_module_release(entry_func)
     elif entry_name == MODULE_RUN_FUNCNAME:

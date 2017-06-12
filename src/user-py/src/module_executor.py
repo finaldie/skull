@@ -9,11 +9,11 @@ import skullpy.logger  as Logger
 
 def run_module_init(init_func, config):
     try:
-        init_func(config)
+        return init_func(config)
     except Exception as e:
         Logger.error('module_init', 'module_init failed due to: {}'.format(e),
                 'StackTrace:\n{}'.format(__dumpStackTrace()))
-        raise
+        return False
 
 def run_module_release(release_func):
     try:
