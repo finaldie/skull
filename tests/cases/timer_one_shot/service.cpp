@@ -23,7 +23,7 @@ void _timerjob_np(skullcpp::Service& service) {
 
 // ====================== Service Init/Release =================================
 static
-void skull_service_init(skullcpp::Service& service, const skull_config_t* config)
+int  skull_service_init(skullcpp::Service& service, const skull_config_t* config)
 {
     printf("skull service init\n");
 
@@ -44,6 +44,8 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
     } else {
         SKULLCPP_LOG_ERROR("init1", "service job create failed1", "should check parameters");
     }
+
+    return 0;
 }
 
 static

@@ -64,10 +64,11 @@ void _timerjob(const skullcpp::Service& service, skullcpp::ServiceApiData& apiDa
 
 // ====================== Service Init/Release =================================
 static
-void skull_service_init(skullcpp::Service& service, const skull_config_t* config)
+int  skull_service_init(skullcpp::Service& service, const skull_config_t* config)
 {
     printf("skull service init\n");
     skullcpp::Config::instance().load(config);
+    return 0;
 }
 
 static

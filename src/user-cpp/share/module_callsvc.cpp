@@ -14,7 +14,7 @@
 static skullcpp::metrics::module moduleMetrics;
 
 static
-void module_init(const skull_config_t* config)
+int  module_init(const skull_config_t* config)
 {
     std::cout << "module(test): init" << std::endl;
     SKULLCPP_LOG_TRACE("skull trace log test " << 1);
@@ -30,6 +30,7 @@ void module_init(const skull_config_t* config)
     SKULLCPP_LOG_DEBUG("config test_item: " << skullcpp::Config::instance().test_item());
     SKULLCPP_LOG_DEBUG("config test_rate: " << skullcpp::Config::instance().test_rate());
     SKULLCPP_LOG_DEBUG("config test_name: " << skullcpp::Config::instance().test_name());
+    return 0;
 }
 
 static

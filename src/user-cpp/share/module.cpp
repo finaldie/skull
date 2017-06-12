@@ -18,15 +18,20 @@ static skullcpp::metrics::module moduleMetrics;
  *
  * @note This function be called during the starting phase before the server
  *        is ready for serving
+ *
+ * @return
+ *    - 0:     Initialization success
+ *    - non-0: Initialization failure
  */
 static
-void module_init(const skull_config_t* config)
+int  module_init(const skull_config_t* config)
 {
     SKULLCPP_LOG_INFO("ModuleInit", "module({MODULE_NAME}): init");
 
     // Load skull_config to skullcpp::Config
     auto& conf = skullcpp::Config::instance();
     conf.load(config);
+    return 0;
 }
 
 /**

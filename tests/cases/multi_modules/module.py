@@ -18,7 +18,7 @@ def module_init(config):
     logger.warn('2', 'py module init: warn test', 'no suggestion')
     logger.error('3', 'py module init: error test', 'no solution')
     logger.fatal('4', 'py module init: fatal test', 'no solution')
-    return
+    return True
 
 def module_release():
     print "py module release"

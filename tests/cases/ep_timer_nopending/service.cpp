@@ -70,7 +70,7 @@ void _timerjob(skullcpp::Service& service) {
 
 // ====================== Service Init/Release =================================
 static
-void skull_service_init(skullcpp::Service& service, const skull_config_t* config)
+int  skull_service_init(skullcpp::Service& service, const skull_config_t* config)
 {
     printf("skull service init\n");
     skullcpp::Config::instance().load(config);
@@ -78,6 +78,7 @@ void skull_service_init(skullcpp::Service& service, const skull_config_t* config
     // Create a timer job (no pending)
     int ret = service.createJob(1000, 0, skull_BindSvcJobNPW(_timerjob), NULL);
     SKULLCPP_LOG_INFO("init", "create service job, ret: " << ret);
+    return 0;
 }
 
 static

@@ -12,7 +12,7 @@
 static skullcpp::metrics::module moduleMetrics;
 
 static
-void module_init(const skull_config_t* config)
+int  module_init(const skull_config_t* config)
 {
     printf("module(test): init\n");
     SKULL_LOG_TRACE("skull trace log test %d", 1);
@@ -23,6 +23,7 @@ void module_init(const skull_config_t* config)
     SKULL_LOG_FATAL("1", "skull fatal log test %d", 6, "ignore, this is test");
 
     skullcpp::Config::instance().load(config);
+    return 0;
 }
 
 static

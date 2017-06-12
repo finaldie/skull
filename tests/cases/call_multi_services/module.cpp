@@ -13,7 +13,7 @@
 static skullcpp::metrics::module moduleMetrics;
 
 static
-void module_init(const skull_config_t* config)
+int  module_init(const skull_config_t* config)
 {
     std::cout << "module(test): init" << std::endl;
     SKULL_LOG_TRACE("skull trace log test %d", 1);
@@ -25,6 +25,7 @@ void module_init(const skull_config_t* config)
 
     // Load skull_config to skullcpp::Config
     skullcpp::Config::instance().load(config);
+    return 0;
 }
 
 static
