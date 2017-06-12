@@ -10,7 +10,7 @@ extern "C" {
 typedef struct skull_service_opt_t {
     void* ud;
 
-    void (*init)    (skull_service_t*, void* ud);
+    int  (*init)    (skull_service_t*, void* ud);
     void (*release) (skull_service_t*, void* ud);
 
     int  (*iocall)  (skull_service_t*, const char* api_name, void* ud);

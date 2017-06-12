@@ -7,7 +7,7 @@
 #include "srv_executor.h"
 #include "skull/service_loader.h"
 
-void skull_srv_init (sk_service_t* srv, void* data)
+int  skull_srv_init (sk_service_t* srv, void* data)
 {
     skull_service_opt_t* opt = data;
 
@@ -18,7 +18,7 @@ void skull_srv_init (sk_service_t* srv, void* data)
         .freezed = 0
     };
 
-    opt->init(&skull_service, opt->ud);
+    return opt->init(&skull_service, opt->ud);
 }
 
 void skull_srv_release (sk_service_t* srv, void* data)

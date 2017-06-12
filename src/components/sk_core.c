@@ -274,7 +274,10 @@ void _sk_service_init(sk_core_t* core)
         SK_LOG_INFO(core->logger, "init service %s", service_name);
 
         SK_LOG_SETCOOKIE("service.%s", service_name);
-        sk_service_start(service);
+        if (sk_service_start(service)) {
+            SK_LOG_FATAL(core->logger, "Initialize service %s failed", service_name);
+            exit(1);
+        }
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 

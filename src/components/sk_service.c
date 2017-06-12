@@ -357,11 +357,13 @@ void sk_service_api_register(sk_service_t* service, const char* api_name,
     fhash_str_set(service->apis, api_name, api);
 }
 
-void sk_service_start(sk_service_t* service)
+int sk_service_start(sk_service_t* service)
 {
     sk_queue_setstate(service->pending_tasks, SK_QUEUE_STATE_INIT);
-    service->opt.init(service, service->opt.srv_data);
+    int r = service->opt.init(service, service->opt.srv_data);
     sk_queue_setstate(service->pending_tasks, SK_QUEUE_STATE_IDLE);
+
+    return r;
 }
 
 void sk_service_stop(sk_service_t* service)
