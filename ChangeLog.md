@@ -1,3 +1,12 @@
+* 2017-06-12 1.0-rc2
+  * Core
+    * **Enhancement:** Check module.init/service.init return value
+  * User
+    * **Enhancement:** Better error handling when exception occurred
+    * **Enhancement:** Python layer support dumping the stacktrace
+    * **Enhancement:** Use Client object instead of peer_xxx apis
+  * MISC
+    * **Enhancement:** Upgrade to latest `skull-ft`
 * 2017-04-14 1.0-rc1
   * Version 1.0 first release candidate
 * 2017-04-13 0.9.16
