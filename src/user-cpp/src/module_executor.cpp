@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include "skull/txn.h"
-#include "skull/logger.h"
+#include "skullcpp/logger.h"
 
 #include "txn_idldata.h"
 #include "mod_loader.h"
@@ -19,7 +19,8 @@ int    skull_module_init   (void* md)
     try {
         return entry->init(mdata->config);
     } catch (std::exception& e) {
-        SKULL_LOG_ERROR("module.init", "Exception: %s", e.what());
+        SKULLCPP_LOG_ERROR("module.init", "Exception: " << e.what(),
+                           "Abort...");
     }
 
     // Error occurred
@@ -34,7 +35,8 @@ void   skull_module_release(void* md)
     try {
         entry->release();
     } catch (std::exception& e) {
-        SKULL_LOG_ERROR("module.release", "Exception: %s", e.what());
+        SKULLCPP_LOG_ERROR("module.release", "Exception: " << e.what(),
+                           "Fix the code.");
     }
 }
 
@@ -50,7 +52,8 @@ int    skull_module_run    (void* md, skull_txn_t* txn)
     try {
         return entry->run(uTxn);
     } catch (std::exception& e) {
-        SKULL_LOG_ERROR("module.run", "Exception: %s", e.what());
+        SKULLCPP_LOG_ERROR("module.run", "Exception: " << e.what(),
+                           "Transaction abort, check the code");
     }
 
     // Error occurred
@@ -70,7 +73,8 @@ ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
     try {
         return entry->unpack(uTxn, data, data_len);
     } catch (std::exception& e) {
-        SKULL_LOG_ERROR("module.unpack", "Exception: %s", e.what());
+        SKULLCPP_LOG_ERROR("module.unpack", "Exception: " << e.what(),
+                           "Transcation abort, check the code");
     }
 
     // Error occurred
@@ -91,7 +95,8 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
     try {
         entry->pack(uTxn, uTxnData);
     } catch (std::exception& e) {
-        SKULL_LOG_ERROR("module.pack", "Exception: %s", e.what());
+        SKULLCPP_LOG_ERROR("module.pack", "Exception: " << e.what(),
+                           "Trascation abort, check the code");
     }
 }
 

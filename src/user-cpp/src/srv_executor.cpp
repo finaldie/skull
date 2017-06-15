@@ -38,7 +38,8 @@ int  skull_srv_init (skull_service_t* srv, void* data)
     try {
         return entry->init(svc, srv_data->config);
     } catch (std::exception& e) {
-        SKULL_LOG_ERROR("service.init", "Exception: %s", e.what());
+        SKULLCPP_LOG_ERROR("service.init", "Exception: " << e.what(),
+                           "Abort...");
     }
 
     // Error occurred
@@ -55,7 +56,8 @@ void skull_srv_release (skull_service_t* srv, void* data)
     try {
         entry->release(svc);
     } catch (std::exception& e) {
-        SKULL_LOG_ERROR("service.release", "Exception: %s", e.what());
+        SKULLCPP_LOG_ERROR("service.release", "Exception: " << e.what(),
+                           "Fix the code and try to prevent the exceptions");
     }
 
     auto* svcData = (ServiceData*)skull_service_data(srv);
@@ -97,7 +99,8 @@ int  skull_srv_iocall  (skull_service_t* srv, const char* api_name,
             return 0;
         }
     } catch (std::exception& e) {
-        SKULL_LOG_ERROR("service.iocall", "Exception: %s", e.what());
+        SKULLCPP_LOG_ERROR("service.iocall", "Exception: " << e.what(),
+                           "I/O call abort, fix the code");
     }
 
     // Cannot find any read/write api to execute
