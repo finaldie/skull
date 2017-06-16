@@ -5,6 +5,7 @@
     * **Enhancement:** Better error handling when exception occurred
     * **Enhancement:** Python layer support dumping the stacktrace
     * **Enhancement:** Use Client object instead of peer_xxx apis
+    * **Enhancement:** Make `pack` function error handling robuster
   * MISC
     * **Enhancement:** Upgrade to latest `skull-ft`
 * 2017-04-14 1.0-rc1
