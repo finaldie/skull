@@ -7,6 +7,15 @@
 #include "api/sk_utils.h"
 #include "api/sk_entity_util.h"
 
+/**
+ * Safety to destroy an entity, either it can be destroyed directly or push it
+ *  into a cleaning queue and waiting for it can be destroyed
+ *  (all the transactions and sub-tasks are all done)
+ *
+ * @return
+ *  - 0: Entity be destroyed
+ *  - 1: Be pushed into cleaning queue
+ */
 int sk_entity_safe_destroy(sk_entity_t* entity)
 {
     if (!entity) return 0;
@@ -26,6 +35,10 @@ int sk_entity_safe_destroy(sk_entity_t* entity)
         sk_sched_t* target = sk_entity_mgr_sched(owner);
 
         if (sched != target) {
+            if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
+                return 0;
+            }
+
             sk_sched_send(sched, target, entity, NULL,
                       SK_PTO_ENTITY_DESTROY, NULL, 0);
             return 1;

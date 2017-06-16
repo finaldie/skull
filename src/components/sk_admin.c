@@ -282,9 +282,9 @@ void _status_module(sk_txn_t* txn, sk_core_t* core)
         sk_module_t* module = NULL;
 
         while ((module = fhash_str_next(&iter))) {
-            size_t unpacking_cnt = sk_module_stat_unpack_get(module);
-            size_t running_cnt   = sk_module_stat_run_get(module);
-            size_t packing_cnt   = sk_module_stat_pack_get(module);
+            size_t unpacking_cnt = module->stat.unpack;
+            size_t running_cnt   = module->stat.run;
+            size_t packing_cnt   = module->stat.pack;
 
             if (unpacking_cnt > 0 && packing_cnt > 0) {
                 _append_response(txn, ADMIN_MODULE_FMT1, module->cfg->name,
@@ -618,7 +618,7 @@ unpack_done:
 }
 
 static
-void _admin_pack(void* md, struct sk_txn_t* txn)
+int  _admin_pack(void* md, struct sk_txn_t* txn)
 {
     sk_print("admin_pack\n");
 
@@ -634,6 +634,7 @@ void _admin_pack(void* md, struct sk_txn_t* txn)
 
 pack_done:
     _sk_admin_data_destroy(admin_data);
+    return 0;
 }
 
 static

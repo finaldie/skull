@@ -146,7 +146,7 @@ ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
     return consumed;
 }
 
-void   skull_module_pack   (void* md, skull_txn_t* txn,
+int    skull_module_pack   (void* md, skull_txn_t* txn,
                             skull_txndata_t* txndata)
 {
     PyGILState_STATE state = PyGILState_Ensure();
@@ -171,11 +171,13 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
 
     if (!pyRet) {
         if (PyErr_Occurred()) PyErr_Print();
+        return 1;
     }
 
     Py_XDECREF(pyRet);
     Py_DECREF(pyArgs);
     PyGILState_Release(state);
+    return 0;
 }
 
 } // End of namespace

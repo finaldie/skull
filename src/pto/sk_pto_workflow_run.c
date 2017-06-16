@@ -25,7 +25,7 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
 {
     unsigned long long start_time = sk_txn_alivetime(txn);
 
-    // 1. run the next module
+    // 1. Run the next module
     sk_module_t* module = sk_txn_next_module(txn);
     if (!module) {
         SK_LOG_TRACE(SK_ENV_LOGGER, "no next module in this workflow, stop it");
@@ -33,7 +33,7 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
         return _run(sched, src, entity, txn, proto_msg);
     }
 
-    // before run module, set the module name for this module
+    // Before run module, set the module name for this module
     // NOTES: the cookie have 256 bytes limitation
     const char* module_name = module->cfg->name;
     SK_LOG_SETCOOKIE("module.%s", module_name);
@@ -42,13 +42,13 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
     // Run the module
     int ret = module->run(module->md, txn);
     sk_print("module execution return code=%d\n", ret);
-    sk_module_stat_run_inc(module);
+    sk_module_stat_inc_run(module);
 
     unsigned long long alivetime = sk_txn_alivetime(txn);
     sk_txn_log_add(txn, "-> m:%s:run start: %llu end: %llu ",
                    module_name, start_time, alivetime);
 
-    // after module exit, set back the module name
+    // After module exit, set back the module name
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     SK_ENV_POS = SK_ENV_POS_CORE;
 
@@ -85,13 +85,14 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
         return _run(sched, src, entity, txn, proto_msg);
     }
 
-    // 3. check whether is the last module:
-    // 3.1 if no, send a event for next module
+    // 3. Check whether is the last module:
     if (!sk_txn_is_last_module(txn)) {
-        sk_print("doesn't reach the last module\n");
+        // 3.1 If no, schedule to next module
+        sk_print("Doesn't reach the last module, schedule to next module\n");
         sk_sched_send(sched, sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
         return 0;
     } else {
+        // 3.2 Set complete state
         sk_txn_setstate(txn, SK_TXN_COMPLETED);
         return _run(sched, src, entity, txn, proto_msg);
     }
@@ -129,8 +130,10 @@ void _txn_log_and_destroy(sk_txn_t* txn) {
 
     int txncnt = sk_entity_taskcnt(entity);
     int eflags = sk_entity_flags(entity);
+    sk_entity_status_t st = sk_entity_status(entity);
 
-    if (eflags & SK_ENTITY_F_DESTROY_NOTXN && txncnt == 0) {
+    if ((st != SK_ENTITY_ACTIVE || eflags & SK_ENTITY_F_DESTROY_NOTXN)
+        && txncnt == 0) {
         sk_entity_safe_destroy(entity);
     }
 }
@@ -144,18 +147,24 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
     sk_module_t* last_module = sk_workflow_last_module(workflow);
     unsigned long long start_time = sk_txn_alivetime(txn);
 
-    // 1. no pack function means no need to send response
+    // 1. No pack function means no need to send response
     if (!last_module->pack) {
         sk_txn_setstate(txn, SK_TXN_PACKED);
         return _run(sched, src, entity, txn, proto_msg);
     }
 
-    // 2. pack the data, and send the response if needed
+    // 2. Pack the data, and send the response if needed
     const char* module_name = last_module->cfg->name;
     SK_LOG_SETCOOKIE("module.%s", module_name);
-    last_module->pack(last_module->md, txn);
+
+    int ret = last_module->pack(last_module->md, txn);
+    if (ret) { // Error occured
+        // Here cannot set state to ERROR, which will cause the infinite-loop
+        sk_entity_mark(entity, SK_ENTITY_INACTIVE);
+    }
+
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-    sk_module_stat_pack_inc(last_module);
+    sk_module_stat_inc_pack(last_module);
 
     size_t packed_data_sz = 0;
     const char* packed_data = sk_txn_output(txn, &packed_data_sz);
@@ -167,11 +176,12 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
         sk_print("write data sz:%zu\n", packed_data_sz);
         sk_entity_write(entity, packed_data, packed_data_sz);
 
-        // record metrics
+        // Record metrics
         sk_metrics_worker.response.inc(1);
         sk_metrics_global.response.inc(1);
     }
 
+    // 3. Increase metrics and set state
     unsigned long long alivetime = sk_txn_alivetime(txn);
     sk_print("txn time: %llu\n", alivetime);
     sk_metrics_worker.latency.inc((uint32_t)alivetime);

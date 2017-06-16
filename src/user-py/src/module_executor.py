@@ -59,6 +59,7 @@ def run_module_pack(pack_func, skull_txn, skull_txndata):
     except Exception as e:
         Logger.error('module_pack', 'module_pack failed due to: {}'.format(e),
                 'StackTrace:\n{}'.format(__dumpStackTrace()))
+        raise
     finally:
         txn.destroyMsgData()
 

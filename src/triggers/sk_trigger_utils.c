@@ -50,7 +50,7 @@ ssize_t sk_trigger_util_unpack(sk_entity_t* entity, const sk_sched_t* deliver_to
         first_module->unpack(first_module->md, txn, data, (size_t)bytes);
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
-    sk_module_stat_unpack_inc(first_module);
+    sk_module_stat_inc_unpack(first_module);
 
     if (consumed == 0) {
         // means user need more data, re-try in next round

@@ -81,7 +81,7 @@ ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
     return -1;
 }
 
-void   skull_module_pack   (void* md, skull_txn_t* txn,
+int    skull_module_pack   (void* md, skull_txn_t* txn,
                             skull_txndata_t* txndata)
 {
     // 1. Create txn and txndata
@@ -97,7 +97,10 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
     } catch (std::exception& e) {
         SKULLCPP_LOG_ERROR("module.pack", "Exception: " << e.what(),
                            "Trascation abort, check the code");
+        return 1;
     }
+
+    return 0;
 }
 
 } // End of namespace

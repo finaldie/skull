@@ -279,10 +279,13 @@ void sk_entity_txndel(sk_entity_t* entity, const struct sk_txn_t* txn)
     _entity_taskcnt_dec(entity);
 }
 
-// get task cnt
 int sk_entity_taskcnt(const sk_entity_t* entity)
 {
     return entity->task_cnt;
+}
+
+int sk_entity_can_destroy(sk_entity_t* entity) {
+    return !entity->task_cnt;
 }
 
 void sk_entity_timeradd(sk_entity_t* entity, const sk_obj_t* obj)

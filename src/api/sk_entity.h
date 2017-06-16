@@ -25,8 +25,8 @@ typedef enum sk_entity_type_t {
 } sk_entity_type_t;
 
 typedef enum sk_entity_status_t {
-    SK_ENTITY_ACTIVE = 0, // read to do the task
-    SK_ENTITY_INACTIVE,   // ready to be deleted
+    SK_ENTITY_ACTIVE    = 0, // Read to do the task
+    SK_ENTITY_INACTIVE,      // Ready to be deleted
     SK_ENTITY_DEAD
 } sk_entity_status_t;
 
@@ -74,6 +74,9 @@ struct sk_workflow_t* sk_entity_workflow(const sk_entity_t*);
 void sk_entity_setopt(sk_entity_t*, sk_entity_opt_t opt, void* ud);
 void sk_entity_mark(sk_entity_t*, sk_entity_status_t status);
 
+int sk_entity_can_destroy(sk_entity_t*);
+
+// Entity flags
 #define SK_ENTITY_F_DESTROY_NOTXN 0x1
 
 void sk_entity_setflags(sk_entity_t*, int flags);
