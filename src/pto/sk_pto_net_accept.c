@@ -26,9 +26,15 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
     sk_workflow_t* workflow = sk_entity_workflow(entity);
     int concurrent = workflow->cfg->concurrent;
 
-    // check whether allow concurrent
+    // Check whether allow concurrent
     if (!concurrent && sk_entity_taskcnt(entity) > 0) {
-        sk_print("net entity already have running tasks\n");
+        sk_print("net entity already has running tasks\n");
+        return;
+    }
+
+    // Check whether error occurred
+    if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
+        sk_print("net entity already has error occurred, won't accept any data\n");
         return;
     }
 

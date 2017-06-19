@@ -5,7 +5,7 @@
 #include "api/sk_txn.h"
 #include "api/sk_service.h"
 
-void skull_srv_init    (sk_service_t*, void* srv_data);
+int  skull_srv_init    (sk_service_t*, void* srv_data);
 
 void skull_srv_release (sk_service_t*, void* srv_data);
 

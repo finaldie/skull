@@ -27,6 +27,12 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         return;
     }
 
+    // Check whether error occurred
+    if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
+        sk_print("net entity already has error occurred, won't accept any data\n");
+        return;
+    }
+
     sk_trigger_util_unpack(entity, SK_ENV_SCHED);
 }
 

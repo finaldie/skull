@@ -8,10 +8,10 @@
 
 #include "module_executor.h"
 
-void   skull_module_init   (void* md)
+int    skull_module_init   (void* md)
 {
     skull_module_t* module = md;
-    module->init(module->ud);
+    return module->init(module->ud);
 }
 
 void   skull_module_release(void* md)
@@ -54,7 +54,7 @@ ssize_t skull_module_unpack (void* md, sk_txn_t* txn,
     return consumed_sz;
 }
 
-void   skull_module_pack   (void* md, sk_txn_t* txn)
+int    skull_module_pack   (void* md, sk_txn_t* txn)
 {
     //SK_ASSERT(sk_txn_udata(txn));
 
@@ -68,5 +68,5 @@ void   skull_module_pack   (void* md, sk_txn_t* txn)
     };
 
     skull_module_t* module = md;
-    module->pack(module->ud, &skull_txn, &skull_txndata);
+    return module->pack(module->ud, &skull_txn, &skull_txndata);
 }

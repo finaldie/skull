@@ -41,6 +41,10 @@ void sk_entity_udp_create(sk_entity_t* entity, int rootfd,
     memcpy(udp_data->readbuf, buf, buf_sz);
 
     sk_entity_setopt(entity, sk_entity_udp_opt, udp_data);
+
+    // Set the flag 'SK_ENTITY_F_DESTROY_NOTXN', the UDP entity will be
+    //  destroyed when there is no txn associated, otherwise will lead a
+    //  entity/fd leak issue
     sk_entity_setflags(entity, sk_entity_flags(entity) | SK_ENTITY_F_DESTROY_NOTXN);
 }
 

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "skull/txn.h"
+#include "skullcpp/logger.h"
 
 #include "txn_idldata.h"
 #include "mod_loader.h"
@@ -10,12 +11,20 @@
 
 namespace skullcpp {
 
-void   skull_module_init   (void* md)
+int    skull_module_init   (void* md)
 {
     module_data_t* mdata = (module_data_t*)md;
     ModuleEntry* entry = mdata->entry;
 
-    entry->init(mdata->config);
+    try {
+        return entry->init(mdata->config);
+    } catch (std::exception& e) {
+        SKULLCPP_LOG_ERROR("module.init", "Exception: " << e.what(),
+                           "Abort...");
+    }
+
+    // Error occurred
+    return -1;
 }
 
 void   skull_module_release(void* md)
@@ -23,7 +32,12 @@ void   skull_module_release(void* md)
     module_data_t* mdata = (module_data_t*)md;
     ModuleEntry* entry = mdata->entry;
 
-    entry->release();
+    try {
+        entry->release();
+    } catch (std::exception& e) {
+        SKULLCPP_LOG_ERROR("module.release", "Exception: " << e.what(),
+                           "Fix the code.");
+    }
 }
 
 int    skull_module_run    (void* md, skull_txn_t* txn)
@@ -35,8 +49,15 @@ int    skull_module_run    (void* md, skull_txn_t* txn)
     module_data_t* mdata = (module_data_t*)md;
     ModuleEntry* entry = mdata->entry;
 
-    int ret = entry->run(uTxn);
-    return ret;
+    try {
+        return entry->run(uTxn);
+    } catch (std::exception& e) {
+        SKULLCPP_LOG_ERROR("module.run", "Exception: " << e.what(),
+                           "Transaction abort, check the code");
+    }
+
+    // Error occurred
+    return -1;
 }
 
 ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
@@ -49,11 +70,18 @@ ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
     module_data_t* mdata = (module_data_t*)md;
     ModuleEntry* entry = mdata->entry;
 
-    ssize_t consumed_sz = entry->unpack(uTxn, data, data_len);
-    return consumed_sz;
+    try {
+        return entry->unpack(uTxn, data, data_len);
+    } catch (std::exception& e) {
+        SKULLCPP_LOG_ERROR("module.unpack", "Exception: " << e.what(),
+                           "Transcation abort, check the code");
+    }
+
+    // Error occurred
+    return -1;
 }
 
-void   skull_module_pack   (void* md, skull_txn_t* txn,
+int    skull_module_pack   (void* md, skull_txn_t* txn,
                             skull_txndata_t* txndata)
 {
     // 1. Create txn and txndata
@@ -64,7 +92,15 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
     module_data_t* mdata = (module_data_t*)md;
     ModuleEntry* entry = mdata->entry;
 
-    entry->pack(uTxn, uTxnData);
+    try {
+        entry->pack(uTxn, uTxnData);
+    } catch (std::exception& e) {
+        SKULLCPP_LOG_ERROR("module.pack", "Exception: " << e.what(),
+                           "Trascation abort, check the code");
+        return 1;
+    }
+
+    return 0;
 }
 
 } // End of namespace

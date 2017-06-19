@@ -28,7 +28,7 @@ typedef struct ServiceWriteApi {
 } ServiceWriteApi;
 
 typedef struct ServiceEntry {
-    void (*init)    (Service&, const skull_config_t*);
+    int  (*init)    (Service&, const skull_config_t*);
     void (*release) (Service&);
 
     ServiceReadApi*  rApis;

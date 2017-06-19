@@ -2,6 +2,8 @@
 #include <string.h>
 
 #include "skullcpp/service.h"
+#include "skullcpp/logger.h"
+
 #include "srv_loader.h"
 #include "srv_utils.h"
 #include "service_imp.h"
@@ -21,7 +23,7 @@ void _register_svc_api(skull_service_t* srv, T* apis, skull_service_api_type_t t
     }
 }
 
-void skull_srv_init (skull_service_t* srv, void* data)
+int  skull_srv_init (skull_service_t* srv, void* data)
 {
     srvdata_t* srv_data = (srvdata_t*)data;
     ServiceEntry* entry = srv_data->entry;
@@ -32,7 +34,16 @@ void skull_srv_init (skull_service_t* srv, void* data)
 
     // 2. Execute user-init
     ServiceImp svc(srv);
-    entry->init(svc, srv_data->config);
+
+    try {
+        return entry->init(svc, srv_data->config);
+    } catch (std::exception& e) {
+        SKULLCPP_LOG_ERROR("service.init", "Exception: " << e.what(),
+                           "Abort...");
+    }
+
+    // Error occurred
+    return -1;
 }
 
 void skull_srv_release (skull_service_t* srv, void* data)
@@ -42,7 +53,12 @@ void skull_srv_release (skull_service_t* srv, void* data)
 
     ServiceImp svc(srv);
 
-    entry->release(svc);
+    try {
+        entry->release(svc);
+    } catch (std::exception& e) {
+        SKULLCPP_LOG_ERROR("service.release", "Exception: " << e.what(),
+                           "Fix the code and try to prevent the exceptions");
+    }
 
     auto* svcData = (ServiceData*)skull_service_data(srv);
     if (svcData) {
@@ -62,24 +78,29 @@ int  skull_srv_iocall  (skull_service_t* srv, const char* api_name,
     srvdata_t* srv_data = (srvdata_t*)data;
     ServiceEntry* entry = srv_data->entry;
 
-    ServiceReadApi* rApi = FindApi<ServiceReadApi>(entry->rApis, api_name);
-    if (rApi) {
-        ServiceImp svc(srv);
-        ServiceApiReqData  apiReq(srv, api_name);
-        ServiceApiRespData apiResp(srv, api_name, true);
+    try {
+        ServiceReadApi* rApi = FindApi<ServiceReadApi>(entry->rApis, api_name);
+        if (rApi) {
+            ServiceImp svc(srv);
+            ServiceApiReqData  apiReq(srv, api_name);
+            ServiceApiRespData apiResp(srv, api_name, true);
 
-        rApi->iocall(svc, apiReq.get(), apiResp.get());
-        return 0;
-    }
+            rApi->iocall(svc, apiReq.get(), apiResp.get());
+            return 0;
+        }
 
-    ServiceWriteApi* wApi = FindApi<ServiceWriteApi>(entry->wApis, api_name);
-    if (wApi) {
-        ServiceImp svc(srv);
-        ServiceApiReqData  apiReq(srv, api_name);
-        ServiceApiRespData apiResp(srv, api_name, true);
+        ServiceWriteApi* wApi = FindApi<ServiceWriteApi>(entry->wApis, api_name);
+        if (wApi) {
+            ServiceImp svc(srv);
+            ServiceApiReqData  apiReq(srv, api_name);
+            ServiceApiRespData apiResp(srv, api_name, true);
 
-        wApi->iocall(svc, apiReq.get(), apiResp.get());
-        return 0;
+            wApi->iocall(svc, apiReq.get(), apiResp.get());
+            return 0;
+        }
+    } catch (std::exception& e) {
+        SKULLCPP_LOG_ERROR("service.iocall", "Exception: " << e.what(),
+                           "I/O call abort, fix the code");
     }
 
     // Cannot find any read/write api to execute

@@ -31,6 +31,7 @@ typedef struct sk_trigger_udp_data_t {
  * This is running on the main scheduler io thread
  *
  * @note The trigger is responsible for creating a base entity object (UDP)
+ *       The 'concurrent' flag is not applicable for UDP entity
  */
 static
 void _readcb(fev_state* fev, int fd, int mask, void* ud)

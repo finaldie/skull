@@ -196,11 +196,15 @@ void _sk_module_init(sk_core_t* core)
     sk_module_t* module = NULL;
 
     while ((module = fhash_str_next(&iter))) {
-        sk_print("module [%s] init...\n", module->cfg->name);
-        SK_LOG_INFO(core->logger, "module [%s] init...", module->cfg->name);
+        const char* module_name = module->cfg->name;
+        sk_print("module [%s] init...\n", module_name);
+        SK_LOG_INFO(core->logger, "module [%s] init...", module_name);
 
-        SK_LOG_SETCOOKIE("module.%s", module->cfg->name);
-        module->init(module->md);
+        SK_LOG_SETCOOKIE("module.%s", module_name);
+        if (module->init(module->md)) {
+            SK_LOG_FATAL(core->logger, "Initialize module %s failed, ABORT!", module_name);
+            exit(1);
+        }
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 
@@ -270,7 +274,10 @@ void _sk_service_init(sk_core_t* core)
         SK_LOG_INFO(core->logger, "init service %s", service_name);
 
         SK_LOG_SETCOOKIE("service.%s", service_name);
-        sk_service_start(service);
+        if (sk_service_start(service)) {
+            SK_LOG_FATAL(core->logger, "Initialize service %s failed", service_name);
+            exit(1);
+        }
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 

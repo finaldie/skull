@@ -17,7 +17,7 @@
 
 namespace skullpy {
 
-void   skull_module_init(void* md)
+int    skull_module_init(void* md)
 {
     PyGILState_STATE state = PyGILState_Ensure();
     module_data_t* mdata = (module_data_t*)md;
@@ -31,14 +31,19 @@ void   skull_module_init(void* md)
     PyTuple_SetItem(pyArgs, 1, pyEntryName);
 
     // Call user module_init
-    PyObject* ret = PyObject_CallObject(mdata->pyExecutorFunc, pyArgs);
-    if (!ret) {
+    PyObject* pyRet = PyObject_CallObject(mdata->pyExecutorFunc, pyArgs);
+    int ret = 1;
+
+    if (!pyRet) {
         if (PyErr_Occurred()) PyErr_Print();
+    } else {
+        ret = PyObject_IsTrue(pyRet) ? 0 : 1;
     }
 
-    Py_XDECREF(ret);
+    Py_XDECREF(pyRet);
     Py_DECREF(pyArgs);
     PyGILState_Release(state);
+    return ret;
 }
 
 void   skull_module_release(void* md)
@@ -117,7 +122,10 @@ ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
 
     // Call user module_unpack
     PyObject* pyConsumed = PyObject_CallObject(mdata->pyExecutorFunc, pyArgs);
-    ssize_t consumed = 0;
+
+    // Set to -1 by default, so if error occurred, like un-handled excpetions,
+    //  then the entity will be destroyed soon
+    ssize_t consumed = -1;
 
     if (!pyConsumed) {
         if (PyErr_Occurred()) PyErr_Print();
@@ -138,7 +146,7 @@ ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
     return consumed;
 }
 
-void   skull_module_pack   (void* md, skull_txn_t* txn,
+int    skull_module_pack   (void* md, skull_txn_t* txn,
                             skull_txndata_t* txndata)
 {
     PyGILState_STATE state = PyGILState_Ensure();
@@ -163,11 +171,13 @@ void   skull_module_pack   (void* md, skull_txn_t* txn,
 
     if (!pyRet) {
         if (PyErr_Occurred()) PyErr_Print();
+        return 1;
     }
 
     Py_XDECREF(pyRet);
     Py_DECREF(pyArgs);
     PyGILState_Release(state);
+    return 0;
 }
 
 } // End of namespace

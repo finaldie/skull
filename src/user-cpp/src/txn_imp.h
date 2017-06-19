@@ -9,10 +9,7 @@ class TxnImp : public Txn {
 private:
     google::protobuf::Message* msg_;
     skull_txn_t* txn_;
-
-    std::string peerName_;
-    PeerType    peerType_;
-    int         peerPort_;
+    Client* client_;
 
     bool destroyRawData_;
 
@@ -33,10 +30,7 @@ public:
 
     google::protobuf::Message& data();
     Status status() const;
-
-    const std::string& peerName() const;
-    int peerPort() const;
-    PeerType peerType() const;
+    const Client& client();
 
     /**
      * Invoke a service async call

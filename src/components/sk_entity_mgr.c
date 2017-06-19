@@ -107,7 +107,10 @@ void _cleanup_dead_entities(sk_entity_mgr_t* mgr, int force)
 
         // 2. Update metrics
         sk_metrics_worker.entity_destroy.inc(1);
-        if (SK_ENTITY_SOCK_V4TCP == sk_entity_type(entity)) {
+        sk_entity_type_t etype = sk_entity_type(entity);
+
+        if (SK_ENTITY_SOCK_V4TCP == etype ||
+            SK_ENTITY_SOCK_V6TCP == etype) {
             sk_metrics_worker.connection_destroy.inc(1);
         }
 
@@ -158,7 +161,9 @@ void sk_entity_mgr_add(sk_entity_mgr_t* mgr, sk_entity_t* entity)
 
     // Recored metrics
     sk_metrics_worker.entity_create.inc(1);
-    if (SK_ENTITY_SOCK_V4TCP == sk_entity_type(entity)) {
+    sk_entity_type_t etype = sk_entity_type(entity);
+    if (SK_ENTITY_SOCK_V4TCP == etype ||
+        SK_ENTITY_SOCK_V6TCP == etype) {
         sk_metrics_worker.connection_create.inc(1);
     }
 

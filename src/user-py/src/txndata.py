@@ -2,7 +2,7 @@
 
 import skull_capi
 
-class TxnData():
+class TxnData(object):
     def __init__(self, skull_txndata):
         self.skull_txndata = skull_txndata
 

@@ -13,7 +13,7 @@
 static skullcpp::metrics::module moduleMetrics;
 
 static
-void module_init(const skull_config_t* config)
+int  module_init(const skull_config_t* config)
 {
     std::cout << "module(test): init" << std::endl;
     SKULL_LOG_TRACE("skull trace log test %d", 1);
@@ -24,6 +24,7 @@ void module_init(const skull_config_t* config)
     SKULL_LOG_FATAL("1", "skull fatal log test %d", 6, "ignore, this is test");
 
     skullcpp::Config::instance().load(config);
+    return 0;
 }
 
 static
@@ -40,9 +41,12 @@ ssize_t module_unpack(skullcpp::Txn& txn, const void* data, size_t data_sz)
 
     std::cout << "module_unpack(test): data sz: " << data_sz << std::endl;
     SKULLCPP_LOG_INFO("2", "module_unpack(test): data sz: " << data_sz);
-    SKULLCPP_LOG_INFO("Cpp PeerInfo", "peer name: " << txn.peerName() << ", "
-                          << "peer port: " << txn.peerPort() << ", "
-                          << "peer type: " << txn.peerType());
+
+    const skullcpp::Client& client = txn.client();
+    SKULLCPP_LOG_INFO("Cpp PeerInfo", "peer name: " << client.name() << ", "
+                          << "peer port: " << client.port() << ", "
+                          << "peer type: " << client.type() << ", "
+                          << "peer type name: " << client.typeName());
 
     // deserialize data to transaction data
     auto& example = (skull::workflow::example&)txn.data();

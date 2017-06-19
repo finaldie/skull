@@ -119,7 +119,7 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
 int sk_txn_safe_destroy(sk_txn_t* txn)
 {
     if (!txn) {
-        return 1;
+        return 0;
     }
 
     if (txn->complete_tasks < txn->total_tasks) {

@@ -12,9 +12,12 @@ from skull.common.proto import *
 #
 # @param config  A parsed yamlObj
 #
+# @return - True:  Initialization success
+#         - False: Initialization failure
+#
 def module_init(config):
     logger.info('ModuleInit', 'config: {}'.format(pprint.pformat(config)))
-    return
+    return True
 
 ##
 # Module Release Function, be called when shutdown phase

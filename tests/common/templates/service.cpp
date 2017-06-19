@@ -13,12 +13,13 @@
  * Initialize the service
  */
 static
-void skull_service_init(skullcpp::Service& service, const skull_config_t* config)
+int  skull_service_init(skullcpp::Service& service, const skull_config_t* config)
 {
     std::cout << "skull service init" << std::endl;
 
     // Load skull_config to skullcpp::Config
     skullcpp::Config::instance().load(config);
+    return 0;
 }
 
 static
