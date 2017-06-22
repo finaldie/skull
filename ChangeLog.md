@@ -1,3 +1,8 @@
+* 2017-06-21 1.0-rc3
+  * Core
+    **Enhancement:** Output more details when logger cannot be created
+  * User
+    **Enhancement:** Fix dead-lock when exception occurred in `pack` phase
 * 2017-06-12 1.0-rc2
   * Core
     * **Enhancement:** Check module.init/service.init return value
