@@ -168,16 +168,17 @@ int    skull_module_pack   (void* md, skull_txn_t* txn,
 
     // Call user module_pack
     PyObject* pyRet = PyObject_CallObject(mdata->pyExecutorFunc, pyArgs);
+    int ret = 0;
 
     if (!pyRet) {
         if (PyErr_Occurred()) PyErr_Print();
-        return 1;
+        ret = 1;
     }
 
     Py_XDECREF(pyRet);
     Py_DECREF(pyArgs);
     PyGILState_Release(state);
-    return 0;
+    return ret;
 }
 
 } // End of namespace
