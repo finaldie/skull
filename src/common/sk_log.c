@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "flibs/flog.h"
 #include "api/sk_utils.h"
@@ -54,7 +55,7 @@ sk_logger_t* sk_logger_create(const char* workdir,
              workdir, log_name);
 
     flog_file_t* logger = flog_create(full_log_name, FLOG_F_ASYNC);
-    SK_ASSERT_MSG(logger, "logger create failure");
+    SK_ASSERT_MSG(logger, "logger create failure: %s : %s\n", full_log_name, strerror(errno));
 
     // 2. set log level
     flog_set_level(log_level);
