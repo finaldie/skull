@@ -1,3 +1,5 @@
+* 2017-07-03 1.0
+  * Version 1.0 release
 * 2017-06-21 1.0-rc3
   * Core
     **Enhancement:** Output more details when logger cannot be created
