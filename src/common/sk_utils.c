@@ -39,6 +39,7 @@ void sk_assert_exit_with_msg(const char* format, ...)
 #endif
 }
 
+#ifdef __GLIBC__
 void sk_backtrace_print()
 {
     void*  buffer[SK_MAX_BACKTRACE];
@@ -47,6 +48,11 @@ void sk_backtrace_print()
     size = backtrace(buffer, SK_MAX_BACKTRACE);
     backtrace_symbols_fd(buffer, size, STDERR_FILENO);
 }
+#else
+void sk_backtrace_print() {
+    fprintf(stderr, "No glibc support, can not dump the backtrace\n");
+}
+#endif
 
 void sk_util_setup_coreinfo(sk_core_t* core)
 {
