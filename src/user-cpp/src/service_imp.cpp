@@ -40,18 +40,16 @@ ServiceApiDataImp::ServiceApiDataImp()
     : req_(NULL), resp_(NULL), cleanup(false), __padding(0), __padding1(0) {
     (void)__padding;
     (void)__padding1;
-#if __WORDSIZE == 64
+
     (void)__padding2;
-#endif
 }
 
 ServiceApiDataImp::ServiceApiDataImp(ServiceApiReqData* req, ServiceApiRespData* resp)
     : req_(req), resp_(resp), cleanup(false), __padding(0), __padding1(0) {
     (void)__padding;
     (void)__padding1;
-#if __WORDSIZE == 64
+
     (void)__padding2;
-#endif
 }
 
 ServiceApiDataImp::ServiceApiDataImp(skull_service_t* svc,
@@ -60,9 +58,8 @@ ServiceApiDataImp::ServiceApiDataImp(skull_service_t* svc,
 {
     (void)__padding;
     (void)__padding1;
-#if __WORDSIZE == 64
+
     (void)__padding2;
-#endif
 
     ServiceApiDataImp((const skull_service_t*)svc, apiReq, apiReqSz,
                       apiResp, apiRespSz);
@@ -74,9 +71,8 @@ ServiceApiDataImp::ServiceApiDataImp(const skull_service_t* svc,
 {
     (void)__padding;
     (void)__padding1;
-#if __WORDSIZE == 64
+
     (void)__padding2;
-#endif
 
     const std::string& svcName = skull_service_name(svc);
     const std::string& apiName = skull_service_apiname(svc);

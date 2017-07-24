@@ -6,9 +6,7 @@
 struct sk_srv_data_t {
     sk_srv_data_mode_t mode;
 
-#if __WORDSIZE == 64
     int _padding;
-#endif
 
     void* data; // User maintain it, user is responisble for destroy it
 };

@@ -23,9 +23,7 @@ typedef struct sk_trigger_opt_t {
 typedef struct sk_trigger_t {
     sk_trigger_type_t type;
 
-#if __WORDSIZE == 64
-    int padding;
-#endif
+    int _padding;
 
     sk_engine_t*   engine;
     sk_workflow_t* workflow;

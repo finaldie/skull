@@ -67,9 +67,8 @@ typedef struct sk_srv_task_t {
     // Body: source scheduler of service call
     const sk_sched_t*    src;
 
-#if __WORDSIZE == 32
-    int _padding;
-#endif
+    // Body Padding
+    char _padding[sizeof(void*)];
 
     // Body: Api or Timer call data
     union {
@@ -87,9 +86,7 @@ typedef struct sk_srv_task_t {
             sk_obj_t*      ud;
             int            valid;
 
-#if __WORDSIZE == 64
             int            _padding;
-#endif
         } timer;
     } data;
 } sk_srv_task_t;

@@ -17,9 +17,7 @@ typedef enum ep_job_type_t {
 typedef struct ep_job_cb_t {
     ep_job_type_t type_;
 
-#if __WORDSIZE == 64
     int __padding;
-#endif
 
     union {
         skull_ep_cb_t    pending_cb_;

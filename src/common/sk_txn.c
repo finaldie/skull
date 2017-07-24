@@ -42,9 +42,7 @@ struct sk_txn_t {
     uint32_t        error     : 1;
     uint32_t        __padding : 31;
 
-#if __WORDSIZE == 64
     int             __padding1;
-#endif
 
     uint64_t        latest_taskid;
     int             total_tasks;

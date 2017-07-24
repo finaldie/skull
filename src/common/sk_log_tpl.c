@@ -25,9 +25,7 @@ struct sk_log_tpl_t {
     fhash* templates; // key: errno, value: _log_tpl_item
     sk_log_tpl_type_t type;
 
-#if __WORDSIZE == 64
-    int padding;
-#endif
+    int _padding;
 };
 
 static

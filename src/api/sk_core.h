@@ -29,12 +29,8 @@ typedef struct sk_cmd_args_t {
     const char* config_location;
     bool daemon;
 
-#if __WORDSIZE == 64
     int _padding :24;
     int _padding1;
-#else
-    int _padding :24;
-#endif
 } sk_cmd_args_t;
 
 // Static Information
@@ -49,9 +45,7 @@ typedef struct sk_core_info_t {
     // system
     pid_t       pid;
 
-#if __WORDSIZE == 64
     int         _padding;
-#endif
 
     // system - dynamic: resource useage
     // Notes: The interval between prev_ and curr_ is 1 second

@@ -17,9 +17,7 @@ struct sk_timersvc_t {
 
     uint32_t timer_alive;
 
-#if __WORDSIZE == 64
     int      _padding;
-#endif
 
     fhash*   timers;
 };
@@ -36,9 +34,7 @@ struct sk_timer_t {
     uint32_t triggered :1;
     uint32_t _reserved :30;
 
-#if __WORDSIZE == 64
     int _padding;
-#endif
 };
 
 sk_timersvc_t* sk_timersvc_create(void* evlp)
