@@ -2,9 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <execinfo.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#ifdef __GLIBC__
+#include <execinfo.h>
+#endif
 
 #include "api/sk_const.h"
 #include "api/sk_utils.h"
@@ -13,7 +16,7 @@ void sk_assert_exit(const char* expr, const char* file, int lineno)
 {
     printf("FATAL: assert [%s] failed - %s:%d\n", expr, file, lineno);
 
-#ifdef SK_DUMP_CORE
+#if defined SK_DUMP_CORE && defined __GLIBC__
     sk_backtrace_print();
     exit(1);
 #else
@@ -28,7 +31,7 @@ void sk_assert_exit_with_msg(const char* format, ...)
     vprintf(format, args);
     va_end(args);
 
-#ifdef SK_DUMP_CORE
+#if defined SK_DUMP_CORE && defined __GLIBC__
     sk_backtrace_print();
     exit(1);
 #else
