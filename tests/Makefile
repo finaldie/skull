@@ -35,8 +35,9 @@ prepare:
 clean:
 
 install:
-	cp ./common/mock_ep            $(prefix)/bin/skullft_mock_ep
+	cp ./common/mock_ep $(prefix)/bin/skullft_mock_ep
 
 help:
 	@echo "usage:"
-	@echo " - make [case=CaseName] [skip=case1[,case2...]] [debug=true]"
+	@echo " - make [case=case1[,case2...]] [skip=case3[,case4...]] [debug=true]"
+

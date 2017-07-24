@@ -1,3 +1,8 @@
+* 2017-07-16 1.1.1
+  * Engine
+    * **Enhancement:** Upgrade `flibs` to v1.0
+    * **Enhancement:** Remove all the `__WORDSIZE` macro
+    * **Fix:** Fix FT Makefile helper message
 * 2017-07-03 1.0
   * Version 1.0 release
 * 2017-06-21 1.0-rc3
