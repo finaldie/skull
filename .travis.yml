@@ -1,5 +1,7 @@
 #language: c
 
+sudo: enabled
+
 env:
     - CC=gcc CXX=g++
     - CC=clang CXX=clang++
@@ -17,6 +19,9 @@ before_install:
     - clang --version
     - clang++ --version
     - python --version
+    - python-config --includes
+    - python2-config --includes
+    - ls -al /usr/bin | grep python
 
 install: true
 
