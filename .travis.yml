@@ -11,6 +11,7 @@ before_install:
     - sudo apt-get install autoconf valgrind expect libyaml-dev python-dev python-pip libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler libc-ares-dev
     - sudo pip install --upgrade setuptools pip
     - sudo pip install PyYAML protobuf==2.6.1 pympler WebOb
+    - sudo pip freeze
     - gcc --version
     - g++ --version
     - clang --version
