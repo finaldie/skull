@@ -23,12 +23,14 @@ before_install:
     - which python-config
     - python-config --includes
     - python2-config --includes
+    - python-config --libs
+    - python-config --cflags
+    - python-config --ldflags
     - pip -V
     - dpkg -l | grep python
     - ls -al /opt/python/2.7.13/
     - ls -al /opt/python/2.7.13/lib
-    - ls -al /opt/python/2.7.13/dist-packages
-    - ls -al /opt/python/2.7.13/site-packages
+    - ls -al /opt/python/2.7.13/lib/python2.7/site-packages
     - ls -al /usr/bin | grep python
 
 install: true
