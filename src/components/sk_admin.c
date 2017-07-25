@@ -5,10 +5,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdarg.h>
 #include <time.h>
 
-#include "jemalloc/jemalloc.h"
+#ifdef SKULL_JEMALLOC_ENABLED
+# include "jemalloc/jemalloc.h"
+#endif
 
 #include "flibs/flist.h"
 #include "flibs/fmbuf.h"
