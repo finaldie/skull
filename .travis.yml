@@ -19,8 +19,16 @@ before_install:
     - clang --version
     - clang++ --version
     - python --version
+    - which python
+    - which python-config
     - python-config --includes
     - python2-config --includes
+    - pip -V
+    - dpkg -l | grep python
+    - ls -al /opt/python/2.7.13/
+    - ls -al /opt/python/2.7.13/lib
+    - ls -al /opt/python/2.7.13/dist-packages
+    - ls -al /opt/python/2.7.13/site-packages
     - ls -al /usr/bin | grep python
 
 install: true
