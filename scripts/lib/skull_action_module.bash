@@ -133,7 +133,7 @@ function _action_module_add()
 
     # 2. get user input and verify them
     while true; do
-        read -p "module name? " module
+        read -p "Module Name? " module
 
         if $(sk_util_check_name "$module"); then
             break;
@@ -153,7 +153,7 @@ function _action_module_add()
     fi
 
     while true; do
-        read -p "which workflow you want add it to? ($idx_range) " workflow_idx
+        read -p "Workflow Index? ($idx_range) " workflow_idx
 
         if ! $(sk_util_is_number $workflow_idx); then
             echo "Error: The input workflow index must be a number" >&2
@@ -170,7 +170,7 @@ function _action_module_add()
 
     # NOTES: currently, we only support Cpp language
     while true; do
-        read -p "which language the module belongs to? ($lang_names) " language
+        read -p "Module Language? ($lang_names) " language
 
         # verify the language valid or not
         if $(sk_util_check_language "$language"); then
@@ -191,7 +191,10 @@ function _action_module_add()
     # 5. add common folder
     action_${language}_common_create
 
-    echo "module [$module] added successfully"
+    echo "Module [$module] added successfully"
+    echo ""
+    echo "Note: Run 'skull module --add' to continue adding more modules"
+    echo "Note: Run 'skull service --add' to create a service if needed"
 }
 
 function _action_module_config_gen()

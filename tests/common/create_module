@@ -84,9 +84,9 @@ function run()
 
         expect -c "
             spawn skull module -a
-            expect \"module name?\" {send \"$name\r\"}
-            expect \"which workflow you want add it to?\" {send \"$workflow_idx\r\"}
-            expect \"which language the module belongs to?\" {send \"$language\r\"}
+            expect \"Module Name?\" {send \"$name\r\"}
+            expect \"Workflow Index?\" {send \"$workflow_idx\r\"}
+            expect \"Module Language?\" {send \"$language\r\"}
             sleep 1
             interact
         "
