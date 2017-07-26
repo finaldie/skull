@@ -244,8 +244,8 @@ def _process_show_workflow():
     workflow_cnt = 0
 
     if workflows is None:
-        print "no workflow"
-        print "note: run 'skull workflow --add' to create a new workflow"
+        print "No workflow"
+        print "Note: run 'skull workflow --add' to create a new workflow"
         return
 
     for workflow in workflows:
@@ -277,7 +277,7 @@ def _process_show_workflow():
         workflow_cnt += 1
         print "\n\n",
 
-    print "total %d workflows" % (workflow_cnt)
+    print "Total %d workflows" % (workflow_cnt)
 
 def _process_add_workflow():
     global yaml_obj
@@ -432,8 +432,6 @@ def _process_add_module():
 
         _dump_config_to_file(yaml_obj, config_name)
 
-        print "add module done"
-
     except Exception as e:
         print "Fatal: _process_add_module: " + str(e)
         raise
@@ -469,8 +467,8 @@ def _process_show_service():
     services_cnt = 0
 
     if services is None:
-        print "no service"
-        print "note: run 'skull service --add' to create a new service"
+        print "No service"
+        print "Note: run 'skull service --add' to create a new service"
         return
 
     for name in services:
@@ -485,7 +483,7 @@ def _process_show_service():
         services_cnt += 1
         print "\n",
 
-    print "total %d services" % (services_cnt)
+    print "Total %d services" % (services_cnt)
 
 def _process_service_exist():
     services = yaml_obj['services']

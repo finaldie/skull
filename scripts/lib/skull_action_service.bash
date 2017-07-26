@@ -170,7 +170,7 @@ function _action_service_path()
 
     local service_name="$1"
     local service_path="$SKULL_PROJ_ROOT/src/services/$service_name"
-    echo "service path: $service_path"
+    echo "Service path: $service_path"
 }
 
 function _action_service_add()
@@ -397,7 +397,7 @@ function _action_service_api_add()
 
     echo "$idl_req_name added"
     echo "$idl_resp_name added"
-    echo "Service API $idl_name added successfully"
+    echo "Service API [$idl_name] added successfully"
 }
 
 function _action_service_import()

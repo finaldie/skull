@@ -110,7 +110,7 @@ function _action_module_path()
 
     local module_name="$1"
     local module_path="$SKULL_PROJ_ROOT/src/modules/$module_name"
-    echo "module path: $module_path"
+    echo "Module path: $module_path"
 }
 
 function _action_module_add()
@@ -124,7 +124,7 @@ function _action_module_add()
     local total_workflows=`action_workflow_show | tail -1 | awk '{print $2}'`
 
     if ! $(sk_util_is_number $total_workflows); then
-        echo "Error: create a workflow first" >&2
+        echo "Error: Create a workflow first" >&2
         return 1
     fi
 
