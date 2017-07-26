@@ -5,7 +5,9 @@
 ## The location where the user run the `skull` command
 SKULL_OLD_LOACTION=`pwd`
 
-SKULL_VALID_NAME_PATTERN="[0-9a-zA-Z_]\{1,\}"
+SKULL_NAME_PATTERN="[0-9a-zA-Z_]\{1,\}"
+
+SKULL_DEFAULT_EDITOR="vi"
 
 ## Suffix of language action names
 SKULL_LANG_MODULE_VALID="module_valid"

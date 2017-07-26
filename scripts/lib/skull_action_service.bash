@@ -283,7 +283,7 @@ function _action_service_config_edit()
 
     # TODO: should load a per-user config to identify which editor will be used
     # instead of hardcode `vi` in here
-    vim $srv_config
+    $SKULL_DEFAULT_EDITOR $srv_config
 }
 
 function _action_service_config_check()
@@ -345,7 +345,7 @@ function _action_service_api_edit()
     local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
     local srv_idl=$srv_idl_folder/$idl_name
 
-    vim $srv_idl
+    $SKULL_DEFAULT_EDITOR $srv_idl
 }
 
 function _action_service_api_check()

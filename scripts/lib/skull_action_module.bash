@@ -245,7 +245,7 @@ function _action_module_config_edit()
 
     # TODO: should load a per-user config to identify which editor will be used
     # instead of hardcode `vi` in here
-    vim $module_config
+    $SKULL_DEFAULT_EDITOR $module_config
 }
 
 function _action_module_config_check()

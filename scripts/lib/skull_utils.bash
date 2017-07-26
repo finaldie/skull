@@ -167,7 +167,7 @@ function sk_util_safe_rm()
 # return current module name if user indeed inside a module folder
 function sk_util_current_module()
 {
-    local module_path=`echo "$SKULL_OLD_LOACTION" | grep -o "src/modules/${SKULL_VALID_NAME_PATTERN}"`
+    local module_path=`echo "$SKULL_OLD_LOACTION" | grep -o "src/modules/${SKULL_NAME_PATTERN}"`
     local module=""
     if [ ! -z "$module_path" ]; then
         module=`basename $module_path`
@@ -269,7 +269,7 @@ function sk_util_check_name()
 # return current module name if user indeed inside a module folder
 function sk_util_current_service()
 {
-    local srv_path=`echo "$SKULL_OLD_LOACTION" | grep -o "src/services/${SKULL_VALID_NAME_PATTERN}"`
+    local srv_path=`echo "$SKULL_OLD_LOACTION" | grep -o "src/services/${SKULL_NAME_PATTERN}"`
     local service=""
     if [ ! -z "$srv_path" ]; then
         service=`basename $srv_path`
