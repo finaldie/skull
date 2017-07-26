@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 ulimit -c unlimited
@@ -19,10 +19,10 @@ skull_start() {
 
 skull_start_memcheck() {
     # Generate suppression argument
-    local supp_files=(`ls bin/*.supp`)
+    local supp_files=`ls bin/*.supp`
     local supp_arg=""
 
-    for supp_file in ${supp_files[@]}; do
+    for supp_file in $supp_files; do
         supp_arg+=" --suppressions="${supp_file}" "
     done
 
