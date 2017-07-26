@@ -83,7 +83,7 @@ function run()
 
         expect -c "
             spawn skull service --import $service_name
-            expect \"data mode? (rw-pr | rw-pw)\" {send \"$data_mode\r\"}
+            expect \"Data Mode? (rw-pr | rw-pw)\" {send \"$data_mode\r\"}
             sleep 1
             interact
         "

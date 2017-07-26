@@ -79,7 +79,7 @@ function run()
 
         expect -c "
             spawn skull service --api-add
-            expect \"service api name:\" {send \"$api_name\r\"}
+            expect \"Service API Name:\" {send \"$api_name\r\"}
             sleep 1
             interact
         "

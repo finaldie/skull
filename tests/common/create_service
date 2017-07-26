@@ -84,9 +84,9 @@ function run()
 
         expect -c "
             spawn skull service --add
-            expect \"service name?\" {send \"$name\r\"}
-            expect \"which language the service belongs to?\" {send \"$language\r\"}
-            expect \"data mode? (rw-pr | rw-pw)\" {send \"$data_mode\r\"}
+            expect \"Service Name?\" {send \"$name\r\"}
+            expect \"Service Language?\" {send \"$language\r\"}
+            expect \"Data Mode? (rw-pr | rw-pw)\" {send \"$data_mode\r\"}
             sleep 1
             interact
         "
