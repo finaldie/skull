@@ -22,7 +22,7 @@ function parse_and_run()
     # parse the command args
     local args=`getopt -a \
         -o n:m:h \
-        -l name:,data_mode:,help \
+        -l name:,data-mode:,help \
         -n "service_import" -- "$@"`
 
     if [ $? != 0 ]; then
@@ -42,7 +42,7 @@ function parse_and_run()
                 service_name=$2
                 shift 2;
                 ;;
-            -m|--data_mode)
+            -m|--data-mode)
                 data_mode=$2
                 shift 2;
                 ;;

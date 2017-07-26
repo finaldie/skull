@@ -22,7 +22,7 @@ function parse_and_run()
     # parse the command args
     local args=`getopt -a \
         -o s:n:h \
-        -l service_name:,api_name:,help \
+        -l service-name:,api-name:,help \
         -n "create_service_api" -- "$@"`
 
     if [ $? != 0 ]; then
@@ -38,11 +38,11 @@ function parse_and_run()
 
     while true; do
         case "$1" in
-            -s|--service_name)
+            -s|--service-name)
                 service_name=$2
                 shift 2;
                 ;;
-            -n|--api_name)
+            -n|--api-name)
                 api_name=$2
                 shift 2;
                 ;;

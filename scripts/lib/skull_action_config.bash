@@ -8,7 +8,7 @@ function action_config()
 {
     # parse the command args
     local args=`getopt -a \
-        -o e \
+        -o eh \
         -l edit,help \
         -n "skull_action_module.bash" -- "$@"`
     if [ $? != 0 ]; then
@@ -25,6 +25,10 @@ function action_config()
                 shift
                 _action_config_edit
                 exit 0
+                ;;
+            -h|--help)
+                shift
+                action_config_usage >&2
                 ;;
             --)
                 shift;

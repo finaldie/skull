@@ -22,7 +22,7 @@ function parse_and_run()
     # parse the command args
     local args=`getopt -a \
         -o n:l:m:h \
-        -l name:,language:,data_mode:,help \
+        -l name:,language:,data-mode:,help \
         -n "create_service" -- "$@"`
 
     if [ $? != 0 ]; then
@@ -47,7 +47,7 @@ function parse_and_run()
                 language=$2
                 shift 2;
                 ;;
-            -m|--data_mode)
+            -m|--data-mode)
                 data_mode=$2
                 shift 2;
                 ;;
@@ -83,7 +83,7 @@ function run()
         cd $SKULL_PROJ_NAME
 
         expect -c "
-            spawn skull service -a
+            spawn skull service --add
             expect \"service name?\" {send \"$name\r\"}
             expect \"which language the service belongs to?\" {send \"$language\r\"}
             expect \"data mode? (rw-pr | rw-pw)\" {send \"$data_mode\r\"}

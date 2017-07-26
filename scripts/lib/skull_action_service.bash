@@ -13,7 +13,7 @@ function action_service()
 {
     # parse the command args
     local args=`getopt -a \
-        -o ash \
+        -o lh \
         -l add,list,help,conf-gen,conf-cat,conf-edit,conf-check,api-list,api-add,api-cat:,api-edit:,api-check,api-gen,import: \
         -n "skull_action_service.bash" -- "$@"`
     if [ $? != 0 ]; then
@@ -26,7 +26,7 @@ function action_service()
 
     while true; do
         case "$1" in
-            -a|--add)
+            --add)
                 shift
                 _action_service_add
                 exit 0
@@ -254,7 +254,7 @@ function _action_service_config_cat()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
@@ -271,7 +271,7 @@ function _action_service_config_edit()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
@@ -296,7 +296,7 @@ function _action_service_api_list()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
@@ -308,7 +308,7 @@ function _action_service_api_cat()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
@@ -332,7 +332,7 @@ function _action_service_api_edit()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
@@ -365,7 +365,7 @@ function _action_service_api_add()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 

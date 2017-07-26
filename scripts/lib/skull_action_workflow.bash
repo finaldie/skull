@@ -72,7 +72,7 @@ function _action_workflow_add()
     local yn_port=true
 
     # 2. set the concurrent
-    read -p "Allow concurrent? (y/n) " yn_concurrent
+    read -p "Allow concurrency? (y/n) " yn_concurrent
     if ! $(sk_util_yn_yes "$yn_concurrent"); then
         concurrent=0
     fi
