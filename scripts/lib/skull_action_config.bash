@@ -1,6 +1,5 @@
-# This is the utility functions for skull build, which can be easiliy to build
-# the entire project without must move to the top folder, meanwhile you can
-# build the project any where when you in a skull project
+# This is the utility functions for skull configuration, which can be easiliy
+#  to dump/edit the configuration file super fast.
 #
 # NOTES: This is included by the main script `skull`
 

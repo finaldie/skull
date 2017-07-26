@@ -6,7 +6,7 @@ For Request class: It help to parse the raw http request to a structured
 
 For Response class: User use it to build a http response easily
 
-In generally, you can setup a proxy/load balancer in front of skull, then use
+In generally, we can setup a proxy/load balancer in front of skull, then use
  these APIs to parse http request and build http response
 
  For example, add the following into /etc/nginx/nginx.conf

@@ -16,7 +16,9 @@ bash: ~/project/tests/cases>tree
 ### Create a skull_ft_case.yml
 ```console
 # skull_ft_case.yml
-description: Basic test case, create a default project/workflow/module/service, then verify there is no errors during creation and building
+description: >
+    Basic test case, create a default project/workflow/module/service,
+    then verify there is no errors during creation and building
 
 pre-run:
     - echo "pre-run"
@@ -54,7 +56,9 @@ skull build ft-check [case=$caseName]
 ```
 
 ### Basic Macros
-To better writing the `skull_ft_case.yml`, some times you will need to copy some files from case folder to running folder, here are some basic macros we can use:
+To better writing the `skull_ft_case.yml`, some times we will need to copy
+some files from case folder to running folder, here are some basic macros we
+can use:
 * **{COMMON}** It will be replaced with the `common` folder path
 * **{RUN}** It will be replaced with the `running` folder path
 * **{CASE}** It will be replaced with the `case` folder path

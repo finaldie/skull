@@ -37,12 +37,13 @@ void skull_service_release(skullcpp::Service& service)
 
 /**************************** Service APIs Calls *******************************
  *
- * Service API implementation. For the api which has read access, you can call
- *  `service.get()` to fetch the service data. For the api which has write
- *  access, you can also call the `service.set()` to store your service data.
+ * Service API implementation. For the API which has read access, we call
+ *  `service.get()` to fetch the service data. For the API which has write
+ *  access, we call the `service.set()` to store the data back to
+ *  service.
  *
  * @note  DO NOT carry over the service data to another place, the only safe
- *         place for it is leaving it inside the service api scope
+ *         place for it is: Keep it inside the service API scope
  *        API message name is end with '_req' for the request, with '_resp'
  *         for the response.
  */

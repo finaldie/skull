@@ -110,8 +110,8 @@ public:
     virtual int createJob(JobNPR, JobNPError) const = 0;
     virtual int createJob(JobNPW, JobNPError) const = 0;
 
-// Use these macros to make a Service::Job easily, you still can use lambda
-//  instead of them
+// Use these macros to make a Service::Job easily. In another handler, we still
+//  can use *lambda* instead of them
 #define skull_BindSvcJobR(f, ...) \
     (skullcpp::Service::JobR) \
     std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)

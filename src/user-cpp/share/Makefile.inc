@@ -29,7 +29,7 @@ OPT = -O2
 else
 MACRO += -DSK_DEBUG -finstrument-functions
 OPT = -O0
-# If your compiler is gcc(>=4.8) or clang, enable the following line
+# If the compiler is gcc(>=4.8) or clang, enable the following line
 #EXTRA += -fsanitize=address
 endif
 

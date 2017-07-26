@@ -48,8 +48,8 @@ public:
 
     typedef std::function<ssize_t (const void* data, size_t len)> UnpackFn;
 
-// Use these macro to make a unpack/epCb easily. And you still can use *lambda*
-//  instead of these
+// Use these macros to make a unpack/epCb easily. And in another hand, we still
+//  can use *lambda* instead of them
 #define skull_BindEpUnpack(f, ...) \
     (skullcpp::EPClient::UnpackFn) \
     std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)

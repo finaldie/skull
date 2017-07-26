@@ -97,10 +97,10 @@ function run()
         expect -c "
             spawn skull workflow -a
             expect \"Allow concurrency? (y/n)\" {send \"$concurrency\r\"}
-            expect \"Input the IDL name:\" {send \"$idl\r\"}
-            expect \"Input Data Source: stdin? (y/n)\" {send \"$enable_stdin\r\"}
-            expect \"Input Data Source: Network? (y/n)\" {send \"$enable_network\r\"}
-            expect \"Input the port you want (1025-65535):\" {send \"$port\r\"}
+            expect \"Transaction IDL name:\" {send \"$idl\r\"}
+            expect \"Trigger by 'stdin'? (y/n)\" {send \"$enable_stdin\r\"}
+            expect \"Trigger by 'network'? (y/n)\" {send \"$enable_network\r\"}
+            expect \"Port listen on (1025-65535):\" {send \"$port\r\"}
             sleep 1
             interact
         "

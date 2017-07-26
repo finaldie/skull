@@ -1,6 +1,6 @@
 # This is the utility functions for skull build, which can be easiliy to build
-# the entire project without must move to the top folder, meanwhile you can
-# build the project any where when you in a skull project
+# the entire project without must move to the top folder, meanwhile we can
+# build the project in any where inside a valid skull project
 #
 # NOTES: This is included by the main script `skull`
 

@@ -433,8 +433,7 @@ void _sk_init_coreinfo(sk_core_t* core)
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
-// execution orders, if you quite understand it, do not modify the calling ord-
-// ers.
+// execution orders, DO NOT modify the calling order before fully understand it.
 void sk_core_init(sk_core_t* core)
 {
     core->status = SK_CORE_INIT;
