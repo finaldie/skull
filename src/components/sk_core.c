@@ -111,7 +111,7 @@ void _sk_setup_workflows(sk_core_t* core)
         sk_print("setup workflow, detail info:\n");
         SK_LOG_INFO(core->logger, "setup one workflow...");
 
-        // set up the type and concurrent
+        // set up the type and concurrency
         sk_workflow_t* workflow = sk_workflow_create(workflow_cfg);
 
         // set up modules

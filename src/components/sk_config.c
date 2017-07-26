@@ -151,7 +151,7 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
 // example yaml config:
 // workflow:
 //     - modules: [test]
-//       concurrent: 1
+//       concurrency: 1
 //       port: 7758
 static
 void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
@@ -171,7 +171,7 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
 
         sk_workflow_cfg_t* workflow = _create_workflow_cfg();
 
-        // load modules and concurrent
+        // load modules and concurrency
         fhash_str_iter item_iter = fhash_str_iter_new(child->data.mapping);
         while ((child = fhash_str_next(&item_iter))) {
             const char* key = item_iter.key;
@@ -180,7 +180,7 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
                 _load_modules(child, workflow);
             } else if (0 == strcmp(key, "idl")) {
                 workflow->idl_name = strdup(child->data.value);
-            } else if (0 == strcmp(key, "concurrent")) {
+            } else if (0 == strcmp(key, "concurrency")) {
                 workflow->concurrent = (uint32_t) sk_config_getint(child) & 0x1;
             } else if (0 == strcmp(key, "port")) {
                 int port = sk_config_getint(child);
@@ -480,7 +480,7 @@ void sk_config_print(sk_config_t* config)
     flist_iter iter = flist_new_iter(config->workflows);
     while ((workflow = flist_each(&iter))) {
         sk_print("workflow start:\n");
-        sk_print("\tconcurrent: %d\n", workflow->concurrent);
+        sk_print("\tconcurrency: %d\n", workflow->concurrent);
         sk_print("\tmodules: ");
 
         sk_module_cfg_t* mcfg = NULL;

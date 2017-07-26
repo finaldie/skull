@@ -37,7 +37,7 @@ languages: ['cpp', 'py']
 # Example:
 #
 #     workflows:
-#      - concurrent: 1
+#      - concurrency: 1
 #        idl: example
 #        modules: ['test:cpp']
 #        port: 7758
