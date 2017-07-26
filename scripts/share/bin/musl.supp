@@ -1,0 +1,6 @@
+{
+   <Known musl libc issue on Alpine:3.6>
+   Memcheck:Free
+   fun:free
+   obj:/lib/ld-musl-x86_64.so.1
+}
