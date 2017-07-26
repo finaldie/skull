@@ -65,6 +65,8 @@ function action_create()
 
     _skull_create $workspace
     echo "create skull workspace done"
+    echo ""
+    echo "Note: Run 'skull workflow --add' to create a workflow then"
 }
 
 function action_create_usage()

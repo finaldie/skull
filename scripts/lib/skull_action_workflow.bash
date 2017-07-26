@@ -132,7 +132,7 @@ function _action_workflow_add()
 
     echo "Workflow added successfully"
     echo ""
-    echo "Note: All the workflow idls are in 'idls' folder"
+    echo "Note: All the workflow IDLs are in 'idls' folder"
     echo "Note: Run 'skull module --add' to create a new module for it"
 }
 

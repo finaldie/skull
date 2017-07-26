@@ -5,6 +5,8 @@
 ## The location where the user run the `skull` command
 SKULL_OLD_LOACTION=`pwd`
 
+SKULL_VALID_NAME_PATTERN="[0-9a-zA-Z_]\{1,\}"
+
 ## Suffix of language action names
 SKULL_LANG_MODULE_VALID="module_valid"
 SKULL_LANG_MODULE_ADD="module_add"
@@ -31,3 +33,4 @@ SKULL_SERVICE_BASE_FOLDER=$SKULL_PROJ_ROOT/src/services
 
 ## Module Base folder
 SKULL_MODULE_BASE_FOLDER=$SKULL_PROJ_ROOT/src/modules
+
