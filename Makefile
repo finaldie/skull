@@ -15,7 +15,7 @@ else
 dep: flibs protos metrics skull-ft
 endif
 
-core:
+core: dep
 	cd src && $(MAKE)
 
 check:
@@ -25,7 +25,7 @@ valgrind-check:
 	cd tests && $(MAKE) $@
 
 install: install-core install-scripts install-api install-api-cpp install-others
-install: install-ft install-api-py
+install: install-ft install-api-py install-dep
 
 clean: clean-api-cpp clean-api-py
 	cd src && $(MAKE) $@

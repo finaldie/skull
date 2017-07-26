@@ -28,8 +28,6 @@ sudo pip install PyYAML protobuf==2.6.1 pympler WebOb;
 # Clone and Build Dependencies (For example: project folder is 'skull')
 cd skull
 git submodule update --init --recursive
-make dep
-sudo make install-dep
 ```
 
 ### Build and Install
