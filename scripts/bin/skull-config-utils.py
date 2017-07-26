@@ -26,8 +26,8 @@ CONFIG_WF_HEADER = """
 # Example:
 #
 #     workflows:
-#      - concurrent: 1
-#        idl: example
+#      - concurrency: 1
+#        IDL: example
 #        modules: ['test:cpp']
 #        port: 7758
 #        stdin: 0
@@ -69,11 +69,11 @@ def _load_yaml_config(config_name):
 
 def _create_workflow():
     return {
-        'concurrent' : 1,
-        'idl'        : "",
-        'stdin'      : 0,
-        'port'       : -1,
-        'modules'    : []
+        'concurrency' : 1,
+        'idl'         : "",
+        'stdin'       : 0,
+        'port'        : -1,
+        'modules'     : []
     }
 
 def _dump_config_to_file(cfgYamlObj, filename):
@@ -250,8 +250,8 @@ def _process_show_workflow():
 
     for workflow in workflows:
         print "workflow [%d]:" % workflow_cnt
-        print " - concurrent: %s" % workflow['concurrent']
-        print " - idl: %s" % workflow['idl']
+        print " - concurrency: %s" % workflow['concurrency']
+        print " - IDL: %s" % workflow['idl']
 
         if workflow.get("port"):
             print " - port: %s" % workflow['port']
@@ -286,14 +286,14 @@ def _process_add_workflow():
     try:
         opts, args = getopt.getopt(sys.argv[7:], 'C:i:p:I:')
 
-        workflow_concurrent = 1
+        workflow_concurrency = 1
         workflow_idl = ""
         workflow_port = -1
         workflow_stdin = 0
 
         for op, value in opts:
             if op == "-C":
-                workflow_concurrent = int(value)
+                workflow_concurrency = int(value)
             elif op == "-i":
                 workflow_idl = value
             elif op == "-p":
@@ -303,7 +303,7 @@ def _process_add_workflow():
 
         # 1. Now add these workflow_x to yaml obj and dump it
         workflow_frame = _create_workflow()
-        workflow_frame['concurrent'] = workflow_concurrent
+        workflow_frame['concurrency'] = workflow_concurrency
         workflow_frame['idl'] = workflow_idl
 
         # 1.1 Add trigger
@@ -552,8 +552,8 @@ def _process_add_service():
 def usage():
     print "usage:"
     print "  skull-config-utils.py -m workflow -c $yaml_file -a show"
-    print "  skull-config-utils.py -m workflow -c $yaml_file -a add -C $concurrent -i $idl_name -p $port"
-    print "  skull-config-utils.py -m workflow -c $yaml_file -a gen_idl -n $idl_name -p $idl_path"
+    print "  skull-config-utils.py -m workflow -c $yaml_file -a add -C $concurrency -i $IDL_name -p $port"
+    print "  skull-config-utils.py -m workflow -c $yaml_file -a gen_idl -n $IDL_name -p $IDL_path"
 
     print "  skull-config-utils.py -m module   -c $yaml_file -a add -M $module_name -i $workflow_index"
 
