@@ -180,7 +180,8 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
                 _load_modules(child, workflow);
             } else if (0 == strcmp(key, "idl")) {
                 workflow->idl_name = strdup(child->data.value);
-            } else if (0 == strcmp(key, "concurrency")) {
+            } else if (0 == strcmp(key, "concurrency")
+                       || 0 == strcmp(key, "concurrent")) {
                 workflow->concurrent = (uint32_t) sk_config_getint(child) & 0x1;
             } else if (0 == strcmp(key, "port")) {
                 int port = sk_config_getint(child);
