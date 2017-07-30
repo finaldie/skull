@@ -111,6 +111,9 @@ sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
     txn->transaction   = sk_mbuf_create(SK_TXN_DEFAULT_INIT_SIZE,
                                         SK_TXN_DEFAULT_MAX_SIZE);
 
+    // Notes: Here we won't add txn into entity directly, since the newly txn
+    //         may need to unpack data first, then it will be a valid txn,
+    //         otherwise it will be a half txn in entity
     return txn;
 }
 
@@ -364,12 +367,8 @@ void sk_txn_setstate(sk_txn_t* txn, sk_txn_state_t state)
 
     txn->state = state;
 
-    if (state == SK_TXN_UNPACKED) {
-        SK_ASSERT(txn->entity);
-
-        // update the entity ref
-        sk_entity_txnadd(txn->entity, txn);
-    } else if (state == SK_TXN_ERROR) {
+    // Record the error in to flag, since the state will be changed later
+    if (state == SK_TXN_ERROR) {
         txn->error = 1;
     }
 }

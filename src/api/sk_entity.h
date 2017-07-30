@@ -70,11 +70,12 @@ int     sk_entity_peer(const sk_entity_t*, sk_entity_peer_t*);
 sk_entity_type_t sk_entity_type(const sk_entity_t*);
 sk_entity_status_t sk_entity_status(const sk_entity_t*);
 struct sk_workflow_t* sk_entity_workflow(const sk_entity_t*);
+int sk_entity_idle(const sk_entity_t*);
 
 void sk_entity_setopt(sk_entity_t*, sk_entity_opt_t opt, void* ud);
 void sk_entity_mark(sk_entity_t*, sk_entity_status_t status);
 
-int sk_entity_can_destroy(sk_entity_t*);
+int sk_entity_destroyable(const sk_entity_t*);
 
 // Entity flags
 #define SK_ENTITY_F_DESTROY_NOTXN 0x1
@@ -87,6 +88,9 @@ void sk_entity_setowner(sk_entity_t*, struct sk_entity_mgr_t* mgr);
 
 struct sk_txn_t* sk_entity_halftxn(const sk_entity_t*);
 void sk_entity_sethalftxn(sk_entity_t*, struct sk_txn_t* txn);
+
+struct sk_txn_t* sk_entity_iqueue_pop(sk_entity_t*);
+void sk_entity_iqueue_push(sk_entity_t*, const struct sk_txn_t*);
 
 void sk_entity_txnadd(sk_entity_t*, const struct sk_txn_t*);
 void sk_entity_txndel(sk_entity_t*, const struct sk_txn_t*);

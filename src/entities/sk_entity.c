@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "flibs/flist.h"
 #include "flibs/fhash.h"
 #include "api/sk_utils.h"
 #include "api/sk_entity.h"
@@ -24,6 +25,9 @@ struct sk_entity_t {
     int                     flags;
     int                     task_cnt;
     void*                   ud;
+
+    // Incoming txn queue (waiting for pick up)
+    flist*                  iqueue;
 };
 
 // increase the query count
@@ -31,6 +35,7 @@ static inline
 void _entity_taskcnt_inc(sk_entity_t* entity)
 {
     entity->task_cnt++;
+    SK_ASSERT(entity->task_cnt > 0);
 }
 
 // decrease the query count
@@ -38,6 +43,7 @@ static inline
 void _entity_taskcnt_dec(sk_entity_t* entity)
 {
     entity->task_cnt--;
+    SK_ASSERT(entity->task_cnt >= 0);
 }
 
 // default opts
@@ -116,6 +122,7 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow, sk_entity_type_t type)
     entity->timers   = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     entity->status   = SK_ENTITY_ACTIVE;
     entity->type     = type;
+    entity->iqueue   = flist_create();
 
     sk_metrics_global.entity_create.inc(1);
     sk_print("create entity %p\n", (void*)entity);
@@ -124,13 +131,13 @@ sk_entity_t* sk_entity_create(sk_workflow_t* workflow, sk_entity_type_t type)
 
 void sk_entity_setopt(sk_entity_t* entity, sk_entity_opt_t opt, void* ud)
 {
-    entity->opt.read  = opt.read  ? opt.read  : default_opt.read;
-    entity->opt.write = opt.write ? opt.write : default_opt.write;
+    entity->opt.read    = opt.read    ? opt.read    : default_opt.read;
+    entity->opt.write   = opt.write   ? opt.write   : default_opt.write;
     entity->opt.destroy = opt.destroy ? opt.destroy : default_opt.destroy;
     entity->opt.rbufget = opt.rbufget ? opt.rbufget : default_opt.rbufget;
     entity->opt.rbufsz  = opt.rbufsz  ? opt.rbufsz  : default_opt.rbufsz;
     entity->opt.rbufpop = opt.rbufpop ? opt.rbufpop : default_opt.rbufpop;
-    entity->opt.peer    = opt.peer ? opt.peer : default_opt.peer;
+    entity->opt.peer    = opt.peer    ? opt.peer    : default_opt.peer;
 
     entity->ud = ud;
 }
@@ -182,6 +189,14 @@ void sk_entity_destroy(sk_entity_t* entity)
         fhash_u64_iter_release(&titer);
         fhash_u64_delete(entity->timers);
 
+        // 4. Clean up all TXNs in iqueue
+        while ((txn = sk_entity_iqueue_pop(entity))) {
+            sk_print("clean up the txns from input queue\n");
+            sk_txn_destroy(txn);
+        }
+        flist_delete(entity->iqueue);
+
+        // 5. In the end, destroy the entity object
         free(entity);
     }
 }
@@ -256,9 +271,32 @@ sk_workflow_t* sk_entity_workflow(const sk_entity_t* entity)
     return entity->workflow;
 }
 
+/**
+ * For the concurrency entity, this always return 1
+ * For non-concurrency entity, return 1 if task cnt == 0, otherwise return 0
+ */
+int sk_entity_idle(const sk_entity_t* entity) {
+    int concurrency = sk_entity_workflow(entity)->cfg->concurrent;
+    if (concurrency) {
+        return 1;
+    } else {
+        return sk_entity_taskcnt(entity) <= 0;
+    }
+}
+
 sk_txn_t* sk_entity_halftxn(const sk_entity_t* entity)
 {
     return entity->half_txn;
+}
+
+struct sk_txn_t* sk_entity_iqueue_pop(sk_entity_t* entity) {
+    if (flist_empty(entity->iqueue)) return NULL;
+
+    return flist_pop(entity->iqueue);
+}
+
+void sk_entity_iqueue_push(sk_entity_t* entity, const struct sk_txn_t* txn) {
+    flist_push(entity->iqueue, txn);
 }
 
 sk_entity_status_t sk_entity_status(const sk_entity_t* entity)
@@ -284,7 +322,7 @@ int sk_entity_taskcnt(const sk_entity_t* entity)
     return entity->task_cnt;
 }
 
-int sk_entity_can_destroy(sk_entity_t* entity) {
+int sk_entity_destroyable(const sk_entity_t* entity) {
     return !entity->task_cnt;
 }
 

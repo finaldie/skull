@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include <stdint.h>
 #include <arpa/inet.h>
 
@@ -31,7 +32,8 @@ typedef struct sk_trigger_udp_data_t {
  * This is running on the main scheduler io thread
  *
  * @note The trigger is responsible for creating a base entity object (UDP)
- *       The 'concurrent' flag is not applicable for UDP entity
+ *       The 'concurrency' flag is not applicable for UDP entity, which means
+ *        it's always trigger a concurrency workflow
  */
 static
 void _readcb(fev_state* fev, int fd, int mask, void* ud)
@@ -70,7 +72,12 @@ void _readcb(fev_state* fev, int fd, int mask, void* ud)
     sk_entity_udp_create(entity, fd, readbuf, (uint16_t)bytes, &c_addr.sa, c_addr_len);
 
     // Unpack data and trigger workflow if possible
-    sk_trigger_util_unpack(entity, NULL);
+    ssize_t consumed = sk_trigger_util_unpack(entity);
+    if (consumed > 0) {
+        // Parsed a valid UDP packet, deliver it to workflow
+        int cnt = sk_trigger_util_deliver(entity, NULL, 1);
+        SK_ASSERT(cnt == 1);
+    }
 }
 
 static

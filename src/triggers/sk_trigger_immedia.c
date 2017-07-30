@@ -25,6 +25,10 @@ void _trigger_immedia_run(sk_trigger_t* trigger)
     sk_entity_t* entity = sk_entity_create(workflow, SK_ENTITY_NONE);
     sk_txn_t* txn = sk_txn_create(workflow, entity);
 
+    // For the 'immediately' trigger, adjust the state first
+    sk_txn_setstate(txn, SK_TXN_RUNNING);
+    sk_entity_txnadd(entity, txn);
+
     sk_sched_send(sched, NULL, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
 }
 
