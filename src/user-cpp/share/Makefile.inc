@@ -78,3 +78,5 @@ PARENT_DIRNAME ?= $(shell basename $(shell pwd | xargs dirname))
 TARGET ?= lib/libskull-$(PARENT_DIRNAME)-$(DIRNAME).so
 TEST_TARGET ?= test.out
 CONF_TARGET ?= skull-$(PARENT_DIRNAME)-$(DIRNAME).yaml
+
+GLOBAL_SUPPRESSION := $(SKULL_SRCTOP)/bin/musl.supp
