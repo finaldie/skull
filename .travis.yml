@@ -41,7 +41,7 @@ script:
     - make clean && make clean-dep
     - make -j4 disable_jemalloc=true FLIB_CFLAGS=-DFLIB_SKIP_LEGACY
     - sudo make install
-    - make check debug=true
+    - make check verbose=true
 
 after_success: true
 
