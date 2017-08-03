@@ -8,7 +8,6 @@
 {
    <Known musl libc issue on Alpine:3.6>
    Memcheck:Leak
-   match-leak-kinds: possible
    fun:calloc
    fun:__dls3
    obj:/lib/ld-musl-x86_64.so.1
