@@ -97,9 +97,9 @@ function run()
 
     local cmd=""
     if [ ! -z "$data" ]; then
-        cmd="echo $data | nc -l $extra_arg -s 127.0.0.1 -p $port"
+        cmd="echo $data | nc -l $extra_arg 127.0.0.1 -p $port"
     else
-        cmd="nc -l $extra_arg -s 127.0.0.1 -p $port"
+        cmd="nc -l $extra_arg 127.0.0.1 -p $port"
     fi
 
     (
