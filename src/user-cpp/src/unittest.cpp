@@ -216,7 +216,7 @@ const google::protobuf::Message& UTModule::getTxnSharedData() const {
 /****************************** Service APIs **********************************/
 UTService::UTService(const std::string& svcName, const std::string& config) {
     this->svcName_   = svcName;
-    this->utService_ = skullut_service_create(svcName.c_str(), config.c_str(),
+    this->utService_ = skullut_service_create(svcName_.c_str(), config.c_str(),
                                               "cpp", svc_getloader());
 }
 
