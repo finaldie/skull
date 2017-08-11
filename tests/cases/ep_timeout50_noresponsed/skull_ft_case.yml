@@ -1,4 +1,4 @@
-description: start a mock endpoint which won't response, send an ep call with timeout=50(infinitely wait)
+description: start a mock endpoint which won't response, send an ep call with timeout=50ms
 
 pre-run:
     - echo "pre-run"
@@ -22,9 +22,9 @@ verify:
     - echo "verify"
     - 'echo "info" | nc 127.0.0.1 7759 | grep "status:" | awk ''{print $2}'' | grep "2"'
     - 'echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie"'
+    - sleep 1
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
-    - sleep 1
     - 'cat ${RUN}/project/run/log/skull.log | grep "svc.test.ep_cb" | grep "status: 2"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'
 
