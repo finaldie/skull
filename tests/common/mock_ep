@@ -103,14 +103,12 @@ function run()
     fi
 
     (
-        cd $SKULL_PROJ_NAME
-
         expect -c "
-            spawn nohup bash -c \"$cmd\" &
-            send \"\r\"
+            spawn nohup sh -c \"$cmd\" &
+            send \"\r\n\"
             interact
         "
-    )
+    ) | tee
 }
 
 # ----------------- main ------------------
