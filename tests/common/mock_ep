@@ -108,7 +108,7 @@ function run()
             send \"\r\n\"
             interact
         "
-    ) | tee
+    )
 }
 
 # ----------------- main ------------------
