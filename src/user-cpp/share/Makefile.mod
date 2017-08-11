@@ -31,11 +31,6 @@ TEST_SRCS = \
 #        `--suppressions=$(SUPPRESSION)` to `VALGRIND`
 SUPPRESSION := $(GLOBAL_SUPPRESSION)
 
-# valgrind command
-VALGRIND := valgrind --tool=memcheck --leak-check=full -v \
-    --suppressions=$(SUPPRESSION) \
-    --gen-suppressions=all --error-exitcode=1
-
 # Include the basic Makefile targets
 include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.cpp.targets
 

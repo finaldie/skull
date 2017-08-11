@@ -27,11 +27,6 @@ TEST_SRCS = $(shell find tests -name "*.cpp")
 #        `--suppressions=$(SUPPRESSION)` to `VALGRIND`
 SUPPRESSION := $(GLOBAL_SUPPRESSION)
 
-# valgrind command
-VALGRIND := valgrind --tool=memcheck --leak-check=full \
-    --suppressions=$(SUPPRESSION) \
-    --gen-suppressions=all --error-exitcode=1
-
 # Include the basic Makefile targets
 include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.common.cpp.targets
 

@@ -80,3 +80,9 @@ TEST_TARGET ?= test.out
 CONF_TARGET ?= skull-$(PARENT_DIRNAME)-$(DIRNAME).yaml
 
 GLOBAL_SUPPRESSION := $(SKULL_SRCTOP)/bin/musl.supp
+
+# valgrind command
+VALGRIND ?= valgrind --tool=memcheck --leak-check=full \
+    --suppressions=$(SUPPRESSION) \
+    --gen-suppressions=all --error-exitcode=1
+
