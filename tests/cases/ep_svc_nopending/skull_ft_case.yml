@@ -16,6 +16,7 @@ run:
     - '${COMMON}/mock_ep -p 7760 -d welcome -i 2'
     - cd project && skull start -D
     - sleep 1
+    - cat ./nohup.out
 
 verify:
     - echo "verify"
