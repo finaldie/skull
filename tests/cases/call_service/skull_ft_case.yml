@@ -11,7 +11,7 @@ pre-run:
     - cp ${COMMON}/templates/service.cpp ${RUN}/project/src/services/s1/src/
     - cp ${COMMON}/templates/test_service.cpp ${RUN}/project/src/services/s1/tests/
     - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
-    - 'cd project/run && sed -i "s/#txn_logging:.*/txn_logging: true/g" skull-config.yaml'
+    - 'cd project/run && sed -i "s/# txn_logging:.*/txn_logging: true/g" skull-config.yaml'
 
 run:
     - echo "run"
