@@ -104,8 +104,8 @@ function run()
 
     (
         expect -c "
-            spawn nohup sh -c \"$cmd\" &
-            send \"\r\n\"
+            spawn -ignore HUP nohup /bin/sh -c \"$cmd &\"
+            send \"\r\"
             interact
         "
     )
