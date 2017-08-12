@@ -88,34 +88,34 @@ function _action_workflow_add()
         fi
     done
 
-    # 4. set trigger
-    ## 4.1 set the stdin
-    read -p "Trigger by 'stdin'? (y/n) " yn_stdin
-    if ! $(sk_util_yn_valid "$yn_stdin"); then
+    # 4. set driver
+    ## 4.1 set the port (This is the most use case)
+    read -p "Trigger by 'network'? (y/n) " yn_port
+    if ! $(sk_util_yn_valid "$yn_port"); then
         echo "Error: Type 'y' or 'n'" >&2
         exit 1
     fi
 
-    if $(sk_util_yn_yes "$yn_stdin"); then
-        enable_stdin=1
+    ## 4.2 set the stdin
+    if $(sk_util_yn_yes "$yn_port"); then
+        while true; do
+            read -p "Port listen on (1025-65535): " port
+
+            if ! $(sk_util_is_number $port); then
+                echo "Error: please input a digital for the port" >&2
+            else
+                break
+            fi
+        done
     else
-        ## 4.2 set the port
-        read -p "Trigger by 'network'? (y/n) " yn_port
-        if ! $(sk_util_yn_valid "$yn_port"); then
+        read -p "Trigger by 'stdin'? (y/n) " yn_stdin
+        if ! $(sk_util_yn_valid "$yn_stdin"); then
             echo "Error: Type 'y' or 'n'" >&2
             exit 1
         fi
 
-        if $(sk_util_yn_yes "$yn_port"); then
-            while true; do
-                read -p "Port listen on (1025-65535): " port
-
-                if ! $(sk_util_is_number $port); then
-                    echo "Error: please input a digital for the port" >&2
-                else
-                    break
-                fi
-            done
+        if $(sk_util_yn_yes "$yn_stdin"); then
+            enable_stdin=1
         fi
     fi
 
