@@ -17,8 +17,8 @@ function action_start()
         fi
     else
         if [ -z "$SKULL_PROJ_ROOT" ]; then
-            echo "Error: Not in a skull project, cannot start a skull-engine" >&2
-            exit 1
+            echo "Note: Assume current folder is running directory: `pwd`"
+            running_dir="`pwd`"
         fi
     fi
 
