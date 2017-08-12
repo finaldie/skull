@@ -83,6 +83,7 @@ typedef struct sk_config_t {
     int    bio_cnt;
 
     int    command_port;
+    const char* command_bind;
 
     // Supportted languages, value: char*
     flist* langs;

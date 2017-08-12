@@ -15,9 +15,9 @@ static
 sk_workflow_cfg_t* _create_workflow_cfg()
 {
     sk_workflow_cfg_t* workflow = calloc(1, sizeof(*workflow));
-    workflow->port = SK_CONFIG_NO_PORT;
+    workflow->port    = SK_CONFIG_NO_PORT;
     workflow->modules = flist_create();
-    workflow->bind    = strdup("127.0.0.1");
+    workflow->bind    = strdup("0.0.0.0");
     return workflow;
 }
 
@@ -103,6 +103,7 @@ void _delete_config(sk_config_t* config)
     }
     flist_delete(config->langs);
 
+    free((void*)config->command_bind);
     free(config);
 }
 
@@ -437,6 +438,8 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
             SK_ASSERT_MSG(port > 0 && port <= 65535, "port[%d] should be "
                               "in (0, 65535]\n", port);
             config->command_port = port;
+        } else if (0 == strcmp(key, "command_bind")) {
+            config->command_bind = strdup(sk_config_getstring(child));
         } else if (0 == strcmp(key, "max_fds")) {
             // load max_fds
             int max_fds = sk_config_getint(child);

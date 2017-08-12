@@ -12,6 +12,9 @@ bg_iothreads: 1
 # Command port, which is used for exposing more skull information
 command_port: 7759
 
+# Command bind to, by default is '127.0.0.1'
+# command_bind: 127.0.0.1
+
 # Log File Name
 log_name: skull.log
 
@@ -46,7 +49,9 @@ languages: ['cpp', 'py']
 #        #sock_type: tcp
 #        #timeout: 100
 #
-# The 'bind' item is optional, and by default it will bind to '127.0.0.1'
+# The 'bind' item is optional, and by default it will bind to '0.0.0.0', to make
+#  it more secure, it's recommended to bind to '127.0.0.1' if there is no
+#  inbound/outbound connections
 # The 'sock_type' item is optional, specific 'tcp' or 'udp'. By default is 'tcp'
 # The 'timeout' item is optional, it controls the transaction timeout,
 #   unit is milliseconds, and by default is 0 (no timeout)
