@@ -13,7 +13,7 @@
 #include "api/sk_mon.h"
 #include "api/sk_service.h"
 #include "api/sk_engine.h"
-#include "api/sk_trigger.h"
+#include "api/sk_driver.h"
 
 typedef enum sk_core_status_t {
     SK_CORE_INIT       = 0,
@@ -77,7 +77,7 @@ typedef struct sk_core_t {
     sk_logger_t*     logger;
 
     flist*           workflows;      // element type: sk_workflow_t*
-    flist*           triggers;       // emement type: sk_trigger_t*
+    flist*           drivers;        // emement type: sk_driver_t*
     fhash*           unique_modules; // key: module name; value: sk_module_t*
     fhash*           services;       // key: service name; value: sk_service_t*
     const char*      working_dir;

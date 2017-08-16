@@ -14,7 +14,7 @@
 #include "api/sk_log_helper.h"
 #include "api/sk_entity_mgr.h"
 #include "api/sk_entity_util.h"
-#include "api/sk_trigger_utils.h"
+#include "api/sk_driver_utils.h"
 
 static int _run(const sk_sched_t* sched, const sk_sched_t* src,
                 sk_entity_t* entity, sk_txn_t* txn,
@@ -125,8 +125,8 @@ void _txn_log_and_destroy(const sk_sched_t* sched, sk_txn_t* txn) {
 
         // Trigger next txn in entity iqueue if possible (deliver to current
         //  scheduler
-        sk_print("Try to delivery Txns from input queue");
-        sk_trigger_util_deliver(entity, sched, 1);
+        sk_print("Try to delivery Txns from input queue\n");
+        sk_driver_util_deliver(entity, sched, 1);
     }
 
     int r = sk_txn_safe_destroy(txn);

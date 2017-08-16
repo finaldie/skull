@@ -8,9 +8,9 @@
 #include "api/sk_metrics.h"
 #include "api/sk_log_helper.h"
 #include "api/sk_entity_util.h"
-#include "api/sk_trigger_utils.h"
+#include "api/sk_driver_utils.h"
 
-ssize_t sk_trigger_util_unpack(sk_entity_t* entity)
+ssize_t sk_driver_util_unpack(sk_entity_t* entity)
 {
     sk_workflow_t* workflow = sk_entity_workflow(entity);
 
@@ -84,7 +84,7 @@ ssize_t sk_trigger_util_unpack(sk_entity_t* entity)
     return consumed;
 }
 
-int sk_trigger_util_deliver(sk_entity_t* entity, const sk_sched_t* deliver_to, int max) {
+int sk_driver_util_deliver(sk_entity_t* entity, const sk_sched_t* deliver_to, int max) {
     if (max <= 0) max = INT32_MAX;
 
     sk_sched_t* sched = SK_ENV_SCHED;
@@ -108,7 +108,7 @@ int sk_trigger_util_deliver(sk_entity_t* entity, const sk_sched_t* deliver_to, i
         delivery++;
     }
 
-    sk_print("sk_trigger_util_deliver: deliver %d txns to scheduler."
+    sk_print("sk_driver_util_deliver: deliver %d txns to scheduler."
              " concurrency: %d ,cnt: %d ,max: %d\n", delivery,
              sk_entity_workflow(entity)->cfg->concurrent, cnt, max);
 

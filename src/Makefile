@@ -54,13 +54,13 @@ ENTITY_OBJS = \
     entities/sk_entity_udp.o \
     entities/sk_entity_util.o
 
-TRIGGER_OBJS = \
-    triggers/sk_trigger.o \
-    triggers/sk_trigger_immedia.o \
-    triggers/sk_trigger_stdin.o \
-    triggers/sk_trigger_tcp.o \
-    triggers/sk_trigger_udp.o \
-    triggers/sk_trigger_utils.o
+DRIVER_OBJS = \
+    drivers/sk_driver.o \
+    drivers/sk_driver_immedia.o \
+    drivers/sk_driver_stdin.o \
+    drivers/sk_driver_tcp.o \
+    drivers/sk_driver_udp.o \
+    drivers/sk_driver_utils.o
 
 COMPONENTS_OBJS = \
     components/sk_sched.o \
@@ -117,7 +117,7 @@ SKULL_MAIN_OBJ = main.o
 SKULL_OBJS = \
     $(COMMON_OBJS) \
     $(ENTITY_OBJS) \
-    $(TRIGGER_OBJS) \
+    $(DRIVER_OBJS) \
     $(COMPONENTS_OBJS) \
     $(SKULL_MAIN_OBJ) \
     $(PTO_OBJS) \

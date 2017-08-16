@@ -12,7 +12,7 @@
 #include "api/sk_entity.h"
 #include "api/sk_sched.h"
 #include "api/sk_entity_util.h"
-#include "api/sk_trigger_utils.h"
+#include "api/sk_driver_utils.h"
 
 static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
@@ -26,9 +26,9 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         return;
     }
 
-    ssize_t consumed = sk_trigger_util_unpack(entity);
+    ssize_t consumed = sk_driver_util_unpack(entity);
     if (consumed > 0) {
-        sk_trigger_util_deliver(entity, SK_ENV_SCHED, 1);
+        sk_driver_util_deliver(entity, SK_ENV_SCHED, 1);
     }
 }
 
