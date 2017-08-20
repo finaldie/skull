@@ -14,23 +14,8 @@ function action_build()
     # all the args will be passed to the main Makefile(e.g. 'CC=clang').
     cd $SKULL_PROJ_ROOT
 
-    # Check whether it is the clean action
-    local clean=false
-    local args=($@)
-    for arg in ${args[@]}; do
-        if [ "$arg" = "clean" ]; then
-            clean=true;
-            break;
-        fi
-    done
-
-    # Build accoring to the args
-    if $clean; then
-        _action_clean $@
-    else
-        _action_prepare
-        _action_build $@
-    fi
+    _action_prepare
+    _action_build $@
 }
 
 function action_build_usage()
@@ -69,8 +54,3 @@ function _action_build()
     exec make $@
 }
 
-function _action_clean()
-{
-    echo "Cleaning ..."
-    exec make $@
-}
