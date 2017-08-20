@@ -30,7 +30,7 @@ void _read_commands(int argc, char** argv, sk_cmd_args_t* cmd_args)
     cmd_args->binary_path = argv[0];
 
     int opt;
-    while ((opt = getopt(argc, argv, "c:D")) != -1) {
+    while ((opt = getopt(argc, argv, "c:Dns")) != -1) {
         switch (opt) {
         case 'c':
             cmd_args->config_location = optarg;
