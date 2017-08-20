@@ -28,9 +28,10 @@ typedef struct sk_cmd_args_t {
     const char* binary_path;
     const char* config_location;
     bool daemon;
+    bool log_rolling_disabled;
 
-    int _padding :24;
-    int _padding1;
+    short _padding;
+    int   _padding1;
 } sk_cmd_args_t;
 
 // Static Information

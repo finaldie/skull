@@ -17,7 +17,8 @@ typedef flog_file_t sk_logger_t;
 
 sk_logger_t* sk_logger_create(const char* workdir,
                               const char* log_name,
-                              int log_level);
+                              int  log_level,
+                              bool rolling_disabled);
 
 void sk_logger_destroy(sk_logger_t* logger);
 

@@ -318,7 +318,8 @@ void _sk_init_log(sk_core_t* core)
     const char* log_name = config->log_name;
     int log_level = config->log_level;
 
-    core->logger = sk_logger_create(working_dir, log_name, log_level);
+    core->logger = sk_logger_create(working_dir, log_name, log_level,
+                                    core->cmd_args.log_rolling_disabled);
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
 
     // create a thread env for the master thread, this is necessary since during

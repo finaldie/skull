@@ -41,7 +41,8 @@ void _skull_log_notification_cb(flog_event_t event)
 // Public APIs
 sk_logger_t* sk_logger_create(const char* workdir,
                               const char* log_name,
-                              int log_level)
+                              int  log_level,
+                              bool rolling_disabled)
 {
     size_t workdir_len = strlen(workdir);
     size_t log_name_len = strlen(log_name);
@@ -55,7 +56,7 @@ sk_logger_t* sk_logger_create(const char* workdir,
              workdir, log_name);
 
     flog_file_t* logger = flog_create(full_log_name, FLOG_F_ASYNC);
-    SK_ASSERT_MSG(logger, "logger create failure: %s : %s\n", full_log_name, strerror(errno));
+    SK_ASSERT_MSG(logger, "Logger creation failure: %s : %s\n", full_log_name, strerror(errno));
 
     // 2. set log level
     flog_set_level(log_level);
@@ -67,7 +68,7 @@ sk_logger_t* sk_logger_create(const char* workdir,
     flog_set_roll_size(SK_LOG_ROLLING_SIZE);
 
     // 5. set log buffer size(per-thread): 20MB
-    flog_set_buffer_size(SK_LOG_MAX_PERTHREAD_BUFSIZE);
+    flog_set_buffer_size(rolling_disabled ? 0 : SK_LOG_MAX_PERTHREAD_BUFSIZE);
 
     // 6. set up the notification callback, we can handle it if there are some
     // abnormal things happened

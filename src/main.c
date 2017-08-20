@@ -40,6 +40,8 @@ void _read_commands(int argc, char** argv, sk_cmd_args_t* cmd_args)
             cmd_args->daemon = 1;
             sk_print("daemon: %d", cmd_args->daemon);
             break;
+        case 'n':
+            cmd_args->log_rolling_disabled = 1;
         default:
             fprintf(stderr, "unknow parameter '%s'\n", optarg);
             _print_usage();
