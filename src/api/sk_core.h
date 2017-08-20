@@ -27,10 +27,15 @@ typedef enum sk_core_status_t {
 typedef struct sk_cmd_args_t {
     const char* binary_path;
     const char* config_location;
-    bool daemon;
-    bool log_rolling_disabled;
 
-    short _padding;
+    bool  daemon;
+    bool  log_rolling_disabled;
+
+    // Notes: If enable forward logs to stdout, then the log-rolling will be
+    //  disabled as well
+    bool  log_stdout_fwd;
+
+    bool  _padding;
     int   _padding1;
 } sk_cmd_args_t;
 

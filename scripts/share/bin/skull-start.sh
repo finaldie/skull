@@ -6,13 +6,17 @@ ulimit -c unlimited
 ##################################### Utils ####################################
 usage() {
     echo "usage:"
-    echo "  skull-start.sh -c config [-D|--memcheck|--gdb|--strace|--massif|--no-log-rolling]"
+    echo "  skull-start.sh -c config [-D|--memcheck|--gdb|--strace|--massif|--no-log-rolling|--std-fowarding]"
 }
 
 skull_start() {
     local args=""
     if $no_log_rolling; then
         args="$args -n"
+    fi
+
+    if $std_forwarding; then
+        args="$args -s"
     fi
 
     if !$daemon; then
@@ -68,10 +72,11 @@ run_by_strace=false
 massif=false
 daemon=false
 no_log_rolling=false
+std_forwarding=false
 
 args=`getopt -a \
         -o c:Dnh \
-        -l memcheck,gdb,strace,massif,no-log-rolling,help \
+        -l memcheck,gdb,strace,massif,no-log-rolling,std-forwarding,help \
         -n "skull-start.sh" -- "$@"`
 if [ $? != 0 ]; then
     echo "Error: Invalid parameters" >&2
@@ -95,6 +100,10 @@ while true; do
         -n|--no-log-rolling)
             shift
             no_log_rolling=true
+            ;;
+        --std-forwarding)
+            shift
+            std_forwarding=true
             ;;
         --memcheck)
             shift

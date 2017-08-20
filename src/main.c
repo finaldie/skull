@@ -42,6 +42,10 @@ void _read_commands(int argc, char** argv, sk_cmd_args_t* cmd_args)
             break;
         case 'n':
             cmd_args->log_rolling_disabled = 1;
+            break;
+        case 's':
+            cmd_args->log_stdout_fwd = 1;
+            break;
         default:
             fprintf(stderr, "unknow parameter '%s'\n", optarg);
             _print_usage();
