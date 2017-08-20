@@ -19,7 +19,7 @@ skull_start() {
         args="$args -s"
     fi
 
-    if !$daemon; then
+    if ! $daemon; then
         exec skull-engine -c $skull_config $args
     else
         exec skull-engine -c $skull_config $args -D > log/stdout.log 2>&1 < /dev/null
