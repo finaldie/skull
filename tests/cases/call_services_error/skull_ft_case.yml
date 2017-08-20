@@ -24,7 +24,7 @@ verify:
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "error status occurred"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep TxnLog | awk ''{print $8}'' | grep 1'
+    - 'cat ${RUN}/project/run/log/skull.log | grep TxnLog | awk ''{print $9}'' | grep 1'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
 
 post-verify:
