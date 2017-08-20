@@ -44,10 +44,11 @@ function action_build_usage()
     echo "  - clean"
     echo ""
     echo "Example:"
-    echo "  skull buld"
-    echo "  skull buld CC=clang"
-    echo "  skull buld check"
-    echo "  skull buld valgrind-check"
+    echo "  skull build"
+    echo "  skull build CC=clang"
+    echo "  skull build check"
+    echo "  skull build valgrind-check"
+    echo "  skull build clean"
 }
 
 function _action_prepare()
