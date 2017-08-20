@@ -71,7 +71,7 @@ sk_logger_t* sk_logger_create(const char* workdir,
 
     // 6. set up the notification callback, we can handle it if there are some
     // abnormal things happened
-    flog_register_event_callback(_skull_log_notification_cb);
+    flog_register_event(_skull_log_notification_cb);
 
     return logger;
 }
