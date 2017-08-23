@@ -1,8 +1,35 @@
-* 2017-07-16 1.1.1
+* 2017-08-23 1.1.1
   * Engine
-    * **Enhancement:** Upgrade `flibs` to v1.0
-    * **Enhancement:** Remove all the `__WORDSIZE` macro
+    * **New:** Docker integrated
+    * **New:** Add `command_bind` config item
     * **Fix:** Fix FT Makefile helper message
+    * **Fix:** Fix epoll-loop issue when `concurrency=0`
+    * **Enhancement:** Remove all the `__WORDSIZE` macro
+    * **Enhancement:** Compatible with `musl`
+    * **Enhancement:** Reorder Makefile dependency, make build easier
+    * **Enhancement:** Compatible with `alpine` Linux release
+    * **Enhancement:** Rename `trigger` to `driver`
+  * API
+    * **Fix:** Fix a unstable UT failure issue in alpine
+  * CLI
+    * **Fix:** Config name change from concurrent to concurrency
+    * **Enhancement:** Refine output message of creating workflow
+    * **Enhancement:** Refine output message of creating module
+    * **Enhancement:** Refine output message of creating service
+    * **Enhancement:** Make CLI more portable
+    * **Enhancement:** Add `musl.supp` valgrind suppression file
+    * **Enhancement:** For skull-start, to allow not only inside a skull project
+    * **Enhancement:** Workflow port bind to 0.0.0.0 by default
+    * **Enhancement:**
+  * MISC
+    * **New:** Support `--no-log-rolling` command arg
+    * **New:** Support logs forward to stdout `--std-forwarding`
+    * **Fix:** Fix FT unstable issue in docker
+    * **Enhancement:** Refine Makefile targets
+    * **Enhancement:** Refine config comments
+    * **Enhancement:** Upgrade `flibs` to v1.0
+    * **Enhancement:** Upgrade `skull-ft` to latest version
+    * **Enhancement:** Remove checking `clean` target in `skull build`
 * 2017-07-03 1.0
   * Version 1.0 release
 * 2017-06-21 1.0-rc3
