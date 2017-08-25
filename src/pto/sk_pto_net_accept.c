@@ -14,7 +14,7 @@
 #include "api/sk_metrics.h"
 #include "api/sk_sched.h"
 #include "api/sk_entity_util.h"
-#include "api/sk_trigger_utils.h"
+#include "api/sk_driver_utils.h"
 
 // -----------------------------------------------------------------------------
 // EventLoop trigger this callback
@@ -23,29 +23,24 @@ static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_entity_t* entity = arg;
-    sk_workflow_t* workflow = sk_entity_workflow(entity);
-    int concurrent = workflow->cfg->concurrent;
-
-    // Check whether allow concurrent
-    if (!concurrent && sk_entity_taskcnt(entity) > 0) {
-        sk_print("net entity already has running tasks\n");
-        return;
-    }
 
     // Check whether error occurred
     if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
-        sk_print("net entity already has error occurred, won't accept any data\n");
+        sk_print("tcp entity already has error occurred, won't accept any data\n");
         return;
     }
 
-    sk_trigger_util_unpack(entity, SK_ENV_SCHED);
+    ssize_t consumed = sk_driver_util_unpack(entity);
+    if (consumed > 0) {
+        sk_driver_util_deliver(entity, SK_ENV_SCHED, 1);
+    }
 }
 
-// send a destroy msg, so that the scheduler will destroy it later
+// Send a destroy msg, so that the scheduler will destroy it later
 static
 void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 {
-    sk_print("net evbuff destroy...\n");
+    sk_print("tcp evbuff destroy...\n");
     sk_entity_t* entity = arg;
 
     sk_entity_safe_destroy(entity);
@@ -56,7 +51,7 @@ static
 int _run(const sk_sched_t* sched, const sk_sched_t* src,
          sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
-    sk_print("net accept event req\n");
+    sk_print("tcp accept event req\n");
     SK_ASSERT(!txn);
     SK_ASSERT(entity);
 

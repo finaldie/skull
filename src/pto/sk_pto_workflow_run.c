@@ -2,18 +2,19 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "api/sk_utils.h"
-#include "api/sk_const.h"
-#include "api/sk_event.h"
-#include "api/sk_entity_mgr.h"
-#include "api/sk_entity_util.h"
 #include "api/sk_pto.h"
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
-#include "api/sk_log_helper.h"
 #include "api/sk_env.h"
-#include "api/sk_metrics.h"
 #include "api/sk_sched.h"
+#include "api/sk_utils.h"
+#include "api/sk_const.h"
+#include "api/sk_event.h"
+#include "api/sk_metrics.h"
+#include "api/sk_log_helper.h"
+#include "api/sk_entity_mgr.h"
+#include "api/sk_entity_util.h"
+#include "api/sk_driver_utils.h"
 
 static int _run(const sk_sched_t* sched, const sk_sched_t* src,
                 sk_entity_t* entity, sk_txn_t* txn,
@@ -115,12 +116,17 @@ void _write_txn_log(sk_txn_t* txn) {
 }
 
 static
-void _txn_log_and_destroy(sk_txn_t* txn) {
+void _txn_log_and_destroy(const sk_sched_t* sched, sk_txn_t* txn) {
     sk_entity_t* entity = sk_txn_entity(txn);
 
     // 1. Log and try to destroy txn
     if (sk_txn_alltask_complete(txn)) {
         _write_txn_log(txn);
+
+        // Trigger next txn in entity iqueue if possible (deliver to current
+        //  scheduler
+        sk_print("Try to delivery Txns from input queue\n");
+        sk_driver_util_deliver(entity, sched, 1);
     }
 
     int r = sk_txn_safe_destroy(txn);
@@ -211,9 +217,8 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
 
     switch (state) {
     case SK_TXN_INIT: {
-        // For the 'immediately' trigger, adjust the state first
         sk_print("txn - INIT\n");
-        sk_txn_setstate(txn, SK_TXN_UNPACKED);
+        //sk_txn_setstate(txn, SK_TXN_UNPACKED);
         sk_txn_setstate(txn, SK_TXN_RUNNING);
         return _run(sched, src, entity, txn, proto_msg);
     }
@@ -238,7 +243,7 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     case SK_TXN_PACKED: {
         sk_print("txn - PACKED: txn destroy\n");
         sk_txn_setstate(txn, SK_TXN_DESTROYED);
-        _txn_log_and_destroy(txn);
+        _txn_log_and_destroy(sched, txn);
         break;
     }
     case SK_TXN_ERROR:
@@ -248,7 +253,7 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     }
     case SK_TXN_DESTROYED: {
         sk_print("txn - DESTROYED: txn destroy\n");
-        _txn_log_and_destroy(txn);
+        _txn_log_and_destroy(sched, txn);
         break;
     }
     default:

@@ -15,9 +15,9 @@ static
 sk_workflow_cfg_t* _create_workflow_cfg()
 {
     sk_workflow_cfg_t* workflow = calloc(1, sizeof(*workflow));
-    workflow->port = SK_CONFIG_NO_PORT;
+    workflow->port    = SK_CONFIG_NO_PORT;
     workflow->modules = flist_create();
-    workflow->bind    = strdup("127.0.0.1");
+    workflow->bind    = strdup("0.0.0.0");
     return workflow;
 }
 
@@ -103,6 +103,7 @@ void _delete_config(sk_config_t* config)
     }
     flist_delete(config->langs);
 
+    free((void*)config->command_bind);
     free(config);
 }
 
@@ -151,7 +152,7 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
 // example yaml config:
 // workflow:
 //     - modules: [test]
-//       concurrent: 1
+//       concurrency: 1
 //       port: 7758
 static
 void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
@@ -171,7 +172,7 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
 
         sk_workflow_cfg_t* workflow = _create_workflow_cfg();
 
-        // load modules and concurrent
+        // load modules and concurrency
         fhash_str_iter item_iter = fhash_str_iter_new(child->data.mapping);
         while ((child = fhash_str_next(&item_iter))) {
             const char* key = item_iter.key;
@@ -180,7 +181,8 @@ void _load_workflow(sk_cfg_node_t* node, sk_config_t* config)
                 _load_modules(child, workflow);
             } else if (0 == strcmp(key, "idl")) {
                 workflow->idl_name = strdup(child->data.value);
-            } else if (0 == strcmp(key, "concurrent")) {
+            } else if (0 == strcmp(key, "concurrency")
+                       || 0 == strcmp(key, "concurrent")) {
                 workflow->concurrent = (uint32_t) sk_config_getint(child) & 0x1;
             } else if (0 == strcmp(key, "port")) {
                 int port = sk_config_getint(child);
@@ -436,6 +438,8 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
             SK_ASSERT_MSG(port > 0 && port <= 65535, "port[%d] should be "
                               "in (0, 65535]\n", port);
             config->command_port = port;
+        } else if (0 == strcmp(key, "command_bind")) {
+            config->command_bind = strdup(sk_config_getstring(child));
         } else if (0 == strcmp(key, "max_fds")) {
             // load max_fds
             int max_fds = sk_config_getint(child);
@@ -480,7 +484,7 @@ void sk_config_print(sk_config_t* config)
     flist_iter iter = flist_new_iter(config->workflows);
     while ((workflow = flist_each(&iter))) {
         sk_print("workflow start:\n");
-        sk_print("\tconcurrent: %d\n", workflow->concurrent);
+        sk_print("\tconcurrency: %d\n", workflow->concurrent);
         sk_print("\tmodules: ");
 
         sk_module_cfg_t* mcfg = NULL;

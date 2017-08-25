@@ -1,5 +1,7 @@
 #language: c
 
+dist: precise
+
 env:
     - CC=gcc CXX=g++
     - CC=clang CXX=clang++
@@ -10,24 +12,36 @@ before_install:
     - sudo apt-get update -qq
     - sudo apt-get install autoconf valgrind expect libyaml-dev python-dev python-pip libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler libc-ares-dev
     - sudo pip install PyYAML protobuf==2.6.1 pympler WebOb
+    - sudo pip freeze
     - gcc --version
     - g++ --version
     - clang --version
     - clang++ --version
+    - pip -V
     - python --version
+    - which python
+    - which python-config
+    - python-config --includes
+    - python2-config --includes
+    - python-config --libs
+    - python-config --cflags
+    - python-config --ldflags
+    - dpkg -l | grep python
 
 install: true
 
 before_script: true
 
 script:
-    - make -j4 dep
-    - sudo make install-dep
-    - make debug=true -j4
+    - make -j4
     - make clean
+    - make -j4 debug=true
+    - make clean && make clean-dep
     - make -j4 disable_jemalloc=true
+    - make clean && make clean-dep
+    - make -j4 disable_jemalloc=true FLIB_CFLAGS=-DFLIB_SKIP_LEGACY
     - sudo make install
-    - make check debug=true
+    - make check verbose=true
 
 after_success: true
 

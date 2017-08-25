@@ -1,6 +1,6 @@
 # This is the utility functions for skull build, which can be easiliy to build
-# the entire project without must move to the top folder, meanwhile you can
-# build the project any where when you in a skull project
+# the entire project without must move to the top folder, meanwhile we can
+# build the project in any where inside a valid skull project
 #
 # NOTES: This is included by the main script `skull`
 
@@ -14,23 +14,8 @@ function action_build()
     # all the args will be passed to the main Makefile(e.g. 'CC=clang').
     cd $SKULL_PROJ_ROOT
 
-    # Check whether it is the clean action
-    local clean=false
-    local args=($@)
-    for arg in ${args[@]}; do
-        if [ "$arg" = "clean" ]; then
-            clean=true;
-            break;
-        fi
-    done
-
-    # Build accoring to the args
-    if $clean; then
-        _action_clean $@
-    else
-        _action_prepare
-        _action_build $@
-    fi
+    _action_prepare
+    _action_build $@
 }
 
 function action_build_usage()
@@ -44,10 +29,11 @@ function action_build_usage()
     echo "  - clean"
     echo ""
     echo "Example:"
-    echo "  skull buld"
-    echo "  skull buld CC=clang"
-    echo "  skull buld check"
-    echo "  skull buld valgrind-check"
+    echo "  skull build"
+    echo "  skull build CC=clang"
+    echo "  skull build check"
+    echo "  skull build valgrind-check"
+    echo "  skull build clean"
 }
 
 function _action_prepare()
@@ -68,8 +54,3 @@ function _action_build()
     exec make $@
 }
 
-function _action_clean()
-{
-    echo "Cleaning ..."
-    exec make $@
-}

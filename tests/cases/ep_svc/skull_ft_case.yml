@@ -15,12 +15,15 @@ run:
     - echo "run"
     - '${COMMON}/mock_ep -p 7760 -d welcome'
     - cd project && skull start -D
+    - ps axuf
+    - netstat -antl
     - sleep 1
 
 verify:
     - echo "verify"
     - 'echo "info" | nc 127.0.0.1 7759 | grep "status:" | awk ''{print $2}'' | grep "2"'
     - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie, welcome"
+    - sleep 1
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "ep status: 1"'

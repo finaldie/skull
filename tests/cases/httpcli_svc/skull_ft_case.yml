@@ -20,8 +20,8 @@ verify:
     - echo "hello skull" | nc 127.0.0.1 7758
     - sleep 1
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
-    - 'cat ${RUN}/project/run/log/skull.log | grep -E "ep response"'
-    - 'cat ${RUN}/project/run/log/skull.log | grep -E "HTTP/1.1"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "ep response"'
+    - 'cat ${RUN}/project/run/log/skull.log | grep "HTTP/1.1"'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
 
 post-verify:

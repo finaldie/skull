@@ -90,9 +90,8 @@ typedef struct sk_txn_taskdata_t {
 
     uint32_t    pendings;       // how many internal pending ep calls
 
-#if __WORDSIZE == 64
     int         _padding;
-#endif
+
     uint64_t    task_id;
 } sk_txn_taskdata_t;
 

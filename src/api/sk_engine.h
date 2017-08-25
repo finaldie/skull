@@ -18,9 +18,7 @@ typedef enum sk_engine_type_t {
 typedef struct sk_engine_t {
     sk_engine_type_t type;
 
-#if __WORDSIZE == 64
     int _padding;
-#endif
 
     pthread_t        io_thread;
     void*            evlp;

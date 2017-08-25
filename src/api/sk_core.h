@@ -13,7 +13,7 @@
 #include "api/sk_mon.h"
 #include "api/sk_service.h"
 #include "api/sk_engine.h"
-#include "api/sk_trigger.h"
+#include "api/sk_driver.h"
 
 typedef enum sk_core_status_t {
     SK_CORE_INIT       = 0,
@@ -27,14 +27,16 @@ typedef enum sk_core_status_t {
 typedef struct sk_cmd_args_t {
     const char* binary_path;
     const char* config_location;
-    bool daemon;
 
-#if __WORDSIZE == 64
-    int _padding :24;
-    int _padding1;
-#else
-    int _padding :24;
-#endif
+    bool  daemon;
+    bool  log_rolling_disabled;
+
+    // Notes: If enable forward logs to stdout, then the log-rolling will be
+    //  disabled as well
+    bool  log_stdout_fwd;
+
+    bool  _padding;
+    int   _padding1;
 } sk_cmd_args_t;
 
 // Static Information
@@ -49,9 +51,7 @@ typedef struct sk_core_info_t {
     // system
     pid_t       pid;
 
-#if __WORDSIZE == 64
     int         _padding;
-#endif
 
     // system - dynamic: resource useage
     // Notes: The interval between prev_ and curr_ is 1 second
@@ -83,7 +83,7 @@ typedef struct sk_core_t {
     sk_logger_t*     logger;
 
     flist*           workflows;      // element type: sk_workflow_t*
-    flist*           triggers;       // emement type: sk_trigger_t*
+    flist*           drivers;        // emement type: sk_driver_t*
     fhash*           unique_modules; // key: module name; value: sk_module_t*
     fhash*           services;       // key: service name; value: sk_service_t*
     const char*      working_dir;

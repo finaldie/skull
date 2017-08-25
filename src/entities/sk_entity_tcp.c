@@ -50,7 +50,7 @@ void _tcp_destroy(sk_entity_t* entity, void* ud)
 {
     if (!ud) return;
 
-    sk_print("net entity destroy\n");
+    sk_print("tcp entity destroy\n");
     sk_metrics_global.connection_destroy.inc(1);
 
     sk_tcp_data_t* tdata = ud;

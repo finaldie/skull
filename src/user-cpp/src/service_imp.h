@@ -54,9 +54,7 @@ private:
     bool  __padding;
     short __padding1;
 
-#if __WORDSIZE == 64
     int   __padding2;
-#endif
 
 public:
     ServiceApiDataImp();

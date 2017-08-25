@@ -1,6 +1,5 @@
-# This is the utility functions for skull build, which can be easiliy to build
-# the entire project without must move to the top folder, meanwhile you can
-# build the project any where when you in a skull project
+# This is the utility functions for skull configuration, which can be easiliy
+#  to dump/edit the configuration file super fast.
 #
 # NOTES: This is included by the main script `skull`
 
@@ -8,7 +7,7 @@ function action_config()
 {
     # parse the command args
     local args=`getopt -a \
-        -o e \
+        -o eh \
         -l edit,help \
         -n "skull_action_module.bash" -- "$@"`
     if [ $? != 0 ]; then
@@ -25,6 +24,10 @@ function action_config()
                 shift
                 _action_config_edit
                 exit 0
+                ;;
+            -h|--help)
+                shift
+                action_config_usage >&2
                 ;;
             --)
                 shift;

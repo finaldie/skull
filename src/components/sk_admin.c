@@ -1,10 +1,17 @@
+#ifndef  _POSIX_C_SOURCE
+# define _POSIX_C_SOURCE 200809L
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdarg.h>
 #include <time.h>
 
-#include "jemalloc/jemalloc.h"
+#ifdef SKULL_JEMALLOC_ENABLED
+# include "jemalloc/jemalloc.h"
+#endif
 
 #include "flibs/flist.h"
 #include "flibs/fmbuf.h"
@@ -48,9 +55,7 @@ static sk_module_cfg_t _sk_admin_module_cfg;
 typedef struct sk_admin_data_t {
     int   ignore;
 
-#if __WORDSIZE == 64
     int   _padding;
-#endif
 
     char*  command;
     fmbuf* response;
@@ -504,13 +509,13 @@ void _process_memory(sk_txn_t* txn)
 }
 
 /********************************* Public APIs ********************************/
-sk_workflow_cfg_t* sk_admin_workflowcfg_create(int port)
+sk_workflow_cfg_t* sk_admin_workflowcfg_create(const char* bind, int port)
 {
     sk_workflow_cfg_t* cfg = calloc(1, sizeof(*cfg));
     cfg->concurrent   = 0;
     cfg->enable_stdin = 0;
     cfg->port         = port;
-    cfg->bind         = "127.0.0.1";
+    cfg->bind         = bind ? bind : "127.0.0.1";
     cfg->idl_name     = NULL;
     cfg->modules      = flist_create();
 

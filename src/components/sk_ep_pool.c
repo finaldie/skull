@@ -74,6 +74,10 @@ typedef enum sk_ep_nst_t {
     SK_EP_NST_SENT    = 2,
 } sk_ep_nst_t;
 
+// 32bit platform: 8  Bytes
+// 64bit platform: 12 Bytes
+#define EPDATA_INIT_SZ (sizeof(size_t) + sizeof(int))
+
 struct sk_ep_t;
 typedef struct sk_ep_timerdata_t {
     sk_entity_t*   timer_entity;
@@ -96,11 +100,7 @@ typedef struct sk_ep_data_t {
 
     size_t             count;   // size of data (bytes)
     sk_ep_nst_t        status;
-    char               data[4]; // data for sending
-
-#if __WORDSIZE == 32
-    int _padding;
-#endif
+    char               data[EPDATA_INIT_SZ]; // data for sending
 } sk_ep_data_t;
 
 typedef struct sk_ep_readarg_t {
@@ -128,9 +128,7 @@ typedef struct sk_ep_t {
 
     int                 fd;
 
-#if __WORDSIZE == 64
     int _padding;
-#endif
 } sk_ep_t;
 
 struct sk_ep_pool_t;
@@ -1069,7 +1067,7 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
         SK_LOG_TRACE(SK_ENV_LOGGER, "ep create");
     }
 
-    size_t extra_data_sz = count > 4 ? count - 4 : 0;
+    size_t extra_data_sz = count > EPDATA_INIT_SZ ? count - EPDATA_INIT_SZ : 0;
     // Create new ep data
     sk_ep_data_t* ep_data = calloc(1, sizeof(*ep_data) + extra_data_sz);
     ep_data->owner   = ep;

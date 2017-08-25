@@ -28,20 +28,17 @@ typedef struct sk_workflow_cfg_t {
 
     int      port;
 
-    // The IPv4 address we want to bind (by default is 127.0.0.1)
-    // TODO: Support IPv6 address
+    // The IPv4 address bind to (By default: 127.0.0.1)
     const char* bind;
 
     const char* idl_name; // workflow idl name
     flist* modules;       // sk_module_cfg_t list
 
-    // unit: millisecond, if the execute time > this threshold, engine will
+    // Unit: millisecond, if the execute time > this threshold, engine will
     //  cancel this transaction. Default value is 0 (unlimited)
     int      timeout;
 
-#if __WORDSIZE == 64
     int      __padding;
-#endif
 } sk_workflow_cfg_t;
 
 typedef struct sk_service_cfg_t {
@@ -58,9 +55,7 @@ typedef struct sk_service_cfg_t {
     // Max queue size
     int max_qsize;
 
-#if __WORDSIZE == 64
     int   __padding3;
-#endif
 } sk_service_cfg_t;
 
 typedef struct sk_config_t {
@@ -88,6 +83,7 @@ typedef struct sk_config_t {
     int    bio_cnt;
 
     int    command_port;
+    const char* command_bind;
 
     // Supportted languages, value: char*
     flist* langs;

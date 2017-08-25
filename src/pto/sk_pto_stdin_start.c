@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include "flibs/fev_buff.h"
 #include "flibs/fnet.h"
@@ -11,21 +12,13 @@
 #include "api/sk_entity.h"
 #include "api/sk_sched.h"
 #include "api/sk_entity_util.h"
-#include "api/sk_trigger_utils.h"
+#include "api/sk_driver_utils.h"
 
 static
 void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
 {
     sk_print("stdin read_cb\n");
     sk_entity_t* entity = arg;
-    sk_workflow_t* workflow = sk_entity_workflow(entity);
-    int concurrent = workflow->cfg->concurrent;
-
-    // check whether allow concurrent
-    if (!concurrent && sk_entity_taskcnt(entity) > 0) {
-        sk_print("entity already have running tasks\n");
-        return;
-    }
 
     // Check whether error occurred
     if (sk_entity_status(entity) != SK_ENTITY_ACTIVE) {
@@ -33,7 +26,10 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
         return;
     }
 
-    sk_trigger_util_unpack(entity, SK_ENV_SCHED);
+    ssize_t consumed = sk_driver_util_unpack(entity);
+    if (consumed > 0) {
+        sk_driver_util_deliver(entity, SK_ENV_SCHED, 1);
+    }
 }
 
 static

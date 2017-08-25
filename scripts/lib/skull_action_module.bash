@@ -110,7 +110,7 @@ function _action_module_path()
 
     local module_name="$1"
     local module_path="$SKULL_PROJ_ROOT/src/modules/$module_name"
-    echo "module path: $module_path"
+    echo "Module path: $module_path"
 }
 
 function _action_module_add()
@@ -124,7 +124,7 @@ function _action_module_add()
     local total_workflows=`action_workflow_show | tail -1 | awk '{print $2}'`
 
     if ! $(sk_util_is_number $total_workflows); then
-        echo "Error: create a workflow first" >&2
+        echo "Error: Create a workflow first" >&2
         return 1
     fi
 
@@ -133,7 +133,7 @@ function _action_module_add()
 
     # 2. get user input and verify them
     while true; do
-        read -p "module name? " module
+        read -p "Module Name? " module
 
         if $(sk_util_check_name "$module"); then
             break;
@@ -153,7 +153,7 @@ function _action_module_add()
     fi
 
     while true; do
-        read -p "which workflow you want add it to? ($idx_range) " workflow_idx
+        read -p "Workflow Index? ($idx_range) " workflow_idx
 
         if ! $(sk_util_is_number $workflow_idx); then
             echo "Error: The input workflow index must be a number" >&2
@@ -170,7 +170,7 @@ function _action_module_add()
 
     # NOTES: currently, we only support Cpp language
     while true; do
-        read -p "which language the module belongs to? ($lang_names) " language
+        read -p "Module Language? ($lang_names) " language
 
         # verify the language valid or not
         if $(sk_util_check_language "$language"); then
@@ -191,7 +191,10 @@ function _action_module_add()
     # 5. add common folder
     action_${language}_common_create
 
-    echo "module [$module] added successfully"
+    echo "Module [$module] added successfully"
+    echo ""
+    echo "Note: Run 'skull module --add' to continue adding more modules"
+    echo "Note: Run 'skull service --add' to create a service if needed"
 }
 
 function _action_module_config_gen()
@@ -245,7 +248,7 @@ function _action_module_config_edit()
 
     # TODO: should load a per-user config to identify which editor will be used
     # instead of hardcode `vi` in here
-    vim $module_config
+    $SKULL_DEFAULT_EDITOR $module_config
 }
 
 function _action_module_config_check()

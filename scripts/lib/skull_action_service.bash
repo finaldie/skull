@@ -13,7 +13,7 @@ function action_service()
 {
     # parse the command args
     local args=`getopt -a \
-        -o ash \
+        -o lh \
         -l add,list,help,conf-gen,conf-cat,conf-edit,conf-check,api-list,api-add,api-cat:,api-edit:,api-check,api-gen,import: \
         -n "skull_action_service.bash" -- "$@"`
     if [ $? != 0 ]; then
@@ -26,7 +26,7 @@ function action_service()
 
     while true; do
         case "$1" in
-            -a|--add)
+            --add)
                 shift
                 _action_service_add
                 exit 0
@@ -170,7 +170,7 @@ function _action_service_path()
 
     local service_name="$1"
     local service_path="$SKULL_PROJ_ROOT/src/services/$service_name"
-    echo "service path: $service_path"
+    echo "Service path: $service_path"
 }
 
 function _action_service_add()
@@ -185,7 +185,7 @@ function _action_service_add()
 
     # 2. get user input and verify them
     while true; do
-        read -p "service name? " service
+        read -p "Service Name? " service
 
         if $(sk_util_check_name "$service"); then
             break;
@@ -202,7 +202,7 @@ function _action_service_add()
 
     # NOTES: currently, we only support Cpp language
     while true; do
-        read -p "which language the service belongs to? ($lang_names) " language
+        read -p "Service Language? ($lang_names) " language
 
         # verify the language valid or not
         if $(sk_util_check_language "$language"); then
@@ -211,7 +211,7 @@ function _action_service_add()
     done
 
     while true; do
-        read -p "data mode? (rw-pr | rw-pw) " data_mode
+        read -p "Data Mode? (rw-pr | rw-pw) " data_mode
 
         if $(__validate_data_mode "$data_mode"); then
             break;
@@ -236,14 +236,14 @@ function _action_service_add()
     # 6. add common folder
     sk_util_run_lang_action $language $SKULL_LANG_COMMON_CREATE
 
-    echo "service [$service] added successfully"
+    echo "Service [$service] added successfully"
 }
 
 function _action_service_config_gen()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service, pwd: `pwd`" >&2
+        echo "Error: Not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
@@ -254,7 +254,7 @@ function _action_service_config_cat()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: Not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
@@ -271,19 +271,19 @@ function _action_service_config_edit()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: Not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
     local srv_config=$(sk_util_current_service_config $service)
     if [ ! -f $srv_config ]; then
-        echo "Error: not found $srv_config" >&2
+        echo "Error: Not found $srv_config" >&2
         exit 1
     fi
 
     # TODO: should load a per-user config to identify which editor will be used
     # instead of hardcode `vi` in here
-    vim $srv_config
+    $SKULL_DEFAULT_EDITOR $srv_config
 }
 
 function _action_service_config_check()
@@ -296,7 +296,7 @@ function _action_service_api_list()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: Not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
@@ -308,12 +308,12 @@ function _action_service_api_cat()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
     if [ $# = 0 ]; then
-        echo "Error: require api name" >&2
+        echo "Error: Requires an API name" >&2
         exit 1
     fi
 
@@ -332,12 +332,12 @@ function _action_service_api_edit()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: Not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
     if [ $# = 0 ]; then
-        echo "Error: require api name" >&2
+        echo "Error: Requires an API name" >&2
         exit 1
     fi
 
@@ -345,7 +345,7 @@ function _action_service_api_edit()
     local srv_idl_folder=$SKULL_PROJ_ROOT/src/services/$service/idl
     local srv_idl=$srv_idl_folder/$idl_name
 
-    vim $srv_idl
+    $SKULL_DEFAULT_EDITOR $srv_idl
 }
 
 function _action_service_api_check()
@@ -358,20 +358,20 @@ function _action_service_api_gen()
 {
     action_common --idl-gen || exit 1
 
-    echo "service api generated, run 'skull build' to re-compile the project"
+    echo "Service API generation complete. Run 'skull build' to re-compile the project"
 }
 
 function _action_service_api_add()
 {
     local service=$(sk_util_current_service)
     if [ -z "$service" ]; then
-        echo "Error: not in a service" >&2
+        echo "Error: Not in a service, pwd: `pwd`" >&2
         exit 1
     fi
 
     local idl_name=""
     while true; do
-        read -p "service api name: " idl_name
+        read -p "Service API Name: " idl_name
 
         if $(sk_util_check_name "$idl_name"); then
             break;
@@ -397,13 +397,13 @@ function _action_service_api_add()
 
     echo "$idl_req_name added"
     echo "$idl_resp_name added"
-    echo "service api $idl_name added successfully"
+    echo "Service API [$idl_name] added successfully"
 }
 
 function _action_service_import()
 {
     if [ $# = 0 ]; then
-        echo "Error: please input a service which you want to import" >&2
+        echo "Error: Please input a service name" >&2
         exit 1
     fi
 
@@ -414,7 +414,7 @@ function _action_service_import()
 
     # 1. Whether the service folder exist
     if [ ! -d "$service_path" ]; then
-        echo "Error: service '$service' doesn't exist" >&2
+        echo "Error: Service '$service' doesn't exist" >&2
         exit 1
     fi
 
@@ -423,13 +423,13 @@ function _action_service_import()
         -c $SKULL_CONFIG_FILE -a exist -s $service
 
     if [ $? -eq 0 ]; then
-        echo "Info: service '$service' has already imported"
+        echo "Info: Service '$service' has already imported"
         exit 0
     fi
 
     # 3. Get service data mode
     while true; do
-        read -p "data mode? (rw-pr | rw-pw) " data_mode
+        read -p "Data Mode? (rw-pr | rw-pw) " data_mode
 
         if $(__validate_data_mode "$data_mode"); then
             break;
@@ -452,7 +452,7 @@ function _action_service_import()
     # 6. Generate service config related code
     sk_util_service_config_gen $service
     if [ $? != 0 ]; then
-        echo "Error: import service failed, cannot generate config" >&2
+        echo "Error: Import service failed, cannot generate config" >&2
         exit 1
     fi
 
@@ -464,7 +464,8 @@ function _action_service_import()
         echo "Import service successfully"
         exit 0
     else
-        echo "Error: import service failed" >&2
+        echo "Error: Import service failed" >&2
         exit 1
     fi
 }
+

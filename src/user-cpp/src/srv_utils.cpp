@@ -21,12 +21,8 @@ ServiceApiReqData::ServiceApiReqData(skull_service_t* svc, const std::string& ap
 
     deserializeMsg(data, sz);
 
-#if __WORDSIZE == 64
     (void)__padding;
     (void)__padding1;
-#else
-    (void)__padding;
-#endif
 }
 
 ServiceApiReqData::ServiceApiReqData(const std::string& svcName,
@@ -39,12 +35,8 @@ ServiceApiReqData::ServiceApiReqData(const std::string& svcName,
     this->msg_      = &(google::protobuf::Message&)msg;
     this->destroyMsg_ = false;
 
-#if __WORDSIZE == 64
     (void)__padding;
     (void)__padding1;
-#else
-    (void)__padding;
-#endif
 }
 
 ServiceApiReqData::ServiceApiReqData(const std::string& svcName,
@@ -59,12 +51,8 @@ ServiceApiReqData::ServiceApiReqData(const std::string& svcName,
 
     deserializeMsg(data, sz);
 
-#if __WORDSIZE == 64
     (void)__padding;
     (void)__padding1;
-#else
-    (void)__padding;
-#endif
 }
 
 ServiceApiReqData::ServiceApiReqData(const skullmock_task_t* task) {
@@ -80,12 +68,8 @@ ServiceApiReqData::ServiceApiReqData(const skullmock_task_t* task) {
 
     deserializeMsg(data, sz);
 
-#if __WORDSIZE == 64
     (void)__padding;
     (void)__padding1;
-#else
-    (void)__padding;
-#endif
 }
 
 ServiceApiReqData::~ServiceApiReqData() {
@@ -140,12 +124,8 @@ ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
     const void* data = skull_service_apidata(svc, SKULL_API_RESP, &sz);
     deserializeMsg(data, sz);
 
-#if __WORDSIZE == 64
     (void)__padding;
     (void)__padding1;
-#else
-    (void)__padding;
-#endif
 }
 
 ServiceApiRespData::ServiceApiRespData(const std::string& svcName,
@@ -158,12 +138,8 @@ ServiceApiRespData::ServiceApiRespData(const std::string& svcName,
 
     deserializeMsg(data, sz);
 
-#if __WORDSIZE == 64
     (void)__padding;
     (void)__padding1;
-#else
-    (void)__padding;
-#endif
 }
 
 ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
@@ -176,12 +152,8 @@ ServiceApiRespData::ServiceApiRespData(skull_service_t* svc,
 
     deserializeMsg(data, sz);
 
-#if __WORDSIZE == 64
     (void)__padding;
     (void)__padding1;
-#else
-    (void)__padding;
-#endif
 }
 
 ServiceApiRespData::~ServiceApiRespData() {

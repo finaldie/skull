@@ -13,12 +13,8 @@ private:
 
     bool destroyRawData_;
 
-#if __WORDSIZE == 64
     uint32_t __padding :24;
     uint32_t __padding1;
-#else
-    uint32_t __padding :24;
-#endif
 
 private:
     void init(skull_txn_t*, bool destroyRawData);

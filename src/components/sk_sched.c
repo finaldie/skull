@@ -26,9 +26,7 @@ typedef struct sk_io_bridge_t {
     fmbuf*   mq;
     int      evfd;
 
-#if __WORDSIZE == 64
     int      _padding;
-#endif
 } sk_io_bridge_t;
 
 // SCHEDULER

@@ -26,8 +26,8 @@ CONFIG_WF_HEADER = """
 # Example:
 #
 #     workflows:
-#      - concurrent: 1
-#        idl: example
+#      - concurrency: 1
+#        IDL: example
 #        modules: ['test:cpp']
 #        port: 7758
 #        stdin: 0
@@ -35,15 +35,24 @@ CONFIG_WF_HEADER = """
 #        #sock_type: tcp
 #        #timeout: 100
 #
-# The 'bind' item is optional, and by default it will bind to '127.0.0.1', and
-#   for other examples, like:
+# The 'bind' item is optional, and by default it will bind to '0.0.0.0', to make
+#  it more secure, it's recommended to bind to '127.0.0.1' when there is no
+#  inbound/outbound connections. Some examples like:
 #    - bind: '0.0.0.0'
 #    - bind: '127.0.0.1'
 #    - bind: '::'
 #    - bind: '::1'
+
+# The 'stdin' item means whether enable stdin as its input, if this one be set
+#  to 1, the 'bind' item will be ignored
+
 # The 'sock_type' item is optional, specific 'tcp' or 'udp'. By default is 'tcp'
+
 # The 'timeout' item is optional, it controls the transaction timeout,
 #   unit is milliseconds, and by default is 0 (no timeout)
+
+# Notes: If not specify 'bind' and stdin = 0, then this workflow will be a
+#         autostart workflow.
 #
 """
 
@@ -69,11 +78,11 @@ def _load_yaml_config(config_name):
 
 def _create_workflow():
     return {
-        'concurrent' : 1,
-        'idl'        : "",
-        'stdin'      : 0,
-        'port'       : -1,
-        'modules'    : []
+        'concurrency' : 1,
+        'idl'         : "",
+        'stdin'       : 0,
+        'port'        : -1,
+        'modules'     : []
     }
 
 def _dump_config_to_file(cfgYamlObj, filename):
@@ -86,7 +95,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
     if cfgYamlObj.get('worker_threads'):
         content.write('worker_threads: {}\n\n'.format(cfgYamlObj['worker_threads']))
     else:
-        content.write('#worker_threads: 1\n\n')
+        content.write('# worker_threads: 1\n\n')
 
     # 2. Dump 'bio'
     content.write('# How many background IO threads\n')
@@ -94,7 +103,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
     if cfgYamlObj.get('bg_iothreads'):
         content.write('bg_iothreads: {}\n\n'.format(cfgYamlObj['bg_iothreads']))
     else:
-        content.write('#bg_iothreads: 1\n\n')
+        content.write('# bg_iothreads: 1\n\n')
 
     # 3. Dump 'command_port'
     content.write('# Command port, which is used for exposing more skull information\n')
@@ -102,17 +111,25 @@ def _dump_config_to_file(cfgYamlObj, filename):
     if cfgYamlObj.get('command_port'):
         content.write('command_port: {}\n\n'.format(cfgYamlObj['command_port']))
     else:
-        content.write('#command_port: 7759\n\n')
+        content.write('# command_port: 7759\n\n')
 
-    # 4. Dump 'log_name'
+    # 4. Dump command_bind
+    content.write('# Command address bind to, by default is \'127.0.0.1\'\n')
+
+    if cfgYamlObj.get('command_bind'):
+        content.write('command_bind: {}\n\n'.format(cfgYamlObj['command_bind']))
+    else:
+        content.write('# command_bind: \'127.0.0.1\'\n\n')
+
+    # 5. Dump 'log_name'
     content.write('# Log File Name\n')
 
     if cfgYamlObj.get('log_name'):
         content.write('log_name: {}\n\n'.format(cfgYamlObj['log_name']))
     else:
-        content.write('#log_name: skull.log\n\n')
+        content.write('# log_name: skull.log\n\n')
 
-    # 5. Dump 'log_level'
+    # 6. Dump 'log_level'
     content.write('##\n')
     content.write('# Log Level\n')
     content.write('#   trace, debug, info. warn, error, fatal are available\n')
@@ -121,20 +138,9 @@ def _dump_config_to_file(cfgYamlObj, filename):
     if cfgYamlObj.get('log_level'):
         content.write('log_level: {}\n\n'.format(cfgYamlObj['log_level']))
     else:
-        content.write('#log_level: info\n\n')
+        content.write('# log_level: info\n\n')
 
-    # 6. 'Txn Logging'
-    content.write('##\n')
-    content.write('# Transaction Logging\n')
-    content.write('#   Enable to see the detail execution flow of each transaction\n')
-    content.write('#\n')
-    if cfgYamlObj.get('txn_logging'):
-        content.write('txn_logging: {}\n\n'.format(cfgYamlObj['txn_logging']))
-    else:
-        content.write('#txn_logging: false\n\n')
-
-
-    # 6. Dump 'languages'
+    # 7. Dump 'languages'
     content.write('# Supported Languages: cpp, py\n')
 
     if cfgYamlObj.get('languages'):
@@ -142,7 +148,17 @@ def _dump_config_to_file(cfgYamlObj, filename):
     else:
         content.write('languages: [\'cpp\', \'py\']\n\n')
 
-    # 7. Dump 'max_fds'
+    # 8. 'Txn Logging'
+    content.write('##\n')
+    content.write('# Transaction Logging\n')
+    content.write('#  Enable to see the detail execution flow of each transaction\n')
+    content.write('#\n')
+    if cfgYamlObj.get('txn_logging'):
+        content.write('txn_logging: {}\n\n'.format(cfgYamlObj['txn_logging']))
+    else:
+        content.write('# txn_logging: false\n\n')
+
+    # 9. Dump 'max_fds'
     content.write('##\n')
     content.write('# Max open file limitation\n')
     content.write('#  By default, this value is depend on the ulimit of the process\n')
@@ -152,9 +168,9 @@ def _dump_config_to_file(cfgYamlObj, filename):
     if cfgYamlObj.get('max_fds'):
         content.write('max_fds: {}\n\n'.format(cfgYamlObj['max_fds']))
     else:
-        content.write('#max_fds: 65535\n\n')
+        content.write('# max_fds: 65535\n\n')
 
-    # 8. Dump 'workflows'
+    # 10. Dump 'workflows'
     content.write(CONFIG_WF_HEADER)
 
     if cfgYamlObj.get('workflows'):
@@ -166,7 +182,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
 
     content.write('\n')
 
-    # 9. Dump 'services'
+    # 11. Dump 'services'
     content.write(CONFIG_SVC_HEADER)
 
     if cfgYamlObj.get('services'):
@@ -244,14 +260,14 @@ def _process_show_workflow():
     workflow_cnt = 0
 
     if workflows is None:
-        print "no workflow"
-        print "note: run 'skull workflow --add' to create a new workflow"
+        print "No workflow"
+        print "Note: run 'skull workflow --add' to create a new workflow"
         return
 
     for workflow in workflows:
         print "workflow [%d]:" % workflow_cnt
-        print " - concurrent: %s" % workflow['concurrent']
-        print " - idl: %s" % workflow['idl']
+        print " - concurrency: %s" % workflow['concurrency']
+        print " - IDL: %s" % workflow['idl']
 
         if workflow.get("port"):
             print " - port: %s" % workflow['port']
@@ -277,7 +293,7 @@ def _process_show_workflow():
         workflow_cnt += 1
         print "\n\n",
 
-    print "total %d workflows" % (workflow_cnt)
+    print "Total %d workflows" % (workflow_cnt)
 
 def _process_add_workflow():
     global yaml_obj
@@ -286,14 +302,14 @@ def _process_add_workflow():
     try:
         opts, args = getopt.getopt(sys.argv[7:], 'C:i:p:I:')
 
-        workflow_concurrent = 1
+        workflow_concurrency = 1
         workflow_idl = ""
         workflow_port = -1
         workflow_stdin = 0
 
         for op, value in opts:
             if op == "-C":
-                workflow_concurrent = int(value)
+                workflow_concurrency = int(value)
             elif op == "-i":
                 workflow_idl = value
             elif op == "-p":
@@ -303,7 +319,7 @@ def _process_add_workflow():
 
         # 1. Now add these workflow_x to yaml obj and dump it
         workflow_frame = _create_workflow()
-        workflow_frame['concurrent'] = workflow_concurrent
+        workflow_frame['concurrency'] = workflow_concurrency
         workflow_frame['idl'] = workflow_idl
 
         # 1.1 Add trigger
@@ -355,10 +371,10 @@ def _process_gen_workflow_idl():
         content = "// This is generated by framework\n"
         content += "// Notes:\n"
         content += "//  - The top message is the main message structure we use,\n"
-        content += "//     if you want to define some sub-messages, write then\n"
+        content += "//     if we want to define some sub-messages, write then\n"
         content += "//     after top message\n"
-        content += "//  - Do not recommend to use 'required' field, if you really\n"
-        content += "//     want to use it, make sure to fill it before use it\n"
+        content += "//  - Do not recommend to use 'required' field, if we really\n"
+        content += "//     want to use it, make sure to fill it before using it\n"
         content += "\n"
         content += "package skull.workflow;\n\n"
         content += "message %s {\n" % idl_name
@@ -432,8 +448,6 @@ def _process_add_module():
 
         _dump_config_to_file(yaml_obj, config_name)
 
-        print "add module done"
-
     except Exception as e:
         print "Fatal: _process_add_module: " + str(e)
         raise
@@ -469,8 +483,8 @@ def _process_show_service():
     services_cnt = 0
 
     if services is None:
-        print "no service"
-        print "note: run 'skull service --add' to create a new service"
+        print "No service"
+        print "Note: run 'skull service --add' to create a new service"
         return
 
     for name in services:
@@ -485,7 +499,7 @@ def _process_show_service():
         services_cnt += 1
         print "\n",
 
-    print "total %d services" % (services_cnt)
+    print "Total %d services" % (services_cnt)
 
 def _process_service_exist():
     services = yaml_obj['services']
@@ -552,8 +566,8 @@ def _process_add_service():
 def usage():
     print "usage:"
     print "  skull-config-utils.py -m workflow -c $yaml_file -a show"
-    print "  skull-config-utils.py -m workflow -c $yaml_file -a add -C $concurrent -i $idl_name -p $port"
-    print "  skull-config-utils.py -m workflow -c $yaml_file -a gen_idl -n $idl_name -p $idl_path"
+    print "  skull-config-utils.py -m workflow -c $yaml_file -a add -C $concurrency -i $IDL_name -p $port"
+    print "  skull-config-utils.py -m workflow -c $yaml_file -a gen_idl -n $IDL_name -p $IDL_path"
 
     print "  skull-config-utils.py -m module   -c $yaml_file -a add -M $module_name -i $workflow_index"
 

@@ -63,6 +63,7 @@ skullut_module_t* skullut_module_create(const char* module_name,
 
     env->txn = sk_txn_create(env->workflow, env->entity);
     sk_txn_setstate(env->txn, SK_TXN_UNPACKED);
+    sk_entity_txnadd(env->entity, env->txn);
     env->tasks = flist_create();
 
     // run init

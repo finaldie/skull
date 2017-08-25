@@ -92,7 +92,7 @@ void skull_service_getdata(const skullcpp::Service& service,
     std::cout << "api req: " << apiReq.name() << std::endl;
     apiResp.set_response("Hi new bie");
 
-    // Create a timer job (pending, write)
+    // Create a timer job (pending)
     int ret = service.createJob((uint32_t)1000, skull_BindSvcJobR(_timerjob), NULL);
     SKULLCPP_LOG_INFO("init", "create service job, ret: " << ret);
 }

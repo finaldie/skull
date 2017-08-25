@@ -5,7 +5,7 @@ SKULL_PROJ_NAME=project
 function usage()
 {
     echo "usage:"
-    echo "  create_workflow -c concurrent -I idl -i enable_stdin -n enable_network -p port"
+    echo "  create_workflow -c concurrency -I idl -i enable_stdin -n enable_network -p port"
 }
 
 function init()
@@ -22,7 +22,7 @@ function parse_and_run()
     # parse the command args
     local args=`getopt -a \
         -o c:i:I:n:p:h \
-        -l concurrent:,enable_stdin:enable_network:,idl:,port:,help \
+        -l concurrency:,stdin:,network:,IDL:,port:,help \
         -n "create_workflow" -- "$@"`
 
     if [ $? != 0 ]; then
@@ -33,7 +33,7 @@ function parse_and_run()
 
     eval set -- "$args"
 
-    local concurrent="y"
+    local concurrency="y"
     local idl="example"
     local enable_stdin="n"
     local enable_network="y"
@@ -41,19 +41,19 @@ function parse_and_run()
 
     while true; do
         case "$1" in
-            -c|--concurrent)
-                concurrent=$2
+            -c|--concurrency)
+                concurrency=$2
                 shift 2;
                 ;;
-            -i|--enable_stdin)
+            -i|--stdin)
                 enable_stdin=$2
                 shift 2;
                 ;;
-            -n|--enable_network)
+            -n|--network)
                 enable_network=$2
                 shift 2;
                 ;;
-            -I|--idl)
+            -I|--IDL)
                 idl=$2
                 shift 2;
                 ;;
@@ -80,12 +80,12 @@ function parse_and_run()
     done
 
     # start to create workflow
-    run $concurrent $idl $enable_stdin $enable_network $port
+    run $concurrency $idl $enable_stdin $enable_network $port
 }
 
 function run()
 {
-    local concurrent="$1"
+    local concurrency="$1"
     local idl="$2"
     local enable_stdin="$3"
     local enable_network="$4"
@@ -96,11 +96,11 @@ function run()
 
         expect -c "
             spawn skull workflow -a
-            expect \"Allow concurrent? (y/n)\" {send \"$concurrent\r\"}
-            expect \"Input the IDL name:\" {send \"$idl\r\"}
-            expect \"Input Data Source: stdin? (y/n)\" {send \"$enable_stdin\r\"}
-            expect \"Input Data Source: Network? (y/n)\" {send \"$enable_network\r\"}
-            expect \"Input the port you want (1025-65535):\" {send \"$port\r\"}
+            expect \"Allow concurrency? (y/n)\" {send \"$concurrency\r\"}
+            expect \"Transaction IDL name:\" {send \"$idl\r\"}
+            expect \"Trigger by 'stdin'? (y/n)\" {send \"$enable_stdin\r\"}
+            expect \"Trigger by 'network'? (y/n)\" {send \"$enable_network\r\"}
+            expect \"Port listen on (1025-65535):\" {send \"$port\r\"}
             sleep 1
             interact
         "

@@ -4,7 +4,7 @@ EXTRA_TITLE =
 CASE_NAME =
 prefix ?= /usr/local
 
-debug = false
+verbose = false
 case =
 skip =
 
@@ -16,9 +16,9 @@ ifneq ($(skip),)
     EXTRA_ARGS += --skip $(skip)
 endif
 
-ifeq ($(debug), true)
+ifeq ($(verbose), true)
     EXTRA_ARGS += -D
-    EXTRA_TITLE = "(Debug Mode)"
+    EXTRA_TITLE = "(Verbose Mode)"
 endif
 
 check: prepare clean
@@ -35,8 +35,9 @@ prepare:
 clean:
 
 install:
-	cp ./common/mock_ep            $(prefix)/bin/skullft_mock_ep
+	cp ./common/mock_ep $(prefix)/bin/skullft_mock_ep
 
 help:
 	@echo "usage:"
-	@echo " - make [case=CaseName] [skip=case1[,case2...]] [debug=true]"
+	@echo " - make [case=case1[,case2...]] [skip=case3[,case4...]] [verbose=true]"
+

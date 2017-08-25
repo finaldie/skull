@@ -32,12 +32,8 @@ void TxnImp::init(skull_txn_t* sk_txn, bool destroyRawData) {
 TxnImp::TxnImp(skull_txn_t* sk_txn) {
     init(sk_txn, false);
 
-#if __WORDSIZE == 64
     (void)__padding;
     (void)__padding1;
-#else
-    (void)__padding;
-#endif
 }
 
 TxnImp::TxnImp(skull_txn_t* sk_txn, bool destroyRawData) {

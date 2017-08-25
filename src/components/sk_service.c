@@ -608,7 +608,7 @@ void* sk_service_data(sk_service_t* service)
     case SK_QUEUE_STATE_IDLE:
     case SK_QUEUE_STATE_READ:
         SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot get mutable data when "
-                     "idle or reading data, please correct your logic",
+                     "idle or reading data, please correct user-layer logic",
                      service->name);
         SK_ASSERT(0);
         return NULL;
@@ -641,7 +641,7 @@ void sk_service_data_set(sk_service_t* service, const void* data)
     case SK_QUEUE_STATE_IDLE:
     case SK_QUEUE_STATE_READ:
         SK_LOG_FATAL(SK_ENV_LOGGER, "service %s cannot set data when "
-                     "idle or reading data, please correct your logic",
+                     "idle or reading data, please correct user-layer logic",
                      service->name);
         SK_ASSERT(0);
     case SK_QUEUE_STATE_LOCK:

@@ -4,7 +4,7 @@
 #include "api/sk_const.h"
 #include "api/sk_core.h"
 
-// per-thread data and macros, most of time, you only need to use these macros
+// Per-thread data and macros, in most of time, we only need to use these macros
 #define SK_ENV              (sk_thread_env())
 #define SK_ENV_CORE         (sk_thread_env()->core)
 
@@ -37,9 +37,7 @@ typedef struct sk_thread_env_t {
 
     sk_env_pos_t pos;
 
-#if __WORDSIZE == 64
     int         _padding;
-#endif
 } sk_thread_env_t;
 
 void sk_thread_env_init();

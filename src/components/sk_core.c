@@ -16,7 +16,7 @@
 #include "api/sk_admin.h"
 #include "api/sk_service.h"
 #include "api/sk_workflow.h"
-#include "api/sk_trigger.h"
+#include "api/sk_driver.h"
 #include "api/sk_loader.h"
 #include "api/sk_const.h"
 #include "api/sk_env.h"
@@ -33,15 +33,16 @@ void _sk_init_admin(sk_core_t* core)
     sk_print("Init admin module\n");
     SK_LOG_INFO(core->logger, "Init admin module");
 
-    core->triggers     = core->triggers ? core->triggers : flist_create();
-    core->admin_wf_cfg = sk_admin_workflowcfg_create(core->config->command_port);
+    core->drivers     = core->drivers ? core->drivers : flist_create();
+    core->admin_wf_cfg = sk_admin_workflowcfg_create(core->config->command_bind,
+                                                     core->config->command_port);
     core->admin_wf     = sk_workflow_create(core->admin_wf_cfg);
 
     sk_module_t* admin_module = sk_admin_module();
     sk_workflow_add_module(core->admin_wf, admin_module);
 
-    sk_trigger_t* trigger = sk_trigger_create(core->master, core->admin_wf);
-    int ret = flist_push(core->triggers, trigger);
+    sk_driver_t* driver = sk_driver_create(core->master, core->admin_wf);
+    int ret = flist_push(core->drivers, driver);
     SK_ASSERT(!ret);
 }
 
@@ -101,7 +102,7 @@ void _sk_setup_workflows(sk_core_t* core)
 {
     sk_config_t* config = core->config;
     core->workflows      = flist_create();
-    core->triggers       = core->triggers ? core->triggers : flist_create();
+    core->drivers       = core->drivers ? core->drivers : flist_create();
     core->unique_modules = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
     flist_iter iter = flist_new_iter(config->workflows);
@@ -111,7 +112,7 @@ void _sk_setup_workflows(sk_core_t* core)
         sk_print("setup workflow, detail info:\n");
         SK_LOG_INFO(core->logger, "setup one workflow...");
 
-        // set up the type and concurrent
+        // set up the type and concurrency
         sk_workflow_t* workflow = sk_workflow_create(workflow_cfg);
 
         // set up modules
@@ -159,9 +160,9 @@ void _sk_setup_workflows(sk_core_t* core)
         int ret = flist_push(core->workflows, workflow);
         SK_ASSERT(!ret);
 
-        // setup triggers
-        sk_trigger_t* trigger = sk_trigger_create(core->master, workflow);
-        ret = flist_push(core->triggers, trigger);
+        // setup driver
+        sk_driver_t* driver = sk_driver_create(core->master, workflow);
+        ret = flist_push(core->drivers, driver);
         SK_ASSERT(!ret);
 
         SK_LOG_INFO(core->logger, "setup one workflow successfully");
@@ -317,7 +318,9 @@ void _sk_init_log(sk_core_t* core)
     const char* log_name = config->log_name;
     int log_level = config->log_level;
 
-    core->logger = sk_logger_create(working_dir, log_name, log_level);
+    core->logger = sk_logger_create(working_dir, log_name, log_level,
+                                    core->cmd_args.log_rolling_disabled,
+                                    core->cmd_args.log_stdout_fwd);
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
 
     // create a thread env for the master thread, this is necessary since during
@@ -433,8 +436,7 @@ void _sk_init_coreinfo(sk_core_t* core)
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
-// execution orders, if you quite understand it, do not modify the calling ord-
-// ers.
+// execution orders, DO NOT modify the calling order before fully understand it.
 void sk_core_init(sk_core_t* core)
 {
     core->status = SK_CORE_INIT;
@@ -473,7 +475,7 @@ void sk_core_init(sk_core_t* core)
     // 10. load services
     _sk_setup_services(core);
 
-    // 11. load workflows and related triggers
+    // 11. load workflows and related drivers
     _sk_setup_workflows(core);
 
     // 12. fill up static information
@@ -535,14 +537,14 @@ void sk_core_start(sk_core_t* core)
         SK_LOG_INFO(core->logger, "Start bio engine [%d] successfully", i + 1);
     }
 
-    // 6. start triggers
-    SK_LOG_INFO(core->logger, "starting triggers...");
-    sk_print("starting triggers...\n");
+    // 6. Active drivers
+    SK_LOG_INFO(core->logger, "starting drivers...");
+    sk_print("starting drivers...\n");
 
-    flist_iter iter = flist_new_iter(core->triggers);
-    sk_trigger_t* trigger = NULL;
-    while ((trigger = flist_each(&iter))) {
-        sk_trigger_run(trigger);
+    flist_iter iter = flist_new_iter(core->drivers);
+    sk_driver_t* driver = NULL;
+    while ((driver = flist_each(&iter))) {
+        sk_driver_run(driver);
     }
 
     // 7. update core status and related information
@@ -609,12 +611,12 @@ void sk_core_destroy(sk_core_t* core)
     sk_print("================== skull engine destroying ==================\n");
     core->status = SK_CORE_DESTROYING;
 
-    // 1. destroy triggers
-    sk_trigger_t* trigger = NULL;
-    while ((trigger = flist_pop(core->triggers))) {
-        sk_trigger_destroy(trigger);
+    // 1. destroy drivers
+    sk_driver_t* driver = NULL;
+    while ((driver = flist_pop(core->drivers))) {
+        sk_driver_destroy(driver);
     }
-    flist_delete(core->triggers);
+    flist_delete(core->drivers);
 
     // 2. destroy engines
     _sk_engines_destroy(core);

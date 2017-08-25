@@ -21,6 +21,7 @@ verify:
     - echo "verify"
     - 'echo "info" | nc 127.0.0.1 7759 | grep "status:" | awk ''{print $2}'' | grep "2"'
     - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie, welcome"
+    - sleep 1
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "svc.test-get-3" | grep "ep status: 0"'

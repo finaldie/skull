@@ -9,16 +9,20 @@ function action_start()
     sk_util_get_proj_root
 
     # 2. Setup running_dir
-    local running_dir="$SKULL_PROJ_ROOT/run"
+    local running_dir=""
     if [ $# != 0 ]; then
         if [[ ! "$1" =~ ^- ]]; then
             running_dir="$1"
             shift
         fi
-    else
+    fi
+
+    if [ -z "$running_dir" ]; then
         if [ -z "$SKULL_PROJ_ROOT" ]; then
-            echo "Error: Not in a skull project, cannot start a skull-engine" >&2
-            exit 1
+            echo "Note: Assume current folder is running directory: `pwd`"
+            running_dir="`pwd`"
+        else
+            running_dir="$SKULL_PROJ_ROOT/run"
         fi
     fi
 
@@ -27,7 +31,7 @@ function action_start()
         exit 1
     fi
 
-    # 3. Validate the running_dir is a valid skull project
+    # 3. Validate the running_dir is a valid skull runnable environment
     local skullbin="$running_dir/bin/skull-start.sh"
     if [ ! -f "$skullbin" ]; then
         echo "Error: $skullbin does not exist" >&2
@@ -48,7 +52,7 @@ function action_start()
 function action_start_usage()
 {
     echo "usage:"
-    echo "  skull start [running_dir] [-D]"
+    echo "  skull start [running_dir] [-D] [--std-forwarding|--no-log-rolling]"
     echo "  skull start [running_dir] --memcheck"
     echo "  skull start [running_dir] --gdb"
     echo "  skull start [running_dir] --strace"

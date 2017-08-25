@@ -22,7 +22,7 @@ function parse_and_run()
     # parse the command args
     local args=`getopt -a \
         -o n:i:l:h \
-        -l name:,workflow_idx:language:,help \
+        -l name:,workflow-idx:,language:,help \
         -n "create_module" -- "$@"`
 
     if [ $? != 0 ]; then
@@ -43,7 +43,7 @@ function parse_and_run()
                 name=$2
                 shift 2;
                 ;;
-            -i|--workflow_idx)
+            -i|--workflow-idx)
                 workflow_idx=$2
                 shift 2;
                 ;;
@@ -84,9 +84,9 @@ function run()
 
         expect -c "
             spawn skull module -a
-            expect \"module name?\" {send \"$name\r\"}
-            expect \"which workflow you want add it to?\" {send \"$workflow_idx\r\"}
-            expect \"which language the module belongs to?\" {send \"$language\r\"}
+            expect \"Module Name?\" {send \"$name\r\"}
+            expect \"Workflow Index?\" {send \"$workflow_idx\r\"}
+            expect \"Module Language?\" {send \"$language\r\"}
             sleep 1
             interact
         "

@@ -28,12 +28,8 @@ TEST_SRCS = \
 
 # valgrind suppresion file
 #  note: if the suppresion file is exist, then need to append
-#        `--suppresions=$(SUPPRESION)` to `VALGRIND`
-SUPPRESION :=
-
-# valgrind command
-VALGRIND := valgrind --tool=memcheck --leak-check=full -v \
-    --gen-suppressions=all --error-exitcode=1
+#        `--suppressions=$(SUPPRESSION)` to `VALGRIND`
+SUPPRESSION := $(GLOBAL_SUPPRESSION)
 
 # Include the basic Makefile targets
 include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.cpp.targets

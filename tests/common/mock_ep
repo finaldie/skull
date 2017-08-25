@@ -5,7 +5,7 @@ SKULL_PROJ_NAME=project
 function usage()
 {
     echo "usage:"
-    echo "  mock_ep -p port -d data [-k|--stay] [-i interval]"
+    echo "  mock_ep -p port -d data [-k|--keep] [-i interval]"
 }
 
 function init()
@@ -22,7 +22,7 @@ function parse_and_run()
     # parse the command args
     local args=`getopt -a \
         -o p:d:ki:h \
-        -l port:,data:stay,help \
+        -l port:,data:,keep,help \
         -n "mock_ep" -- "$@"`
 
     if [ $? != 0 ]; then
@@ -35,7 +35,7 @@ function parse_and_run()
 
     local port="7760"
     local data=""
-    local stay=false
+    local keep=false
     local interval=0
 
     while true; do
@@ -48,8 +48,8 @@ function parse_and_run()
                 data=$2
                 shift 2;
                 ;;
-            -k|--stay)
-                stay=true
+            -k|--keep)
+                keep=true
                 shift
                 ;;
             -i)
@@ -75,19 +75,19 @@ function parse_and_run()
     done
 
     # Start mock end point
-    run "$port" $stay "$data" "$interval"
+    run "$port" $keep "$data" "$interval"
 }
 
 # Notes: append '-i 10000' to make sure nc won't response in a short time
 function run()
 {
     local port="$1"
-    local stay=$2
+    local keep=$2
     local data="$3"
     local interval=$4
 
     local extra_arg=""
-    if $stay; then
+    if $keep; then
         extra_arg+="-k "
     fi
 
@@ -103,10 +103,8 @@ function run()
     fi
 
     (
-        cd $SKULL_PROJ_NAME
-
         expect -c "
-            spawn nohup bash -c \"$cmd\" &
+            spawn -ignore HUP nohup /bin/bash -c \"$cmd\" &
             send \"\r\"
             interact
         "
