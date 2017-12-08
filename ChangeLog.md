@@ -1,3 +1,8 @@
+* 2017-12-07 1.1.2
+  * Engine
+    * **New:** Add `Slowlog` option in global config with microsecond precision 
+  * CLI
+    * **Fix:** Fix a unbreak issue in `skull-config` command
 * 2017-08-23 1.1.1
   * Engine
     * **New:** Docker integrated
