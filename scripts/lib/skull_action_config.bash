@@ -28,6 +28,7 @@ function action_config()
             -h|--help)
                 shift
                 action_config_usage >&2
+                break
                 ;;
             --)
                 shift;

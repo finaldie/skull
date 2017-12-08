@@ -34,7 +34,7 @@ typedef struct sk_workflow_cfg_t {
     const char* idl_name; // workflow idl name
     flist* modules;       // sk_module_cfg_t list
 
-    // Unit: millisecond, if the execute time > this threshold, engine will
+    // Unit: millisecond, if the execution time > this threshold, engine will
     //  cancel this transaction. Default value is 0 (unlimited)
     int      timeout;
 
@@ -91,10 +91,16 @@ typedef struct sk_config_t {
     // max open fds
     int    max_fds;
 
+    // Unit: microseconds, if the execution time > this threshold, engine
+    //  wouldn't cancel this transaction, instead the detail transaction will
+    //  be logged
+    int    slowlog_ms;
+
     bool   txn_logging;
 
     bool   __padding1;
     short  __padding2;
+    int    __padding3;
 } sk_config_t;
 
 sk_config_t* sk_config_create(const char* filename);

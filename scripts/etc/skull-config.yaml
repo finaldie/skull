@@ -40,6 +40,14 @@ languages: ['cpp', 'py']
 #
 # max_fds: 65535
 
+##
+# Slow log
+#  Unit: microsecond.
+#
+#  If the transaction exection time >= this threshold, engine will log the
+#  transaction details. If set to <= 0, the feature will be disabled.
+#
+# slowlog_ms: 0
 
 ##
 # Skull Workflows
