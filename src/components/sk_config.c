@@ -446,6 +446,8 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
             config->max_fds = max_fds;
         } else if (0 == strcmp(key, "txn_logging")) {
             config->txn_logging = sk_config_getbool(child);
+        } else if (0 == strcmp(key, "slowlog_ms")) {
+            config->slowlog_ms = sk_config_getint(child);
         }
     }
 

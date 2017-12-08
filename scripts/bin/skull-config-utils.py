@@ -170,6 +170,20 @@ def _dump_config_to_file(cfgYamlObj, filename):
     else:
         content.write('# max_fds: 65535\n\n')
 
+    # 10. Dump 'slowlog_ms'
+    content.write('##\n')
+    content.write('# Slow log\n')
+    content.write('#  Unit: microsecond.\n')
+    content.write('#\n')
+    content.write('#  If the transaction exection time >= this threshold, engine will log the\n')
+    content.write('#  transaction details. If set to <= 0, the feature will be disabled.\n')
+    content.write('#\n');
+
+    if cfgYamlObj.get('slowlog_ms'):
+        content.write('slowlog_ms: {}\n\n'.format(cfgYamlObj['slowlog_ms']))
+    else:
+        content.write('# slowlog_ms: 0\n\n')
+
     # 10. Dump 'workflows'
     content.write(CONFIG_WF_HEADER)
 

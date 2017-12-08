@@ -101,7 +101,19 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
 
 static
 void _write_txn_log(sk_txn_t* txn) {
-    if (!SK_ENV_CONFIG->txn_logging) {
+    unsigned long long alivetime = sk_txn_alivetime(txn);
+    bool slowlog = false;
+    bool txnlog  = false;
+
+    if (SK_ENV_CONFIG->slowlog_ms > 0) {
+        if (alivetime >= (unsigned long long)SK_ENV_CONFIG->slowlog_ms) {
+            slowlog = true;
+        }
+    } else if (SK_ENV_CONFIG->txn_logging) {
+        txnlog = true;
+    }
+
+    if (!slowlog && !txnlog) {
         return;
     }
 
@@ -109,10 +121,16 @@ void _write_txn_log(sk_txn_t* txn) {
     sk_txn_log_end(txn);
 
     // 2. Log the full txn log
-    unsigned long long alivetime = sk_txn_alivetime(txn);
 
-    SK_LOG_INFO(SK_ENV_LOGGER, "TxnLog: status: %d duration: %.3f ms | %s",
-        sk_txn_error(txn), (double)alivetime / 1000, sk_txn_log(txn));
+    if (txnlog) {
+        SK_LOG_INFO(SK_ENV_LOGGER, "TxnLog: status: %d duration: %.3f ms | %s",
+            sk_txn_error(txn), (double)alivetime / 1000, sk_txn_log(txn));
+    }
+
+    if (slowlog) {
+        SK_LOG_INFO(SK_ENV_LOGGER, "SlowLog: status: %d duration: %.3f ms | %s",
+            sk_txn_error(txn), (double)alivetime / 1000, sk_txn_log(txn));
+    }
 }
 
 static
