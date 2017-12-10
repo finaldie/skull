@@ -109,7 +109,9 @@ void _write_txn_log(sk_txn_t* txn) {
         if (alivetime >= (unsigned long long)SK_ENV_CONFIG->slowlog_ms) {
             slowlog = true;
         }
-    } else if (SK_ENV_CONFIG->txn_logging) {
+    }
+
+    if (SK_ENV_CONFIG->txn_logging) {
         txnlog = true;
     }
 
