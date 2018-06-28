@@ -1,3 +1,8 @@
+* 2018-06-27 1.1.3
+  * Engine
+    * **Fix:** txnlog and slowlog can be present in the same transaction
+  * MISC
+    * **Enhancement:** Upgrade jemalloc to 5.0.1
 * 2017-12-07 1.1.2
   * Engine
     * **New:** Add `Slowlog` option in global config with microsecond precision 
