@@ -9,7 +9,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#ifdef SKULL_JEMALLOC_ENABLED
+#ifdef SKULL_JEMALLOC_LINKED
 # include "jemalloc/jemalloc.h"
 #endif
 
@@ -501,8 +501,8 @@ void __append_memory_stat(void* txn, const char * content)
 static
 void _process_memory(sk_txn_t* txn)
 {
-#ifdef SKULL_JEMALLOC_ENABLED
-    malloc_stats_print(__append_memory_stat, txn, NULL);
+#ifdef SKULL_JEMALLOC_LINKED
+    je_malloc_stats_print(__append_memory_stat, txn, NULL);
 #else
     _append_response(txn, "Not implemented\r\n");
 #endif

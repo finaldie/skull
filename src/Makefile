@@ -45,7 +45,8 @@ COMMON_OBJS = \
     common/sk_timer_service.o \
     common/sk_object.o \
     common/sk_mbuf.o \
-    common/sk_module.o
+    common/sk_module.o \
+    common/sk_malloc.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
