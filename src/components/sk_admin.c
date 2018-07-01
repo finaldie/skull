@@ -500,7 +500,7 @@ void __append_jemalloc_stat(void* txn, const char * content)
 }
 
 static
-void __append_mem_stat(sk_txn_t* txn, const char* t, sk_mem_stat_t* stat)
+void __append_mem_stat(sk_txn_t* txn, const char* t, const sk_mem_stat_t* stat)
 {
     _append_response(txn, "%s.nmalloc:%d\n",         t, stat->nmalloc);
     _append_response(txn, "%s.nfree:%d\n",           t, stat->nfree);
@@ -511,6 +511,7 @@ void __append_mem_stat(sk_txn_t* txn, const char* t, sk_mem_stat_t* stat)
     _append_response(txn, "%s.alloc_sz:%zu\n",       t, stat->alloc_sz);
     _append_response(txn, "%s.dalloc_sz:%zu\n",      t, stat->dalloc_sz);
     _append_response(txn, "%s.peak_sz:%zu\n",        t, stat->peak_sz);
+    _append_response(txn, "%s.used_sz:%zu\n",        t, sk_mem_allocated(stat));
     _append_response(txn, "\n");
 }
 
@@ -519,11 +520,38 @@ void _process_memory(sk_txn_t* txn)
 {
     // 1. Dump skull core mem stat
     sk_core_t* core = SK_ENV_CORE;
-    sk_mem_stat_t* static_stat = sk_mem_static();
-    sk_mem_stat_t* core_stat   = &(core->mem_stat);
+    const sk_mem_stat_t* static_stat = sk_mem_static();
+    const sk_mem_stat_t* core_stat   = &(core->mstat);
 
     __append_mem_stat(txn, "init", static_stat);
     __append_mem_stat(txn, "core", core_stat);
+
+    _append_response(txn, "Modules:\n");
+
+    {
+        fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+        sk_module_t* module = NULL;
+        while ((module = fhash_str_next(&iter))) {
+            const sk_mem_stat_t* stat = &module->mstat;
+            __append_mem_stat(txn, module->cfg->name, stat);
+        }
+
+        fhash_str_iter_release(&iter);
+    }
+
+    _append_response(txn, "Services:\n");
+
+    {
+        fhash_str_iter iter = fhash_str_iter_new(core->services);
+        sk_service_t* service = NULL;
+
+        while ((service = fhash_str_next(&iter))) {
+            const sk_mem_stat_t* stat = sk_service_memstat(service);
+            __append_mem_stat(txn, sk_service_name(service), stat);
+        }
+
+        fhash_str_iter_release(&iter);
+    }
 
     // 2. Dump jemalloc stat if available
 #ifdef SKULL_JEMALLOC_LINKED

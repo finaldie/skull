@@ -31,12 +31,12 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src /*master*/,
 
     // Run timer job
     SK_LOG_SETCOOKIE("service.%s", sk_service_name(service));
-    SK_ENV_POS = SK_ENV_POS_SERVICE;
+    SK_ENV_POS_SAVE(SK_ENV_POS_SERVICE, service);
 
     job(service, status, ud, valid);
 
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-    SK_ENV_POS = SK_ENV_POS_CORE;
+    SK_ENV_POS_RESTORE();
 
     if (status == SK_SRV_JOB_OK) {
         // Notify master the service task has completed

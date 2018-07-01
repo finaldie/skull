@@ -22,6 +22,7 @@
 #define SK_ENV_MASTER_SCHED (SK_ENV_CORE->master->sched)
 #define SK_ENV_EP           (sk_thread_env()->engine->ep_pool)
 #define SK_ENV_POS          (sk_thread_env()->pos)
+#define SK_ENV_CURRENT      (sk_thread_env()->current)
 
 typedef enum sk_env_pos_t {
     SK_ENV_POS_CORE    = 0,
@@ -39,7 +40,10 @@ typedef struct sk_thread_env_t {
 
     sk_env_pos_t pos;
 
-    int         _padding;
+    int          _padding;
+
+    // Current module or service
+    void*        current;
 } sk_thread_env_t;
 
 void sk_thread_env_init();
@@ -50,6 +54,23 @@ sk_thread_env_t* sk_thread_env_create(sk_core_t* core, sk_engine_t* engine,
                                       const char* fmt, ...);
 
 bool sk_thread_env_ready();
+
+/**
+ * These two macros helps to save/restore the pos and current
+ *
+ * @note Make sure there is no break/return statement between the two macros
+ */
+#define SK_ENV_POS_SAVE(pos, current) \
+    do { \
+        sk_env_pos_t ____prev_pos  = SK_ENV_POS; \
+        void*        ____prev_curr = SK_ENV_CURRENT; \
+        SK_ENV_POS     = pos; \
+        SK_ENV_CURRENT = current
+
+#define SK_ENV_POS_RESTORE() \
+        SK_ENV_POS     = ____prev_pos; \
+        SK_ENV_CURRENT = ____prev_curr; \
+    } while (0)
 
 #endif
 

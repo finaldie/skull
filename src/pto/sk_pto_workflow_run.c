@@ -25,6 +25,7 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
                 sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     unsigned long long start_time = sk_txn_alivetime(txn);
+    int ret = 0;
 
     // 1. Run the next module
     sk_module_t* module = sk_txn_next_module(txn);
@@ -38,10 +39,10 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
     // NOTES: the cookie have 256 bytes limitation
     const char* module_name = module->cfg->name;
     SK_LOG_SETCOOKIE("module.%s", module_name);
-    SK_ENV_POS = SK_ENV_POS_MODULE;
+    SK_ENV_POS_SAVE(SK_ENV_POS_MODULE, module);
 
     // Run the module
-    int ret = module->run(module->md, txn);
+    ret = module->run(module->md, txn);
     sk_print("module execution return code=%d\n", ret);
     sk_module_stat_inc_run(module);
 
@@ -51,7 +52,7 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
 
     // After module exit, set back the module name
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-    SK_ENV_POS = SK_ENV_POS_CORE;
+    SK_ENV_POS_RESTORE();
 
     if (ret) {
         sk_print("module (%s) error occurred\n", module_name);

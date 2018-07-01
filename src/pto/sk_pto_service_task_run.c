@@ -49,14 +49,14 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src /*master*/,
     //        'task_complete' message, or the user module will be hanged
 
     SK_LOG_SETCOOKIE("service.%s", service_name);
-    SK_ENV_POS = SK_ENV_POS_SERVICE;
+    SK_ENV_POS_SAVE(SK_ENV_POS_SERVICE, service);
 
     srv_status =
         sk_service_run_iocall(service, txn, taskdata, api_name, io_status);
     SK_ASSERT(srv_status == SK_SRV_STATUS_OK);
 
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-    SK_ENV_POS = SK_ENV_POS_CORE;
+    SK_ENV_POS_RESTORE();
 
     if (srv_status != SK_SRV_STATUS_OK) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "service: user io call failed \

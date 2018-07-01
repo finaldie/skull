@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "api/sk_config.h"
+#include "api/sk_malloc.h"
 
 struct sk_txn_t;
 
@@ -19,6 +20,9 @@ typedef struct sk_module_t {
 
     // stat data (dynamic)
     sk_module_stat_t stat;
+
+    // mem stat
+    sk_mem_stat_t    mstat;
 
     // Interfaces
     int     (*init)   (void* md);

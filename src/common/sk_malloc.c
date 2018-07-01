@@ -7,6 +7,7 @@
 #include "flibs/compiler.h"
 #include "api/sk_env.h"
 #include "api/sk_core.h"
+#include "api/sk_service.h"
 #include "api/sk_malloc.h"
 
 #ifdef SKULL_JEMALLOC_LINKED
@@ -131,8 +132,19 @@ sk_mem_stat_t* _get_stat() {
     if (!sk_thread_env_ready() || unlikely(!SK_ENV)) {
         stat = &istat;
     } else {
-        if (SK_ENV_POS == SK_ENV_POS_CORE) {
-            stat = &(SK_ENV_CORE->mem_stat);
+        sk_env_pos_t pos = SK_ENV_POS;
+
+        switch (pos) {
+        case SK_ENV_POS_MODULE:
+            stat = &((sk_module_t*)(SK_ENV_CURRENT))->mstat;
+            break;
+        case SK_ENV_POS_SERVICE:
+            stat = sk_service_memstat(SK_ENV_CURRENT);
+            break;
+        case SK_ENV_POS_CORE:
+        default:
+            stat = &SK_ENV_CORE->mstat;
+            break;
         }
     }
 
@@ -143,11 +155,11 @@ sk_mem_stat_t* _get_stat() {
  * Public APIs
  */
 
-sk_mem_stat_t* sk_mem_static() {
+const sk_mem_stat_t* sk_mem_static() {
     return &istat;
 }
 
-size_t sk_mem_allocated(sk_mem_stat_t* stat) {
+size_t sk_mem_allocated(const sk_mem_stat_t* stat) {
     return stat->alloc_sz >= stat->dalloc_sz
         ? stat->alloc_sz - stat->dalloc_sz : 0;
 }

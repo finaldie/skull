@@ -36,7 +36,8 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
     sk_txn_task_status_t task_status = task_cb_msg->task_status;
     int svc_task_done        = task_cb_msg->svc_task_done;
 
-    const char* caller_module_name = taskdata->caller_module->cfg->name;
+    sk_module_t* caller_module      = taskdata->caller_module;
+    const char*  caller_module_name = caller_module->cfg->name;
     uint64_t task_id = sk_txn_task_id(taskdata->owner);
 
     // 2. mark the txn task complete
@@ -48,13 +49,14 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
         SK_ASSERT(service);
 
         // 4. run a specific service api callback
+        int ret = 0;
         SK_LOG_SETCOOKIE("module.%s", caller_module_name);
-        SK_ENV_POS = SK_ENV_POS_MODULE;
+        SK_ENV_POS_SAVE(SK_ENV_POS_MODULE, caller_module);
 
-        int ret = sk_service_run_iocall_cb(service, txn, task_id, api_name);
+        ret = sk_service_run_iocall_cb(service, txn, task_id, api_name);
 
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-        SK_ENV_POS = SK_ENV_POS_CORE;
+        SK_ENV_POS_RESTORE();
 
         if (ret) {
             SK_LOG_TRACE(SK_ENV_LOGGER,

@@ -102,7 +102,7 @@ typedef struct sk_core_t {
     time_t           starttime;
 
     // memory stat
-    sk_mem_stat_t    mem_stat;
+    sk_mem_stat_t    mstat;
 } sk_core_t;
 
 void sk_core_init(sk_core_t* core);

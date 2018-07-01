@@ -1,6 +1,7 @@
 #ifndef SK_SERVICE_H
 #define SK_SERVICE_H
 
+#include "api/sk_malloc.h"
 #include "api/sk_config.h"
 #include "api/sk_txn.h"
 #include "api/sk_sched.h"
@@ -139,6 +140,7 @@ void sk_service_stop(sk_service_t*);
 const char* sk_service_name(const sk_service_t*);
 const char* sk_service_type(const sk_service_t*);
 const sk_service_cfg_t* sk_service_config(const sk_service_t*);
+sk_mem_stat_t* sk_service_memstat(const sk_service_t*);
 
 // APIs for master
 sk_srv_status_t sk_service_push_task(sk_service_t*, const sk_srv_task_t*);

@@ -19,12 +19,12 @@ typedef struct sk_mem_stat_t {
 /**
  * Get the static stat structure
  */
-sk_mem_stat_t* sk_mem_static();
+const sk_mem_stat_t* sk_mem_static();
 
 /**
  * Calculate memory usage
  */
-size_t sk_mem_allocated(sk_mem_stat_t*);
+size_t sk_mem_allocated(const sk_mem_stat_t*);
 
 #endif
 
