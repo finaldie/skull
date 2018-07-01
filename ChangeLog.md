@@ -1,5 +1,6 @@
 * 2018-06-27 1.1.3
   * Engine
+    * **New:** override libc malloc to better measure memory stats
     * **Fix:** txnlog and slowlog can be present in the same transaction
   * MISC
     * **Enhancement:** Upgrade jemalloc to 5.0.1

@@ -99,6 +99,7 @@ Name                  | Description |
 ## Contribution and Discussion
 To discuss any issues, there are some ways we can use:
  - Open an issue on Github directly
+ - Discuss at Reddit: [https://www.reddit.com/r/skullengine/][18]
  - Send an email to skull-engine@googlegroups.com
  - Go directly to the [Mail Group][14], and post the questions.
 
@@ -121,6 +122,7 @@ To fix a bug or add a new feature, just **`Fork`** the repo, then apply the fixe
 [15]: https://github.com/finaldie/skull-service-httpcli
 [16]: https://github.com/finaldie/DNSTurbo
 [17]: https://github.com/finaldie/DNSTurbo#trailer
+[18]: https://www.reddit.com/r/skullengine/
 
 
 [20]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.1/Dockerfile
