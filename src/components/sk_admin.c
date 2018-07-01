@@ -22,6 +22,7 @@
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
 #include "api/sk_mon.h"
+#include "api/sk_malloc.h"
 #include "api/sk_admin.h"
 
 #define ADMIN_CMD_HELP_CONTENT \
@@ -307,7 +308,7 @@ void _status_module(sk_txn_t* txn, sk_core_t* core)
         }
 
         fhash_str_iter_release(&iter);
-        _append_response(txn, "\n", 1);
+        _append_response(txn, "\n");
     }
 
 }
@@ -343,7 +344,7 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
         }
 
         fhash_str_iter_release(&iter);
-        _append_response(txn, "\n", 1);
+        _append_response(txn, "\n");
     }
 }
 
@@ -493,18 +494,42 @@ void _process_status(sk_txn_t* txn)
 }
 
 static
-void __append_memory_stat(void* txn, const char * content)
+void __append_jemalloc_stat(void* txn, const char * content)
 {
     _append_response(txn, "%s", content);
 }
 
 static
+void __append_mem_stat(sk_txn_t* txn, const char* t, sk_mem_stat_t* stat)
+{
+    _append_response(txn, "%s.nmalloc:%d\n",         t, stat->nmalloc);
+    _append_response(txn, "%s.nfree:%d\n",           t, stat->nfree);
+    _append_response(txn, "%s.ncalloc:%d\n",         t, stat->ncalloc);
+    _append_response(txn, "%s.nrealloc:%d\n",        t, stat->nrealloc);
+    _append_response(txn, "%s.nposix_memalign:%d\n", t, stat->nposix_memalign);
+    _append_response(txn, "%s.naligned_alloc:%d\n",  t, stat->naligned_alloc);
+    _append_response(txn, "%s.alloc_sz:%zu\n",       t, stat->alloc_sz);
+    _append_response(txn, "%s.dalloc_sz:%zu\n",      t, stat->dalloc_sz);
+    _append_response(txn, "%s.peak_sz:%zu\n",        t, stat->peak_sz);
+    _append_response(txn, "\n");
+}
+
+static
 void _process_memory(sk_txn_t* txn)
 {
+    // 1. Dump skull core mem stat
+    sk_core_t* core = SK_ENV_CORE;
+    sk_mem_stat_t* static_stat = sk_mem_static();
+    sk_mem_stat_t* core_stat   = &(core->mem_stat);
+
+    __append_mem_stat(txn, "init", static_stat);
+    __append_mem_stat(txn, "core", core_stat);
+
+    // 2. Dump jemalloc stat if available
 #ifdef SKULL_JEMALLOC_LINKED
-    je_malloc_stats_print(__append_memory_stat, txn, NULL);
+    je_malloc_stats_print(__append_jemalloc_stat, txn, NULL);
 #else
-    _append_response(txn, "Not implemented\r\n");
+    _append_response(txn, "Jemalloc Stat Not Available\r\n");
 #endif
 }
 

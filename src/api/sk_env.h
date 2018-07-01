@@ -1,6 +1,8 @@
 #ifndef SK_ENV_H
 #define SK_ENV_H
 
+#include <stdbool.h>
+
 #include "api/sk_const.h"
 #include "api/sk_core.h"
 
@@ -42,9 +44,12 @@ typedef struct sk_thread_env_t {
 
 void sk_thread_env_init();
 void sk_thread_env_set(sk_thread_env_t* env);
+
 sk_thread_env_t* sk_thread_env();
 sk_thread_env_t* sk_thread_env_create(sk_core_t* core, sk_engine_t* engine,
                                       const char* fmt, ...);
+
+bool sk_thread_env_ready();
 
 #endif
 

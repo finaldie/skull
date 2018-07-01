@@ -5,7 +5,8 @@
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
 
-static pthread_key_t sk_env_key;
+static pthread_key_t sk_env_key = 0;
+static bool sk_env_ready = false;
 
 static
 void _sk_thread_exit(void* data)
@@ -20,6 +21,7 @@ void _sk_thread_exit(void* data)
 void sk_thread_env_init()
 {
     pthread_key_create(&sk_env_key, _sk_thread_exit);
+    sk_env_ready = true;
 }
 
 void sk_thread_env_set(sk_thread_env_t* env)
@@ -48,4 +50,9 @@ sk_thread_env_t* sk_thread_env_create(sk_core_t* core,
 
     thread_env->pos = SK_ENV_POS_CORE;
     return thread_env;
+}
+
+bool sk_thread_env_ready()
+{
+    return sk_env_ready;
 }
