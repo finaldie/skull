@@ -209,10 +209,6 @@ google::protobuf::Message& UTModule::getTxnSharedData() {
     return *this->msg_;
 }
 
-const google::protobuf::Message& UTModule::getTxnSharedData() const {
-    return getTxnSharedData();
-}
-
 /****************************** Service APIs **********************************/
 UTService::UTService(const std::string& svcName, const std::string& config) {
     this->svcName_   = svcName;
