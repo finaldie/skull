@@ -276,7 +276,7 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
     int ret = SK_ALLOCATOR(posix_memalign)(memptr, alignment, size);
 
     sk_mem_stat_t* stat = _get_stat();
-    if (likely(!ret && !memptr && stat)) {
+    if (likely(!ret && stat)) {
         SK_ATOMIC_INC(stat->nposix_memalign);
         SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(*memptr));
     }
