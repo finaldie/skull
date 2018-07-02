@@ -1,6 +1,7 @@
 #language: c
 
-dist: precise
+dist: trusty
+sudo: true
 
 env:
     - CC=gcc CXX=g++
