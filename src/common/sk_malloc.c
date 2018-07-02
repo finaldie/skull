@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <dlfcn.h>
 #include <pthread.h>
+#include <malloc.h>
 
 #include "flibs/compiler.h"
 #include "api/sk_env.h"
@@ -22,7 +23,7 @@ size_t _get_malloc_sz(void* ptr) {
 
 static
 size_t _get_malloc_sz(void* ptr) {
-    return 0;
+    return malloc_usable_size(ptr);
 }
 #endif
 
@@ -45,12 +46,14 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
 
 #define SK_LOAD_SYMBOL(symbol) \
     do { \
+        if (SK_REAL(symbol)) break; \
+\
         SK_REAL(symbol) = \
             (SK_REAL_TYPE(symbol))(intptr_t)dlsym(RTLD_NEXT, #symbol); \
 \
         if (unlikely(!SK_REAL(symbol))) { \
-            fprintf(stderr, "Error in loading mem symbol: %s\n", dlerror()); \
-            exit(1); \
+            fprintf(stderr, "Error in loading mem symbol: %s\n", #symbol); \
+            abort(); \
         } \
     } while(0)
 
@@ -63,9 +66,13 @@ static sk_mem_stat_t istat;
 
 static
 void _init() {
+    /**
+     * Initialize all public symbols besides `calloc`, because `dlsym` would
+     *  call `calloc` itself. Here we handle loading `calloc` separately.
+     *  See `sk_real_calloc`.
+     */
     SK_LOAD_SYMBOL(malloc);
     SK_LOAD_SYMBOL(free);
-    SK_LOAD_SYMBOL(calloc);
     SK_LOAD_SYMBOL(realloc);
     SK_LOAD_SYMBOL(posix_memalign);
     SK_LOAD_SYMBOL(aligned_alloc);
@@ -90,9 +97,42 @@ void  sk_real_free(void* ptr) {
 }
 
 static
+void* __hacky_calloc(size_t nmemb, size_t sz) {
+    fprintf(stderr, "__hacky_calloc return NULL\n");
+    return NULL;
+}
+
+/**
+ * Here, to make `dlsym` happy, we use a temporary `__hacky_calloc` to trick
+ *  it, to allow `dlsym` can be returned when `calloc` return NULL. The whole
+ *  sequence flow like this:
+ *
+ *  caller    calloc    dlsym    calloc  hacky_calloc real_calloc
+ *    |-------->|         |         |         |            |
+ *    |         |-------->|         |         |            |
+ *    |         |         |-------->|         |            |
+ *    |         |         |         |-------->|            |
+ *    |         |         |         |<--null--|            |
+ *    |         |         |<--null--|         |            |
+ *    |         |<-symbol-|         |         |            |
+ *    |         |----------------------------------------->|
+ *    |         |<------------------ptr--------------------|
+ *    |<--ptr---|         |         |         |            |
+ */
+static
 void* sk_real_calloc(size_t nmemb, size_t sz) {
     if (unlikely(!SK_REAL(calloc))) {
-        _init();
+        SK_REAL(calloc) = __hacky_calloc;
+
+        FMEM_BARRIER();
+
+        SK_REAL(calloc) =
+            (SK_REAL_TYPE(calloc))(intptr_t)dlsym(RTLD_NEXT, "calloc");
+
+        if (unlikely(!SK_REAL(calloc))) {
+            fprintf(stderr, "Error in loading mem symbol: calloc\n");
+            abort();
+        }
     }
 
     return SK_REAL(calloc)(nmemb, sz);
@@ -154,7 +194,6 @@ sk_mem_stat_t* _get_stat() {
 /**
  * Public APIs
  */
-
 const sk_mem_stat_t* sk_mem_static() {
     return &istat;
 }
@@ -189,6 +228,17 @@ void free(void* ptr) {
     SK_ALLOCATOR(free)(ptr);
 }
 
+/**
+ * Tricky for `calloc`, `dlsym` would call `calloc` by itself which lead
+ *  infinite recursion, fortunately if `calloc` return NULL, dlsym will
+ *  fall back to another path to use global symbol which here is fine.
+ *  So here we let `calloc` return NULL via a `__hacky_calloc`, then set
+ *  up the real symbol, see `sk_real_calloc` for details.
+ *
+ *  @note The stat.ncalloc would be 1 time bigger than reality, we can adjust
+ *         it in admin module. stat.alloc_sz is accurate, since the nullptr
+ *         size is 0.
+ */
 void* calloc(size_t nmemb, size_t sz) {
     void* ptr = SK_ALLOCATOR(calloc)(nmemb, sz);
 
