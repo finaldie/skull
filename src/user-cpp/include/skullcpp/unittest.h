@@ -47,7 +47,6 @@ public:
 
     void setTxnSharedData(const google::protobuf::Message&);
     google::protobuf::Message& getTxnSharedData();
-    const google::protobuf::Message& getTxnSharedData() const;
 };
 
 class UTService {
