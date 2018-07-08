@@ -55,8 +55,8 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
 
         ret = sk_service_run_iocall_cb(service, txn, task_id, api_name);
 
-        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
         SK_ENV_POS_RESTORE();
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
         if (ret) {
             SK_LOG_TRACE(SK_ENV_LOGGER,

@@ -11,6 +11,8 @@
 #include "api/sk_service.h"
 #include "api/sk_malloc.h"
 
+#define SK_MAX(x, y) ((x) > (y) ? (x) : (y))
+
 #ifdef SKULL_JEMALLOC_LINKED
 # include "jemalloc/jemalloc.h"
 # define SK_ALLOCATOR(symbol) je_ ## symbol
@@ -57,8 +59,21 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
         } \
     } while(0)
 
+/**
+ * Inner atomic operations. TODO: Use C11 __Atomic to replace all these
+ */
 #define SK_ATOMIC_INC(v) __sync_add_and_fetch(&(v), 1)
-#define SK_ATOMIC_ADD(v, delta) __sync_add_and_fetch(&(v), delta)
+#define SK_ATOMIC_ADD(v, delta) __sync_add_and_fetch(&(v), (delta))
+#define SK_ATOMIC_CAS(v, expect, value) \
+    __sync_bool_compare_and_swap(&(v), (expect), (value))
+#define SK_ATOMIC_UPDATE_PEAKSZ(nstat) \
+    do { \
+        size_t curr_peak = nstat->peak_sz; \
+        size_t curr_used = sk_mem_allocated(nstat); \
+        if (curr_peak == curr_used) break; \
+        size_t peak_sz   = SK_MAX(curr_peak, curr_used); \
+        if (SK_ATOMIC_CAS(nstat->peak_sz, curr_peak, peak_sz)) break; \
+    } while(1)
 
 // The mem_stat before thread_env been set up (mainly for counting the stat
 //  during the initialization)
@@ -199,8 +214,11 @@ const sk_mem_stat_t* sk_mem_static() {
 }
 
 size_t sk_mem_allocated(const sk_mem_stat_t* stat) {
-    return stat->alloc_sz >= stat->dalloc_sz
-        ? stat->alloc_sz - stat->dalloc_sz : 0;
+    volatile size_t alloc_sz  = stat->alloc_sz;
+    volatile size_t dalloc_sz = stat->dalloc_sz;
+
+    return alloc_sz > dalloc_sz
+        ? alloc_sz - dalloc_sz : 0;
 }
 
 /**
@@ -213,6 +231,7 @@ void* malloc(size_t sz) {
     if (likely(stat)) {
         SK_ATOMIC_INC(stat->nmalloc);
         SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(ptr));
+        SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
     return ptr;
@@ -223,6 +242,7 @@ void free(void* ptr) {
     if (likely(stat)) {
         SK_ATOMIC_INC(stat->nfree);
         SK_ATOMIC_ADD(stat->dalloc_sz, _get_malloc_sz(ptr));
+        SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
     SK_ALLOCATOR(free)(ptr);
@@ -246,6 +266,7 @@ void* calloc(size_t nmemb, size_t sz) {
     if (likely(stat)) {
         SK_ATOMIC_INC(stat->ncalloc);
         SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(ptr));
+        SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
     return ptr;
@@ -267,6 +288,8 @@ void* realloc(void* ptr, size_t sz) {
             SK_ATOMIC_ADD(stat->alloc_sz, new_sz);
             SK_ATOMIC_ADD(stat->dalloc_sz, old_sz);
         }
+
+        SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
     return nptr;
@@ -279,6 +302,7 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
     if (likely(!ret && stat)) {
         SK_ATOMIC_INC(stat->nposix_memalign);
         SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(*memptr));
+        SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
     return ret;
@@ -291,6 +315,7 @@ void* aligned_alloc(size_t alignment, size_t size) {
     if (likely(stat)) {
         SK_ATOMIC_INC(stat->naligned_alloc);
         SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(ptr));
+        SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
     return ptr;

@@ -35,8 +35,8 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src /*master*/,
 
     job(service, status, ud, valid);
 
-    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     SK_ENV_POS_RESTORE();
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     if (status == SK_SRV_JOB_OK) {
         // Notify master the service task has completed

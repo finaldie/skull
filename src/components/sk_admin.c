@@ -520,13 +520,22 @@ void _process_memory(sk_txn_t* txn)
 {
     // 1. Dump skull core mem stat
     sk_core_t* core = SK_ENV_CORE;
+    size_t total_allocated = 0;
+
     const sk_mem_stat_t* static_stat = sk_mem_static();
     const sk_mem_stat_t* core_stat   = &(core->mstat);
 
+    _append_response(txn, "Initialization:\n");
     __append_mem_stat(txn, "init", static_stat);
+    total_allocated += sk_mem_allocated(static_stat);
+
+    _append_response(txn, "Core:\n");
     __append_mem_stat(txn, "core", core_stat);
+    total_allocated += sk_mem_allocated(core_stat);
 
     _append_response(txn, "Modules:\n");
+    __append_mem_stat(txn, sk_admin_module()->cfg->name, &sk_admin_module()->mstat);
+    total_allocated += sk_mem_allocated(&sk_admin_module()->mstat);
 
     {
         fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
@@ -534,6 +543,7 @@ void _process_memory(sk_txn_t* txn)
         while ((module = fhash_str_next(&iter))) {
             const sk_mem_stat_t* stat = &module->mstat;
             __append_mem_stat(txn, module->cfg->name, stat);
+            total_allocated += sk_mem_allocated(stat);
         }
 
         fhash_str_iter_release(&iter);
@@ -548,10 +558,14 @@ void _process_memory(sk_txn_t* txn)
         while ((service = fhash_str_next(&iter))) {
             const sk_mem_stat_t* stat = sk_service_memstat(service);
             __append_mem_stat(txn, sk_service_name(service), stat);
+            total_allocated += sk_mem_allocated(stat);
         }
 
         fhash_str_iter_release(&iter);
     }
+
+    _append_response(txn, "Summary:\n");
+    _append_response(txn, "  Total Allocated: %zu\n\n", total_allocated);
 
     // 2. Dump jemalloc stat if available
 #ifdef SKULL_JEMALLOC_LINKED

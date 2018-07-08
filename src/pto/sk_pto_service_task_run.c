@@ -55,8 +55,8 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src /*master*/,
         sk_service_run_iocall(service, txn, taskdata, api_name, io_status);
     SK_ASSERT(srv_status == SK_SRV_STATUS_OK);
 
-    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     SK_ENV_POS_RESTORE();
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     if (srv_status != SK_SRV_STATUS_OK) {
         SK_LOG_ERROR(SK_ENV_LOGGER, "service: user io call failed \

@@ -51,8 +51,8 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
                    module_name, start_time, alivetime);
 
     // After module exit, set back the module name
-    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     SK_ENV_POS_RESTORE();
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     if (ret) {
         sk_print("module (%s) error occurred\n", module_name);
@@ -183,6 +183,7 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
     // 2. Pack the data, and send the response if needed
     const char* module_name = last_module->cfg->name;
     SK_LOG_SETCOOKIE("module.%s", module_name);
+    SK_ENV_POS_SAVE(SK_ENV_POS_MODULE, last_module);
 
     int ret = last_module->pack(last_module->md, txn);
     if (ret) { // Error occured
@@ -190,6 +191,7 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
         sk_entity_mark(entity, SK_ENTITY_INACTIVE);
     }
 
+    SK_ENV_POS_RESTORE();
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     sk_module_stat_inc_pack(last_module);
 
@@ -239,7 +241,6 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     switch (state) {
     case SK_TXN_INIT: {
         sk_print("txn - INIT\n");
-        //sk_txn_setstate(txn, SK_TXN_UNPACKED);
         sk_txn_setstate(txn, SK_TXN_RUNNING);
         return _run(sched, src, entity, txn, proto_msg);
     }
