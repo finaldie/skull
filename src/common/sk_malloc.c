@@ -7,11 +7,10 @@
 
 #include "flibs/compiler.h"
 #include "api/sk_env.h"
+#include "api/sk_utils.h"
 #include "api/sk_core.h"
 #include "api/sk_service.h"
 #include "api/sk_malloc.h"
-
-#define SK_MAX(x, y) ((x) > (y) ? (x) : (y))
 
 #ifdef SKULL_JEMALLOC_LINKED
 # include "jemalloc/jemalloc.h"
