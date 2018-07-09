@@ -31,7 +31,7 @@
     " - counter | metrics\n" \
     " - last\n" \
     " - info | status\n" \
-    " - memory\n"
+    " - memory [full|trace=true|trace=false]\n"
 
 #define ADMIN_CMD_HELP            "help"
 #define ADMIN_CMD_METRICS         "metrics"
@@ -41,8 +41,11 @@
 #define ADMIN_CMD_INFO            "info"
 #define ADMIN_CMD_MEMORY          "memory"
 
+#define ADMIN_CMD_MAX_ARGS        (10)
+#define ADMIN_CMD_MAX_LENGTH      (256)
+
 #define ADMIN_LINE_MAX_LENGTH     (1024)
-#define ADMIN_RESP_MAX_LENGTH     (4096)
+#define ADMIN_RESP_MAX_LENGTH     (8192)
 #define ADMIN_COUNTER_LINE_LENGTH (256)
 
 #define ADMIN_MODULE_FMT1         " %s - unpack %zu | run %zu | pack %zu ;"
@@ -50,15 +53,17 @@
 #define ADMIN_MODULE_FMT3         " %s - run %zu | pack %zu ;"
 #define ADMIN_MODULE_FMT4         " %s - run %zu ;"
 
+
 static sk_module_t _sk_admin_module;
 static sk_module_cfg_t _sk_admin_module_cfg;
 
 typedef struct sk_admin_data_t {
     int   ignore;
 
-    int   _padding;
+    int   argc;
 
-    char*  command;
+    char*  command[ADMIN_CMD_MAX_ARGS];
+    char   raw[ADMIN_CMD_MAX_LENGTH];
     fmbuf* response;
 } sk_admin_data_t;
 
@@ -77,7 +82,6 @@ void _sk_admin_data_destroy(sk_admin_data_t* admin_data)
 {
     if (!admin_data) return;
 
-    free(admin_data->command);
     fmbuf_delete(admin_data->response);
     free(admin_data);
 }
@@ -99,7 +103,8 @@ void _mon_cb(const char* name, double value, void* ud)
     fmbuf* buf = admin_data->response;
 
     char metrics_str[ADMIN_COUNTER_LINE_LENGTH];
-    int printed = snprintf(metrics_str, ADMIN_COUNTER_LINE_LENGTH, "%s: %f\n", name, value);
+    int printed = snprintf(metrics_str, ADMIN_COUNTER_LINE_LENGTH,
+                           "%s: %f\n", name, value);
 
     if (printed < 0) {
         sk_print("metrics buffer is too small(%d), name: %s, value: %f\n",
@@ -516,8 +521,7 @@ void __append_mem_stat(sk_txn_t* txn, const char* t, const sk_mem_stat_t* stat)
 }
 
 static
-void _process_memory(sk_txn_t* txn)
-{
+void _process_memory_info(sk_txn_t* txn) {
     // 1. Dump skull core mem stat
     sk_core_t* core = SK_ENV_CORE;
     size_t total_allocated = 0;
@@ -565,14 +569,44 @@ void _process_memory(sk_txn_t* txn)
     }
 
     _append_response(txn, "Summary:\n");
-    _append_response(txn, "  Total Allocated: %zu\n\n", total_allocated);
+    _append_response(txn, "Total Allocated: %zu\n", total_allocated);
+    _append_response(txn, "Trace Enabled: %d\n\n", sk_mem_trace_status());
+}
 
-    // 2. Dump jemalloc stat if available
-#ifdef SKULL_JEMALLOC_LINKED
+static
+void _process_memory_detail(sk_txn_t* txn) {
+    // Dump jemalloc stat if available
+#   ifdef SKULL_JEMALLOC_LINKED
     je_malloc_stats_print(__append_jemalloc_stat, txn, NULL);
-#else
+#   else
     _append_response(txn, "Jemalloc Stat Not Available\r\n");
-#endif
+#   endif
+}
+
+static
+void _process_memory(sk_admin_data_t* admin_data, sk_txn_t* txn)
+{
+    const char* subcommand = NULL;
+    if (admin_data->argc == 1) {
+        subcommand = "info";
+    } else {
+        subcommand = admin_data->command[1];
+    }
+
+    if (0 == strcasecmp("info", subcommand)) {
+        _process_memory_info(txn);
+    } else if (0 == strcasecmp("trace=true", subcommand)) {
+        sk_mem_trace(true);
+        _process_memory_info(txn);
+    } else if (0 == strcasecmp("trace=false", subcommand)) {
+        sk_mem_trace(false);
+        _process_memory_info(txn);
+    } else if (0 == strcasecmp("full", subcommand)) {
+        _process_memory_info(txn);
+        _process_memory_detail(txn);
+    } else {
+        _process_help(txn);
+    }
 }
 
 /********************************* Public APIs ********************************/
@@ -585,6 +619,11 @@ sk_workflow_cfg_t* sk_admin_workflowcfg_create(const char* bind, int port)
     cfg->bind         = bind ? bind : "127.0.0.1";
     cfg->idl_name     = NULL;
     cfg->modules      = flist_create();
+
+    // To prevent Admin module realloc txn->output buffer which nosiy the memory
+    //  measurement. Here from the observation, use 8192 would be a big enough
+    //  number, we can adjust it when necessary.
+    cfg->txn_out_sz   = ADMIN_RESP_MAX_LENGTH;
 
     flist_push(cfg->modules, &_sk_admin_module_cfg);
 
@@ -629,9 +668,8 @@ int _admin_run(void* md, sk_txn_t* txn)
         return 0;
     }
 
-    const char* command = admin_data->command;
-    sk_print("receive command: %s\n", command);
-    SK_LOG_INFO(SK_ENV_LOGGER, "Received command: %s", command);
+    const char* command = admin_data->command[0];
+    sk_print("Receive command: %s\n", command);
 
     if (0 == strcasecmp(ADMIN_CMD_HELP, command)) {
         _process_help(txn);
@@ -644,7 +682,7 @@ int _admin_run(void* md, sk_txn_t* txn)
                0 == strcasecmp(ADMIN_CMD_INFO, command)) {
         _process_status(txn);
     } else if (0 == strcasecmp(ADMIN_CMD_MEMORY, command)) {
-        _process_memory(txn);
+        _process_memory(admin_data, txn);
     } else {
         _process_help(txn);
     }
@@ -680,8 +718,18 @@ ssize_t _admin_unpack(void* md, struct sk_txn_t* txn,
     }
 
     // store command string, remove the '\r\n', and append '\0'
-    admin_data->command = calloc(1, data_sz - tailer_offset + 1);
-    memcpy(admin_data->command, data, data_sz - tailer_offset);
+    size_t max_len = SK_MIN(data_sz - tailer_offset, ADMIN_CMD_MAX_LENGTH - 1);
+    strncpy(admin_data->raw, data, max_len);
+
+    sk_print("Receive raw command: %s\n", admin_data->raw);
+    SK_LOG_INFO(SK_ENV_LOGGER, "Received command: %s", admin_data->raw);
+
+    for (char* token = NULL, *cmds = admin_data->raw;
+         admin_data->argc < ADMIN_CMD_MAX_ARGS &&
+         (token = strsep(&cmds, " ")) != NULL;
+         admin_data->argc++) {
+        admin_data->command[admin_data->argc] = token;
+    }
 
 unpack_done:
     sk_txn_setudata(txn, admin_data);

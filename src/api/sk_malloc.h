@@ -2,6 +2,7 @@
 #define SK_MALLOC_H
 
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef struct sk_mem_stat_t {
     int nmalloc;
@@ -25,6 +26,9 @@ const sk_mem_stat_t* sk_mem_static();
  * Calculate memory usage
  */
 size_t sk_mem_allocated(const sk_mem_stat_t*);
+
+bool sk_mem_trace_status();
+void sk_mem_trace(bool enabled);
 
 #endif
 

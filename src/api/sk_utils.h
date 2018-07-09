@@ -18,6 +18,7 @@ void sk_assert_exit_with_msg(const char* format, ...);
 // APIs
 
 #define SK_MAX(x, y) ((x) > (y) ? (x) : (y))
+#define SK_MIN(x, y) ((x) < (y) ? (x) : (y))
 
 // ASSERTIONS
 #define SK_ASSERT(expr) \

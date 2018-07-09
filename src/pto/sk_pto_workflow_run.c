@@ -43,16 +43,17 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
 
     // Run the module
     ret = module->run(module->md, txn);
+
+    // After module exit, set back the module name
+    SK_ENV_POS_RESTORE();
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+
     sk_print("module execution return code=%d\n", ret);
     sk_module_stat_inc_run(module);
 
     unsigned long long alivetime = sk_txn_alivetime(txn);
     sk_txn_log_add(txn, "-> m:%s:run start: %llu end: %llu ",
                    module_name, start_time, alivetime);
-
-    // After module exit, set back the module name
-    SK_ENV_POS_RESTORE();
-    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     if (ret) {
         sk_print("module (%s) error occurred\n", module_name);
