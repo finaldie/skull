@@ -23,6 +23,7 @@
 #define SK_ENV_EP           (sk_thread_env()->engine->ep_pool)
 #define SK_ENV_POS          (sk_thread_env()->pos)
 #define SK_ENV_CURRENT      (sk_thread_env()->current)
+#define SK_ENV_NAME         (sk_thread_env()->name)
 
 typedef enum sk_env_pos_t {
     SK_ENV_POS_CORE    = 0,

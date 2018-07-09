@@ -74,11 +74,5 @@ struct sk_const_t;
 // service
 #define SK_SRV_MAX_TASK                      (1024)
 
-// static strings
-#define SK_INIT_STR                          "init"
-#define SK_CORE_STR                          "core"
-#define SK_MODULE_STR                        "module"
-#define SK_SERVICE_STR                       "service"
-
 #endif
 

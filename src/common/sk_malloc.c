@@ -6,13 +6,29 @@
 #include <malloc.h>
 
 #include "flibs/compiler.h"
-#include "flibs/ftime.h"
 #include "api/sk_env.h"
-#include "api/sk_utils.h"
+#include "api/sk_time.h"
 #include "api/sk_const.h"
+#include "api/sk_utils.h"
 #include "api/sk_core.h"
 #include "api/sk_service.h"
 #include "api/sk_malloc.h"
+
+// Global Memory Tracer Tag
+#define SK_GMTT "[MEM_TRACE]"
+#define SK_FILL_TAGS(tn, c, n) \
+{ \
+    *tname = tn; \
+    *component = c; \
+    *name = n; \
+}
+
+#define SK_MT_HEADER_FMT "%lu.%lu %s %s:%s.%s - "
+#define _SK_MT_ALLOC_FMT(symbol) #symbol " %p %zu bytes from %p %lu ns\n"
+#define _SK_MT_REALLOC_FMT "realloc %p-%p %zu-%zu bytes from %p %lu ns %s\n"
+
+#define SK_MT_FMT(symbol) SK_MT_HEADER_FMT _SK_MT_ALLOC_FMT(symbol)
+#define SK_MT_FMT_REALLOC SK_MT_HEADER_FMT _SK_MT_REALLOC_FMT
 
 #ifdef SKULL_JEMALLOC_LINKED
 # include "jemalloc/jemalloc.h"
@@ -184,32 +200,31 @@ void* sk_real_aligned_alloc(size_t alignment, size_t size) {
 }
 
 static
-sk_mem_stat_t* _get_stat(const char** tag, const char** name) {
+sk_mem_stat_t* _get_stat(const char** tname,
+                         const char** component,
+                         const char** name) {
     sk_mem_stat_t* stat = NULL;
 
     if (!sk_thread_env_ready() || unlikely(!SK_ENV)) {
         stat = &istat;
-        *tag = SK_INIT_STR;
-        *name = SK_INIT_STR;
+        SK_FILL_TAGS("main", "skull", "init");
     } else {
         sk_env_pos_t pos = SK_ENV_POS;
 
         switch (pos) {
         case SK_ENV_POS_MODULE:
             stat = &((sk_module_t*)(SK_ENV_CURRENT))->mstat;
-            *tag = SK_MODULE_STR;
-            *name = ((sk_module_t*)(SK_ENV_CURRENT))->cfg->name;
+            SK_FILL_TAGS(SK_ENV_NAME, "module",
+                         ((sk_module_t*)(SK_ENV_CURRENT))->cfg->name);
             break;
         case SK_ENV_POS_SERVICE:
             stat = sk_service_memstat(SK_ENV_CURRENT);
-            *tag = SK_SERVICE_STR;
-            *name = sk_service_name(SK_ENV_CURRENT);
+            SK_FILL_TAGS(SK_ENV_NAME, "service", sk_service_name(SK_ENV_CURRENT));
             break;
         case SK_ENV_POS_CORE:
         default:
             stat = &SK_ENV_CORE->mstat;
-            *tag = SK_CORE_STR;
-            *name = SK_CORE_STR;
+            SK_FILL_TAGS(SK_ENV_NAME, "skull", "core");
             break;
         }
     }
@@ -243,11 +258,12 @@ void sk_mem_trace(bool enabled) {
  * Override libc, to measure module/service memory usage
  */
 void* malloc(size_t sz) {
-    unsigned long long start = ftime_gettime();
+    ulong_t start = sk_gettime();
     void* ptr = SK_ALLOCATOR(malloc)(sz);
+    ulong_t duration = sk_gettime() - start;
 
-    const char* tag = NULL, *name = NULL;
-    sk_mem_stat_t* stat = _get_stat(&tag, &name);
+    const char* tname = NULL, *comp = NULL, *name = NULL;
+    sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(stat)) {
         SK_ATOMIC_INC(stat->nmalloc);
         SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(ptr));
@@ -255,31 +271,33 @@ void* malloc(size_t sz) {
     }
 
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, "tid %lu %s:%s malloc %p %zu bytes from %p %llu us\n",
-                pthread_self(), tag, name, ptr, sz, __builtin_return_address(0),
-                ftime_gettime() - start);
+        fprintf(stderr, SK_MT_FMT(malloc),
+                start / 1000000000l, start % 1000000000l,
+                SK_GMTT, tname, comp, name, ptr, sz,
+                __builtin_return_address(0), duration);
     }
 
     return ptr;
 }
 
 void free(void* ptr) {
-    unsigned long long start = ftime_gettime();
-
-    const char* tag = NULL, *name = NULL;
-    sk_mem_stat_t* stat = _get_stat(&tag, &name);
+    const char* tname = NULL, *comp = NULL, *name = NULL;
+    sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(stat)) {
         SK_ATOMIC_INC(stat->nfree);
         SK_ATOMIC_ADD(stat->dalloc_sz, _get_malloc_sz(ptr));
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
+    ulong_t start = sk_gettime();
     SK_ALLOCATOR(free)(ptr);
+    ulong_t duration = sk_gettime() - start;
 
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, "tid %lu %s:%s free %p %zu bytes from %p %llu us\n",
-                pthread_self(), tag, name, ptr, _get_malloc_sz(ptr),
-                __builtin_return_address(0), ftime_gettime() - start);
+        fprintf(stderr, SK_MT_FMT(free),
+                start / 1000000000l, start % 1000000000l,
+                SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
+                __builtin_return_address(0), duration);
     }
 }
 
@@ -295,11 +313,12 @@ void free(void* ptr) {
  *         size is 0.
  */
 void* calloc(size_t nmemb, size_t sz) {
-    unsigned long long start = ftime_gettime();
+    ulong_t start = sk_gettime();
     void* ptr = SK_ALLOCATOR(calloc)(nmemb, sz);
+    ulong_t duration = sk_gettime() - start;
 
-    const char* tag = NULL, *name = NULL;
-    sk_mem_stat_t* stat = _get_stat(&tag, &name);
+    const char* tname = NULL, *comp = NULL, *name = NULL;
+    sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(stat)) {
         SK_ATOMIC_INC(stat->ncalloc);
         SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(ptr));
@@ -307,23 +326,25 @@ void* calloc(size_t nmemb, size_t sz) {
     }
 
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, "tid %lu %s:%s calloc %p %zu bytes from %p %llu us\n",
-                pthread_self(), tag, name, ptr, _get_malloc_sz(ptr),
-                __builtin_return_address(0), ftime_gettime() - start);
+        fprintf(stderr, SK_MT_FMT(calloc),
+                start / 1000000000l, start % 1000000000l,
+                SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
+                __builtin_return_address(0), duration);
     }
 
     return ptr;
 }
 
 void* realloc(void* ptr, size_t sz) {
-    unsigned long long start = ftime_gettime();
     size_t old_sz = _get_malloc_sz(ptr);
 
+    ulong_t start = sk_gettime();
     void* nptr = SK_ALLOCATOR(realloc)(ptr, sz);
-    size_t new_sz = _get_malloc_sz(nptr);
+    ulong_t duration = sk_gettime() - start;
 
-    const char* tag = NULL, *name = NULL;
-    sk_mem_stat_t* stat = _get_stat(&tag, &name);
+    size_t new_sz = _get_malloc_sz(nptr);
+    const char* tname = NULL, *comp = NULL, *name = NULL;
+    sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
 
     const char* warning = "";
     if (unlikely(!ptr && sz == 0)) {
@@ -346,20 +367,22 @@ void* realloc(void* ptr, size_t sz) {
     }
 
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, "tid %lu %s:%s realloc %p-%p %zu-%zu bytes from %p %llu us %s\n",
-                pthread_self(), tag, name, ptr, nptr, old_sz, new_sz,
-                __builtin_return_address(0), ftime_gettime() - start, warning);
+        fprintf(stderr, SK_MT_FMT_REALLOC,
+                start / 1000000000l, start % 1000000000l,
+                SK_GMTT, tname, comp, name, ptr, nptr, old_sz, new_sz,
+                __builtin_return_address(0), duration, warning);
     }
 
     return nptr;
 }
 
 int posix_memalign(void **memptr, size_t alignment, size_t size) {
-    unsigned long long start = ftime_gettime();
+    ulong_t start = sk_gettime();
     int ret = SK_ALLOCATOR(posix_memalign)(memptr, alignment, size);
+    ulong_t duration = sk_gettime() - start;
 
-    const char* tag = NULL, *name = NULL;
-    sk_mem_stat_t* stat = _get_stat(&tag, &name);
+    const char* tname = NULL, *comp = NULL, *name = NULL;
+    sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(!ret && stat)) {
         SK_ATOMIC_INC(stat->nposix_memalign);
         SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(*memptr));
@@ -367,20 +390,22 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
     }
 
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, "tid %lu %s:%s posix_memalign %zu bytes from %p %llu us\n",
-                pthread_self(), tag, name, _get_malloc_sz(*memptr),
-                __builtin_return_address(0), ftime_gettime() - start);
+        fprintf(stderr, SK_MT_FMT(posix_memalign),
+                start / 1000000000l, start % 1000000000l,
+                SK_GMTT, tname, comp, name, *memptr, _get_malloc_sz(*memptr),
+                __builtin_return_address(0), duration);
     }
 
     return ret;
 }
 
 void* aligned_alloc(size_t alignment, size_t size) {
-    unsigned long long start = ftime_gettime();
+    ulong_t start = sk_gettime();
     void* ptr = SK_ALLOCATOR(aligned_alloc)(alignment, size);
+    ulong_t duration = sk_gettime() - start;
 
-    const char* tag = NULL, *name = NULL;
-    sk_mem_stat_t* stat = _get_stat(&tag, &name);
+    const char* tname = NULL, *comp = NULL, *name = NULL;
+    sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(stat)) {
         SK_ATOMIC_INC(stat->naligned_alloc);
         SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(ptr));
@@ -388,9 +413,10 @@ void* aligned_alloc(size_t alignment, size_t size) {
     }
 
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, "tid %lu %s:%s aligned_alloc %zu bytes from %p %llu us\n",
-                pthread_self(), tag, name, _get_malloc_sz(ptr),
-                __builtin_return_address(0), ftime_gettime() - start);
+        fprintf(stderr, SK_MT_FMT(aligned_alloc),
+                start / 1000000000l, start % 1000000000l,
+                SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
+                __builtin_return_address(0), duration);
     }
 
     return ptr;

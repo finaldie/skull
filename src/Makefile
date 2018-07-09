@@ -46,7 +46,8 @@ COMMON_OBJS = \
     common/sk_object.o \
     common/sk_mbuf.o \
     common/sk_module.o \
-    common/sk_malloc.o
+    common/sk_malloc.o \
+    common/sk_time.o
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
@@ -157,6 +158,7 @@ UT_OBJS = \
     common/sk_object.o \
     common/sk_mbuf.o \
     common/sk_module.o \
+    common/sk_time.o \
     entities/sk_entity.o \
     entities/sk_entity_stdin.o \
     entities/sk_entity_tcp.o \

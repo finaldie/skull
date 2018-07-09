@@ -58,9 +58,8 @@ static sk_module_t _sk_admin_module;
 static sk_module_cfg_t _sk_admin_module_cfg;
 
 typedef struct sk_admin_data_t {
-    int   ignore;
-
-    int   argc;
+    int    ignore;
+    int    argc;
 
     char*  command[ADMIN_CMD_MAX_ARGS];
     char   raw[ADMIN_CMD_MAX_LENGTH];
