@@ -38,7 +38,13 @@ typedef struct sk_workflow_cfg_t {
     //  cancel this transaction. Default value is 0 (unlimited)
     int      timeout;
 
-    int      __padding;
+    /**
+     * @note: This is an *Optional* hint for the workflow which wants to initia-
+     *        lize the txn context output buffer from a specific size. By defau-
+     *        lt is `0`. This is useful for optimizing the performance for those
+     *        certain well meatured workflows.
+     */
+    int      txn_out_sz;
 } sk_workflow_cfg_t;
 
 typedef struct sk_service_cfg_t {

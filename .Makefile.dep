@@ -17,7 +17,7 @@ jemalloc: deps/jemalloc/Makefile
 	cd deps/jemalloc && $(MAKE) $(MAKE_FLAGS)
 
 deps/jemalloc/Makefile:
-	cd deps/jemalloc && ./autogen.sh
+	cd deps/jemalloc && ./autogen.sh --with-jemalloc-prefix=je_
 
 .PHONY: flibs protos metrics skull-ft jemalloc
 

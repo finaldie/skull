@@ -25,6 +25,7 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
                 sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     unsigned long long start_time = sk_txn_alivetime(txn);
+    int ret = 0;
 
     // 1. Run the next module
     sk_module_t* module = sk_txn_next_module(txn);
@@ -38,20 +39,21 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
     // NOTES: the cookie have 256 bytes limitation
     const char* module_name = module->cfg->name;
     SK_LOG_SETCOOKIE("module.%s", module_name);
-    SK_ENV_POS = SK_ENV_POS_MODULE;
+    SK_ENV_POS_SAVE(SK_ENV_POS_MODULE, module);
 
     // Run the module
-    int ret = module->run(module->md, txn);
+    ret = module->run(module->md, txn);
+
+    // After module exit, set back the module name
+    SK_ENV_POS_RESTORE();
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+
     sk_print("module execution return code=%d\n", ret);
     sk_module_stat_inc_run(module);
 
     unsigned long long alivetime = sk_txn_alivetime(txn);
     sk_txn_log_add(txn, "-> m:%s:run start: %llu end: %llu ",
                    module_name, start_time, alivetime);
-
-    // After module exit, set back the module name
-    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
-    SK_ENV_POS = SK_ENV_POS_CORE;
 
     if (ret) {
         sk_print("module (%s) error occurred\n", module_name);
@@ -109,7 +111,9 @@ void _write_txn_log(sk_txn_t* txn) {
         if (alivetime >= (unsigned long long)SK_ENV_CONFIG->slowlog_ms) {
             slowlog = true;
         }
-    } else if (SK_ENV_CONFIG->txn_logging) {
+    }
+
+    if (SK_ENV_CONFIG->txn_logging) {
         txnlog = true;
     }
 
@@ -180,6 +184,7 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
     // 2. Pack the data, and send the response if needed
     const char* module_name = last_module->cfg->name;
     SK_LOG_SETCOOKIE("module.%s", module_name);
+    SK_ENV_POS_SAVE(SK_ENV_POS_MODULE, last_module);
 
     int ret = last_module->pack(last_module->md, txn);
     if (ret) { // Error occured
@@ -187,6 +192,7 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
         sk_entity_mark(entity, SK_ENTITY_INACTIVE);
     }
 
+    SK_ENV_POS_RESTORE();
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     sk_module_stat_inc_pack(last_module);
 
@@ -236,7 +242,6 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     switch (state) {
     case SK_TXN_INIT: {
         sk_print("txn - INIT\n");
-        //sk_txn_setstate(txn, SK_TXN_UNPACKED);
         sk_txn_setstate(txn, SK_TXN_RUNNING);
         return _run(sched, src, entity, txn, proto_msg);
     }

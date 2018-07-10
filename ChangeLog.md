@@ -1,3 +1,11 @@
+* 2018-06-27 1.1.3
+  * Engine
+    * **New:** override libc malloc to better measure memory stats
+    * **Fix:** txnlog and slowlog can be present in the same transaction
+    * **Enhancement:** _Admin Module_ parses commands into an array, more flexible for subcommands
+  * MISC
+    * **Enhancement:** Upgrade jemalloc to 5.0.1
+    * **Enhancement:** Upgrade travis to ubuntu.trusty
 * 2017-12-07 1.1.2
   * Engine
     * **New:** Add `Slowlog` option in global config with microsecond precision 

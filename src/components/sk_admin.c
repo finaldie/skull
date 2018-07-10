@@ -9,7 +9,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#ifdef SKULL_JEMALLOC_ENABLED
+#ifdef SKULL_JEMALLOC_LINKED
 # include "jemalloc/jemalloc.h"
 #endif
 
@@ -22,6 +22,7 @@
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
 #include "api/sk_mon.h"
+#include "api/sk_malloc.h"
 #include "api/sk_admin.h"
 
 #define ADMIN_CMD_HELP_CONTENT \
@@ -30,7 +31,7 @@
     " - counter | metrics\n" \
     " - last\n" \
     " - info | status\n" \
-    " - memory\n"
+    " - memory [full|trace=true|trace=false]\n"
 
 #define ADMIN_CMD_HELP            "help"
 #define ADMIN_CMD_METRICS         "metrics"
@@ -40,8 +41,11 @@
 #define ADMIN_CMD_INFO            "info"
 #define ADMIN_CMD_MEMORY          "memory"
 
+#define ADMIN_CMD_MAX_ARGS        (10)
+#define ADMIN_CMD_MAX_LENGTH      (256)
+
 #define ADMIN_LINE_MAX_LENGTH     (1024)
-#define ADMIN_RESP_MAX_LENGTH     (4096)
+#define ADMIN_RESP_MAX_LENGTH     (8192)
 #define ADMIN_COUNTER_LINE_LENGTH (256)
 
 #define ADMIN_MODULE_FMT1         " %s - unpack %zu | run %zu | pack %zu ;"
@@ -49,15 +53,16 @@
 #define ADMIN_MODULE_FMT3         " %s - run %zu | pack %zu ;"
 #define ADMIN_MODULE_FMT4         " %s - run %zu ;"
 
+
 static sk_module_t _sk_admin_module;
 static sk_module_cfg_t _sk_admin_module_cfg;
 
 typedef struct sk_admin_data_t {
-    int   ignore;
+    int    ignore;
+    int    argc;
 
-    int   _padding;
-
-    char*  command;
+    char*  command[ADMIN_CMD_MAX_ARGS];
+    char   raw[ADMIN_CMD_MAX_LENGTH];
     fmbuf* response;
 } sk_admin_data_t;
 
@@ -76,7 +81,6 @@ void _sk_admin_data_destroy(sk_admin_data_t* admin_data)
 {
     if (!admin_data) return;
 
-    free(admin_data->command);
     fmbuf_delete(admin_data->response);
     free(admin_data);
 }
@@ -98,7 +102,8 @@ void _mon_cb(const char* name, double value, void* ud)
     fmbuf* buf = admin_data->response;
 
     char metrics_str[ADMIN_COUNTER_LINE_LENGTH];
-    int printed = snprintf(metrics_str, ADMIN_COUNTER_LINE_LENGTH, "%s: %f\n", name, value);
+    int printed = snprintf(metrics_str, ADMIN_COUNTER_LINE_LENGTH,
+                           "%s: %f\n", name, value);
 
     if (printed < 0) {
         sk_print("metrics buffer is too small(%d), name: %s, value: %f\n",
@@ -307,7 +312,7 @@ void _status_module(sk_txn_t* txn, sk_core_t* core)
         }
 
         fhash_str_iter_release(&iter);
-        _append_response(txn, "\n", 1);
+        _append_response(txn, "\n");
     }
 
 }
@@ -343,7 +348,7 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
         }
 
         fhash_str_iter_release(&iter);
-        _append_response(txn, "\n", 1);
+        _append_response(txn, "\n");
     }
 }
 
@@ -493,19 +498,114 @@ void _process_status(sk_txn_t* txn)
 }
 
 static
-void __append_memory_stat(void* txn, const char * content)
+void __append_jemalloc_stat(void* txn, const char * content)
 {
     _append_response(txn, "%s", content);
 }
 
 static
-void _process_memory(sk_txn_t* txn)
+void __append_mem_stat(sk_txn_t* txn, const char* t, const sk_mem_stat_t* stat)
 {
-#ifdef SKULL_JEMALLOC_ENABLED
-    malloc_stats_print(__append_memory_stat, txn, NULL);
-#else
-    _append_response(txn, "Not implemented\r\n");
-#endif
+    _append_response(txn, "%s.nmalloc:%d\n",         t, stat->nmalloc);
+    _append_response(txn, "%s.nfree:%d\n",           t, stat->nfree);
+    _append_response(txn, "%s.ncalloc:%d\n",         t, stat->ncalloc);
+    _append_response(txn, "%s.nrealloc:%d\n",        t, stat->nrealloc);
+    _append_response(txn, "%s.nposix_memalign:%d\n", t, stat->nposix_memalign);
+    _append_response(txn, "%s.naligned_alloc:%d\n",  t, stat->naligned_alloc);
+    _append_response(txn, "%s.alloc_sz:%zu\n",       t, stat->alloc_sz);
+    _append_response(txn, "%s.dalloc_sz:%zu\n",      t, stat->dalloc_sz);
+    _append_response(txn, "%s.peak_sz:%zu\n",        t, stat->peak_sz);
+    _append_response(txn, "%s.used_sz:%zu\n",        t, sk_mem_allocated(stat));
+    _append_response(txn, "\n");
+}
+
+static
+void _process_memory_info(sk_txn_t* txn) {
+    // 1. Dump skull core mem stat
+    sk_core_t* core = SK_ENV_CORE;
+    size_t total_allocated = 0;
+
+    const sk_mem_stat_t* static_stat = sk_mem_static();
+    const sk_mem_stat_t* core_stat   = &(core->mstat);
+
+    _append_response(txn, "Initialization:\n");
+    __append_mem_stat(txn, "init", static_stat);
+    total_allocated += sk_mem_allocated(static_stat);
+
+    _append_response(txn, "Core:\n");
+    __append_mem_stat(txn, "core", core_stat);
+    total_allocated += sk_mem_allocated(core_stat);
+
+    _append_response(txn, "Modules:\n");
+    __append_mem_stat(txn, sk_admin_module()->cfg->name, &sk_admin_module()->mstat);
+    total_allocated += sk_mem_allocated(&sk_admin_module()->mstat);
+
+    {
+        fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
+        sk_module_t* module = NULL;
+        while ((module = fhash_str_next(&iter))) {
+            const sk_mem_stat_t* stat = &module->mstat;
+            __append_mem_stat(txn, module->cfg->name, stat);
+            total_allocated += sk_mem_allocated(stat);
+        }
+
+        fhash_str_iter_release(&iter);
+    }
+
+    _append_response(txn, "Services:\n");
+
+    {
+        fhash_str_iter iter = fhash_str_iter_new(core->services);
+        sk_service_t* service = NULL;
+
+        while ((service = fhash_str_next(&iter))) {
+            const sk_mem_stat_t* stat = sk_service_memstat(service);
+            __append_mem_stat(txn, sk_service_name(service), stat);
+            total_allocated += sk_mem_allocated(stat);
+        }
+
+        fhash_str_iter_release(&iter);
+    }
+
+    _append_response(txn, "Summary:\n");
+    _append_response(txn, "Total Allocated: %zu\n", total_allocated);
+    _append_response(txn, "Trace Enabled: %d\n\n", sk_mem_trace_status());
+}
+
+static
+void _process_memory_detail(sk_txn_t* txn) {
+    // Dump jemalloc stat if available
+#   ifdef SKULL_JEMALLOC_LINKED
+    je_malloc_stats_print(__append_jemalloc_stat, txn, NULL);
+#   else
+    _append_response(txn, "Jemalloc Stat Not Available\r\n");
+#   endif
+}
+
+static
+void _process_memory(sk_admin_data_t* admin_data, sk_txn_t* txn)
+{
+    const char* subcommand = NULL;
+    if (admin_data->argc == 1) {
+        subcommand = "info";
+    } else {
+        subcommand = admin_data->command[1];
+    }
+
+    if (0 == strcasecmp("info", subcommand)) {
+        _process_memory_info(txn);
+    } else if (0 == strcasecmp("trace=true", subcommand)) {
+        sk_mem_trace(true);
+        _process_memory_info(txn);
+    } else if (0 == strcasecmp("trace=false", subcommand)) {
+        sk_mem_trace(false);
+        _process_memory_info(txn);
+    } else if (0 == strcasecmp("full", subcommand)) {
+        _process_memory_info(txn);
+        _process_memory_detail(txn);
+    } else {
+        _process_help(txn);
+    }
 }
 
 /********************************* Public APIs ********************************/
@@ -518,6 +618,11 @@ sk_workflow_cfg_t* sk_admin_workflowcfg_create(const char* bind, int port)
     cfg->bind         = bind ? bind : "127.0.0.1";
     cfg->idl_name     = NULL;
     cfg->modules      = flist_create();
+
+    // To prevent Admin module realloc txn->output buffer which nosiy the memory
+    //  measurement. Here from the observation, use 8192 would be a big enough
+    //  number, we can adjust it when necessary.
+    cfg->txn_out_sz   = ADMIN_RESP_MAX_LENGTH;
 
     flist_push(cfg->modules, &_sk_admin_module_cfg);
 
@@ -562,9 +667,8 @@ int _admin_run(void* md, sk_txn_t* txn)
         return 0;
     }
 
-    const char* command = admin_data->command;
-    sk_print("receive command: %s\n", command);
-    SK_LOG_INFO(SK_ENV_LOGGER, "Received command: %s", command);
+    const char* command = admin_data->command[0];
+    sk_print("Receive command: %s\n", command);
 
     if (0 == strcasecmp(ADMIN_CMD_HELP, command)) {
         _process_help(txn);
@@ -577,7 +681,7 @@ int _admin_run(void* md, sk_txn_t* txn)
                0 == strcasecmp(ADMIN_CMD_INFO, command)) {
         _process_status(txn);
     } else if (0 == strcasecmp(ADMIN_CMD_MEMORY, command)) {
-        _process_memory(txn);
+        _process_memory(admin_data, txn);
     } else {
         _process_help(txn);
     }
@@ -613,8 +717,18 @@ ssize_t _admin_unpack(void* md, struct sk_txn_t* txn,
     }
 
     // store command string, remove the '\r\n', and append '\0'
-    admin_data->command = calloc(1, data_sz - tailer_offset + 1);
-    memcpy(admin_data->command, data, data_sz - tailer_offset);
+    size_t max_len = SK_MIN(data_sz - tailer_offset, ADMIN_CMD_MAX_LENGTH - 1);
+    strncpy(admin_data->raw, data, max_len);
+
+    sk_print("Receive raw command: %s\n", admin_data->raw);
+    SK_LOG_INFO(SK_ENV_LOGGER, "Received command: %s", admin_data->raw);
+
+    for (char* token = NULL, *cmds = admin_data->raw;
+         admin_data->argc < ADMIN_CMD_MAX_ARGS &&
+         (token = strsep(&cmds, " ")) != NULL;
+         admin_data->argc++) {
+        admin_data->command[admin_data->argc] = token;
+    }
 
 unpack_done:
     sk_txn_setudata(txn, admin_data);

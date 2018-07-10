@@ -10,5 +10,7 @@ typedef union sk_ud_t {
     void*    ud;
 } sk_ud_t;
 
+typedef unsigned long int ulong_t;
+
 #endif
 

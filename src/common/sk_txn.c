@@ -97,13 +97,13 @@ void _sk_txn_task_destroy(sk_txn_task_t* task)
 }
 
 // Public APIs
-sk_txn_t* sk_txn_create(sk_workflow_t* workflow, sk_entity_t* entity)
+sk_txn_t* sk_txn_create(sk_workflow_t* wf, sk_entity_t* entity)
 {
     sk_txn_t* txn = calloc(1, sizeof(*txn));
-    txn->workflow      = workflow;
+    txn->workflow      = wf;
     txn->entity        = entity;
-    txn->output        = fmbuf_create(0);
-    txn->workflow_idx  = flist_new_iter(workflow->modules);
+    txn->output        = fmbuf_create((size_t)SK_MAX(wf->cfg->txn_out_sz, 0));
+    txn->workflow_idx  = flist_new_iter(wf->modules);
     txn->task_tbl      = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     txn->latest_taskid = 0;
     txn->start_time    = ftime_gettime();

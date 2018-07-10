@@ -14,6 +14,7 @@
 #include "api/sk_service.h"
 #include "api/sk_engine.h"
 #include "api/sk_driver.h"
+#include "api/sk_malloc.h"
 
 typedef enum sk_core_status_t {
     SK_CORE_INIT       = 0,
@@ -96,15 +97,19 @@ typedef struct sk_core_t {
     sk_core_status_t status;
 
     // max open files limitation
-    int max_fds;
+    int              max_fds;
 
-    time_t starttime;
+    time_t           starttime;
+
+    // memory stat
+    sk_mem_stat_t    mstat;
 } sk_core_t;
 
 void sk_core_init(sk_core_t* core);
 void sk_core_start(sk_core_t* core);
 void sk_core_stop(sk_core_t* core);
 void sk_core_destroy(sk_core_t* core);
+
 
 // utils
 sk_service_t*    sk_core_service(sk_core_t*, const char* service_name);

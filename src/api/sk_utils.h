@@ -17,6 +17,9 @@ void sk_assert_exit_with_msg(const char* format, ...);
 
 // APIs
 
+#define SK_MAX(x, y) ((x) > (y) ? (x) : (y))
+#define SK_MIN(x, y) ((x) < (y) ? (x) : (y))
+
 // ASSERTIONS
 #define SK_ASSERT(expr) \
     if (unlikely(!(expr))) { \
@@ -29,7 +32,6 @@ void sk_assert_exit_with_msg(const char* format, ...);
                                 __FILE__ ":" SK_EXTRACT_STR(__LINE__) " - " \
                                 __VA_ARGS__); \
     }
-
 
 // debug print
 #ifdef SK_DEBUG
@@ -58,7 +60,7 @@ void sk_assert_exit_with_msg(const char* format, ...);
 /**
  * Dump backtrace to stderr
  */
-void sk_backtrace_print();
+void sk_backtrace_print(int start, int max);
 
 /**
  * Fill up the core info

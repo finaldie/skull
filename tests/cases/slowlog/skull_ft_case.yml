@@ -13,6 +13,7 @@ pre-run:
     - cd project && skull build && skull build check && skull build valgrind-check && skull deploy
     - echo "Set slowlog to 10ms"
     - 'cd project/run && sed -i "s/# slowlog_ms:.*/slowlog_ms: 10000/g" skull-config.yaml'
+    - 'cd project/run && sed -i "s/# txn_logging:.*/txn_logging: true/g" skull-config.yaml'
 
 run:
     - echo "run"
@@ -27,6 +28,7 @@ verify:
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
     - 'cat ${RUN}/project/run/log/skull.log | grep SlowLog | wc -l | grep 1'
     - 'cat ${RUN}/project/run/log/skull.log | grep SlowLog | awk ''{print $9}'' | grep 0'
+    - 'cat ${RUN}/project/run/log/skull.log | grep TxnLog | awk ''{print $9}'' | grep 0'
     - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
 
 post-verify:

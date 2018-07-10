@@ -17,7 +17,7 @@ void sk_assert_exit(const char* expr, const char* file, int lineno)
     printf("FATAL: assert [%s] failed - %s:%d\n", expr, file, lineno);
 
 #if defined SK_DUMP_CORE && defined __GLIBC__
-    sk_backtrace_print();
+    sk_backtrace_print(0, SK_MAX_BACKTRACE);
     exit(1);
 #else
     abort();
@@ -32,7 +32,7 @@ void sk_assert_exit_with_msg(const char* format, ...)
     va_end(args);
 
 #if defined SK_DUMP_CORE && defined __GLIBC__
-    sk_backtrace_print();
+    sk_backtrace_print(0, SK_MAX_BACKTRACE);
     exit(1);
 #else
     abort();
@@ -40,16 +40,18 @@ void sk_assert_exit_with_msg(const char* format, ...)
 }
 
 #ifdef __GLIBC__
-void sk_backtrace_print()
+void sk_backtrace_print(int start, int max)
 {
-    void*  buffer[SK_MAX_BACKTRACE];
+    if (start < 0 || start >= max) return;
+
+    void*  buffer[max];
     int    size;
 
-    size = backtrace(buffer, SK_MAX_BACKTRACE);
+    size = backtrace(buffer + start, max);
     backtrace_symbols_fd(buffer, size, STDERR_FILENO);
 }
 #else
-void sk_backtrace_print() {
+void sk_backtrace_print(int start, int max) {
     fprintf(stderr, "No glibc support, can not dump the backtrace\n");
 }
 #endif

@@ -43,12 +43,18 @@ ssize_t sk_driver_util_unpack(sk_entity_t* entity)
         sk_entity_sethalftxn(entity, txn);
     }
 
-    // 3. try to unpack the user data
+    // 3. unpack the user data
     const char* module_name = first_module->cfg->name;
+    const void* data = NULL;
+    ssize_t consumed = 0;
+
     SK_LOG_SETCOOKIE("module.%s", module_name);
-    const void* data = sk_entity_rbufget(entity);
-    ssize_t consumed =
-        first_module->unpack(first_module->md, txn, data, (size_t)bytes);
+    SK_ENV_POS_SAVE(SK_ENV_POS_MODULE, first_module);
+
+    data = sk_entity_rbufget(entity);
+    consumed = first_module->unpack(first_module->md, txn, data, (size_t)bytes);
+
+    SK_ENV_POS_RESTORE();
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     sk_module_stat_inc_unpack(first_module);
@@ -84,7 +90,9 @@ ssize_t sk_driver_util_unpack(sk_entity_t* entity)
     return consumed;
 }
 
-int sk_driver_util_deliver(sk_entity_t* entity, const sk_sched_t* deliver_to, int max) {
+int sk_driver_util_deliver(sk_entity_t* entity,
+                           const sk_sched_t* deliver_to,
+                           int max) {
     if (max <= 0) max = INT32_MAX;
 
     sk_sched_t* sched = SK_ENV_SCHED;
