@@ -19,13 +19,24 @@ jemalloc: deps/jemalloc/Makefile
 deps/jemalloc/Makefile:
 	cd deps/jemalloc && ./autogen.sh --with-jemalloc-prefix=je_
 
-.PHONY: flibs protos metrics skull-ft jemalloc
+protobuf-cpp: deps/protobuf/Makefile
+	cd deps/protobuf && $(MAKE) $(MAKE_FLAGS)
+
+protobuf-py: protobuf-cpp
+	cd deps/protobuf/python && $(python_path) setup.py build --cpp_implementation
+
+protobuf: protobuf-py
+
+deps/protobuf/Makefile:
+	cd deps/protobuf && ./autogen.sh && ./configure
+
+.PHONY: flibs protos metrics skull-ft jemalloc protobuf protobuf-py protobuf-cpp
 
 # install targets
 install-core:
 	cd src && $(MAKE) install
 
-install-dep:
+install-skull-ft:
 	cd deps/skull-ft && $(MAKE) install
 
 install-ft:
@@ -41,8 +52,17 @@ install-others:
 install-scripts:
 	cd scripts && $(MAKE) install
 
+install-protobuf-cpp:
+	cd deps/protobuf && $(MAKE) install && ldconfig
+
+install-protobuf-py: install-protobuf-cpp
+	cd deps/protobuf/python && $(python_path) setup.py install --cpp_implementation
+
+install-protobuf: install-protobuf-py
+
 .PHONY: install-core install-api install-others install-scripts
-.PHONY: install-dep install-ft
+.PHONY: install-skull-ft install-ft install-protobuf install-protobuf-py
+.PHONY: install-protobuf-cpp
 
 # clean targets
 clean-flibs:
@@ -58,4 +78,8 @@ clean-jemalloc:
 	! test -f ./deps/jemalloc/Makefile || $(MAKE) $(MAKE_FLAGS) -C ./deps/jemalloc clean || exit "$$?"
 	rm -f ./deps/jemalloc/Makefile
 
-.PHONY: clean-flibs clean-protos clean-skull-ft clean-jemalloc
+clean-protobuf:
+	! test -f ./deps/protobuf/Makefile || $(MAKE) $(MAKE_FLAGS) -C ./deps/protobuf clean || exit "$$?"
+	rm -f ./deps/protobuf/Makefile
+
+.PHONY: clean-flibs clean-protos clean-skull-ft clean-jemalloc clean-protobuf
