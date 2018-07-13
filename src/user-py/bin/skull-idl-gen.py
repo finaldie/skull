@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import sys
 import os
@@ -67,7 +67,7 @@ def generate_idl_file(header_file_name):
         return
 
     # Open file
-    header_file = file(header_file_name, 'w')
+    header_file = open(header_file_name, 'w')
 
     # Fill top title
     content = HEADER_CONTENT_START
@@ -88,7 +88,7 @@ def generate_init_file(init_file_name):
     if not init_file_name or len(init_file_name) == 0:
         return
 
-    init_file = file(init_file_name, 'w')
+    init_file = open(init_file_name, 'w')
 
     # Fill top title
     content = HEADER_CONTENT_INIT_START
@@ -107,7 +107,7 @@ def generate_init_file(init_file_name):
     init_file.close()
 
 def usage():
-    print "usage: skull-idl-gen.py -o output_header_file -i init_file -w workflow_proto_list -s service_proto_list"
+    print ("usage: skull-idl-gen.py -o output_header_file -i init_file -w workflow_proto_list -s service_proto_list")
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -124,17 +124,17 @@ if __name__ == "__main__":
                 init_file_name = value
             elif op == "-w":
                 wf_file_list = value.split('|')
-                wf_file_list = filter(None, wf_file_list)
+                wf_file_list = list(filter(None, wf_file_list))
             elif op == "-s":
                 svc_file_list = value.split('|')
-                svc_file_list = filter(None, svc_file_list)
+                svc_file_list = list(filter(None, svc_file_list))
             elif op == "-p":
                 prefix = value
 
         generate_idl_file(header_file_name)
         generate_init_file(init_file_name)
 
-    except Exception, e:
-        print "Fatal: " + str(e)
+    except Exception as e:
+        print ("Fatal: " + str(e))
         usage()
         raise

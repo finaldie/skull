@@ -17,7 +17,7 @@ _Skull_ can be used in generic serving layer or embedded device. E.g. _web logic
 [Changelog](ChangeLog.md)
 
 ## How to Build
-Use _Ubuntu14.04_ as an example. (Tested on `Ubuntu 12.04/14.04/16.04`, `RHEL6.x` and `Raspberry OS`)
+Use _Ubuntu14.04_ as an example. (Tested on `Debian jessie/stretch`, `Ubuntu 12.04/14.04/16.04/18.04, alpine`, `RHEL6.x` and `Raspberry OS`)
 
 ### Install Dependencies
 ```console
@@ -39,6 +39,9 @@ sudo make install
 **Notes:**
  * To disable `jemalloc`, use `make -j4 disable_jemalloc=true` to build it
  * For some _Linux_ Releases, we might need to use `CFLAGS`, `CXXFLAGS`, `LDFLAGS` to finish the build
+
+**More Options:**
+ * `python_path`: By default it's python3, but we can override it to another path for testing purpose
 
 ### Docker Images
 Also, the [**_Docker images_**][31] are ready now, if people don't want to waste time to set up a brand new environment, we can run the **_Docker_** image directly within 1 min :)

@@ -41,8 +41,8 @@ def _load_user_entry(moduleName, entryName, uModule, userModule, isPrintError):
 # Public APIs
 # Module Loader entry, skull-engine will call this to load a user module
 def module_load(module_name):
-    #print sys.path
-    #print "module name: %s" % module_name
+    #print (sys.path, file=sys.stderr)
+    #print ("module name: %s" % module_name, file=sys.stderr)
     full_name = 'skull.modules.' + module_name + '.module'
 
     # Create Global Environment Vars
@@ -65,7 +65,7 @@ def module_load(module_name):
 
     # 1. Load user module
     try:
-        #print "Loading user module: %s" % full_name
+        #print ("Loading user module: %s" % full_name, file=sys.stderr)
 
         uModule = __import__(full_name)
     except Exception as e:

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "skull/txn.h"
+#include "py3_compat.h"
 #include "module_loader.h"
 #include "module_executor.h"
 

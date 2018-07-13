@@ -179,13 +179,13 @@ function _action_module_add()
     done
 
     # 3. Add basic folder structure if the target module does not exist
-    local IDL=`$SKULL_ROOT/bin/skull-config-utils.py -m workflow \
+    local IDL=`$SKULL_PYTHON $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
                 -c $SKULL_CONFIG_FILE -a value -i $workflow_idx -d idl`
 
     action_${language}_module_add "$module" "$IDL"
 
     # 4. Add module into main config
-    $SKULL_ROOT/bin/skull-config-utils.py -m module -c $SKULL_CONFIG_FILE \
+    $SKULL_PYTHON $SKULL_ROOT/bin/skull-config-utils.py -m module -c $SKULL_CONFIG_FILE \
         -a add -M $module -i $workflow_idx -l $language
 
     # 5. add common folder
