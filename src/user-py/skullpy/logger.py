@@ -21,7 +21,7 @@ def trace(msg):
     try:
         capi.log(log_msg)
     except Exception as e:
-        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        print ("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
         pass
 
 def debug(msg):
@@ -40,7 +40,7 @@ def debug(msg):
     try:
         capi.log(log_msg)
     except Exception as e:
-        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        print ("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
         pass
 
 def info(code, msg):
@@ -62,7 +62,7 @@ def info(code, msg):
     try:
         capi.log(log_msg)
     except Exception as e:
-        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        print ("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
         pass
 
 def warn(code, msg, suggestion):
@@ -87,7 +87,7 @@ def warn(code, msg, suggestion):
     try:
         capi.log(log_msg)
     except Exception as e:
-        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        print ("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
         pass
 
 def error(code, msg, solution):
@@ -112,7 +112,7 @@ def error(code, msg, solution):
     try:
         capi.log(log_msg)
     except Exception as e:
-        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        print ("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
         pass
 
 def fatal(code, msg, solution):
@@ -134,7 +134,7 @@ def fatal(code, msg, solution):
     try:
         capi.log(log_msg)
     except Exception as e:
-        print "Failed to log message: {}:{} {}".format(filename, info.lineno, e)
+        print ("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
         pass
 
 # Level Checking APIs

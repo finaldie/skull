@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include "skull/api.h"
+#include "py3_compat.h"
 #include "txn_idldata.h"
 #include "capis.h"
 
@@ -403,11 +404,43 @@ static PyMethodDef SkullMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "skull_capi",
+    NULL,
+    -1,
+    SkullMethods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC
+PyInit_capi() {
+    return PyModule_Create(&moduledef);
+}
+
+#endif
+
 namespace skullpy {
 
+#if PY_MAJOR_VERSION >= 3
 void register_capis() {
-    Py_InitModule("skull_capi", SkullMethods);
+    PyImport_AppendInittab("skull_capi", PyInit_capi);
+    fprintf(stderr, "python3 api loaded\n");
 }
+#else
+void register_capis() {
+    PyObject *module = Py_InitModule("skull_capi", SkullMethods);
+    if (!module) {
+        fprintf(stderr, "python capi module creation failed\n");
+	exit(1);
+    }
+    fprintf(stderr, "python2 api loaded\n");
+}
+#endif
 
 } // End of namespace
 

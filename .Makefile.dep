@@ -7,7 +7,7 @@ protos:
 	cd src && $(MAKE) $@
 
 metrics:
-	cd scripts/config && ../tools/sk-metrics-gen.py -c metrics.yaml
+	cd scripts/config && $(python_path) ../tools/sk-metrics-gen.py -c metrics.yaml
 	mv scripts/config/sk_metrics.h src/api
 	mv scripts/config/sk_metrics.c src/common
 
