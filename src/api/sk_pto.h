@@ -64,16 +64,18 @@
 struct sk_sched_t;
 
 typedef union sk_arg_t {
-    bool     b;
-    int      i;
-    uint32_t u32;
-    uint64_t u64;
-    int32_t  i32;
-    int64_t  i64;
-    void*    p;
-    char*    s;
-    char     c;
-    void     (*f)();
+    bool      b;
+    int       i;
+    uint32_t  u32;
+    uint64_t  u64;
+    int32_t   i32;
+    int64_t   i64;
+    void*     p;
+    char*     s;
+    char      c;
+    void      (*f)();
+    intptr_t  ip;
+    uintptr_t uip;
 } sk_arg_t;
 
 /**

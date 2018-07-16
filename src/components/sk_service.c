@@ -209,7 +209,9 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
     SK_ASSERT(target);
 
     // 3. Schedule to target scheduler to handle the task
-    sk_print("schedule timer task: valid: %d\n", valid);
+    sk_print("schedule timer task: valid: %d, job: %p ,job ptr sz: %zu\n",
+             valid, (void*)(intptr_t)job, sizeof(job));
+
     sk_sched_send(SK_ENV_SCHED, target, entity, NULL, 0,
                   SK_PTO_SVC_TIMER_RUN, service, job, ud, valid, status);
 }
@@ -249,7 +251,7 @@ static
 void _job_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
     // 1. Extract timer parameters
-    sk_print("timer triggered\n");
+    sk_print("core timer triggered\n");
     srv_jobdata_t* jobdata = sk_obj_get(ud).ud;
     sk_service_t*    svc     = jobdata->service;
     sk_service_job   job     = jobdata->job;
@@ -258,6 +260,9 @@ void _job_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     sk_service_job_rw_t type = jobdata->type;
 
     // 4. Send event to prepare running a service task
+    sk_print("send a timer_emit to timer service, job: %p\n",
+             (void*)(uintptr_t)job);
+
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched, entity, NULL, 0,
                   SK_PTO_TIMER_EMIT, svc, job, udata, valid, bidx, type);
 }

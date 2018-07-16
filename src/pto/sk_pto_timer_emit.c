@@ -24,8 +24,8 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
 
     uint32_t id = SK_PTO_TIMER_EMIT;
     sk_service_t*  svc   = sk_pto_arg(id, msg, 0)->p;
-    sk_obj_t*      udata = sk_pto_arg(id, msg, 1)->p;
-    sk_service_job ujob  = sk_pto_arg(id, msg, 2)->f;
+    sk_service_job ujob  = sk_pto_arg(id, msg, 1)->f;
+    sk_obj_t*      udata = sk_pto_arg(id, msg, 2)->p;
     int            valid = sk_pto_arg(id, msg, 3)->i;
     int            bidx  = sk_pto_arg(id, msg, 4)->i;
     sk_service_job_rw_t type = sk_pto_arg(id, msg, 5)->u32;
