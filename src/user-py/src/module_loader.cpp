@@ -164,6 +164,8 @@ int _module_load_config(skull_module_t* module, const char* filename)
 
     PyGILState_STATE state = PyGILState_Ensure();
     skullpy::module_data_t* md = (skullpy::module_data_t*)module->ud;
+
+    // TODO: Useless, remove it later
     md->config = skull_config_create(filename);
 
     // Loading config

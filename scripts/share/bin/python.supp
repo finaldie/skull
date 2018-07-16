@@ -525,7 +525,7 @@
    Memcheck:Leak
    fun:realloc
    fun:_PyObject_GC_Resize
-   fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
+   #fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
 }
 
 {
@@ -533,7 +533,7 @@
    Memcheck:Leak
    fun:malloc
    fun:_PyObject_GC_New
-   fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
+   #fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
 }
 
 {
@@ -541,7 +541,7 @@
    Memcheck:Leak
    fun:malloc
    fun:_PyObject_GC_NewVar
-   fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
+   #fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
 }
 
 #
@@ -917,4 +917,196 @@
    test_decimal2
    Memcheck:Addr4
    fun:PyUnicode_FSConverter
+}
+
+{
+   Handle PyMalloc confusing valgrind python3.5 1
+   Memcheck:Addr4
+   ...
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
+}
+
+{
+   Handle PyMalloc confusing valgrind python3.5 2
+   Memcheck:Addr4
+   ...
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+}
+
+{
+   PyGrammar_AddAccelerators
+   Memcheck:Addr4
+   obj:*
+   fun:PyGrammar_AddAccelerators
+}
+
+{
+   PyImport_ImportModuleLevelObject
+   Memcheck:Addr4
+   ...
+   fun:_PyObject_CallMethodIdObjArgs
+   fun:PyImport_ImportModuleLevelObject
+}
+
+{
+   PyImport_ImportModuleLevelObject jump cond
+   Memcheck:Cond
+   ...
+   fun:_PyObject_CallMethodIdObjArgs
+   fun:PyImport_ImportModuleLevelObject
+}
+
+{
+   PyImport_ImportModuleLevelObject uninitialized value 8 bytes
+   Memcheck:Value8
+   ...
+   fun:_PyObject_CallMethodIdObjArgs
+   fun:PyImport_ImportModuleLevelObject
+}
+
+{
+   Py_Finalize invalid read 4 bytes in PyImport_Cleanup
+   Memcheck:Addr4
+   ...
+   fun:PyImport_Cleanup
+   fun:Py_Finalize
+}
+
+{
+   Py_Finalize invalid read 4 bytes in PyGrammar_RemoveAccelerators
+   Memcheck:Addr4
+   obj:*
+   fun:PyGrammar_RemoveAccelerators
+   fun:Py_Finalize
+}
+
+{
+   _PyGC_CollectNoFail jump cond
+   Memcheck:Cond
+   ...
+   fun:_PyGC_CollectNoFail
+}
+
+{
+   _PyGC_CollectNoFail uninitialized value 8 bytes
+   Memcheck:Value8
+   ...
+   fun:_PyGC_CollectNoFail
+}
+
+{
+   PyDict_Clear jump cond
+   Memcheck:Cond
+   ...
+   fun:PyDict_Clear
+}
+
+{
+   PyDict_Clear uninitialized value 8 bytes
+   Memcheck:Value8
+   ...
+   fun:PyDict_Clear
+}
+
+{
+   _PyObject_GenericGetAttrWithDict
+   Memcheck:Addr4
+   ...
+   fun:_PyObject_GenericGetAttrWithDict
+}
+
+{
+   _PyBytes_Resize Invalid read 4 bytes
+   Memcheck:Addr4
+   obj:*
+   fun:_PyBytes_Resize
+}
+
+{
+   _PyBytes_Resize jump cond
+   Memcheck:Cond
+   obj:*
+   fun:_PyBytes_Resize
+}
+
+{
+   _PyBytes_Resize uninitialized value 8 bytes
+   Memcheck:Value8
+   obj:*
+   fun:_PyBytes_Resize
+}
+
+{
+   _PyGen_Finalize
+   Memcheck:Addr4
+   ...
+   fun:_PyGen_Finalize
+}
+
+{
+   _PyObject_GC_Resize jump cond
+   Memcheck:Cond
+   obj:*
+   fun:_PyObject_GC_Resize
+}
+
+{
+   _PyObject_GC_Resize uninitialized value 8 bytes
+   Memcheck:Value8
+   obj:*
+   fun:_PyObject_GC_Resize
+}
+
+{
+   PyCFunction_Call jump cond
+   Memcheck:Cond
+   ...
+   fun:PyCFunction_Call
+}
+
+{
+   PyCFunction_Call uninitialised value 8 bytes
+   Memcheck:Value8
+   ...
+   fun:PyCFunction_Call
+}
+
+{
+   PyCFunction_Call invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:PyCFunction_Call
+}
+
+{
+   PyDict_SetItem jump cond
+   Memcheck:Cond
+   ...
+   fun:PyDict_SetItem
+}
+
+{
+   PyDict_SetItem uninitialised value 8 bytes
+   Memcheck:Value8
+   ...
+   fun:PyDict_SetItem
+}
+
+{
+   Handle PyMalloc confusing valgrind (possibly leaked)
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_PyObject_GC_Resize
+}
+
+{
+   Handle PyMalloc confusing valgrind (possibly leaked)
+   Memcheck:Leak
+   fun:malloc
+   obj:*
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
 }
