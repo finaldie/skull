@@ -30,6 +30,8 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src /*master*/,
     int            valid   = sk_pto_arg(id, msg, 3)->b;
     sk_service_job_ret_t status = sk_pto_arg(id, msg, 4)->u32;
 
+    sk_print("In timer run: job: %p\n", (void*)(intptr_t)job);
+
     // Run timer job
     SK_LOG_SETCOOKIE("service.%s", sk_service_name(service));
     SK_ENV_POS_SAVE(SK_ENV_POS_SERVICE, service);
