@@ -1,6 +1,7 @@
 MAKE ?= make
 prefix ?= /usr/local
 disable_jemalloc ?= false
+disable_fast_proto ?= false
 export python_path ?= /usr/bin/python3
 
 MAKE_FLAGS +=
