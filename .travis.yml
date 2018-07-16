@@ -11,22 +11,21 @@ before_install:
     - uname -a
     - cat /etc/issue
     - sudo apt-get update -qq
-    - sudo apt-get install autoconf valgrind expect libyaml-dev python-dev python-pip libprotobuf-dev protobuf-compiler libprotobuf-c0-dev protobuf-c-compiler libc-ares-dev
-    - sudo pip install PyYAML protobuf==2.6.1 pympler WebOb
-    - sudo pip freeze
+    - sudo apt-get install autoconf libtool valgrind expect libyaml-dev python3-dev python3-pip libc-ares-dev
+    - sudo pip3 install PyYAML pympler WebOb
+    - sudo pip3 freeze
     - gcc --version
     - g++ --version
     - clang --version
     - clang++ --version
-    - pip -V
-    - python --version
-    - which python
-    - which python-config
-    - python-config --includes
-    - python2-config --includes
-    - python-config --libs
-    - python-config --cflags
-    - python-config --ldflags
+    - pip3 -V
+    - python3 --version
+    - which python3
+    - which python3-config
+    - python3-config --includes
+    - python3-config --libs
+    - python3-config --cflags
+    - python3-config --ldflags
     - dpkg -l | grep python
 
 install: true
@@ -34,12 +33,14 @@ install: true
 before_script: true
 
 script:
+    - make dep -j4
+    - sudo make install-dep
     - make -j4
     - make clean
     - make -j4 debug=true
-    - make clean && make clean-dep
+    - make clean
     - make -j4 disable_jemalloc=true
-    - make clean && make clean-dep
+    - make clean
     - make -j4 disable_jemalloc=true FLIB_CFLAGS=-DFLIB_SKIP_LEGACY
     - sudo make install
     - make check verbose=true
