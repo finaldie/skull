@@ -14,7 +14,7 @@ from skull.common.proto import *
 # @param config  A parsed yamlObj
 #
 def module_init(config):
-    print "py module init"
+    print ("py module init")
 
     Logger.trace('py module init: trace test')
     Logger.debug('py module init: debug test')
@@ -28,7 +28,7 @@ def module_init(config):
 # Module Release Function, be called when shutdown phase
 #
 def module_release():
-    print "py module release"
+    print ("py module release")
     return
 
 ##
@@ -42,7 +42,7 @@ def module_release():
 # @return How many bytes be consumed
 #
 def module_unpack(txn, data):
-    print "py module unpack"
+    print ("py module unpack")
 
     # Store data into txn sharedData
     example_msg = txn.data()
@@ -60,7 +60,7 @@ def module_unpack(txn, data):
 # @return How many bytes be consumed
 #
 def module_pack(txn, txndata):
-    print "py module pack"
+    print ("py module pack")
 
     # Increase counters
     mod_metrics = Metrics.module()
@@ -71,7 +71,7 @@ def module_pack(txn, txndata):
 
     # Assemble response
     example_msg = txn.data()
-    print "pack data: %s" % example_msg.data
+    print ("pack data: %s" % example_msg.data)
 
     if txn.status() != Txn.Txn.TXN_OK:
         txndata.append('error')
@@ -87,7 +87,7 @@ def module_pack(txn, txndata):
 # @return - True if no error
 #         - False if error occurred
 def module_run(txn):
-    print "py module run"
+    print("py module run")
 
     # Increase counters
     mod_metrics = Metrics.module()
@@ -102,11 +102,11 @@ def module_run(txn):
 
     # invoke iocall to s1 service
     ret = txn.iocall('s1', 'get', get_req_msg, 0, _api_cb)
-    print "iocall ret: {}".format(ret)
+    print("iocall ret: {}".format(ret))
     return True
 
 def _api_cb(txn, iostatus, api_name, request_msg, response_msg):
-    print "api_cb: iostatus: {}, api_name: {}, request_msg: {}, response_msg: {}".format(
-            iostatus, api_name, request_msg, response_msg)
+    print("api_cb: iostatus: {}, api_name: {}, request_msg: {}, response_msg: {}".format(
+            iostatus, api_name, request_msg, response_msg))
 
     return True
