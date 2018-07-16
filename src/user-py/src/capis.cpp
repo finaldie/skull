@@ -430,7 +430,6 @@ namespace skullpy {
 #if PY_MAJOR_VERSION >= 3
 void register_capis() {
     PyImport_AppendInittab("skull_capi", PyInit_capi);
-    fprintf(stderr, "python3 api loaded\n");
 }
 #else
 void register_capis() {
@@ -439,7 +438,6 @@ void register_capis() {
         fprintf(stderr, "python capi module creation failed\n");
 	exit(1);
     }
-    fprintf(stderr, "python2 api loaded\n");
 }
 #endif
 

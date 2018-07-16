@@ -83,7 +83,7 @@ void skull_load_api()
 
     char newRunningPath[PYTHON_PATH_MAX];
     snprintf(newRunningPath, PYTHON_PATH_MAX, "%s/lib/py", runningPath);
-    printf("runningPath: %s; newRunningPath: %s\n", runningPath, newRunningPath);
+    //printf("runningPath: %s; newRunningPath: %s\n", runningPath, newRunningPath);
 
     if (_append_syspath(newRunningPath)) {
         fprintf(stderr, "Error: cannot append python sys.path: %s\n", runningPath);
