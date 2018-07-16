@@ -22,8 +22,8 @@ Use _Ubuntu14.04_ as an example. (Tested on `Debian jessie/stretch`, `Ubuntu 12.
 ### Install Dependencies
 ```console
 # Install System Dependencies
-sudo apt-get install autoconf valgrind expect libyaml-dev python3-dev python3-pip libprotobuf-c0-dev protobuf-c-compiler;
-sudo pip install PyYAML pympler WebOb;
+sudo apt-get install autoconf libtool valgrind expect libyaml-dev python3-dev python3-pip;
+sudo pip3 install PyYAML pympler WebOb;
 
 # Clone and Build Dependencies (For example: project folder is 'skull')
 cd skull

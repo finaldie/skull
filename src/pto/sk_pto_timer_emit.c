@@ -16,19 +16,19 @@
 // This proto is ran in master thread
 static
 int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
-          sk_txn_t* txn, void* proto_msg)
+          sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
     SK_ASSERT(entity);
     SK_ASSERT(SK_ENV_ENGINE == SK_ENV_CORE->master);
+    SK_ASSERT(sk_pto_check(SK_PTO_TIMER_EMIT, msg));
 
-    TimerEmit* timer_emit_msg = proto_msg;
-    sk_service_t*  svc   = (sk_service_t*) (uintptr_t) timer_emit_msg->svc;
-    sk_obj_t*      udata = (void*) (uintptr_t) timer_emit_msg->udata;
-    sk_service_job ujob  = *(sk_service_job*) timer_emit_msg->job.data;
-    int            valid = timer_emit_msg->valid;
-    int            bidx  = timer_emit_msg->bidx;
-    sk_service_job_rw_t type = (sk_service_job_rw_t)timer_emit_msg->type;
-
+    uint32_t id = SK_PTO_TIMER_EMIT;
+    sk_service_t*  svc   = sk_pto_arg(id, msg, 0)->p;
+    sk_obj_t*      udata = sk_pto_arg(id, msg, 1)->p;
+    sk_service_job ujob  = sk_pto_arg(id, msg, 2)->f;
+    int            valid = sk_pto_arg(id, msg, 3)->i;
+    int            bidx  = sk_pto_arg(id, msg, 4)->i;
+    sk_service_job_rw_t type = sk_pto_arg(id, msg, 5)->u32;
 
     // 1. Create a service task (access -> write)
     sk_srv_task_t task;
@@ -67,7 +67,6 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     return 0;
 }
 
-sk_proto_opt_t sk_pto_timer_emit = {
-    .descriptor = &timer_emit__descriptor,
+sk_proto_ops_t sk_pto_ops_timer_emit = {
     .run = _run
 };
