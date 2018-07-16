@@ -5,7 +5,6 @@ SKULL_LIBS = \
     -lyaml \
     -lflibs \
     $(JEMALLOC_STATIC) \
-    -lprotobuf-c \
     -pthread \
     -ldl \
     -lrt
@@ -58,7 +57,7 @@ ENTITY_OBJS = \
 
 DRIVER_OBJS = \
     drivers/sk_driver.o \
-    drivers/sk_driver_immedia.o \
+    drivers/sk_driver_direct.o \
     drivers/sk_driver_stdin.o \
     drivers/sk_driver_tcp.o \
     drivers/sk_driver_udp.o \
@@ -76,29 +75,18 @@ COMPONENTS_OBJS = \
 
 PTO_OBJS = \
     pto/sk_pto.o \
-    pto/sk_pto_net_accept.o \
+    pto/sk_pto_tcp_accept.o \
     pto/sk_pto_entity_destroy.o \
     pto/sk_pto_workflow_run.o \
     pto/sk_pto_service_iocall.o \
     pto/sk_pto_service_task_run.o \
-    pto/sk_pto_service_task_complete.o \
+    pto/sk_pto_service_task_done.o \
     pto/sk_pto_timer_triggered.o \
     pto/sk_pto_timer_emit.o \
     pto/sk_pto_stdin_start.o \
     pto/sk_pto_service_timer_run.o \
-    pto/sk_pto_service_timer_complete.o \
+    pto/sk_pto_service_timer_done.o \
     pto/sk_pto_service_task_cb.o
-
-PTO_IDLS_OBJS = \
-    pto/idls/net_accept.pb-c.o \
-    pto/idls/entity_destroy.pb-c.o \
-    pto/idls/workflow_run.pb-c.o \
-    pto/idls/service_iocall.pb-c.o \
-    pto/idls/service_task.pb-c.o \
-    pto/idls/timer_triggered.pb-c.o \
-    pto/idls/timer_emit.pb-c.o \
-    pto/idls/stdin_start.pb-c.o \
-    pto/idls/service_timer.pb-c.o
 
 USER_C_OBJS = \
     user-c/src/logger_private.o \
@@ -123,19 +111,7 @@ SKULL_OBJS = \
     $(COMPONENTS_OBJS) \
     $(SKULL_MAIN_OBJ) \
     $(PTO_OBJS) \
-    $(PTO_IDLS_OBJS) \
     $(USER_C_OBJS)
-
-PROTO_IDLS = \
-    net_accept.proto \
-    entity_destroy.proto \
-    workflow_run.proto \
-    service_iocall.proto \
-    service_task.proto \
-    timer_triggered.proto \
-    timer_emit.proto \
-    stdin_start.proto \
-    service_timer.proto
 
 UT_OBJS = \
     user-c/src/unittest.o \
@@ -162,15 +138,10 @@ UT_OBJS = \
     entities/sk_entity.o \
     entities/sk_entity_stdin.o \
     entities/sk_entity_tcp.o \
-    entities/sk_entity_udp.o \
-    pto/idls/service_iocall.pb-c.o \
-    pto/idls/service_task.pb-c.o
+    entities/sk_entity_udp.o
 
 # target rules
 all: $(SKULL_ENGINE) $(SKULL_UTLIB_C)
-
-# compile proto idls
-protos: $(PROTO_IDLS)
 
 install:
 	test -d $(prefix)/bin || mkdir -p $(prefix)/bin
@@ -180,10 +151,7 @@ install:
 clean:
 	rm -f $(SKULL_ENGINE) $(SKULL_UTLIB_C) $(SKULL_OBJS) $(UT_OBJS)
 
-clean-protos:
-	rm -f pto/idls/*.pb-c.*
-
-.PHONY: skull clean install protos clean-protos
+.PHONY: skull clean install
 
 # sub targets
 $(SKULL_ENGINE): $(SKULL_OBJS)
@@ -193,10 +161,6 @@ $(SKULL_ENGINE): $(SKULL_OBJS)
 $(SKULL_UTLIB_C): $(UT_OBJS)
 	$(SKULL_UTLD) -o $(SKULL_UTLIB_C) $(UT_OBJS) $(SKULL_LIBS)
 
-# compile protocol file without -Wpadded
-%.pb-c.o: %.pb-c.c
-	$(SKULL_TP_CC) -c $< -o $@
-
 # This file needs extra_macro to build static core information
 common/sk_utils.o: common/sk_utils.c
 	$(SKULL_CC) $(EXTRA_MACRO) -c $< -o $@
@@ -204,5 +168,3 @@ common/sk_utils.o: common/sk_utils.c
 %.o: %.c
 	$(SKULL_CC) -c $< -o $@
 
-%.proto:
-	cd pto/idls && protoc-c --c_out=. $@

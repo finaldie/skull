@@ -47,7 +47,7 @@ def generate_headers(api_file_list, pkg_name, addReflection):
         else:
             # We use add addReflection = True when generate __init__.py file,
             #  so no need to import the full path
-            content += "import %s_pb2 as %s\n" % (api_basename, alias_name)
+            content += "from . import %s_pb2 as %s\n" % (api_basename, alias_name)
             content += "descpool.Default().Add(descriptor_pb2.FileDescriptorProto.FromString(%s.DESCRIPTOR.serialized_pb))\n\n" % alias_name
 
     return content

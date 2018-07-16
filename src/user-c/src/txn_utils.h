@@ -1,7 +1,6 @@
 #ifndef SKULL_TXN_UTILS_H
 #define SKULL_TXN_UTILS_H
 
-#include <google/protobuf-c/protobuf-c.h>
 #include "api/sk_txn.h"
 
 struct _skull_txn_t {

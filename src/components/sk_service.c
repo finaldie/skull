@@ -161,20 +161,14 @@ void _schedule_api_task(sk_service_t* service, const sk_srv_task_t* task)
     sk_txn_t*   txn     = task->data.api.txn;
     sk_txn_taskdata_t* taskdata = task->data.api.txn_task;
 
-    ServiceTaskRun task_run_pto = SERVICE_TASK_RUN__INIT;
-    task_run_pto.service_name = (char*) sk_service_name(service);
-    task_run_pto.api_name     = (char*) task->data.api.name;
-    task_run_pto.io_status    = (uint32_t) task->io_status;
-    task_run_pto.src          = (uint64_t) (uintptr_t) src;
-    task_run_pto.taskdata     = (uint64_t) (uintptr_t) taskdata;
-
     // 2. Find a bio if needed
     const sk_sched_t* target = _find_target_sched(src, bidx);
     SK_ASSERT(target);
 
     // 3. Deliver the protocol
-    sk_sched_send(SK_ENV_SCHED, target, sk_txn_entity(txn), txn,
-                  SK_PTO_SVC_TASK_RUN, &task_run_pto, 0);
+    sk_sched_send(SK_ENV_SCHED, target, sk_txn_entity(txn), txn, 0,
+                  SK_PTO_SVC_TASK_RUN, sk_service_name(service),
+                  task->data.api.name, task->io_status, src, taskdata);
 
     sk_print("service: deliver task(%d) to worker\n", (int) task_id);
     SK_LOG_TRACE(SK_ENV_LOGGER, "service: deliver task(%d) to worker",
@@ -189,16 +183,11 @@ void _schedule_api_errortask(sk_service_t* service, const sk_srv_task_t* task)
     sk_txn_t*         txn = task->data.api.txn;
     sk_txn_taskdata_t* taskdata = task->data.api.txn_task;
 
-    ServiceTaskCb task_cb_msg = SERVICE_TASK_CB__INIT;
-    task_cb_msg.taskdata      = (uint64_t) (uintptr_t) taskdata;
-    task_cb_msg.service_name  = (char*) sk_service_name(service);;
-    task_cb_msg.api_name      = (char*) task->data.api.name;
-    task_cb_msg.task_status   = (uint32_t) SK_TXN_TASK_BUSY;
-    task_cb_msg.svc_task_done = 0;
-
     // 2. Deliver the protocol
-    sk_sched_send(SK_ENV_SCHED, src, sk_txn_entity(txn), txn,
-                  SK_PTO_SVC_TASK_CB, &task_cb_msg, 0);
+    sk_sched_send(SK_ENV_SCHED, src, sk_txn_entity(txn), txn, 0,
+                  SK_PTO_SVC_TASK_CB, taskdata, sk_service_name(service),
+                  task->data.api.name, SK_TXN_TASK_BUSY,
+                  false /*svc task done*/);
 }
 
 static
@@ -214,14 +203,6 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
     sk_service_job_ret_t status = task->io_status == SK_SRV_IO_STATUS_OK
         ? SK_SRV_JOB_OK : SK_SRV_JOB_ERROR_BUSY;
 
-    ServiceTimerRun msg = SERVICE_TIMER_RUN__INIT;
-    msg.svc       = (uintptr_t) (void*) service;
-    msg.job.len   = sizeof (job);
-    msg.job.data  = (uint8_t*) &job;
-    msg.ud        = (uintptr_t) (void*) ud;
-    msg.valid     = valid;
-    msg.status    = status;
-
     // 2. Find a bio if needed
     const sk_sched_t* target = status == SK_SRV_JOB_OK
         ? _find_target_sched(src, bidx) : src;
@@ -229,8 +210,8 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
 
     // 3. Schedule to target scheduler to handle the task
     sk_print("schedule timer task: valid: %d\n", valid);
-    sk_sched_send(SK_ENV_SCHED, target, entity, NULL,
-                      SK_PTO_SVC_TIMER_RUN, &msg, 0);
+    sk_sched_send(SK_ENV_SCHED, target, entity, NULL, 0,
+                  SK_PTO_SVC_TIMER_RUN, service, job, ud, valid, status);
 }
 
 // return 0 on invalid, 1 on valid
@@ -276,18 +257,9 @@ void _job_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     int              bidx    = jobdata->bidx;
     sk_service_job_rw_t type = jobdata->type;
 
-    TimerEmit timer_msg = TIMER_EMIT__INIT;
-    timer_msg.svc       = (uint64_t) (uintptr_t) svc;
-    timer_msg.job.len   = sizeof (job);
-    timer_msg.job.data  = (uint8_t*) &job;
-    timer_msg.udata     = (uint64_t) (uintptr_t) udata;
-    timer_msg.valid     = valid;
-    timer_msg.bidx      = bidx;
-    timer_msg.type      = type;
-
     // 4. Send event to prepare running a service task
-    sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched, entity, NULL,
-                    SK_PTO_TIMER_EMIT, &timer_msg, 0);
+    sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched, entity, NULL, 0,
+                  SK_PTO_TIMER_EMIT, svc, job, udata, valid, bidx, type);
 }
 
 //========================= Public APIs of service =============================
@@ -589,15 +561,13 @@ void sk_service_api_complete(const sk_service_t* service,
     sk_entity_t* entity = sk_txn_entity(txn);
     sk_sched_t* api_caller = sk_entity_sched(entity);
 
-    ServiceTaskCb task_cb_msg = SERVICE_TASK_CB__INIT;
-    task_cb_msg.taskdata      = (uint64_t) (uintptr_t) taskdata;
-    task_cb_msg.service_name  = (char*) service->name;
-    task_cb_msg.api_name = (char*) sk_service_api(service, api_name)->name;
-    task_cb_msg.task_status   = SK_TXN_TASK_DONE;
-    task_cb_msg.svc_task_done = 0; // do not complete the svc task again
-
-    sk_sched_send(SK_ENV_SCHED, api_caller, entity, txn,
-                  SK_PTO_SVC_TASK_CB, &task_cb_msg, 0);
+    // Notes: Do not complete the svc task again, here we set svc_task_done to
+    //  `false`
+    sk_sched_send(SK_ENV_SCHED, api_caller, entity, txn, 0,
+                  SK_PTO_SVC_TASK_CB, taskdata, service->name,
+                  sk_service_api(service, api_name)->name,
+                  SK_TXN_TASK_DONE /*task status*/,
+                  false /*svc_task_done*/);
 }
 
 void* sk_service_data(sk_service_t* service)
@@ -687,18 +657,11 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
     task_data.pendings   = 0; // how many internal pending ep calls
     uint64_t task_id = sk_txn_task_add(txn, &task_data);
 
-    // 3. construct iocall protocol
-    ServiceIocall iocall_msg = SERVICE_IOCALL__INIT;
-    iocall_msg.task_id       = task_id;
-    iocall_msg.service_name  = (char*) service->name;
-    iocall_msg.api_name      = (char*) api_name;
-    iocall_msg.bio_idx       = bidx;
-    iocall_msg.txn_task      = (uint64_t) (uintptr_t) sk_txn_taskdata(txn, task_id);
-
-    //5. Send to master engine
+    // 3. Send to master engine
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched,
-                  sk_txn_entity(txn), txn,
-                  SK_PTO_SVC_IOCALL, &iocall_msg, 0);
+                  sk_txn_entity(txn), txn, 0,
+                  SK_PTO_SVC_IOCALL, task_id, service->name, api_name,
+                  bidx, sk_txn_taskdata(txn, task_id));
     return 0;
 }
 

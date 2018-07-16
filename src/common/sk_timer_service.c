@@ -93,19 +93,13 @@ static
 void _timer_triggered(fev_state* state, void* arg)
 {
     SK_ASSERT(arg);
-    sk_print("tmsvc: timer triggered\n");
 
     sk_timer_t* timer = arg;
     timer->triggered = 1;
+    sk_print("tmsvc: timer triggered %p\n", (void*)timer);
 
-    TimerTriggered timer_pto = TIMER_TRIGGERED__INIT;
-    timer_pto.timer_obj      = (uint64_t) (uintptr_t) timer;
-    timer_pto.timer_cb.len   = sizeof (timer->trigger);
-    timer_pto.timer_cb.data  = (uint8_t*) &timer->trigger;
-    timer_pto.ud             = (uint64_t) (uintptr_t) timer->ud;
-
-    sk_sched_send(SK_ENV_SCHED, SK_ENV_SCHED, timer->entity, NULL,
-                  SK_PTO_TIMER_TRIGGERED, &timer_pto, 0);
+    sk_sched_send(SK_ENV_SCHED, SK_ENV_SCHED, timer->entity, NULL, 0,
+                  SK_PTO_TIMER_TRIGGERED, timer, timer->trigger, timer->ud);
 }
 
 sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,

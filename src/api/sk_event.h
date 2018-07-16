@@ -29,7 +29,6 @@ typedef struct sk_event_t {
     //  it would improve the performance
     void*    txn;
 
-    // Protobuf data
     void*    data;
 } sk_event_t;
 
