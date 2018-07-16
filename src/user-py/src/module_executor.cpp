@@ -114,7 +114,8 @@ ssize_t skull_module_unpack (void* md, skull_txn_t* txn,
     PyObject* pyModuleName = PyString_FromString(mdata->name);
     PyObject* pyEntryName  = PyString_FromString(MODULE_UNPACK_FUNCNAME);
     PyObject* pyTxn        = PyCapsule_New(txn, "skull_txn", NULL);
-    PyObject* pyData       = Py_BuildValue("s#", data, data_len); // Read-Only char buffer
+    PyObject* pyData       = PyString_FromStringAndSize((const char*)data,
+                                                        (Py_ssize_t)data_len);
 
     PyTuple_SetItem(pyArgs, 0, pyModuleName);
     PyTuple_SetItem(pyArgs, 1, pyEntryName);

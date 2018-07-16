@@ -67,7 +67,8 @@ PyObject* py_txn_get(PyObject* self, PyObject* args) {
         Py_INCREF(Py_None);
         return Py_None;
     } else {
-        return Py_BuildValue("s#", rawData->data(), rawData->size());
+        return PyBytes_FromStringAndSize((const char*)rawData->data(),
+                                         rawData->size());
     }
 }
 
