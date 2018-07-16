@@ -32,14 +32,14 @@ def module_release():
 #
 # @param txn  Transaction context which is used for getting shared transaction
 #              data or invoking service `iocall`
-# @param data Input data
+# @param data Input read-only `bytes` data
 #
-# @return - > 0: How many bytes consumed
+# @return - > 0: Tell engine N bytes be consumed
 #         - = 0: Need more data
 #         - < 0: Error occurred
 #
 def module_unpack(txn, data):
-    logger.debug('ModuleUnpack: receive data: {}'.format(data))
+    logger.debug('ModuleUnpack: receive data: {}'.format(data.decode('UTF-8')))
 
     # Store data into txn sharedData
     sharedData = txn.data()
