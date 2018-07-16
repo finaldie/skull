@@ -659,8 +659,8 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 
     // 3. Send to master engine
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched,
-                  sk_txn_entity(txn), txn, 0,
-                  SK_PTO_SVC_IOCALL, task_id, service->name, api_name,
+                  sk_txn_entity(txn), txn, 0, SK_PTO_SVC_IOCALL,
+                  task_id, service->name, task_data.api_name,
                   bidx, sk_txn_taskdata(txn, task_id));
     return 0;
 }
