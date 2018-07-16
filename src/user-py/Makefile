@@ -21,7 +21,7 @@ PYTHON_CFLAGS := $(shell $(python_path)-config --cflags)
 PYTHON_LIBS := $(shell $(python_path)-config --libs)
 
 CXX ?= g++
-STD = -std=c++0x
+STD = -std=c++11
 # Reset macro
 MACRO =
 INC += \
