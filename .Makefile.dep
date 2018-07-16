@@ -1,3 +1,8 @@
+ifeq ($(disable_fast_proto), false)
+    CPP_PROTO = --cpp_implementation
+else
+    CPP_PROTO =
+endif
 
 # dependency targets
 flibs:
@@ -20,7 +25,7 @@ protobuf-cpp: deps/protobuf/Makefile
 	cd deps/protobuf && $(MAKE) $(MAKE_FLAGS)
 
 protobuf-py: protobuf-cpp
-	cd deps/protobuf/python && $(python_path) setup.py build --cpp_implementation
+	cd deps/protobuf/python && $(python_path) setup.py build $(CPP_PROTO)
 
 protobuf: protobuf-py
 
@@ -53,7 +58,7 @@ install-protobuf-cpp:
 	cd deps/protobuf && $(MAKE) install && ldconfig
 
 install-protobuf-py: install-protobuf-cpp
-	cd deps/protobuf/python && $(python_path) setup.py install --cpp_implementation
+	cd deps/protobuf/python && $(python_path) setup.py install $(CPP_PROTO)
 
 install-protobuf: install-protobuf-py
 
