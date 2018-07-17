@@ -68,7 +68,7 @@ PyObject* py_txn_get(PyObject* self, PyObject* args) {
         return Py_None;
     } else {
         return PyBytes_FromStringAndSize((const char*)rawData->data(),
-                                         rawData->size());
+                                         (Py_ssize_t)rawData->size());
     }
 }
 
