@@ -24,7 +24,7 @@ deps/jemalloc/Makefile:
 protobuf-cpp: deps/protobuf/Makefile
 	cd deps/protobuf && $(MAKE) $(MAKE_FLAGS)
 
-protobuf-py: protobuf-cpp
+protobuf-py: install-protobuf-cpp
 	cd deps/protobuf/python && $(python_path) setup.py build $(CPP_PROTO)
 
 protobuf: protobuf-py
@@ -54,7 +54,7 @@ install-others:
 install-scripts:
 	cd scripts && $(MAKE) install
 
-install-protobuf-cpp:
+install-protobuf-cpp: protobuf-cpp
 	cd deps/protobuf && $(MAKE) install && ldconfig
 
 install-protobuf-py: install-protobuf-cpp
