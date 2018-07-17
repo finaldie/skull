@@ -24,10 +24,10 @@ deps/jemalloc/Makefile:
 protobuf-cpp: deps/protobuf/Makefile
 	cd deps/protobuf && $(MAKE) $(MAKE_FLAGS)
 
-protobuf-py: install-protobuf-cpp
+protobuf-py:
 	cd deps/protobuf/python && $(python_path) setup.py build $(CPP_PROTO)
 
-protobuf: protobuf-py
+protobuf: protobuf-cpp
 
 deps/protobuf/Makefile:
 	cd deps/protobuf && ./autogen.sh && ./configure
@@ -54,13 +54,13 @@ install-others:
 install-scripts:
 	cd scripts && $(MAKE) install
 
-install-protobuf-cpp: protobuf-cpp
+install-protobuf-cpp:
 	cd deps/protobuf && $(MAKE) install && ldconfig
 
-install-protobuf-py: install-protobuf-cpp
+install-protobuf-py:
 	cd deps/protobuf/python && $(python_path) setup.py install $(CPP_PROTO)
 
-install-protobuf: install-protobuf-py
+install-protobuf: install-protobuf-cpp
 
 .PHONY: install-core install-api install-others install-scripts
 .PHONY: install-skull-ft install-ft install-protobuf install-protobuf-py
