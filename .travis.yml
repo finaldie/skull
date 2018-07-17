@@ -4,8 +4,8 @@ dist: trusty
 sudo: required
 
 env:
-    - CC=gcc CXX=g++
-    - CC=clang CXX=clang++
+    - CC=gcc CXX=g++ CXXFLAGS+=-std=c++11
+    - CC=clang CXX=clang++ CXXFLAGS+=-std=c++11
 
 before_install:
     - uname -a
@@ -34,9 +34,9 @@ before_script: true
 
 script:
     - make protobuf
-    - sudo make install-protobuf
+    - sudo -i make install-protobuf
     - make protobuf-py
-    - sudo make install-protobuf-py
+    - sudo -i make install-protobuf-py
     - make dep -j4
     - sudo make install-dep
     - make -j4
