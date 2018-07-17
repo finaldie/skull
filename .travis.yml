@@ -33,8 +33,8 @@ install: true
 before_script: true
 
 script:
-    - sudo make dep -j4
-    - sudo make install-dep
+    - make dep -j4
+    - make install-dep
     - make -j4
     - make clean
     - make -j4 debug=true
@@ -42,7 +42,7 @@ script:
     - make -j4 disable_jemalloc=true
     - make clean
     - make -j4 disable_jemalloc=true FLIB_CFLAGS=-DFLIB_SKIP_LEGACY
-    - sudo make install
+    - make install
     - make check verbose=true
 
 after_success: true
