@@ -34,9 +34,9 @@ before_script: true
 
 script:
     - make protobuf
-    - sudo -i make install-protobuf
+    - sudo env PATH=$PATH make install-protobuf
     - make protobuf-py
-    - sudo -i make install-protobuf-py
+    - sudo env PATH=$PATH make install-protobuf-py
     - make dep -j4
     - sudo make install-dep
     - make -j4
