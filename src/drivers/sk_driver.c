@@ -3,7 +3,7 @@
 #include "api/sk_utils.h"
 #include "api/sk_driver.h"
 
-extern sk_driver_opt_t sk_driver_direct;
+extern sk_driver_opt_t sk_driver_immedia;
 extern sk_driver_opt_t sk_driver_stdin;
 extern sk_driver_opt_t sk_driver_tcp;
 extern sk_driver_opt_t sk_driver_udp;
@@ -33,7 +33,7 @@ sk_driver_t* sk_driver_create(sk_engine_t* engine, sk_workflow_t* workflow)
     // 3. set opt
     switch (driver->type) {
     case SK_DRIVER_IMMEDIATELY:
-        driver->opt = sk_driver_direct;
+        driver->opt = sk_driver_immedia;
         break;
     case SK_DRIVER_STDIN:
         driver->opt = sk_driver_stdin;

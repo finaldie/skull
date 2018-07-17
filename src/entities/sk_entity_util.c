@@ -39,8 +39,8 @@ int sk_entity_safe_destroy(sk_entity_t* entity)
                 return 0;
             }
 
-            sk_sched_send(sched, target, entity, NULL, 0,
-                      SK_PTO_ENTITY_DESTROY);
+            sk_sched_send(sched, target, entity, NULL,
+                      SK_PTO_ENTITY_DESTROY, NULL, 0);
             return 1;
         } else {
             sk_entity_mgr_del(owner, entity);

@@ -115,7 +115,7 @@ function action_py_gen_metrics()
     local tmp_source_file=$tmpdir/metrics.py
     local source_file=$COMMON_PY_LOCATION/metrics.py
 
-    $SKULL_PYTHON $LANGUAGE_PY_PATH/bin/skull-metrics-gen.py -c $config \
+    python $LANGUAGE_PY_PATH/bin/skull-metrics-gen.py -c $config \
         -o $tmp_source_file
 
     if ! $(sk_util_compare_file $tmp_source_file $source_file); then
@@ -123,10 +123,6 @@ function action_py_gen_metrics()
     fi
 }
 
-##
-# @notes Python config currently use yaml object direct, won't re-generate
-#         the python config again
-#
 function action_py_gen_config()
 {
     local config=$1
@@ -136,7 +132,7 @@ function action_py_gen_config()
 
     ## Compare the md5 of the new metrics and old metrics' files, do not to
     ## replace them if they are same, it will reduce the compiling time
-    #$SKULL_PYTHON $LANGUAGE_PY_PATH/bin/skull-config-gen.py -c $config \
+    #$LANGUAGE_PY_PATH/bin/skull-config-gen.py -c $config \
     #    -h $tmpdir/config.h
 
     ## if the new config.x are different from the old ones, replace them
@@ -221,7 +217,7 @@ function _generate_py_protos()
         param_list+=" -s $svc_proto_list"
     fi
 
-    $SKULL_PYTHON $LANGUAGE_PY_PATH/bin/skull-idl-gen.py -p $PROTO_PY_FOLDER_NAME \
+    $LANGUAGE_PY_PATH/bin/skull-idl-gen.py -p $PROTO_PY_FOLDER_NAME \
         -i $PROTO_PY_FOLDER/__init__.py \
         $param_list
 }

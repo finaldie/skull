@@ -18,22 +18,21 @@
  */
 static
 int _run(const sk_sched_t* sched, const sk_sched_t* src,
-         sk_entity_t* entity, sk_txn_t* txn, sk_pto_hdr_t* msg)
+         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     SK_ASSERT(sched);
     SK_ASSERT(entity);
     SK_ASSERT(txn);
-    SK_ASSERT(msg);
-    SK_ASSERT(sk_pto_check(SK_PTO_SVC_IOCALL, msg));
+    SK_ASSERT(proto_msg);
     SK_ASSERT(SK_ENV_ENGINE == SK_ENV_CORE->master);
 
     // 1. unpack the parameters
-    uint32_t id = SK_PTO_SVC_IOCALL;
-    uint64_t    task_id         = sk_pto_arg(id, msg, 0)->u64;
-    const char* service_name    = sk_pto_arg(id, msg, 1)->s;
-    const char* api_name        = sk_pto_arg(id, msg, 2)->s;
-    int         bidx            = sk_pto_arg(id, msg, 3)->i;
-    sk_txn_taskdata_t* taskdata = sk_pto_arg(id, msg, 4)->p;
+    ServiceIocall* iocall_msg = proto_msg;
+    uint64_t    task_id       = iocall_msg->task_id;
+    const char* service_name  = iocall_msg->service_name;
+    const char* api_name      = iocall_msg->api_name;
+    int         bidx          = iocall_msg->bio_idx;
+    sk_txn_taskdata_t* taskdata = (sk_txn_taskdata_t*) (uintptr_t) iocall_msg->txn_task;
 
     // 2. find the target service
     sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
@@ -100,6 +99,7 @@ io_call_exit:
     return ret;
 }
 
-sk_proto_ops_t sk_pto_ops_srv_iocall = {
+sk_proto_opt_t sk_pto_srv_iocall = {
+    .descriptor = &service_iocall__descriptor,
     .run        = _run
 };

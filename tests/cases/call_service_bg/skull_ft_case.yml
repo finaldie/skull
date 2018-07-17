@@ -19,13 +19,13 @@ run:
 
 verify:
     - echo "verify"
-    - 'echo "info" | nc -w 1 127.0.0.1 7759 | grep "status:" | awk ''{print $2}'' | grep "2"'
-    - echo "hello" | nc -w 1 127.0.0.1 7758 -i 1 | grep "Hi new bie, Hi new bie"
+    - 'echo "info" | nc 127.0.0.1 7759 | grep "status:" | awk ''{print $2}'' | grep "2"'
+    - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie, Hi new bie"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "Start bio engine \[1\] successfully"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "bio-1:service.s1"'
-    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response: 2"'
+    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'
 
 post-verify:
     - echo "post-verify"

@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "py3_compat.h"
 #include "module_executor.h"
 #include "module_loader.h"
 
@@ -164,8 +163,6 @@ int _module_load_config(skull_module_t* module, const char* filename)
 
     PyGILState_STATE state = PyGILState_Ensure();
     skullpy::module_data_t* md = (skullpy::module_data_t*)module->ud;
-
-    // TODO: Useless, remove it later
     md->config = skull_config_create(filename);
 
     // Loading config

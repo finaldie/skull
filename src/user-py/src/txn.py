@@ -66,10 +66,10 @@ class Txn(object):
     #         - IO_ERROR_BIO
     #         - IO_ERROR_REQUEST
     def iocall(self, service_name, api_name, request_msg, bio_idx=None, api_cb=None):
-        if service_name is None or isinstance(service_name, str) is False:
+        if service_name is None or isinstance(service_name, types.StringType) is False:
             return Txn.IO_ERROR_SVCNAME
 
-        if api_name is None or isinstance(api_name, str) is False:
+        if api_name is None or isinstance(api_name, types.StringType) is False:
             return Txn.IO_ERROR_APINAME
 
         if request_msg is None or isinstance(request_msg, message.Message) is False:

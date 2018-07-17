@@ -47,7 +47,9 @@ void _sk_accept(fev_state* fev, int fd, void* ud)
                            is_v4 ? SK_ENTITY_SOCK_V4TCP : SK_ENTITY_SOCK_V6TCP);
     sk_print("create a new entity(%d)\n", fd);
 
-    sk_sched_send(sched, NULL, entity, NULL, 0, SK_PTO_TCP_ACCEPT, fd);
+    NetAccept accept_msg = NET_ACCEPT__INIT;
+    accept_msg.fd = fd;
+    sk_sched_send(sched, NULL, entity, NULL, SK_PTO_NET_ACCEPT, &accept_msg, 0);
 }
 
 static

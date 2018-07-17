@@ -20,12 +20,12 @@ run:
 
 verify:
     - echo "verify"
-    - echo "hello" | nc -w 1 127.0.0.1 7758 -i 1 | grep "error"
+    - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "error"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "error status occurred"'
     - 'cat ${RUN}/project/run/log/skull.log | grep TxnLog | awk ''{print $9}'' | grep 1'
-    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response: 1"'
+    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
 
 post-verify:
     - echo "post-verify"

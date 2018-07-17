@@ -112,7 +112,7 @@ int sk_driver_util_deliver(sk_entity_t* entity,
         sk_entity_txnadd(entity, txn);
 
         // 2. Send a workflow event
-        sk_sched_send(sched, deliver_to, entity, txn, 0, SK_PTO_WORKFLOW_RUN);
+        sk_sched_send(sched, deliver_to, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
         delivery++;
     }
 

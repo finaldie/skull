@@ -34,7 +34,7 @@ def run_module_run(run_func, skull_txn):
                 'StackTrace:\n{}'.format(__dumpStackTrace()))
         return False
 
-def run_module_unpack(unpack_func, skull_txn, data: bytes):
+def run_module_unpack(unpack_func, skull_txn, data):
     txn = Txn.Txn(skull_txn)
 
     try:

@@ -3,8 +3,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <stdarg.h>
 #include <sys/eventfd.h>
+#include <google/protobuf-c/protobuf-c.h>
 
 #include "flibs/fmbuf.h"
 #include "flibs/fev.h"
@@ -33,6 +33,7 @@ typedef struct sk_io_bridge_t {
 struct sk_sched_t {
     void* evlp;
     sk_entity_mgr_t* entity_mgr;
+    sk_proto_t*      pto_tbl;
     sk_timersvc_t*   tmsvc;
     sk_io_t*         io_tbl[SK_PTO_PRI_SZ];
     sk_io_bridge_t*  bridge_tbl[SK_SCHED_MAX_IO_BRIDGE];
@@ -59,10 +60,9 @@ void _event_destroy(sk_event_t* event)
     free(event->data);
 }
 
-static
 sk_proto_t* _get_pto(const sk_sched_t* sched, uint32_t pto_id)
 {
-    return &sk_pto_tbl[pto_id];
+    return &sched->pto_tbl[pto_id];
 }
 
 // copy the events from bridge mq
@@ -91,7 +91,7 @@ void _copy_event(fev_state* fev, int fd, int mask, void* arg)
         sk_sched_t* dst      = io_bridge->dst;
         uint32_t    pto_id   = event.pto_id;
         sk_proto_t* pto      = _get_pto(dst, pto_id);
-        int         priority = pto->pri;
+        int         priority = pto->priority;
         sk_io_t*    dst_io   = io_bridge->dst->io_tbl[priority];
 
         sk_io_type_t io_type = event.dst == dst ? SK_IO_INPUT : SK_IO_OUTPUT;
@@ -168,10 +168,9 @@ void _check_ptos(sk_proto_t* pto_tbl)
         return;
     }
 
-    for (int i = 0; pto_tbl[i].id < SK_PTO_MAX; i++) {
-        sk_proto_t* pto = &pto_tbl[i];
-        SK_ASSERT_MSG(i == pto->id, "pto id mis-match, %d - %u\n", i, pto->id);
-        SK_ASSERT_MSG(pto->ops->run, "pto missing run function: id %u\n", i);
+    for (int i = 0; pto_tbl[i].pto_id != -1; i++) {
+        sk_proto_t pto = pto_tbl[i];
+        SK_ASSERT(pto.opt->run);
     }
 }
 
@@ -359,7 +358,7 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
 
     uint32_t pto_id = event->pto_id;
     sk_proto_t* pto = _get_pto(sched, pto_id);
-    sk_print("Run event: pto_id = %u, priority: %d\n", pto_id, pto->pri);
+    sk_print("Run event: pto_id = %u, priority: %d\n", pto_id, pto->priority);
     SK_ASSERT(pto);
 
     sk_entity_t* entity = event->entity;
@@ -370,12 +369,17 @@ int _run_event(sk_sched_t* sched, sk_io_t* io, sk_event_t* event)
         sk_entity_mgr_add(sched->entity_mgr, entity);
     }
 
-    // 2. Run event
+    // 2. Decode the message
+    ProtobufCMessage* msg =
+        protobuf_c_message_unpack(pto->opt->descriptor, NULL, event->sz, event->data);
+
+    // 3. Run event
     sk_txn_t*   txn = event->txn;
     const sk_sched_t* src = event->src;
-    pto->ops->run(sched, src, entity, txn, event->data);
+    pto->opt->run(sched, src, entity, txn, msg);
 
-    // 3. Release event
+    // 4. Release message resources
+    protobuf_c_message_free_unpacked(msg, NULL);
     _event_destroy(event);
 
     return 0;
@@ -429,12 +433,9 @@ int _process_events(sk_sched_t* sched)
 }
 
 static
-int _emit_event(const sk_sched_t* sched,
-                const sk_sched_t* dst,
-                sk_io_type_t io_type,
-                const sk_entity_t* entity,
-                const sk_txn_t* txn,
-                int flags, uint32_t pto_id, va_list ap)
+int _emit_event(const sk_sched_t* sched, const sk_sched_t* dst, sk_io_type_t io_type,
+                const sk_entity_t* entity, const sk_txn_t* txn,
+                uint32_t pto_id, void* proto_msg, int flags)
 {
     sk_proto_t* pto = _get_pto(sched, pto_id);
 
@@ -448,17 +449,17 @@ int _emit_event(const sk_sched_t* sched,
     event.entity = (sk_entity_t*) entity;
     event.txn    = (sk_txn_t*) txn;
 
-    if (pto->argc > 0) {
-        event.sz = SK_PTO_SZ(pto);
+    if (proto_msg) {
+        event.sz = protobuf_c_message_get_packed_size(proto_msg);
         event.data = calloc(1, event.sz);
-        size_t packed_sz = sk_pto_pack(pto_id, event.data, ap);
+        size_t packed_sz = protobuf_c_message_pack(proto_msg, event.data);
         SK_ASSERT(packed_sz == (size_t)event.sz);
     } else {
         event.sz = 0;
         event.data = NULL;
     }
 
-    sk_io_t* io = _get_io(sched, pto->pri);
+    sk_io_t* io = _get_io(sched, pto->priority);
     SK_ASSERT(io);
 
     sk_io_push(io, io_type, &event, 1);
@@ -485,15 +486,16 @@ static
 sk_proto_t* _create_proto_tbl(sk_proto_t* tbl)
 {
     // 1. calculate table size
-    size_t size = SK_PTO_MAX + 1;
+    size_t size = 0;
+    while (tbl[size++].pto_id >= 0);
 
     // 2. create mapping table
     sk_proto_t* mapping = calloc(1, sizeof(*mapping) * size);
     for (size_t i = 0; i < size; i++) {
         sk_proto_t proto = tbl[i];
-        int pto_id = proto.id;
+        int pto_id = proto.pto_id;
 
-        if (pto_id == SK_PTO_MAX) {
+        if (pto_id == -1) {
             mapping[size - 1] = proto;
             continue;
         }
@@ -512,6 +514,7 @@ sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr,
                                SK_EVENT_SZ * SK_SCHED_PULL_NUM);
     sched->evlp       = evlp;
     sched->entity_mgr = entity_mgr;
+    sched->pto_tbl    = _create_proto_tbl(sk_pto_tbl);
     sched->tmsvc      = tmsvc;
     sched->running    = 0;
     sched->flags      = flags;
@@ -521,7 +524,7 @@ sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr,
         sched->io_tbl[i] = sk_io_create(0, 0);
     }
 
-    _check_ptos(sk_pto_tbl);
+    _check_ptos(sched->pto_tbl);
     sk_entity_mgr_setsched(sched->entity_mgr, sched);
     return sched;
 }
@@ -542,6 +545,7 @@ void sk_sched_destroy(sk_sched_t* sched)
         sk_io_destroy(sched->io_tbl[i]);
     }
 
+    free(sched->pto_tbl);
     free(sched);
 }
 
@@ -602,15 +606,10 @@ int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst)
 
 int sk_sched_send(const sk_sched_t* sched, const sk_sched_t* dst,
                   const sk_entity_t* entity, const sk_txn_t* txn,
-                  int flags, uint32_t pto_id, ...)
+                  uint32_t pto_id, void* proto_msg, int flag)
 {
     SK_ASSERT(entity);
     sk_io_type_t io_type = sched == dst ? SK_IO_INPUT : SK_IO_OUTPUT;
 
-    va_list ap;
-    va_start(ap, pto_id);
-    int r = _emit_event(sched, dst, io_type, entity, txn, flags, pto_id, ap);
-    va_end(ap);
-    return r;
+    return _emit_event(sched, dst, io_type, entity, txn, pto_id, proto_msg, flag);
 }
-

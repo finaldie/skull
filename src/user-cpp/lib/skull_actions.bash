@@ -132,7 +132,7 @@ function action_cpp_gen_metrics()
     local tmp_header_file=$tmpdir/skull_metrics.h
     local header_file=$COMMON_CPP_LOCATION/src/skull_metrics.h
 
-    $SKULL_PYTHON $LANGUAGE_CPP_PATH/bin/skull-metrics-gen.py -c $config \
+    python $LANGUAGE_CPP_PATH/bin/skull-metrics-gen.py -c $config \
         -o $tmp_header_file
 
     if [ ! -d "$COMMON_CPP_LOCATION/src/" ]; then
@@ -153,7 +153,7 @@ function action_cpp_gen_config()
 
     # Compare the md5 of the new metrics and old metrics' files, do not to
     # replace them if they are same, it will reduce the compiling time
-    $SKULL_PYTHON $LANGUAGE_CPP_PATH/bin/skull-config-gen.py -c $config \
+    $LANGUAGE_CPP_PATH/bin/skull-config-gen.py -c $config \
         -h $tmpdir/config.h
 
     # if the new config.x are different from the old ones, replace them
@@ -272,7 +272,7 @@ function _generate_protos()
         param_list+=" -s $svc_proto_list"
     fi
 
-    $SKULL_PYTHON $LANGUAGE_CPP_PATH/bin/skull-idl-gen.py -p $PROTO_CPP_FOLDER_NAME \
+    $LANGUAGE_CPP_PATH/bin/skull-idl-gen.py -p $PROTO_CPP_FOLDER_NAME \
         -o $COMMON_CPP_LOCATION/src/skull_protos.h \
         $param_list
 }

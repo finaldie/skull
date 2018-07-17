@@ -17,7 +17,7 @@ SKULL_ETC_DIR := $(SKULL_LANG_PATH)/etc
 SKULL_SHARE_DIR := $(SKULL_LANG_PATH)/share
 
 CXX ?= g++
-STD = -std=c++11
+STD = -std=c++0x
 INC += \
     -Iinclude \
     -I../user-c/include

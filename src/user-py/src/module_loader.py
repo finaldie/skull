@@ -41,8 +41,8 @@ def _load_user_entry(moduleName, entryName, uModule, userModule, isPrintError):
 # Public APIs
 # Module Loader entry, skull-engine will call this to load a user module
 def module_load(module_name):
-    #print (sys.path, file=sys.stderr)
-    #print ("module name: %s" % module_name, file=sys.stderr)
+    #print sys.path
+    #print "module name: %s" % module_name
     full_name = 'skull.modules.' + module_name + '.module'
 
     # Create Global Environment Vars
@@ -65,7 +65,7 @@ def module_load(module_name):
 
     # 1. Load user module
     try:
-        #print ("Loading user module: %s" % full_name, file=sys.stderr)
+        #print "Loading user module: %s" % full_name
 
         uModule = __import__(full_name)
     except Exception as e:
@@ -99,10 +99,10 @@ def module_load(module_name):
     return True
 
 def module_load_config(module_name, config_file_name):
-    if module_name is None or isinstance(module_name, str) is False:
+    if module_name is None or isinstance(module_name, types.StringType) is False:
         return
 
-    if config_file_name is None or isinstance(config_file_name, str) is False:
+    if config_file_name is None or isinstance(config_file_name, types.StringType) is False:
         return
 
     user_module = UserModuleTables.get(module_name)
@@ -115,7 +115,7 @@ def module_load_config(module_name, config_file_name):
     yaml_file = None
 
     try:
-        yaml_file = open(config_file_name, 'r')
+        yaml_file = file(config_file_name, 'r')
     except Exception as e:
         Logger.fatal('load_config',
             'Cannot load user module {} config {} : {}'.format(module_name, config_file_name, str(e)),
@@ -128,10 +128,10 @@ def module_load_config(module_name, config_file_name):
     yaml_file.close()
 
 def module_execute(module_name, entry_name, skull_txn=None, data=None, skull_txndata=None):
-    if module_name is None or isinstance(module_name, str) is False:
+    if module_name is None or isinstance(module_name, types.StringType) is False:
         return
 
-    if entry_name is None or isinstance(entry_name, str) is False:
+    if entry_name is None or isinstance(entry_name, types.StringType) is False:
         return
 
     user_module = UserModuleTables.get(module_name)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # This is skull metrics generator and which is used for the skull engine itself.
 # It will generate a C++ header file
@@ -45,23 +45,23 @@ def load_yaml_config():
     global yaml_obj
     global config_name
 
-    yaml_file = open(config_name, 'r')
+    yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
 def gen_cpp_header_metrics(class_name, metrics_obj):
     global METRICS_TYPE
 
     if not metrics_obj.get("type"):
-        print ("Fatal: don't find 'type' field in the config, please check it again")
+        print "Fatal: don't find 'type' field in the config, please check it again"
         sys.exit(1)
 
     type = metrics_obj['type']
     if type not in METRICS_TYPE:
-        print ("Fatal: 'type' field must be 'static' or 'dynamic', please check it again")
+        print "Fatal: 'type' field must be 'static' or 'dynamic', please check it again"
         sys.exit(1)
 
     if not metrics_obj.get("metrics"):
-        print ("Fatal: don't find 'metrics' field in the config, please check it again")
+        print "Fatal: don't find 'metrics' field in the config, please check it again"
         sys.exit(1)
 
     metrics_map = metrics_obj['metrics']
@@ -117,7 +117,7 @@ def gen_cpp_header_metrics(class_name, metrics_obj):
     return content
 
 def generate_cpp_header():
-    source_file = open(source_name, 'w')
+    source_file = file(source_name, 'w')
     content = ""
 
     # generate header
@@ -138,7 +138,7 @@ def process_core():
     generate_cpp_header()
 
 def usage():
-    print ("usage: skull-metrics-gen.py -c config -o source_file")
+    print "usage: skull-metrics-gen.py -c config -o source_file"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -158,7 +158,7 @@ if __name__ == "__main__":
         # Now run the process func according the mode
         process_core()
 
-    except Exception as e:
-        print ("Fatal: " + str(e))
+    except Exception, e:
+        print "Fatal: " + str(e)
         usage()
         raise

@@ -10,7 +10,6 @@
 #include <iostream>
 
 #include "skull/api.h"
-#include "py3_compat.h"
 #include "txn_idldata.h"
 #include "capis.h"
 
@@ -67,8 +66,7 @@ PyObject* py_txn_get(PyObject* self, PyObject* args) {
         Py_INCREF(Py_None);
         return Py_None;
     } else {
-        return PyBytes_FromStringAndSize((const char*)rawData->data(),
-                                         (Py_ssize_t)rawData->size());
+        return Py_BuildValue("s#", rawData->data(), rawData->size());
     }
 }
 
@@ -405,41 +403,11 @@ static PyMethodDef SkullMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-#if PY_MAJOR_VERSION >= 3
-static struct PyModuleDef moduledef = {
-    PyModuleDef_HEAD_INIT,
-    "skull_capi",
-    NULL,
-    -1,
-    SkullMethods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
-
-PyMODINIT_FUNC
-PyInit_capi() {
-    return PyModule_Create(&moduledef);
-}
-
-#endif
-
 namespace skullpy {
 
-#if PY_MAJOR_VERSION >= 3
 void register_capis() {
-    PyImport_AppendInittab("skull_capi", PyInit_capi);
+    Py_InitModule("skull_capi", SkullMethods);
 }
-#else
-void register_capis() {
-    PyObject *module = Py_InitModule("skull_capi", SkullMethods);
-    if (!module) {
-        fprintf(stderr, "python capi module creation failed\n");
-	exit(1);
-    }
-}
-#endif
 
 } // End of namespace
 

@@ -10,7 +10,7 @@ EXTRA += -Wconversion -fno-omit-frame-pointer
 OTHER = -pipe -g -ggdb3 -fPIC
 SHARED = -shared
 
-MACRO = -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE -D_GNU_SOURCE
+MACRO = -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE -D_GNU_SOURCE
 INC = \
     -I. \
     -I../deps/flibs/include \

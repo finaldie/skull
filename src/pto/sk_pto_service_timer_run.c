@@ -18,19 +18,16 @@
 static
 int _run (const sk_sched_t* sched, const sk_sched_t* src /*master*/,
           sk_entity_t* entity, sk_txn_t* txn,
-          sk_pto_hdr_t* msg)
+          void* proto_msg)
 {
     SK_ASSERT(src == SK_ENV_MASTER_SCHED);
-    SK_ASSERT(sk_pto_check(SK_PTO_SVC_TIMER_RUN, msg));
 
-    uint32_t id = SK_PTO_SVC_TIMER_RUN;
-    sk_service_t*  service = sk_pto_arg(id, msg, 0)->p;
-    sk_service_job job     = sk_pto_arg(id, msg, 1)->f;
-    sk_obj_t*      ud      = sk_pto_arg(id, msg, 2)->p;
-    int            valid   = sk_pto_arg(id, msg, 3)->b;
-    sk_service_job_ret_t status = sk_pto_arg(id, msg, 4)->u32;
-
-    sk_print("In timer run: job: %p\n", (void*)(intptr_t)job);
+    ServiceTimerRun* msg = proto_msg;
+    sk_service_t*  service = (sk_service_t*) (uintptr_t) msg->svc;
+    sk_service_job job     = *(sk_service_job*) msg->job.data;
+    sk_obj_t*      ud      = (sk_obj_t*) (uintptr_t) msg->ud;
+    int            valid   = msg->valid;
+    sk_service_job_ret_t status = (sk_service_job_ret_t)msg->status;
 
     // Run timer job
     SK_LOG_SETCOOKIE("service.%s", sk_service_name(service));
@@ -43,8 +40,10 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src /*master*/,
 
     if (status == SK_SRV_JOB_OK) {
         // Notify master the service task has completed
-        sk_sched_send(sched, src, entity, NULL, 0, SK_PTO_SVC_TIMER_DONE,
-                      service);
+        ServiceTimerComplete complete_msg = SERVICE_TIMER_COMPLETE__INIT;
+        complete_msg.svc = (uintptr_t) (void*) service;
+        sk_sched_send(sched, src, entity, NULL, SK_PTO_SVC_TIMER_COMPLETE,
+                      &complete_msg, 0);
     } else {
         // Destory timer entity directly since we won't call timer complete
         sk_entity_safe_destroy(entity);
@@ -53,6 +52,7 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src /*master*/,
     return 0;
 }
 
-sk_proto_ops_t sk_pto_ops_svc_timer_run = {
-    .run = _run
+sk_proto_opt_t sk_pto_svc_timer_run = {
+    .descriptor = &service_timer_run__descriptor,
+    .run        = _run
 };

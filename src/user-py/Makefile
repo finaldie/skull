@@ -13,15 +13,15 @@ SKULL_BIN_DIR := $(SKULL_LANG_PATH)/bin
 SKULL_LIB_DIR := $(SKULL_LANG_PATH)/lib
 SKULL_ETC_DIR := $(SKULL_LANG_PATH)/etc
 SKULL_SHARE_DIR := $(SKULL_LANG_PATH)/share
-SKULLPY_BUILD_DIR := build
+SKULLPY_API_DIR := $(prefix)/lib/skullpy
 
-PYTHON_INC := $(shell $(python_path)-config --includes)
-PYTHON_LDFLAGS := $(shell $(python_path)-config --ldflags)
-PYTHON_CFLAGS := $(shell $(python_path)-config --cflags)
-PYTHON_LIBS := $(shell $(python_path)-config --libs)
+PYTHON_INC := $(shell python-config --includes)
+PYTHON_LDFLAGS := $(shell python-config --ldflags)
+PYTHON_CFLAGS := $(shell python-config --cflags)
+PYTHON_LIBS := $(shell python-config --libs)
 
 CXX ?= g++
-STD = -std=c++11
+STD = -std=c++0x
 # Reset macro
 MACRO =
 INC += \
@@ -46,7 +46,7 @@ SKULL_OBJS = \
     src/txn_idldata.o
 
 all: $(SKULL_CPP_LIB)
-	$(python_path) setup.py check
+	cd src && python -m compileall .
 
 install: prepare
 	cp -r $(LOCAL_BIN_DIR)/* $(SKULL_BIN_DIR)
@@ -54,17 +54,17 @@ install: prepare
 	cp -r $(LOCAL_ETC_DIR)/* $(SKULL_ETC_DIR)
 	cp -r $(LOCAL_SHARE_DIR)/* $(SKULL_SHARE_DIR)
 	cp $(SKULL_CPP_LIB) $(prefix)/lib
-	$(python_path) setup.py install
+	cp src/*.py* $(SKULLPY_API_DIR)
 
 prepare:
 	test -d $(SKULL_BIN_DIR) || mkdir -p $(SKULL_BIN_DIR)
 	test -d $(SKULL_LIB_DIR) || mkdir -p $(SKULL_LIB_DIR)
 	test -d $(SKULL_ETC_DIR) || mkdir -p $(SKULL_ETC_DIR)
 	test -d $(SKULL_SHARE_DIR) || mkdir -p $(SKULL_SHARE_DIR)
+	test -d $(SKULLPY_API_DIR) || mkdir -p $(SKULLPY_API_DIR)
 
 clean:
 	rm -f $(SKULL_OBJS) $(SKULL_CPP_LIB) src/*.pyc
-	$(python_path) setup.py clean && rm -rf $(SKULLPY_BUILD_DIR)
 
 .PHONY: install prepare
 

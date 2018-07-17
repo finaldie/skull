@@ -36,9 +36,3 @@ SKULL_SERVICE_BASE_FOLDER=$SKULL_PROJ_ROOT/src/services
 ## Module Base folder
 SKULL_MODULE_BASE_FOLDER=$SKULL_PROJ_ROOT/src/modules
 
-## Python Interpreter (By default python3)
-SKULL_PYTHON=${python_path:-/usr/bin/python3}
-if [ ! -z $SKULL_PYTHON_INTERPRETER ]; then
-    SKULL_PYTHON=$SKULL_PYTHON_INTERPRETER
-fi
-

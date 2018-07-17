@@ -26,7 +26,11 @@ In generally, we can setup a proxy/load balancer in front of skull, then use
  ```
 """
 
-from io import StringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+
 from wsgiref import simple_server, util
 
 from webob import Request as WebObRequest

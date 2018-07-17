@@ -19,22 +19,22 @@
  */
 static
 int _run(const sk_sched_t* sched, const sk_sched_t* src,
-         sk_entity_t* entity, sk_txn_t* txn, sk_pto_hdr_t* msg)
+         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
 {
     SK_ASSERT(sched);
     SK_ASSERT(entity);
     SK_ASSERT(txn);
-    SK_ASSERT(msg);
-    SK_ASSERT(sk_pto_check(SK_PTO_SVC_TASK_CB, msg));
+    SK_ASSERT(proto_msg);
     SK_ASSERT(sched == sk_entity_sched(entity));
 
     // 1. unpack the parameters
-    uint32_t id = SK_PTO_SVC_TASK_CB;
-    sk_txn_taskdata_t* taskdata = sk_pto_arg(id, msg, 0)->p;
-    const char* service_name = sk_pto_arg(id, msg, 1)->s;
-    const char* api_name     = sk_pto_arg(id, msg, 2)->s;
-    sk_txn_task_status_t task_status = (sk_txn_task_status_t)sk_pto_arg(id, msg, 3)->i;
-    int svc_task_done        = sk_pto_arg(id, msg, 4)->i;
+    ServiceTaskCb* task_cb_msg = proto_msg;
+    sk_txn_taskdata_t* taskdata
+        = (sk_txn_taskdata_t*) (uintptr_t ) task_cb_msg->taskdata;
+    const char* service_name = task_cb_msg->service_name;
+    const char* api_name     = task_cb_msg->api_name;
+    sk_txn_task_status_t task_status = task_cb_msg->task_status;
+    int svc_task_done        = task_cb_msg->svc_task_done;
 
     sk_module_t* caller_module      = taskdata->caller_module;
     const char*  caller_module_name = caller_module->cfg->name;
@@ -83,15 +83,19 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
                  sk_txn_task_lifetime(txn, task_id));
 
     // 6. send a complete protocol back to master
-    bool resume_wf    = taskdata->cb
+    ServiceTaskComplete task_complete_msg = SERVICE_TASK_COMPLETE__INIT;
+    task_complete_msg.service_name = (char*) service_name;
+    task_complete_msg.resume_wf    = taskdata->cb
         ? sk_txn_module_complete(txn)
         : sk_txn_alltask_complete(txn);
+    task_complete_msg.svc_task_done = svc_task_done;
 
-    sk_sched_send(SK_ENV_SCHED, SK_ENV_MASTER_SCHED, entity, txn, 0,
-                  SK_PTO_SVC_TASK_DONE, service_name, resume_wf, svc_task_done);
+    sk_sched_send(SK_ENV_SCHED, SK_ENV_MASTER_SCHED, entity, txn,
+                  SK_PTO_SVC_TASK_COMPLETE, &task_complete_msg, 0);
     return 0;
 }
 
-sk_proto_ops_t sk_pto_ops_srv_task_cb = {
+sk_proto_opt_t sk_pto_srv_task_cb = {
+    .descriptor = &service_task_cb__descriptor,
     .run        = _run
 };

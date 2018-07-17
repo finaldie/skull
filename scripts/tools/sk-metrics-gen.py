@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # This is skull metrics generator and used only for the skull engine itself.
 # It will generate the C header and source files
@@ -89,13 +89,13 @@ def load_yaml_config():
     global yaml_obj
     global config_name
 
-    yaml_file = open(config_name, 'r')
+    yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
 def gen_c_header_metrics(scope_name, metrics_obj):
     # check required field
     if not metrics_obj.get("metrics"):
-        print ("Fatal: don't find 'metrics' field in the config, please check it again")
+        print "Fatal: don't find 'metrics' field in the config, please check it again"
         sys.exit(1)
 
     metrics_map = metrics_obj['metrics']
@@ -123,7 +123,7 @@ def gen_c_header_metrics(scope_name, metrics_obj):
     return content
 
 def generate_c_header():
-    header_file = open(HEADER_NAME, 'w')
+    header_file = file(HEADER_NAME, 'w')
     content = ""
 
     # generate header
@@ -146,18 +146,18 @@ def gen_c_source_metrics(scope_name, metrics_obj):
 
     # 0. check required field
     if not metrics_obj.get("metrics"):
-        print ("Fatal: don't find 'metrics' field in the config, please check it again")
+        print "Fatal: don't find 'metrics' field in the config, please check it again"
         sys.exit(1)
 
     metrics_map = metrics_obj['metrics']
 
     if not metrics_obj.get("mode"):
-        print ("Fatal: don't find 'mode' field in the config, please check it again")
+        print "Fatal: don't find 'mode' field in the config, please check it again"
         sys.exit(1)
 
     mode = metrics_obj['mode']
     if mode not in METRICS_MODE:
-        print ("Fatal: 'mode' field must be 'global' or 'thread', please check it again")
+        print "Fatal: 'mode' field must be 'global' or 'thread', please check it again"
         sys.exit(1)
 
     # 1. assemble metrics methods
@@ -189,7 +189,7 @@ def gen_c_source_metrics(scope_name, metrics_obj):
     return content
 
 def generate_c_source():
-    source_file = open(SOURCE_NAME, 'w')
+    source_file = file(SOURCE_NAME, 'w')
     content = ""
 
     # generate header
@@ -210,7 +210,7 @@ def process_core():
     generate_c_source()
 
 def usage():
-    print ("usage: skull-metrics-gen.py -c yaml_file")
+    print "usage: skull-metrics-gen.py -c yaml_file"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -228,7 +228,7 @@ if __name__ == "__main__":
         # Now run the process func according the mode
         process_core()
 
-    except Exception as e:
-        print ("Fatal: " + str(e))
+    except Exception, e:
+        print "Fatal: " + str(e)
         usage()
         sys.exit(1)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 import sys
 import os
@@ -64,7 +64,7 @@ def load_yaml_config():
     global yaml_obj
     global config_name
 
-    yaml_file = open(config_name, 'r')
+    yaml_file = file(config_name, 'r')
     yaml_obj = yaml.load(yaml_file)
 
 def _generate_constructor():
@@ -96,7 +96,7 @@ def _generate_constructor():
         elif type(value) is float:
             content += "%s_(0.0f)\n" % name
         else:
-            print ("Error: Unsupported type, name: %s, type: %s" % (name, type(value)))
+            print "Error: Unsupported type, name: %s, type: %s" % (name, type(value))
             sys.exit(1)
 
     content += "   " + CONSTRUCTOR_SECTION_END
@@ -121,7 +121,7 @@ def _generate_loading_api():
         elif type(value) is str:
             content += "        %s_ = skull_config_getstring(config, \"%s\");\n" % (name, name)
         else:
-            print ("Error: Unsupported type, name: %s, type: %s" % (name, type(value)))
+            print "Error: Unsupported type, name: %s, type: %s" % (name, type(value))
             sys.exit(1)
 
     content += LOAD_END
@@ -145,7 +145,7 @@ def _generate_data_members():
         elif type(value) is str:
             content += "    std::string %s_;\n" % name
         else:
-            print ("Error: Unsupported name: %s, type: %s" % (name, type(value)))
+            print "Error: Unsupported name: %s, type: %s" % (name, type(value))
             sys.exit(1)
 
     return content + "\n"
@@ -168,19 +168,19 @@ def _generate_data_apis():
         elif type(value) is str:
             content += "    const std::string& %s() const {return %s_;}\n" % (name, name)
         else:
-            print ("Error: Unsupported name: %s, type: %s" % (name, type(value)))
+            print "Error: Unsupported name: %s, type: %s" % (name, type(value))
             sys.exit(1)
 
     return content
 
 def generate_header():
     global config_name
-    header_file = open(header_name, 'w')
+    header_file = file(header_name, 'w')
     content = ""
 
     # generate header
     m = hashlib.md5()
-    m.update(config_name.encode('utf-8'))
+    m.update(config_name)
     md5_of_config = m.hexdigest()
     content += HEADER_CONTENT_START % (md5_of_config, md5_of_config)
 
@@ -208,7 +208,7 @@ def generate_config():
     generate_header()
 
 def usage():
-    print ("usage: skull-config-gen.py -c config -h output_header_file")
+    print "usage: skull-config-gen.py -c config -h output_header_file"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -228,7 +228,7 @@ if __name__ == "__main__":
         # Now run the process func according the mode
         generate_config()
 
-    except Exception as e:
-        print ("Fatal: " + str(e))
+    except Exception, e:
+        print "Fatal: " + str(e)
         usage()
-        raise
+        sys.exit(1)

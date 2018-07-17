@@ -5,13 +5,13 @@
 #include "api/sk_driver.h"
 
 static
-void _driver_direct_create(sk_driver_t* driver)
+void _driver_immedia_create(sk_driver_t* driver)
 {
     return;
 }
 
 static
-void _driver_direct_run(sk_driver_t* driver)
+void _driver_immedia_run(sk_driver_t* driver)
 {
     sk_engine_t* engine = driver->engine;
     sk_sched_t* sched = engine->sched;
@@ -29,17 +29,17 @@ void _driver_direct_run(sk_driver_t* driver)
     sk_txn_setstate(txn, SK_TXN_RUNNING);
     sk_entity_txnadd(entity, txn);
 
-    sk_sched_send(sched, NULL, entity, txn, 0, SK_PTO_WORKFLOW_RUN);
+    sk_sched_send(sched, NULL, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
 }
 
 static
-void _driver_direct_destroy(sk_driver_t* driver)
+void _driver_immedia_destroy(sk_driver_t* driver)
 {
     return;
 }
 
-sk_driver_opt_t sk_driver_direct = {
-    .create  = _driver_direct_create,
-    .run     = _driver_direct_run,
-    .destroy = _driver_direct_destroy
+sk_driver_opt_t sk_driver_immedia = {
+    .create  = _driver_immedia_create,
+    .run     = _driver_immedia_run,
+    .destroy = _driver_immedia_destroy
 };

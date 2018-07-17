@@ -144,7 +144,7 @@ function action_service_usage()
 
 function action_service_show()
 {
-    $SKULL_PYTHON $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE -a show
+    $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE -a show
 }
 
 function __validate_data_mode()
@@ -230,7 +230,7 @@ function _action_service_add()
     fi
 
     # 5. Add service into main config
-    $SKULL_PYTHON $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
+    $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
         -a add -s $service -b true -d $data_mode -l $language
 
     # 6. add common folder
@@ -419,7 +419,7 @@ function _action_service_import()
     fi
 
     # 2. Check whehter it's in skull.config
-    $SKULL_PYTHON $SKULL_ROOT/bin/skull-config-utils.py -m service \
+    $SKULL_ROOT/bin/skull-config-utils.py -m service \
         -c $SKULL_CONFIG_FILE -a exist -s $service
 
     if [ $? -eq 0 ]; then
@@ -457,7 +457,7 @@ function _action_service_import()
     fi
 
     # 7. Add service into skull-config
-    $SKULL_PYTHON $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
+    $SKULL_ROOT/bin/skull-config-utils.py -m service -c $SKULL_CONFIG_FILE \
         -a add -s $service -b true -d $data_mode -l $language
 
     if [ $? = 0 ]; then
