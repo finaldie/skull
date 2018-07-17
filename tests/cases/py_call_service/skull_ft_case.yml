@@ -16,15 +16,15 @@ pre-run:
 run:
     - echo "run"
     - cd project && skull start -D
-    - sleep 1
+    - sleep 2
 
 verify:
     - echo "verify"
-    - echo "hello" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie"
+    - echo "hello" | nc -w 1 127.0.0.1 7758 -i 1 | grep "Hi new bie"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
     - 'cat ${RUN}/project/run/log/skull.log | grep TxnLog | awk ''{print $9}'' | grep 0'
-    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
+    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response: 1"'
 
 post-verify:
     - echo "post-verify"

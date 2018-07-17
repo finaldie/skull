@@ -49,14 +49,14 @@ void _error(fev_state* fev, fev_buff* evbuff, void* arg)
 // register the new sock fd into eventloop
 static
 int _run(const sk_sched_t* sched, const sk_sched_t* src,
-         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+         sk_entity_t* entity, sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
     sk_print("tcp accept event req\n");
     SK_ASSERT(!txn);
     SK_ASSERT(entity);
+    SK_ASSERT(sk_pto_check(SK_PTO_TCP_ACCEPT, msg));
 
-    NetAccept* accept_msg = proto_msg;
-    int client_fd = accept_msg->fd;
+    int client_fd = sk_pto_arg(SK_PTO_TCP_ACCEPT, msg, 0)->i;
     fev_state* fev = SK_ENV_EVENTLOOP;
 
     fev_buff* evbuff = fevbuff_new(fev, client_fd, _read_cb, _error, entity);
@@ -68,7 +68,6 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
     return 0;
 }
 
-sk_proto_opt_t sk_pto_net_accept = {
-    .descriptor = &net_accept__descriptor,
-    .run        = _run
+sk_proto_ops_t sk_pto_ops_tcp_accept = {
+    .run = _run
 };

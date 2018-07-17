@@ -18,11 +18,11 @@
 
 static int _run(const sk_sched_t* sched, const sk_sched_t* src,
                 sk_entity_t* entity, sk_txn_t* txn,
-                void* proto_msg);
+                sk_pto_hdr_t* proto_msg);
 
 static
 int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
-                sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+                sk_entity_t* entity, sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
     unsigned long long start_time = sk_txn_alivetime(txn);
     int ret = 0;
@@ -32,7 +32,7 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
     if (!module) {
         SK_LOG_TRACE(SK_ENV_LOGGER, "no next module in this workflow, stop it");
         sk_txn_setstate(txn, SK_TXN_COMPLETED);
-        return _run(sched, src, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, msg);
     }
 
     // Before run module, set the module name for this module
@@ -85,19 +85,19 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
 
         SK_LOG_DEBUG(SK_ENV_LOGGER,
             "module (%s) error occurred, goto pack directly", module_name);
-        return _run(sched, src, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, msg);
     }
 
     // 3. Check whether is the last module:
     if (!sk_txn_is_last_module(txn)) {
         // 3.1 If no, schedule to next module
         sk_print("Doesn't reach the last module, schedule to next module\n");
-        sk_sched_send(sched, sched, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
+        sk_sched_send(sched, sched, entity, txn, 0, SK_PTO_WORKFLOW_RUN);
         return 0;
     } else {
         // 3.2 Set complete state
         sk_txn_setstate(txn, SK_TXN_COMPLETED);
-        return _run(sched, src, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, msg);
     }
 }
 
@@ -229,7 +229,7 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
 // execute the `pack` method
 static
 int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
-         sk_txn_t* txn, void* proto_msg)
+         sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
     SK_ASSERT(sched && entity && txn);
     sk_txn_state_t state = sk_txn_state(txn);
@@ -243,25 +243,25 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     case SK_TXN_INIT: {
         sk_print("txn - INIT\n");
         sk_txn_setstate(txn, SK_TXN_RUNNING);
-        return _run(sched, src, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, msg);
     }
     case SK_TXN_UNPACKED: {
         sk_print("txn - UNPACKED\n");
         sk_txn_setstate(txn, SK_TXN_RUNNING);
-        return _run(sched, src, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, msg);
     }
     case SK_TXN_RUNNING: {
         sk_print("txn - RUNNING\n");
-        return _module_run(sched, src, entity, txn, proto_msg);
+        return _module_run(sched, src, entity, txn, msg);
     }
     case SK_TXN_PENDING: {
         sk_print("txn - PENDING\n");
         sk_txn_setstate(txn, SK_TXN_RUNNING);
-        return _run(sched, src, entity, txn, proto_msg);
+        return _run(sched, src, entity, txn, msg);
     }
     case SK_TXN_COMPLETED: {
         sk_print("txn - COMPLETED\n");
-        return _module_pack(sched, src, entity, txn, proto_msg);
+        return _module_pack(sched, src, entity, txn, msg);
     }
     case SK_TXN_PACKED: {
         sk_print("txn - PACKED: txn destroy\n");
@@ -272,7 +272,7 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     case SK_TXN_ERROR:
     case SK_TXN_TIMEOUT: {
         sk_print("txn - ERROR or TIMEOUT: txn error or timeout\n");
-        return _module_pack(sched, src, entity, txn, proto_msg);
+        return _module_pack(sched, src, entity, txn, msg);
     }
     case SK_TXN_DESTROYED: {
         sk_print("txn - DESTROYED: txn destroy\n");
@@ -289,7 +289,6 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     return 0;
 }
 
-sk_proto_opt_t sk_pto_workflow_run = {
-    .descriptor = &workflow_run__descriptor,
-    .run        = _run
+sk_proto_ops_t sk_pto_ops_workflow_run = {
+    .run = _run
 };

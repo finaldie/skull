@@ -3,8 +3,8 @@ MAKE ?= make
 MAKE += $(MAKE_FLAGS)
 
 # global variables
-SKULL_SRCTOP := $(shell pwd)
-export SKULL_SRCTOP
+export SKULL_SRCTOP := $(shell pwd)
+export python_path ?= /usr/bin/python3
 
 # Static variables
 SKULL_BIN_DIR = bin

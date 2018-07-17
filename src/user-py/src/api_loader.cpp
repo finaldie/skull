@@ -10,6 +10,7 @@
 #include <string>
 
 #include "module_loader.h"
+#include "py3_compat.h"
 #include "capis.h"
 
 // API Layer Register function names
@@ -50,13 +51,16 @@ int _append_syspath(const std::string& path)
 
 void skull_load_api()
 {
-    // 1. Initialize Python Environment
-    // 1.1 Initalize python interpreter, GIL and enable threads
+    // 1. Register C APIs for Python
+    skullpy::register_capis();
+
+    // 2. Initialize Python Environment
+    // 2.1 Initalize python interpreter, GIL and enable threads
     Py_Initialize();
     PyEval_InitThreads();
     g_main_pythread_state = PyEval_SaveThread();
 
-    // 1.2 Append python loader path into sys.path
+    // 2.2 Append python loader path into sys.path
     PyGILState_STATE state = PyGILState_Ensure();
 
     if (_append_syspath(PYTHON_SYSPATH1)) {
@@ -69,7 +73,7 @@ void skull_load_api()
         exit(1);
     }
 
-    // 1.3 Append python running path into sys.path
+    // 2.3 Append python running path into sys.path
     char runningPath[PYTHON_PATH_MAX];
     memset(runningPath, 0, PYTHON_PATH_MAX);
     if (!getcwd(runningPath, PYTHON_PATH_MAX)) {
@@ -85,9 +89,6 @@ void skull_load_api()
         fprintf(stderr, "Error: cannot append python sys.path: %s\n", runningPath);
         exit(1);
     }
-
-    // 2. Register C APIs for Python
-    skullpy::register_capis();
 
     // 3. Register module loader
     skullpy::module_loader_register();

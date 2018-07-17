@@ -13,16 +13,16 @@ pre-run:
 run:
     - echo "run"
     - cd project && skull start -D
-    - sleep 1
+    - sleep 2
 
 verify:
     - echo "verify"
-    - echo "hello skull" | nc 127.0.0.1 7758
+    - echo "hello skull" | nc -w 1 127.0.0.1 7758
     - sleep 1
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "ep response"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "HTTP/1.1"'
-    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
+    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response: 1"'
 
 post-verify:
     - echo "post-verify"

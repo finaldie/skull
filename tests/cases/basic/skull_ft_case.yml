@@ -16,12 +16,12 @@ run:
 
 verify:
     - echo "verify"
-    - 'echo "info" | nc 127.0.0.1 7759 | grep "status:" | awk ''{print $2}'' | grep "2"'
-    - echo "hello skull" | nc 127.0.0.1 7758 -i 1 | grep "hello skull"
+    - 'echo "info" | nc 127.0.0.1 7759 -w 1 | grep "status:" | awk ''{print $2}'' | grep "2"'
+    - echo "hello skull" | nc 127.0.0.1 7758 -i 1 -w 1 | grep "hello skull"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello skull"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "module_pack(test): data sz:12"'
-    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'
+    - 'echo "metrics" | nc 127.0.0.1 7759 -w 1 | grep "global.response: 2"'
 
 post-verify:
     - echo "post-verify"

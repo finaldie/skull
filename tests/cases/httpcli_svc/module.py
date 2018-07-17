@@ -14,7 +14,7 @@ from skull.common.proto import *
 # @param config  A parsed yamlObj
 #
 def module_init(config):
-    print "py module init"
+    print("py module init")
     Logger.info('0', 'config: {}'.format(pprint.pformat(config)))
 
     Logger.trace('py module init: trace test')
@@ -29,7 +29,7 @@ def module_init(config):
 # Module Release Function, be called when shutdown phase
 #
 def module_release():
-    print "py module release"
+    print("py module release")
     return
 
 ##
@@ -45,7 +45,7 @@ def module_release():
 #         - < 0: Error occurred
 #
 def module_unpack(txn, data):
-    print "py module unpack"
+    print("py module unpack")
     Logger.info('5', 'receive data: {}'.format(data))
 
     # Store data into txn sharedData
@@ -64,7 +64,7 @@ def module_unpack(txn, data):
 # @return How many bytes be consumed
 #
 def module_pack(txn, txndata):
-    print "py module pack"
+    print("py module pack")
 
     # Increase counters
     mod_metrics = Metrics.module()
@@ -78,7 +78,7 @@ def module_pack(txn, txndata):
         txndata.append('error')
     else:
         sharedData = txn.data()
-        print "pack data: %s" % sharedData.data
+        print("pack data: %s" % sharedData.data)
         Logger.info('7', 'module_pack: data sz: {}'.format(len(sharedData.data)))
 
         txndata.append(sharedData.data)
@@ -92,7 +92,7 @@ def module_pack(txn, txndata):
 # @return - True if no error
 #         - False if error occurred
 def module_run(txn):
-    print "py module run"
+    print("py module run")
 
     # Increase counters
     mod_metrics = Metrics.module()
@@ -113,13 +113,13 @@ def module_run(txn):
 
     # invoke iocall to s1 service
     ret = txn.iocall('http', 'query', http_query, 0, _api_cb)
-    print "iocall ret: {}".format(ret)
+    print("iocall ret: {}".format(ret))
 
     return True
 
 def _api_cb(txn, iostatus, api_name, request_msg, response_msg):
-    print "api_cb: iostatus: {}, api_name: {}, request_msg: {}, response_msg: {}".format(
-            iostatus, api_name, request_msg, response_msg)
+    print("api_cb: iostatus: {}, api_name: {}, request_msg: {}, response_msg: {}".format(
+            iostatus, api_name, request_msg, response_msg))
 
     example_msg = txn.data()
     example_msg.data = str(response_msg.body)

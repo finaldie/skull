@@ -18,7 +18,7 @@ void _driver_stdin_run(sk_driver_t* driver)
     sk_entity_t*   entity   = sk_entity_create(workflow, SK_ENTITY_STD);
     sk_sched_t*    sched    = engine->sched;
 
-    sk_sched_send(sched, NULL, entity, NULL, SK_PTO_STDIN_START, NULL, 0);
+    sk_sched_send(sched, NULL, entity, NULL, 0, SK_PTO_STDIN_START);
 }
 
 static

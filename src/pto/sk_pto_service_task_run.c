@@ -20,21 +20,22 @@
  */
 static
 int _run(const sk_sched_t* sched, const sk_sched_t* src /*master*/,
-         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+         sk_entity_t* entity, sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
     SK_ASSERT(sched);
     SK_ASSERT(entity);
     SK_ASSERT(txn);
-    SK_ASSERT(proto_msg);
+    SK_ASSERT(msg);
+    SK_ASSERT(sk_pto_check(SK_PTO_SVC_TASK_RUN, msg));
     SK_ASSERT(src == SK_ENV_MASTER_SCHED);
 
     // 1. unpack the parameters
-    ServiceTaskRun* task_run_msg = proto_msg;
-    const char* service_name = task_run_msg->service_name;
-    const char* api_name     = task_run_msg->api_name;
-    uint32_t    io_status    = task_run_msg->io_status;
-    sk_sched_t* api_caller   = (sk_sched_t*) (uintptr_t) task_run_msg->src;
-    sk_txn_taskdata_t* taskdata = (sk_txn_taskdata_t*) (uintptr_t) task_run_msg->taskdata;
+    uint32_t id = SK_PTO_SVC_TASK_RUN;
+    const char* service_name = sk_pto_arg(id, msg, 0)->s;
+    const char* api_name     = sk_pto_arg(id, msg, 1)->s;
+    uint32_t    io_status    = sk_pto_arg(id, msg, 2)->u32;
+    sk_sched_t* api_caller   = sk_pto_arg(id, msg, 3)->p;
+    sk_txn_taskdata_t* taskdata = sk_pto_arg(id, msg, 4)->p;;
     SK_ASSERT(io_status < SK_SRV_IO_STATUS_MAX);
 
     sk_srv_status_t srv_status = SK_SRV_STATUS_OK;
@@ -69,16 +70,14 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src /*master*/,
     sk_txn_task_status_t txn_status =
         task_done ? SK_TXN_TASK_DONE : SK_TXN_TASK_PENDING;
 
-    // 5. schedule it back and run api callback
-    ServiceTaskCb task_cb_msg = SERVICE_TASK_CB__INIT;
-    task_cb_msg.taskdata      = (uint64_t) (uintptr_t) taskdata;
-    task_cb_msg.service_name  = (char*) service_name;
-    task_cb_msg.api_name = (char*) sk_service_api(service, api_name)->name;
-    task_cb_msg.task_status   = (uint32_t) txn_status;
-    task_cb_msg.svc_task_done = 1;
+    bool svc_task_done = true;
 
-    sk_sched_send(SK_ENV_SCHED, api_caller, entity, txn,
-                  SK_PTO_SVC_TASK_CB, &task_cb_msg, 0);
+    // 5. schedule it back and run api callback
+
+    sk_sched_send(SK_ENV_SCHED, api_caller, entity, txn, 0,
+                  SK_PTO_SVC_TASK_CB, taskdata, sk_service_name(service),
+                  sk_service_api(service, api_name)->name, txn_status,
+                  svc_task_done);
 
     // 7. update metrics
     sk_metrics_worker.srv_iocall_execute.inc(1);
@@ -87,7 +86,6 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src /*master*/,
     return ret;
 }
 
-sk_proto_opt_t sk_pto_srv_task_run = {
-    .descriptor = &service_task_run__descriptor,
+sk_proto_ops_t sk_pto_ops_srv_task_run = {
     .run        = _run
 };

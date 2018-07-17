@@ -23,14 +23,14 @@ run:
 
 verify:
     - echo "verify"
-    - 'echo "info" | nc 127.0.0.1 7759 | grep "status:" | awk ''{print $2}'' | grep "2"'
-    - echo "hello skull" | nc 127.0.0.1 7758 -i 1 | grep "Hi new bie, Hi new bie, Hi new bie"
+    - 'echo "info" | nc -w 1 127.0.0.1 7759 | grep "status:" | awk ''{print $2}'' | grep "2"'
+    - echo "hello skull" | nc -w 1 127.0.0.1 7758 -i 1 | grep "Hi new bie, Hi new bie, Hi new bie"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello skull"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "module_pack: data sz: 48"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "Cpp PeerInfo" | grep "peer name: 127.0.0.1, peer port: [0-9]\{1,5\}, peer type: 2, peer type name: TCPV4"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "Py PeerInfo" | grep "peer name: 127.0.0.1, peer port: [0-9]\{1,5\}, peer type: 2, peer type name: TCPV4"'
-    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 2"'
+    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response: 2"'
 
 post-verify:
     - echo "post-verify"

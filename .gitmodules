@@ -7,3 +7,6 @@
 [submodule "deps/jemalloc"]
 	path = deps/jemalloc
 	url = git://github.com/jemalloc/jemalloc.git
+[submodule "deps/protobuf"]
+	path = deps/protobuf
+	url = git://github.com/google/protobuf.git
