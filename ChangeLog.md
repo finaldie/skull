@@ -1,4 +1,6 @@
-* 2018-07-11 1.2.1
+* 2018-07-19 1.2.1
+  * Engine
+    * **Enhancement:** Remove protobuf-c from dependency
   * API
     * **New:** Upgrade python2 to python3
   * CLI
