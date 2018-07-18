@@ -5,8 +5,10 @@
 //  - Do not recommend to use 'requried' field, if we really want to use it,
 //     make sure it be filled before using it
 
+syntax = "proto3";
+
 package skull.service.TPL_PKG_NAME;
 
 message TPL_MSG_NAME {
-    optional string name = 1;
+    string name = 1;
 }

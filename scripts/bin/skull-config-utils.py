@@ -393,9 +393,10 @@ def _process_gen_workflow_idl():
         content += "//  - Do not recommend to use 'required' field, if we really\n"
         content += "//     want to use it, make sure to fill it before using it\n"
         content += "\n"
+        content += "syntax = \"proto3\";"
         content += "package skull.workflow;\n\n"
         content += "message %s {\n" % idl_name
-        content += "    optional bytes data = 1;\n"
+        content += "    bytes data = 1;\n"
         content += "}\n"
 
         proto_file.write(content)

@@ -4,8 +4,10 @@
 //     some sub-messages, write them after the top message
 //  - DO NOT define any 'requried' field
 
+syntax = "proto3";
+
 package skull.service.TPL_PKG_NAME;
 
 message TPL_MSG_NAME {
-    optional string response = 1;
+    string response = 1;
 }
