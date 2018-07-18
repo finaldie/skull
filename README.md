@@ -28,10 +28,7 @@ sudo pip3 install PyYAML pympler WebOb;
 # Clone and Build Dependencies (For example: project folder is 'skull')
 cd skull && git submodule update --init --recursive;
 
-# Compile and Install Protobuf
-make protobuf; sudo make install-protobuf; make protobuf-py; sudo make install-protobuf-py;
-
-# Compile other dependencies
+# Compile and install dependencies
 make -j4 dep; sudo make install-dep;
 ```
 

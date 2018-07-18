@@ -1,7 +1,9 @@
 ifeq ($(disable_fast_proto), false)
     CPP_PROTO = --cpp_implementation
+    PB_LIB_PATH = export LD_LIBRARY_PATH=../src/.libs
 else
     CPP_PROTO =
+    PB_LIB_PATH = true
 endif
 
 # dependency targets
@@ -24,10 +26,11 @@ deps/jemalloc/Makefile:
 protobuf-cpp: deps/protobuf/Makefile
 	cd deps/protobuf && $(MAKE) $(MAKE_FLAGS)
 
-protobuf-py:
-	cd deps/protobuf/python && $(python_path) setup.py build $(CPP_PROTO)
+protobuf-py: protobuf-cpp
+	cd deps/protobuf/python && \
+	    $(PB_LIB_PATH) ; $(python_path) setup.py build $(CPP_PROTO)
 
-protobuf: protobuf-cpp
+protobuf: protobuf-py
 
 deps/protobuf/Makefile:
 	cd deps/protobuf && ./autogen.sh && ./configure
@@ -57,10 +60,11 @@ install-scripts:
 install-protobuf-cpp:
 	cd deps/protobuf && $(MAKE) install && ldconfig
 
-install-protobuf-py:
-	cd deps/protobuf/python && $(python_path) setup.py install $(CPP_PROTO)
+install-protobuf-py: install-protobuf-cpp
+	cd deps/protobuf/python && \
+	    $(PB_LIB_PATH) ; $(python_path) setup.py install $(CPP_PROTO)
 
-install-protobuf: install-protobuf-cpp
+install-protobuf: install-protobuf-py
 
 .PHONY: install-core install-api install-others install-scripts
 .PHONY: install-skull-ft install-ft install-protobuf install-protobuf-py
@@ -74,11 +78,14 @@ clean-skull-ft:
 	$(MAKE) $(MAKE_FLAGS) -C ./deps/skull-ft clean || exit "$$?"
 
 clean-jemalloc:
-	! test -f ./deps/jemalloc/Makefile || $(MAKE) $(MAKE_FLAGS) -C ./deps/jemalloc clean || exit "$$?"
+	! test -f ./deps/jemalloc/Makefile || \
+	    $(MAKE) $(MAKE_FLAGS) -C ./deps/jemalloc clean || exit "$$?"
 	rm -f ./deps/jemalloc/Makefile
 
 clean-protobuf:
-	! test -f ./deps/protobuf/Makefile || $(MAKE) $(MAKE_FLAGS) -C ./deps/protobuf clean || exit "$$?"
+	! test -f ./deps/protobuf/Makefile || \
+	    $(MAKE) $(MAKE_FLAGS) -C ./deps/protobuf clean || exit "$$?"
 	rm -f ./deps/protobuf/Makefile
+	cd ./deps/protobuf/python && $(python_path) setup.py clean
 
 .PHONY: clean-flibs clean-skull-ft clean-jemalloc clean-protobuf

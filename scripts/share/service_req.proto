@@ -2,8 +2,8 @@
 // Notes:
 //  - Top message is the main message structure we use, if we want to define
 //     some sub-messages, write them after the top message
-//  - Do not recommend to use 'requried' field, if we really want to use it,
-//     make sure it be filled before using it
+//  - For pb2: Do not recommend to use 'requried' field, if we really want to
+//     use it, make sure it be filled before using it
 
 syntax = "proto3";
 
