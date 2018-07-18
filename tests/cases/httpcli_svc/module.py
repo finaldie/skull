@@ -1,12 +1,12 @@
 import yaml
 import pprint
 
-from skullpy import txn     as Txn
-from skullpy import txndata as TxnData
-from skullpy import logger  as Logger
+from skull import txn     as Txn
+from skull import txndata as TxnData
+from skull import logger  as Logger
 
-from skull.common import metrics as Metrics
-from skull.common.proto import *
+from common import metrics as Metrics
+from common.proto import *
 
 ##
 # Module Init Entry, be called when start phase

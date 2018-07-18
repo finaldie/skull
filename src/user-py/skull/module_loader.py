@@ -3,10 +3,11 @@
 import os
 import sys
 import types
+import importlib
 
 import yaml
-import skullpy.module_executor as skull_module_executor
-import skullpy.logger as Logger
+import skull.module_executor as skull_module_executor
+import skull.logger as Logger
 
 # Define required user module entries
 MODULE_INIT_FUNCNAME    = 'module_init'
@@ -23,10 +24,7 @@ EnvVars = None
 
 # Internel APIs
 def _load_user_entry(moduleName, entryName, uModule, userModule, isPrintError):
-    pkg_modules = uModule.__dict__.get('modules')
-    pkg_module  = pkg_modules.__dict__.get(moduleName)
-    entry_module = pkg_module.__dict__.get('module')
-    func = entry_module.__dict__.get(entryName)
+    func = uModule.__dict__.get(entryName)
 
     if isinstance(func, types.FunctionType):
         userModule['entries'][entryName] = func
@@ -43,7 +41,7 @@ def _load_user_entry(moduleName, entryName, uModule, userModule, isPrintError):
 def module_load(module_name):
     #print (sys.path, file=sys.stderr)
     #print ("module name: %s" % module_name, file=sys.stderr)
-    full_name = 'skull.modules.' + module_name + '.module'
+    full_name = 'modules.%s.module' % module_name
 
     # Create Global Environment Vars
     global EnvVars
@@ -64,10 +62,11 @@ def module_load(module_name):
     }
 
     # 1. Load user module
+    uModule = None
     try:
         #print ("Loading user module: %s" % full_name, file=sys.stderr)
 
-        uModule = __import__(full_name)
+        uModule = importlib.import_module(full_name)
     except Exception as e:
         Logger.fatal('module_load', 'Cannot load user module {}: {}'.format(module_name, str(e)),
             'please check the module whether exist')

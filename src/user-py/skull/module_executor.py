@@ -3,9 +3,9 @@
 import os
 import inspect
 
-import skullpy.txn     as Txn
-import skullpy.txndata as TxnData
-import skullpy.logger  as Logger
+import skull.txn     as Txn
+import skull.txndata as TxnData
+import skull.logger  as Logger
 
 def run_module_init(init_func, config):
     try:

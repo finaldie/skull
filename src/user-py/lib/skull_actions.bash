@@ -49,7 +49,7 @@ function action_py_module_add()
 
     cp $LANGUAGE_PY_PATH/etc/config.yaml         $module_path/config.yaml
     cp $LANGUAGE_PY_PATH/share/module.py         $module_path/module.py
-    cp $LANGUAGE_PY_PATH/share/__init__.py       $module_path/__init__.py
+    #cp $LANGUAGE_PY_PATH/share/__init__.py       $module_path/__init__.py
     cp $LANGUAGE_PY_PATH/share/gitignore-module  $module_path/.gitignore
 
     sed -i "s/{MODULE_NAME}/$module/g" $module_path/module.py
@@ -157,7 +157,7 @@ function action_py_gen_idl()
         # 1. prepare building folder
         mkdir -p $PROTO_PY_FOLDER
         cd $PROTO_PY_FOLDER
-        touch __init__.py
+        #touch __init__.py
 
         # 2. copy workflow/service idls into building folder
         # 2.1 copy workflow idls

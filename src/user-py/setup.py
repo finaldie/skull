@@ -2,11 +2,11 @@
 
 from distutils.core import setup
 
-setup(name='skullpy',
+setup(name='skull',
     version='1.2.1',
     description='Skull Python API',
     author='Yuzhang Hu',
     author_email='hyzwowtools@gmail.com',
     url='https://github.com/finaldie/skull',
-    packages=['skullpy'],
+    packages=['skull'],
 )

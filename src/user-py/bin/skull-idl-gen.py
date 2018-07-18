@@ -19,7 +19,7 @@ HEADER_CONTENT_START = "\n"
 HEADER_CONTENT_INIT_START = "\
 from google.protobuf import descriptor_pb2\n\
 from google.protobuf import descriptor_pool\n\
-import skullpy.descpool as descpool\n\
+import skull.descpool as descpool\n\
 \n\
 "
 
@@ -43,7 +43,7 @@ def generate_headers(api_file_list, pkg_name, addReflection):
         alias_name = "%s_%s_pto" % (pkg_name, api_basename)
 
         if addReflection is False:
-            content += "import skull.common.%s.%s_pb2 as %s\n" % (prefix, api_basename, alias_name)
+            content += "import common.%s.%s_pb2 as %s\n" % (prefix, api_basename, alias_name)
         else:
             # We use add addReflection = True when generate __init__.py file,
             #  so no need to import the full path

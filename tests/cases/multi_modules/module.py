@@ -1,11 +1,11 @@
 import yaml
 import pprint
 
-from skullpy     import *
-from skullpy.txn import *
+from skull     import *
+from skull.txn import *
 
-from skull.common import *
-from skull.common.proto import *
+from common import *
+from common.proto import *
 
 def module_init(config):
     print("py module init")

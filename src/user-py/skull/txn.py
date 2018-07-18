@@ -1,9 +1,9 @@
 # Python Txn Class
 
 import types
-import skull_capi       as capi
-import skullpy.descpool as descpool
-import skullpy.client   as client
+import skull_capi     as capi
+import skull.descpool as descpool
+import skull.client   as client
 
 from google.protobuf import message
 from google.protobuf import message_factory

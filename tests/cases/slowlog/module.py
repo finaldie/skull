@@ -2,12 +2,12 @@ import yaml
 import pprint
 import time
 
-from skullpy.txn import *
-from skullpy.txndata import *
-from skullpy import logger as Logger
+from skull.txn import *
+from skull.txndata import *
+from skull import logger as Logger
 
-from skull.common import metrics as Metrics
-from skull.common.proto import *
+from common import metrics as Metrics
+from common.proto import *
 
 def module_init(config):
     print("py module init")

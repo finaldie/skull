@@ -12,7 +12,7 @@
 
 #define SKULL_MODULE_CONF_PREFIX_NAME    "skull-modules-"
 
-#define PYTHON_API_LOADER_NAME           "skullpy.module_loader"
+#define PYTHON_API_LOADER_NAME           "skull.module_loader"
 #define PYTHON_API_LOADING_FUNCNAME      "module_load"
 #define PYTHON_API_LOADING_CONF_FUNCNAME "module_load_config"
 #define PYTHON_API_EXECUTOR_FUNCNAME     "module_execute"
