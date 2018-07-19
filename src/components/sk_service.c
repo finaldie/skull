@@ -625,9 +625,11 @@ void sk_service_data_set(sk_service_t* service, const void* data)
                      "idle or reading data, please correct user-layer logic",
                      service->name);
         SK_ASSERT(0);
+        break;
     case SK_QUEUE_STATE_LOCK:
     default:
         SK_ASSERT(0);
+        break;
     }
 }
 
