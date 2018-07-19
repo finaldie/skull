@@ -82,7 +82,7 @@ create a _Skull_ project, have fun :)
 ## Existing Services
 Name                  | Description |
 ----------------------|-------------|
-[DNS Client][2] | Async DNS client for A record |
+[DNS Client][2] | Async DNS client for A/AAAA record |
 [Http Client][15] | Async http client service, easy to send/receive http request/response |
 
 ## Other Resources
