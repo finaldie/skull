@@ -33,7 +33,7 @@ protobuf-py: protobuf-cpp
 protobuf: protobuf-py
 
 deps/protobuf/Makefile:
-	cd deps/protobuf && ./autogen.sh && ./configure
+	cd deps/protobuf && ./autogen.sh && ./configure --enable-static=no
 
 .PHONY: flibs metrics skull-ft jemalloc protobuf protobuf-py protobuf-cpp
 
