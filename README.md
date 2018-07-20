@@ -17,7 +17,7 @@ _Skull_ can be used in generic serving layer or embedded device. E.g. _web logic
 [Changelog](ChangeLog.md)
 
 ## How to Build
-Use _Ubuntu14.04_ as an example. (Tested on `Debian jessie/stretch`, `Ubuntu 12.04/14.04/16.04/18.04, alpine`, `RHEL6.x` and `Raspberry OS`)
+Use _Ubuntu18.04_ as an example. (Tested on `Debian jessie/stretch`, `14.04/16.04/18.04, alpine`, `RHEL6.x` and `Raspberry OS`)
 
 ### Install Dependencies
 ```console
@@ -50,20 +50,20 @@ Also, the [**_Docker images_**][31] are ready now, if people don't want to waste
 
 Assume that we've already [installed _Docker_][30], then apply the following commands to pull and run the image to bring user into a development ready environment super fast:
 ```console
--bash$ docker pull finaldie/skull:1.1-build
--bash$ docker run -it finaldie/skull:1.1-build
+-bash$ docker pull finaldie/skull:1.2-build
+-bash$ docker run -it finaldie/skull:1.2-build
 ```
 
 And the below table is the current images:<br>
 
 Tag              | Dockerfile         | Notes                         |
 -----------------|--------------------|-------------------------------|
-1.1              | ([Dockerfile][20]) | 1.1 Debian runtime image      |
-1.1-build        | ([Dockerfile][21]) | 1.1 Debian dev/building image |
-1.1-ubuntu       | ([Dockerfile][22]) | 1.1 Ubuntu runtime image      |
-1.1-ubuntu-build | ([Dockerfile][23]) | 1.1 Ubuntu dev/building image |
-1.1-alpine       | ([Dockerfile][24]) | 1.1 Alpine runtime image      |
-1.1-alpine-build | ([Dockerfile][25]) | 1.1 Alpine dev/building image |
+1.2              | ([Dockerfile][20]) | 1.2 Debian runtime image      |
+1.2-build        | ([Dockerfile][21]) | 1.2 Debian dev/building image |
+1.2-ubuntu       | ([Dockerfile][22]) | 1.2 Ubuntu runtime image      |
+1.2-ubuntu-build | ([Dockerfile][23]) | 1.2 Ubuntu dev/building image |
+1.2-alpine       | ([Dockerfile][24]) | 1.2 Alpine runtime image      |
+1.2-alpine-build | ([Dockerfile][25]) | 1.2 Alpine dev/building image |
 
 ## A Quick Demo
 After installing _Skull_ into the system, run the following steps to
@@ -130,12 +130,12 @@ To fix a bug or add a new feature, just **`Fork`** the repo, then apply the fixe
 [18]: https://www.reddit.com/r/skullengine/
 
 
-[20]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.1/Dockerfile
-[21]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.1/Dockerfile.build
-[22]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.1/ubuntu/Dockerfile
-[23]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.1/ubuntu/Dockerfile.build
-[24]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.1/alpine/Dockerfile
-[25]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.1/alpine/Dockerfile.build
+[20]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/Dockerfile
+[21]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/Dockerfile.build
+[22]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/ubuntu/Dockerfile
+[23]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/ubuntu/Dockerfile.build
+[24]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/alpine/Dockerfile
+[25]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/alpine/Dockerfile.build
 
 [30]: https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/
 [31]: https://hub.docker.com/r/finaldie/skull/
