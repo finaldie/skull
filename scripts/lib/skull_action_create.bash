@@ -30,7 +30,12 @@ function _skull_create()
     cp $SKULL_ROOT/share/skull/Makefile.ft.tpl   $workspace/tests/Makefile
     cp $SKULL_ROOT/share/skull/README.md.ft.tpl  $workspace/tests/README.md
 
+    # TODO: Remove musl.supp. valgrind in UT use global one instead
+    #       skull better to have a config functionality which can
+    #       output installation root path, valgrind suppressions...
     cp -r $SKULL_ROOT/share/skull/bin/skull-*.sh $workspace/bin
+    cp -r $SKULL_ROOT/share/skull/bin/musl.supp $workspace/bin
+
     cp $SKULL_ROOT/share/skull/gitignore         $workspace/.gitignore
     cp $SKULL_ROOT/share/skull/ycm_extra_conf.py $workspace/.ycm_extra_conf.py
 
