@@ -9,7 +9,7 @@ DEPS_LDFLAGS += -L../../common/cpp/lib
 
 DEPS_LIBS += \
     -lprotobuf \
-    -lskullcpp-api \
+    -lskull-api-cpp \
     -Wl,--no-as-needed \
     -lskull-common-cpp
 

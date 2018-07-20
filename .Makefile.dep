@@ -57,8 +57,9 @@ install-others:
 install-scripts:
 	cd scripts && $(MAKE) install
 
+# Notes: For alpine platform, the ldconfig return error, ignore it for now
 install-protobuf-cpp:
-	cd deps/protobuf && $(MAKE) install
+	cd deps/protobuf && $(MAKE) install && (ldconfig || true)
 
 install-protobuf-py: install-protobuf-cpp
 	cd deps/protobuf/python && \
