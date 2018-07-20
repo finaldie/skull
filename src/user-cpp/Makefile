@@ -24,8 +24,8 @@ INC += \
 
 SKULL_LDFLAGS += $(SHARED)
 
-SKULL_CPP_LIB := libskullcpp-api.so
-SKULL_UT_LIB := libskull-unittest-cpp.so
+SKULL_CPP_LIB := libskull-api-cpp.so
+SKULL_UT_LIB  := libskull-unittest-cpp.so
 
 DEPS_LDFLAGS = -L../../deps/flibs/lib
 

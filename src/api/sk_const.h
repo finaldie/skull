@@ -31,7 +31,7 @@ struct sk_const_t;
 #define SK_API_LOAD_FUNCNAME                 "skull_load_api"
 #define SK_API_UNLOAD_FUNCNAME               "skull_unload_api"
 
-#define SK_USER_LIBNAME_FORMAT               "libskull%s-api.so"
+#define SK_USER_LIBNAME_FORMAT               "libskull-api-%s.so"
 #define SK_USER_PREFIX1                      "/usr/local/lib"
 #define SK_USER_PREFIX2                      "/usr/lib"
 #define SK_USER_LIBNAME_MAX                  (1024)

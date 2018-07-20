@@ -58,7 +58,7 @@ install-scripts:
 	cd scripts && $(MAKE) install
 
 install-protobuf-cpp:
-	cd deps/protobuf && $(MAKE) install && ldconfig
+	cd deps/protobuf && $(MAKE) install
 
 install-protobuf-py: install-protobuf-cpp
 	cd deps/protobuf/python && \

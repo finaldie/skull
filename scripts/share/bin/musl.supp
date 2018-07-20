@@ -12,3 +12,13 @@
    fun:__dls3
    obj:/lib/ld-musl-x86_64.so.1
 }
+
+{
+   <Known musl libc issue on Alpine:3.8>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   fun:__cxa_atexit
+   obj:/usr/local/lib/libprotobuf.so.16.0.0
+   obj:*
+}
