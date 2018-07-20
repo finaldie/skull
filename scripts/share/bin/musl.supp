@@ -16,7 +16,6 @@
 {
    <Known musl libc issue on Alpine:3.8>
    Memcheck:Leak
-   match-leak-kinds: definite
    fun:calloc
    fun:__cxa_atexit
    obj:/usr/local/lib/libprotobuf.so.16.0.0
