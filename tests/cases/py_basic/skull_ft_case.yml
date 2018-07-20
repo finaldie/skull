@@ -12,15 +12,15 @@ pre-run:
 run:
     - echo "run"
     - cd project && skull start -D
-    - sleep 1
+    - sleep 2
 
 verify:
     - echo "verify"
-    - echo "hello skull" | nc 127.0.0.1 7758 -i 1 | grep "hello skull"
+    - echo "hello skull" | nc 127.0.0.1 7758 -i 1 -w 1 | grep "hello skull"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello skull"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "module_pack: data sz: 12"'
-    - 'echo "metrics" | nc 127.0.0.1 7759 | grep "global.response: 1"'
+    - 'echo "metrics" | nc 127.0.0.1 7759 -w 1 | grep "global.response: 1"'
 
 post-verify:
     - echo "post-verify"

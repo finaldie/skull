@@ -26,6 +26,7 @@ int sk_userlib_load(const char* filename)
     const char* lib = fhash_str_get(user_libs, filename);
     if (lib) {
         sk_print("user lib %s has already loaded\n", filename);
+        printf("user lib %s has already loaded\n", filename);
         return 0;
     }
 

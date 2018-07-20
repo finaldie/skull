@@ -17,15 +17,15 @@ SKULL_ETC_DIR := $(SKULL_LANG_PATH)/etc
 SKULL_SHARE_DIR := $(SKULL_LANG_PATH)/share
 
 CXX ?= g++
-STD = -std=c++0x
+STD = -std=c++11
 INC += \
     -Iinclude \
     -I../user-c/include
 
 SKULL_LDFLAGS += $(SHARED)
 
-SKULL_CPP_LIB := libskullcpp-api.so
-SKULL_UT_LIB := libskull-unittest-cpp.so
+SKULL_CPP_LIB := libskull-api-cpp.so
+SKULL_UT_LIB  := libskull-unittest-cpp.so
 
 DEPS_LDFLAGS = -L../../deps/flibs/lib
 

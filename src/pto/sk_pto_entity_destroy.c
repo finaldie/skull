@@ -8,7 +8,7 @@
 
 static
 int _run(const sk_sched_t* sched, const sk_sched_t* src,
-         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+         sk_entity_t* entity, sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
     SK_ASSERT(entity);
     sk_print("entity(%p) status=%d, will be deleted\n",
@@ -18,7 +18,6 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
     return 0;
 }
 
-sk_proto_opt_t sk_pto_entity_destroy = {
-    .descriptor = &entity_destroy__descriptor,
+sk_proto_ops_t sk_pto_ops_entity_destroy = {
     .run        = _run
 };

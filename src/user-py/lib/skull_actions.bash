@@ -49,7 +49,7 @@ function action_py_module_add()
 
     cp $LANGUAGE_PY_PATH/etc/config.yaml         $module_path/config.yaml
     cp $LANGUAGE_PY_PATH/share/module.py         $module_path/module.py
-    cp $LANGUAGE_PY_PATH/share/__init__.py       $module_path/__init__.py
+    #cp $LANGUAGE_PY_PATH/share/__init__.py       $module_path/__init__.py
     cp $LANGUAGE_PY_PATH/share/gitignore-module  $module_path/.gitignore
 
     sed -i "s/{MODULE_NAME}/$module/g" $module_path/module.py
@@ -115,7 +115,7 @@ function action_py_gen_metrics()
     local tmp_source_file=$tmpdir/metrics.py
     local source_file=$COMMON_PY_LOCATION/metrics.py
 
-    python $LANGUAGE_PY_PATH/bin/skull-metrics-gen.py -c $config \
+    $SKULL_PYTHON $LANGUAGE_PY_PATH/bin/skull-metrics-gen.py -c $config \
         -o $tmp_source_file
 
     if ! $(sk_util_compare_file $tmp_source_file $source_file); then
@@ -123,6 +123,10 @@ function action_py_gen_metrics()
     fi
 }
 
+##
+# @notes Python config currently use yaml object direct, won't re-generate
+#         the python config again
+#
 function action_py_gen_config()
 {
     local config=$1
@@ -132,7 +136,7 @@ function action_py_gen_config()
 
     ## Compare the md5 of the new metrics and old metrics' files, do not to
     ## replace them if they are same, it will reduce the compiling time
-    #$LANGUAGE_PY_PATH/bin/skull-config-gen.py -c $config \
+    #$SKULL_PYTHON $LANGUAGE_PY_PATH/bin/skull-config-gen.py -c $config \
     #    -h $tmpdir/config.h
 
     ## if the new config.x are different from the old ones, replace them
@@ -153,7 +157,7 @@ function action_py_gen_idl()
         # 1. prepare building folder
         mkdir -p $PROTO_PY_FOLDER
         cd $PROTO_PY_FOLDER
-        touch __init__.py
+        #touch __init__.py
 
         # 2. copy workflow/service idls into building folder
         # 2.1 copy workflow idls
@@ -217,7 +221,7 @@ function _generate_py_protos()
         param_list+=" -s $svc_proto_list"
     fi
 
-    $LANGUAGE_PY_PATH/bin/skull-idl-gen.py -p $PROTO_PY_FOLDER_NAME \
+    $SKULL_PYTHON $LANGUAGE_PY_PATH/bin/skull-idl-gen.py -p $PROTO_PY_FOLDER_NAME \
         -i $PROTO_PY_FOLDER/__init__.py \
         $param_list
 }

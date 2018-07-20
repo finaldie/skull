@@ -3,10 +3,11 @@
 import os
 import sys
 import types
+import importlib
 
 import yaml
-import skullpy.module_executor as skull_module_executor
-import skullpy.logger as Logger
+import skull.module_executor as skull_module_executor
+import skull.logger as Logger
 
 # Define required user module entries
 MODULE_INIT_FUNCNAME    = 'module_init'
@@ -23,10 +24,7 @@ EnvVars = None
 
 # Internel APIs
 def _load_user_entry(moduleName, entryName, uModule, userModule, isPrintError):
-    pkg_modules = uModule.__dict__.get('modules')
-    pkg_module  = pkg_modules.__dict__.get(moduleName)
-    entry_module = pkg_module.__dict__.get('module')
-    func = entry_module.__dict__.get(entryName)
+    func = uModule.__dict__.get(entryName)
 
     if isinstance(func, types.FunctionType):
         userModule['entries'][entryName] = func
@@ -41,9 +39,9 @@ def _load_user_entry(moduleName, entryName, uModule, userModule, isPrintError):
 # Public APIs
 # Module Loader entry, skull-engine will call this to load a user module
 def module_load(module_name):
-    #print sys.path
-    #print "module name: %s" % module_name
-    full_name = 'skull.modules.' + module_name + '.module'
+    #print (sys.path, file=sys.stderr)
+    #print ("module name: %s" % module_name, file=sys.stderr)
+    full_name = 'modules.%s.module' % module_name
 
     # Create Global Environment Vars
     global EnvVars
@@ -64,10 +62,11 @@ def module_load(module_name):
     }
 
     # 1. Load user module
+    uModule = None
     try:
-        #print "Loading user module: %s" % full_name
+        #print ("Loading user module: %s" % full_name, file=sys.stderr)
 
-        uModule = __import__(full_name)
+        uModule = importlib.import_module(full_name)
     except Exception as e:
         Logger.fatal('module_load', 'Cannot load user module {}: {}'.format(module_name, str(e)),
             'please check the module whether exist')
@@ -99,10 +98,10 @@ def module_load(module_name):
     return True
 
 def module_load_config(module_name, config_file_name):
-    if module_name is None or isinstance(module_name, types.StringType) is False:
+    if module_name is None or isinstance(module_name, str) is False:
         return
 
-    if config_file_name is None or isinstance(config_file_name, types.StringType) is False:
+    if config_file_name is None or isinstance(config_file_name, str) is False:
         return
 
     user_module = UserModuleTables.get(module_name)
@@ -115,7 +114,7 @@ def module_load_config(module_name, config_file_name):
     yaml_file = None
 
     try:
-        yaml_file = file(config_file_name, 'r')
+        yaml_file = open(config_file_name, 'r')
     except Exception as e:
         Logger.fatal('load_config',
             'Cannot load user module {} config {} : {}'.format(module_name, config_file_name, str(e)),
@@ -128,10 +127,10 @@ def module_load_config(module_name, config_file_name):
     yaml_file.close()
 
 def module_execute(module_name, entry_name, skull_txn=None, data=None, skull_txndata=None):
-    if module_name is None or isinstance(module_name, types.StringType) is False:
+    if module_name is None or isinstance(module_name, str) is False:
         return
 
-    if entry_name is None or isinstance(entry_name, types.StringType) is False:
+    if entry_name is None or isinstance(entry_name, str) is False:
         return
 
     user_module = UserModuleTables.get(module_name)

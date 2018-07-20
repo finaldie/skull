@@ -6,12 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "py3_compat.h"
 #include "module_executor.h"
 #include "module_loader.h"
 
 #define SKULL_MODULE_CONF_PREFIX_NAME    "skull-modules-"
 
-#define PYTHON_API_LOADER_NAME           "skullpy.module_loader"
+#define PYTHON_API_LOADER_NAME           "skull.module_loader"
 #define PYTHON_API_LOADING_FUNCNAME      "module_load"
 #define PYTHON_API_LOADING_CONF_FUNCNAME "module_load_config"
 #define PYTHON_API_EXECUTOR_FUNCNAME     "module_execute"
@@ -163,6 +164,8 @@ int _module_load_config(skull_module_t* module, const char* filename)
 
     PyGILState_STATE state = PyGILState_Ensure();
     skullpy::module_data_t* md = (skullpy::module_data_t*)module->ud;
+
+    // TODO: Useless, remove it later
     md->config = skull_config_create(filename);
 
     // Loading config

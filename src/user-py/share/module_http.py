@@ -2,14 +2,14 @@ import yaml
 import pprint
 import sys
 
-from skullpy import txn     as Txn
-from skullpy import txndata as TxnData
-from skullpy import logger  as Logger
-from skullpy import http
+from skull import txn     as Txn
+from skull import txndata as TxnData
+from skull import logger  as Logger
+from skull import http
 
-from skull.common import protos  as Protos
-from skull.common import metrics as Metrics
-from skull.common.proto import *
+from common import protos  as Protos
+from common import metrics as Metrics
+from common.proto import *
 
 ##
 # Module Init Entry, be called when start phase
@@ -17,7 +17,7 @@ from skull.common.proto import *
 # @param config  A parsed yamlObj
 #
 def module_init(config):
-    print "py module init"
+    print("py module init")
     Logger.info('0', 'config: {}'.format(pprint.pformat(config)))
 
     Logger.trace('py module init: trace test')
@@ -32,7 +32,7 @@ def module_init(config):
 # Module Release Function, be called when shutdown phase
 #
 def module_release():
-    print "py module release"
+    print("py module release")
     return
 
 ##
@@ -55,13 +55,13 @@ def module_unpack(txn, data):
     try:
         request = requestHandler.parse()
     except http.RequestIncomplete as e:
-        print "request body incomplete, need more data: {}".format(e)
+        print("request body incomplete, need more data: {}".format(e))
         return 0
     except Exception as e:
-        print "request parsing failed: {}".format(e)
+        print("request parsing failed: {}".format(e))
         return -1
 
-    print "request: {}".format(request)
+    print("request: {}".format(request))
 
     # Store data into txn sharedData
     example_msg = txn.data()
@@ -79,7 +79,7 @@ def module_unpack(txn, data):
 # @return How many bytes be consumed
 #
 def module_pack(txn, txndata):
-    print "py module pack"
+    print("py module pack")
 
     # Increase counters
     mod_metrics = Metrics.module()
@@ -112,7 +112,7 @@ def module_pack(txn, txndata):
 # @return - True if no error
 #         - False if error occurred
 def module_run(txn):
-    print "py module run"
+    print("py module run")
 
     # Increase counters
     mod_metrics = Metrics.module()

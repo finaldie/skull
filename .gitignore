@@ -42,3 +42,6 @@ src/common/sk_metrics.c
 
 # skull-engine binary
 src/skull-engine
+
+# python build folder
+src/user-py/build/

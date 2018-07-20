@@ -1,3 +1,12 @@
+* 2018-07-19 1.2.1
+  * Engine
+    * **Enhancement:** Remove protobuf-c from dependency
+  * API
+    * **New:** Upgrade python2 to python3
+  * CLI
+    * **New:** Upgrade python2 to python3
+  * MISC
+    * **Enhancement:** Move all `_BSD_SOURCE` to `_DEFAULT_SOURCE`
 * 2018-06-27 1.1.3
   * Engine
     * **New:** override libc malloc to better measure memory stats

@@ -17,12 +17,12 @@
 // This proto is ran in master engine
 static
 int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
-          sk_txn_t* txn, void* proto_msg)
+          sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
     SK_ASSERT(SK_ENV_ENGINE == SK_ENV_CORE->master);
+    SK_ASSERT(sk_pto_check(SK_PTO_SVC_TIMER_DONE, msg));
 
-    ServiceTimerComplete* complete_msg = proto_msg;
-    sk_service_t* service = (sk_service_t*) (uintptr_t) complete_msg->svc;
+    sk_service_t* service = sk_pto_arg(SK_PTO_SVC_TIMER_DONE, msg, 0)->p;
 
     // 1. mark task complete
     sk_service_task_setcomplete(service);
@@ -39,7 +39,6 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     return 0;
 }
 
-sk_proto_opt_t sk_pto_svc_timer_complete = {
-    .descriptor = &service_timer_complete__descriptor,
-    .run        = _run
+sk_proto_ops_t sk_pto_ops_svc_timer_done = {
+    .run = _run
 };

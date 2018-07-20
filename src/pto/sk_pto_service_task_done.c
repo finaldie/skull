@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "api/sk_utils.h"
 #include "api/sk_sched.h"
@@ -18,20 +19,20 @@
  */
 static
 int _run(const sk_sched_t* sched, const sk_sched_t* src,
-         sk_entity_t* entity, sk_txn_t* txn, void* proto_msg)
+         sk_entity_t* entity, sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
     SK_ASSERT(sched);
     SK_ASSERT(entity);
     SK_ASSERT(txn);
-    SK_ASSERT(proto_msg);
+    SK_ASSERT(msg);
+    SK_ASSERT(sk_pto_check(SK_PTO_SVC_TASK_DONE, msg));
     SK_ASSERT(SK_ENV_ENGINE->type == SK_ENGINE_MASTER);
 
     // 1. unpack the parameters
-    ServiceTaskComplete* task_complete_msg = proto_msg;
-    const char* service_name = task_complete_msg->service_name;
-    int resume_wf = task_complete_msg->resume_wf;
-    int svc_task_done = task_complete_msg->svc_task_done;
-    sk_print("debug: svc_task_done: %d\n", svc_task_done);
+    const char* service_name = sk_pto_arg(SK_PTO_SVC_TASK_DONE, msg, 0)->s;
+    bool resume_wf           = sk_pto_arg(SK_PTO_SVC_TASK_DONE, msg, 1)->b;
+    bool svc_task_done       = sk_pto_arg(SK_PTO_SVC_TASK_DONE, msg, 2)->b;
+    sk_print("Debug: svc_task_done: %d\n", svc_task_done);
 
     // 2. find the target service
     sk_service_t* service = sk_core_service(SK_ENV_CORE, service_name);
@@ -50,7 +51,7 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
     if (resume_wf) {
         sk_print("Resume workflow\n");
         SK_LOG_TRACE(SK_ENV_LOGGER, "Resume workflow");
-        sk_sched_send(sched, src, entity, txn, SK_PTO_WORKFLOW_RUN, NULL, 0);
+        sk_sched_send(sched, src, entity, txn, 0, SK_PTO_WORKFLOW_RUN);
     }
 
     // 5. schedule another round of service call if exist
@@ -61,7 +62,6 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
     return 0;
 }
 
-sk_proto_opt_t sk_pto_srv_task_complete = {
-    .descriptor = &service_task_complete__descriptor,
-    .run        = _run
+sk_proto_ops_t sk_pto_ops_srv_task_done = {
+    .run = _run
 };

@@ -13,16 +13,17 @@
 
 static
 int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
-          sk_txn_t* txn, void* proto_msg)
+          sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
-    TimerTriggered* timer_pto = proto_msg;
-    sk_timer_t* timer = (sk_timer_t*) (uintptr_t) timer_pto->timer_obj;
+    SK_ASSERT(sk_pto_check(SK_PTO_TIMER_TRIGGERED, msg));
+
+    uint32_t id = SK_PTO_TIMER_TRIGGERED;
+    sk_timer_t* timer = sk_pto_arg(id, msg, 0)->p;
+    sk_timer_triggered timer_cb = sk_pto_arg(id, msg, 1)->f;
+    sk_obj_t*   ud    = sk_pto_arg(id, msg, 2)->p;
+
     sk_timersvc_t* timersvc = sk_timer_svc(timer);
     int timer_valid = sk_timer_valid(timer);
-
-    sk_obj_t* ud = (sk_obj_t*) (uintptr_t) timer_pto->ud;
-    sk_timer_triggered timer_cb =
-        * (sk_timer_triggered*) timer_pto->timer_cb.data;
 
     // run timer callback
     sk_print("timer triggered proto: valid: %d\n", timer_valid);
@@ -32,7 +33,6 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     return 0;
 }
 
-sk_proto_opt_t sk_pto_timer_triggered = {
-    .descriptor = &timer_triggered__descriptor,
+sk_proto_ops_t sk_pto_ops_timer_triggered = {
     .run = _run
 };
