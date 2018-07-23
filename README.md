@@ -1,6 +1,11 @@
 [![Build Status](https://travis-ci.org/finaldie/skull.svg?branch=master)](https://travis-ci.org/finaldie/skull)
 [![GitHub license](https://img.shields.io/github/license/finaldie/skull.svg)]()
 [![Platform](https://img.shields.io/badge/platform-Linux-blue.svg)]()
+![GitHub release](https://img.shields.io/github/release/finaldie/skull.svg)
+![Docker Pulls](https://img.shields.io/docker/pulls/finaldie/skull.svg)
+![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/finaldie/skull.svg)
+![GitHub language count](https://img.shields.io/github/languages/count/finaldie/skull.svg)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/finaldie/skull.svg)
 
 Skull
 =====

@@ -1,0 +1,191 @@
+#!/bin/bash
+
+SKULL_ROOT=""
+
+function get_root() {
+    SKULL_ROOT=`dirname $0`
+    SKULL_ROOT=`dirname $SKULL_ROOT`
+}
+
+function process_cmd() {
+    # parse the command args
+    local args=`getopt -a -o h -l prefix,includes,common-libs,common-test-libs,\
+        libs,test-libs,cflags,ldflags,help,\
+        cpp-dir,cpp-inc,cpp-common-targets,cpp-targets,\
+        py-dir,py-common-targets,py-targets \
+        -n "skull-config" -- "$@"`
+    if [ $? != 0 ]; then
+        echo "Error: Invalid parameters" >&2
+        action_workflow_usage
+        exit 1
+    fi
+
+    eval set -- "$args"
+
+    while true; do
+        case "$1" in
+            --prefix)
+                shift
+                _echo_prefix
+                continue
+                ;;
+            --includes)
+                shift
+                _echo_includes
+                continue
+                ;;
+            --common-libs)
+                shift
+                _echo_common_libs
+                continue
+                ;;
+            --common-test-libs)
+                shift
+                _echo_common_test_libs
+                continue
+                ;;
+            --libs)
+                shift
+                _echo_libs
+                continue
+                ;;
+            --test-libs)
+                shift
+                _echo_libs
+                continue
+                ;;
+            --cflags)
+                shift
+                _echo_cflags
+                continue
+                ;;
+            --ldflags)
+                shift
+                _echo_ldflags
+                continue
+                ;;
+            --cpp-dir)
+                shift
+                _echo_cpp_dir
+                continue
+                ;;
+            --cpp-common-targets)
+                shift
+                _echo_cpp_common_targets
+                continue
+                ;;
+            --cpp-targets)
+                shift
+                _echo_cpp_targets
+                continue
+                ;;
+            --cpp-inc)
+                shift
+                _echo_cpp_inc
+                continue
+                ;;
+            --py-dir)
+                shift
+                _echo_py_dir
+                continue
+                ;;
+            --py-common-targets)
+                shift
+                _echo_py_common_targets
+                continue
+                ;;
+            --py-targets)
+                shift
+                _echo_py_targets
+                continue
+                ;;
+            -h|--help)
+                shift
+                _usage
+                exit 0
+                ;;
+            --)
+                shift;
+                _usage
+                break;
+                exit 0
+                ;;
+            *)
+                echo "Error: Invalid parameters $1" >&2
+                shift
+                _usage >&2
+                exit 1
+                ;;
+        esac
+    done
+}
+
+function _usage() {
+    echo "Usage: skull-config [--prefix]"
+}
+
+function _echo_prefix() {
+    echo $SKULL_ROOT
+}
+
+function _echo_includes() {
+    echo ""
+}
+
+function _echo_common_libs() {
+    echo "-lskull-api-cpp -Wl,--no-as-needed -lprotobuf"
+}
+
+function _echo_common_test_libs() {
+    echo "-lskull-unittest-cpp -lskull-unittest-c -lprotobuf"
+}
+
+function _echo_libs() {
+    echo "-lprotobuf -lskull-api-cpp -Wl,--no-as-needed -lskull-common-cpp"
+}
+
+function _echo_test_libs() {
+    echo "-lprotobuf -lskull-common-cpp -lskull-unittest-cpp -lskull-unittest-c"
+}
+
+function _echo_cflags() {
+    echo ""
+}
+
+function _echo_ldflags() {
+    echo "-rdynamic -Wl,-rpath,./lib -Wl,-rpath,../../common/cpp/lib -Wl,-rpath,/usr/local/lib"
+}
+
+function _echo_cpp_dir() {
+    echo "$SKULL_ROOT/share/skull/lang/cpp"
+}
+
+function _echo_cpp_common_targets() {
+    echo "$(_echo_cpp_dir)/share/Makefile.common.targets"
+}
+
+function _echo_cpp_targets() {
+    echo "$(_echo_cpp_dir)/share/Makefile.targets"
+}
+
+function _echo_cpp_inc() {
+    echo "$(_echo_cpp_dir)/share/Makefile.inc"
+}
+
+function _echo_py_dir() {
+    echo "$SKULL_ROOT/share/skull/lang/py"
+}
+
+function _echo_py_common_targets() {
+    echo "$(_echo_py_dir)/share/Makefile.common.targets"
+}
+
+function _echo_py_targets() {
+    echo "$(_echo_py_dir)/share/Makefile.mod.targets"
+}
+
+# main
+get_root
+
+process_cmd $@
+

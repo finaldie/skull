@@ -45,3 +45,7 @@ src/skull-engine
 
 # python build folder
 src/user-py/build/
+
+# deps folder
+deps/protobuf
+deps/jemalloc
