@@ -28,10 +28,11 @@ skull_start() {
 
 skull_start_memcheck() {
     # Generate suppression argument
-    local sys_path="/usr/local/share/skull/bin"
+    local sys_path=`skull-config --valgrind-dir`
     local local_path="bin"
 
-    local supp_files=`ls ${sys_path}/*.supp ${bin}/*.supp`
+    local supp_files=`ls ${sys_path}/*.supp`
+    supp_file+=`find ${local_path} -name "*.supp"`
     local supp_arg=""
 
     for supp_file in $supp_files; do

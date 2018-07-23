@@ -79,7 +79,7 @@ TARGET ?= lib/libskull-$(PARENT_DIRNAME)-$(DIRNAME).so
 TEST_TARGET ?= test.out
 CONF_TARGET ?= skull-$(PARENT_DIRNAME)-$(DIRNAME).yaml
 
-GLOBAL_SUPPRESSION := $(SKULL_SRCTOP)/bin/musl.supp
+GLOBAL_SUPPRESSION := $(shell skull-config --valgrind-dir)/musl.supp
 
 # valgrind command
 VALGRIND ?= valgrind --tool=memcheck --leak-check=full \

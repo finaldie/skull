@@ -56,7 +56,6 @@ function action_py_module_add()
 
     # copy makefile templates
     cp $LANGUAGE_PY_PATH/share/Makefile.mod         $module_path/Makefile
-    cp $LANGUAGE_PY_PATH/share/Makefile.mod.targets $SKULL_MAKEFILE_FOLDER/Makefile.mod.py.targets
 
     # generate a static config code for user
     local module_config=$module_path/config.yaml
@@ -90,10 +89,6 @@ function action_py_common_create()
         cp $LANGUAGE_PY_PATH/share/gitignore-common \
             $COMMON_PY_LOCATION/.gitignore
     fi
-
-    # copy common makefile targets
-    cp $LANGUAGE_PY_PATH/share/Makefile.common.targets \
-        $SKULL_MAKEFILE_FOLDER/Makefile.common.py.targets
 
     # generate the metrics
     action_py_gen_metrics $SKULL_METRICS_FILE

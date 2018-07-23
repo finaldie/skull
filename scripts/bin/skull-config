@@ -2,6 +2,14 @@
 
 SKULL_ROOT=""
 
+SKULL_LONG_OPS="help,prefix,"
+SKULL_LONG_OPS+="includes,common-includes,"
+SKULL_LONG_OPS+="common-libs,common-test-libs,libs,test-libs,"
+SKULL_LONG_OPS+="cflags,ldflags,common-ldflags,"
+SKULL_LONG_OPS+="cpp-dir,cpp-inc,cpp-common-targets,cpp-targets,"
+SKULL_LONG_OPS+="py-dir,py-inc,py-common-targets,py-targets,"
+SKULL_LONG_OPS+="valgrind-dir"
+
 function get_root() {
     SKULL_ROOT=`dirname $0`
     SKULL_ROOT=`dirname $SKULL_ROOT`
@@ -9,11 +17,8 @@ function get_root() {
 
 function process_cmd() {
     # parse the command args
-    local args=`getopt -a -o h -l prefix,includes,common-libs,common-test-libs,\
-        libs,test-libs,cflags,ldflags,help,\
-        cpp-dir,cpp-inc,cpp-common-targets,cpp-targets,\
-        py-dir,py-common-targets,py-targets \
-        -n "skull-config" -- "$@"`
+    local args=`getopt -a -o h -l $SKULL_LONG_OPS -n "skull-config" -- "$@"`
+
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
         action_workflow_usage
@@ -34,6 +39,11 @@ function process_cmd() {
                 _echo_includes
                 continue
                 ;;
+            --common-includes)
+                shift
+                _echo_common_includes
+                continue
+                ;;
             --common-libs)
                 shift
                 _echo_common_libs
@@ -51,7 +61,7 @@ function process_cmd() {
                 ;;
             --test-libs)
                 shift
-                _echo_libs
+                _echo_test_libs
                 continue
                 ;;
             --cflags)
@@ -62,6 +72,11 @@ function process_cmd() {
             --ldflags)
                 shift
                 _echo_ldflags
+                continue
+                ;;
+            --common-ldflags)
+                shift
+                _echo_common_ldflags
                 continue
                 ;;
             --cpp-dir)
@@ -89,6 +104,11 @@ function process_cmd() {
                 _echo_py_dir
                 continue
                 ;;
+            --py-inc)
+                shift
+                _echo_py_inc
+                continue
+                ;;
             --py-common-targets)
                 shift
                 _echo_py_common_targets
@@ -99,6 +119,11 @@ function process_cmd() {
                 _echo_py_targets
                 continue
                 ;;
+            --valgrind-dir)
+                shift
+                _echo_valgrind-dir
+                continue
+                ;;
             -h|--help)
                 shift
                 _usage
@@ -106,7 +131,6 @@ function process_cmd() {
                 ;;
             --)
                 shift;
-                _usage
                 break;
                 exit 0
                 ;;
@@ -121,7 +145,7 @@ function process_cmd() {
 }
 
 function _usage() {
-    echo "Usage: skull-config [--prefix]"
+    echo "Usage: skull-config [--prefix|--includes|--common-includes|--common-libs|--common-test-libs|--libs|--test-libs|--cflags|--ldflags|--cpp-dir|--cpp-inc|--cpp-common-targets|--cpp-targets|--py-dir|--py-common-targets|--py-targets|--valgrind-dir]"
 }
 
 function _echo_prefix() {
@@ -129,6 +153,10 @@ function _echo_prefix() {
 }
 
 function _echo_includes() {
+    echo "-Isrc -I../../common/cpp/src"
+}
+
+function _echo_common_includes() {
     echo ""
 }
 
@@ -153,7 +181,11 @@ function _echo_cflags() {
 }
 
 function _echo_ldflags() {
-    echo "-rdynamic -Wl,-rpath,./lib -Wl,-rpath,../../common/cpp/lib -Wl,-rpath,/usr/local/lib"
+    echo "-L../../common/cpp/lib"
+}
+
+function _echo_common_ldflags() {
+    echo ""
 }
 
 function _echo_cpp_dir() {
@@ -176,12 +208,20 @@ function _echo_py_dir() {
     echo "$SKULL_ROOT/share/skull/lang/py"
 }
 
+function _echo_py_inc() {
+    echo "$(_echo_py_dir)/share/Makefile.inc"
+}
+
 function _echo_py_common_targets() {
     echo "$(_echo_py_dir)/share/Makefile.common.targets"
 }
 
 function _echo_py_targets() {
     echo "$(_echo_py_dir)/share/Makefile.mod.targets"
+}
+
+function _echo_valgrind-dir() {
+    echo "$SKULL_ROOT/share/skull/bin"
 }
 
 # main
