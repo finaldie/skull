@@ -1,10 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "api/sk_env.h"
 #include "api/sk_core.h"
 #include "api/sk_pto.h"
 #include "api/sk_utils.h"
 #include "api/sk_object.h"
+#include "api/sk_log_helper.h"
 
 #include "txn_utils.h"
 #include "srv_types.h"
@@ -65,11 +67,102 @@ void _job_data_destroy(sk_ud_t ud)
 {
     job_data_t* data = ud.ud;
 
+    // TODO: HACKY: Problem is that from service.createJob(...), we create some
+    //  data from service scope, but release those data from core scope, which
+    //  cause the memory measurement inaccurate:
+    //   - Service: Memory usage keep increasing
+    //   - Core:    Memory usage keep decreasing
+    //
+    //  Note: This problem only impact user API layer
+    //
+    //  How to Fix: Let's see the whole data flow:
+    //
+    //   ---- service ---------|----------- Core ------------------------------
+    //                         |
+    //   C-API create_job      |
+    //     |    (Data 1)       |
+    //     |                   |                     (X ns..)
+    //     |-> core.create_job | ----> job trigger ........... entity.destory
+    //          (Data 2)                   |                         |
+    //                               release (Data 2)                |
+    //                                                               |
+    //                                                        release (Data 1)
+    //
+    //  From above, we can see, both data 1 and 2 are created in service scope,
+    //   but they all be released in core, which looks like a data transfer from
+    //   service to core. (Or a memleak in service layer)
+    //
+    //  To correctly measure the user timer job memory stat, overall we want to
+    //   1) Keep C-API data (Data 1) still remain in service scope
+    //   2) Keep core data (Data 2) in core scope
+    //
+    //  Then we would:
+    //   1) core.create_job: When calling it from this file, we reset its
+    //      position from 'service' to 'core'
+    //
+    //   2) c.release_job: When callback happens, reset its position from 'core'
+    //      to 'service'
+    //
+    //  Notes: In the future, needs to find a way move the 'position reset' to
+    //         engine.
+    sk_service_t* sk_svc = data->svc.service;
+
+    SK_LOG_SETCOOKIE("service.%s", sk_service_name(sk_svc));
+    SK_ENV_POS_SAVE(SK_ENV_POS_SERVICE, sk_svc);
+
     if (data->destroyer) {
         data->destroyer(data->ud);
     }
 
     free(data);
+
+    SK_ENV_POS_RESTORE();
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+}
+
+static inline
+sk_obj_t* _create_job_arg(job_data_t* jobdata) {
+    sk_ud_t      cb_data = {.ud = jobdata};
+    sk_obj_opt_t opt     = {.preset = NULL, .destroy = _job_data_destroy};
+    sk_obj_t*    param_obj = sk_obj_create(opt, cb_data);
+
+    return param_obj;
+}
+
+// TODO: For the hacky description please refer to _job_data_destroy()
+static
+sk_service_job_ret_t
+_create_job(sk_service_t*       service,
+                  uint32_t            delayed,
+                  sk_service_job_rw_t type,
+                  sk_service_job      job,
+                  job_data_t*         jobdata,
+                  int                 bidx) {
+
+    sk_env_pos_t pos = SK_ENV_POS;
+
+    SK_ASSERT_MSG(pos == SK_ENV_POS_SERVICE || pos == SK_ENV_POS_CORE,
+                  "Calling _create_job from unexpected location, "
+                  "position: %d\n", pos);
+
+    sk_service_job_ret_t ret = SK_SRV_JOB_OK;
+
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+    SK_ENV_POS_SAVE(SK_ENV_POS_CORE, NULL);
+
+    sk_obj_t* arg = _create_job_arg(jobdata);
+    ret = sk_service_job_create(service, delayed, type, job, arg, bidx);
+
+    if (ret != SK_SRV_JOB_OK) {
+        sk_obj_destroy(arg);
+    }
+
+    SK_ENV_POS_RESTORE();
+    if (pos == SK_ENV_POS_SERVICE) {
+        SK_LOG_SETCOOKIE("service.%s", sk_service_name(service));
+    }
+
+    return ret;
 }
 
 static
@@ -151,18 +244,15 @@ skull_service_job_create(skull_service_t* service, uint32_t delayed,
     jobdata->destroyer = udfree;
     jobdata->ud        = ud;
 
-    sk_ud_t      cb_data = {.ud = jobdata};
-    sk_obj_opt_t opt     = {.preset = NULL, .destroy = _job_data_destroy};
-    sk_obj_t*    param_obj = sk_obj_create(opt, cb_data);
-
     // Fix the bio index to 0 due to we can not schedule it to other thread,
     //  or it would leading a contention issue of *task_data* memory
     sk_service_job_rw_t job_rw = type == SKULL_JOB_READ
                                     ? SK_SRV_JOB_READ : SK_SRV_JOB_WRITE;
-    sk_service_job_ret_t sret = sk_service_job_create(sk_svc, delayed,
-                                    job_rw, _job_cb, param_obj, 0);
+
+    sk_service_job_ret_t sret = _create_job(sk_svc, delayed,
+                                    job_rw, _job_cb, jobdata, 0);
+
     if (sret != SK_SRV_JOB_OK) {
-        sk_obj_destroy(param_obj);
         ret = SKULL_JOB_ERROR_BIO;
     } else {
         service->task->pendings++;
@@ -189,6 +279,9 @@ skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
         return SKULL_JOB_ERROR_NOCB;
     }
 
+    sk_service_job_rw_t job_rw =
+        type == SKULL_JOB_READ ? SK_SRV_JOB_READ : SK_SRV_JOB_WRITE;
+
     sk_service_t* sk_svc = service->service;
 
     job_data_t* jobdata = calloc(1, sizeof(*jobdata));
@@ -199,16 +292,10 @@ skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
     jobdata->destroyer  = udfree;
     jobdata->ud         = ud;
 
-    sk_ud_t      cb_data = {.ud = jobdata};
-    sk_obj_opt_t opt     = {.preset = NULL, .destroy = _job_data_destroy};
-    sk_obj_t*    param_obj = sk_obj_create(opt, cb_data);
-
-    sk_service_job_rw_t job_rw =
-        type == SKULL_JOB_READ ? SK_SRV_JOB_READ : SK_SRV_JOB_WRITE;
     sk_service_job_ret_t sret =
-        sk_service_job_create(sk_svc, delayed, job_rw, _job_cb, param_obj, bidx);
+        _create_job(sk_svc, delayed, job_rw, _job_cb, jobdata, bidx);
+
     if (sret != SK_SRV_JOB_OK) {
-        sk_obj_destroy(param_obj);
         ret = SKULL_JOB_ERROR_BIO;
     }
 

@@ -43,7 +43,7 @@ script:
     - make clean
     - make -j4 disable_jemalloc=true FLIB_CFLAGS=-DFLIB_SKIP_LEGACY
     - sudo make install
-    - make check verbose=true
+    - make check verbose=true skip=httpcli_svc,dns_svc
 
 after_success: true
 
