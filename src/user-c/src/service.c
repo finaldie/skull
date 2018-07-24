@@ -83,14 +83,15 @@ void _job_data_destroy(sk_ud_t ud)
     //     |    (Data 1)       |
     //     |                   |                     (X ns..)
     //     |-> core.create_job | ----> job trigger ........... entity.destory
-    //          (Data 2)                   |                         |
-    //                               release (Data 2)                |
-    //                                                               |
-    //                                                        release (Data 1)
+    //          (Data 2)       |            |                        |
+    //                         |     release (Data 2)                |
+    //                         |                                     |
+    //                         |                              release (Data 1)
     //
     //  From above, we can see, both data 1 and 2 are created in service scope,
-    //   but they all be released in core, which looks like a data transfer from
-    //   service to core. (Or a memleak in service layer)
+    //   but they are all released in core scope, which looks like the data
+    //   transfer from service to core scope. It would also confuse people that
+    //   there is memleak in service layer.
     //
     //  To correctly measure the user timer job memory stat, overall we want to
     //   1) Keep C-API data (Data 1) still remain in service scope
