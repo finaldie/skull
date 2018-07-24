@@ -1,3 +1,12 @@
+* 2018-07-24 1.2.2
+  * Engine
+    * **Fix:** Memory stat measurement inaccurate issue in endpoint and service job
+  * CLI
+    * **New:** New `skull-config` for making makefiles clearly
+    * **Enhancement:** Won't create `.skull/makefiles` folder
+  * MISC
+    * **New:** `memory detail|full` available in _Admin Module_
+    * **Enhancement:** Won' copy `.supp` files to `project/bin` folder
 * 2018-07-19 1.2.1
   * Engine
     * **Enhancement:** Remove protobuf-c from dependency
@@ -19,7 +28,7 @@
   * Engine
     * **New:** Add `Slowlog` option in global config with microsecond precision 
   * CLI
-    * **Fix:** Fix a unbreak issue in `skull-config` command
+    * **Fix:** Fix a unbreak issue in `skull config` command
 * 2017-08-23 1.1.1
   * Engine
     * **New:** Docker integrated

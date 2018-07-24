@@ -360,6 +360,7 @@ function sk_util_service_config_gen()
 # Return current skull.version
 function sk_util_version()
 {
+    local changelog=$SKULL_ROOT/etc/skull/ChangeLog.md
     local version=`cat $changelog | head -1 | awk '{print $3}'`
     echo $version
 }
