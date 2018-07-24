@@ -44,7 +44,7 @@ typedef struct sk_thread_env_t {
     int          _padding;
 
     // Current module or service
-    void*        current;
+    const void*  current;
 } sk_thread_env_t;
 
 void sk_thread_env_init();
@@ -64,7 +64,7 @@ bool sk_thread_env_ready();
 #define SK_ENV_POS_SAVE(pos, current) \
     do { \
         sk_env_pos_t ____prev_pos  = SK_ENV_POS; \
-        void*        ____prev_curr = SK_ENV_CURRENT; \
+        const void*  ____prev_curr = SK_ENV_CURRENT; \
         SK_ENV_POS     = pos; \
         SK_ENV_CURRENT = current
 

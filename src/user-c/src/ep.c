@@ -123,7 +123,7 @@ ep_job_t* _ep_job_create(const skull_service_t* service,
     sk_handler->release = _release;
 
     // Hacky here, we force to disable the 'SK_EP_F_CONCURRENT' due to it's a
-    //  too dangerous flag which will can cause the whole ep pool be blocked,
+    //  dangerous flag which will cause the whole ep pool be blocked,
     //  So let's just force use the ping-pong mode
     // Also, we disable all other flags, to add more flags in the futher
     sk_handler->flags = 0;
@@ -157,7 +157,8 @@ skull_ep_send(const skull_service_t* service,
     const sk_entity_t* ett = service->txn ? sk_txn_entity(service->txn) : NULL;
 
     // Send job to ep pool
-    sk_ep_status_t ret = sk_ep_send(SK_ENV_EP, ett, sk_handler, data, count, _ep_cb, job);
+    sk_ep_status_t ret = sk_ep_send(SK_ENV_EP, service->service, ett,
+                                    sk_handler, data, count, _ep_cb, job);
     if (ret == SK_EP_OK) {
         service->task->pendings++;
         sk_print("service task pending cnt: %u\n", service->task->pendings);
@@ -194,7 +195,8 @@ skull_ep_send_np(const skull_service_t* service,
     const sk_entity_t* ett = service->txn ? sk_txn_entity(service->txn) : NULL;
 
     // Send job to ep pool
-    sk_ep_status_t ret = sk_ep_send(SK_ENV_EP, ett, sk_handler, data, count, _ep_cb, job);
+    sk_ep_status_t ret = sk_ep_send(SK_ENV_EP, service->service,
+                                    ett, sk_handler, data, count, _ep_cb, job);
     if (ret != SK_EP_OK) {
         if (sk_handler.release) {
             sk_handler.release(job);

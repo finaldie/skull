@@ -50,6 +50,7 @@ function _skull_create()
     sed -i "s/CREATION_DATE/$today/g" $workspace/ChangeLog.md
 
     sed -i "s/CREATION_DATE/$today/g" $workspace/.skull/config.yml
+    sed -i "s/SKULL_VERSION/$(sk_util_version)/g" $workspace/.skull/config.yml
 }
 
 function action_create()

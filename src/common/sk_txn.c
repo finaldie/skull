@@ -7,6 +7,7 @@
 #include "flibs/ftime.h"
 #include "flibs/fhash.h"
 
+#include "api/sk_env.h"
 #include "api/sk_sched.h"
 #include "api/sk_entity.h"
 #include "api/sk_utils.h"
@@ -197,7 +198,18 @@ void sk_txn_output_append(sk_txn_t* txn, const void* data, size_t sz)
 
     if (free_sz < sz) {
         size_t new_sz = fmbuf_used(txn->output) + sz;
+
+        // TODO: (HACKY) The problem is txn.output was be created from core, but
+        //  be realloced in module, which cause the memory stat measurement
+        //  not accurate. So we force it be marked in core even realloc happens.
+        //
+        // Note: In current design (at least version <= 1.2.1), txn.append
+        //  only can be called from a module.
+        SK_ENV_POS_SAVE(SK_ENV_POS_CORE, NULL);
+
         txn->output = fmbuf_realloc(txn->output, new_sz);
+
+        SK_ENV_POS_RESTORE();
     }
 
     int ret = fmbuf_push(txn->output, data, sz);

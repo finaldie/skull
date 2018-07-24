@@ -6,7 +6,7 @@
 function action_version()
 {
     local changelog=$SKULL_ROOT/etc/skull/ChangeLog.md
-    local version=`cat $changelog | head -1 | awk '{print $3}'`
+    local version=$(sk_util_version)
 
     echo "Skull $version - A fast to start, easy to maintain," \
          "high productive serving framework."

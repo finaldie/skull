@@ -31,7 +31,7 @@
     " - counter | metrics\n" \
     " - last\n" \
     " - info | status\n" \
-    " - memory [full|trace=true|trace=false]\n"
+    " - memory [detail|full|trace=true|trace=false]\n"
 
 #define ADMIN_CMD_HELP            "help"
 #define ADMIN_CMD_METRICS         "metrics"
@@ -504,8 +504,15 @@ void __append_jemalloc_stat(void* txn, const char * content)
 }
 
 static
-void __append_mem_stat(sk_txn_t* txn, const char* t, const sk_mem_stat_t* stat)
+void __append_mem_stat(sk_txn_t* txn,
+                       const char* t,
+                       const sk_mem_stat_t* stat,
+                       bool detail)
 {
+    _append_response(txn, "%s.used_sz:%zu\n",        t, sk_mem_allocated(stat));
+
+    if (!detail) return;
+
     _append_response(txn, "%s.nmalloc:%d\n",         t, stat->nmalloc);
     _append_response(txn, "%s.nfree:%d\n",           t, stat->nfree);
     _append_response(txn, "%s.ncalloc:%d\n",         t, stat->ncalloc);
@@ -515,12 +522,11 @@ void __append_mem_stat(sk_txn_t* txn, const char* t, const sk_mem_stat_t* stat)
     _append_response(txn, "%s.alloc_sz:%zu\n",       t, stat->alloc_sz);
     _append_response(txn, "%s.dalloc_sz:%zu\n",      t, stat->dalloc_sz);
     _append_response(txn, "%s.peak_sz:%zu\n",        t, stat->peak_sz);
-    _append_response(txn, "%s.used_sz:%zu\n",        t, sk_mem_allocated(stat));
     _append_response(txn, "\n");
 }
 
 static
-void _process_memory_info(sk_txn_t* txn) {
+void _process_memory_info(sk_txn_t* txn, bool detail) {
     // 1. Dump skull core mem stat
     sk_core_t* core = SK_ENV_CORE;
     size_t total_allocated = 0;
@@ -529,15 +535,16 @@ void _process_memory_info(sk_txn_t* txn) {
     const sk_mem_stat_t* core_stat   = &(core->mstat);
 
     _append_response(txn, "Initialization:\n");
-    __append_mem_stat(txn, "init", static_stat);
+    __append_mem_stat(txn, "init", static_stat, detail);
     total_allocated += sk_mem_allocated(static_stat);
 
-    _append_response(txn, "Core:\n");
-    __append_mem_stat(txn, "core", core_stat);
+    _append_response(txn, "\nCore:\n");
+    __append_mem_stat(txn, "core", core_stat, detail);
     total_allocated += sk_mem_allocated(core_stat);
 
-    _append_response(txn, "Modules:\n");
-    __append_mem_stat(txn, sk_admin_module()->cfg->name, &sk_admin_module()->mstat);
+    _append_response(txn, "\nModules:\n");
+    __append_mem_stat(txn, sk_admin_module()->cfg->name,
+                      &sk_admin_module()->mstat, detail);
     total_allocated += sk_mem_allocated(&sk_admin_module()->mstat);
 
     {
@@ -545,14 +552,14 @@ void _process_memory_info(sk_txn_t* txn) {
         sk_module_t* module = NULL;
         while ((module = fhash_str_next(&iter))) {
             const sk_mem_stat_t* stat = &module->mstat;
-            __append_mem_stat(txn, module->cfg->name, stat);
+            __append_mem_stat(txn, module->cfg->name, stat, detail);
             total_allocated += sk_mem_allocated(stat);
         }
 
         fhash_str_iter_release(&iter);
     }
 
-    _append_response(txn, "Services:\n");
+    _append_response(txn, "\nServices:\n");
 
     {
         fhash_str_iter iter = fhash_str_iter_new(core->services);
@@ -560,20 +567,20 @@ void _process_memory_info(sk_txn_t* txn) {
 
         while ((service = fhash_str_next(&iter))) {
             const sk_mem_stat_t* stat = sk_service_memstat(service);
-            __append_mem_stat(txn, sk_service_name(service), stat);
+            __append_mem_stat(txn, sk_service_name(service), stat, detail);
             total_allocated += sk_mem_allocated(stat);
         }
 
         fhash_str_iter_release(&iter);
     }
 
-    _append_response(txn, "Summary:\n");
+    _append_response(txn, "\nSummary:\n");
     _append_response(txn, "Total Allocated: %zu\n", total_allocated);
     _append_response(txn, "Trace Enabled: %d\n\n", sk_mem_trace_status());
 }
 
 static
-void _process_memory_detail(sk_txn_t* txn) {
+void _process_memory_allocator(sk_txn_t* txn) {
     // Dump jemalloc stat if available
 #   ifdef SKULL_JEMALLOC_LINKED
     je_malloc_stats_print(__append_jemalloc_stat, txn, NULL);
@@ -593,16 +600,18 @@ void _process_memory(sk_admin_data_t* admin_data, sk_txn_t* txn)
     }
 
     if (0 == strcasecmp("info", subcommand)) {
-        _process_memory_info(txn);
+        _process_memory_info(txn, false);
+    } else if (0 == strcasecmp("detail", subcommand)) {
+        _process_memory_info(txn, true);
     } else if (0 == strcasecmp("trace=true", subcommand)) {
         sk_mem_trace(true);
-        _process_memory_info(txn);
+        _process_memory_info(txn, false);
     } else if (0 == strcasecmp("trace=false", subcommand)) {
         sk_mem_trace(false);
-        _process_memory_info(txn);
+        _process_memory_info(txn, false);
     } else if (0 == strcasecmp("full", subcommand)) {
-        _process_memory_info(txn);
-        _process_memory_detail(txn);
+        _process_memory_info(txn, true);
+        _process_memory_allocator(txn);
     } else {
         _process_help(txn);
     }

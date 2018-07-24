@@ -2,6 +2,7 @@
 
 #include "service_imp.h"
 #include "skullcpp/service.h"
+#include "skullcpp/logger.h"
 
 namespace skullcpp {
 
@@ -86,6 +87,7 @@ void _job_triggered_np(skull_service_t* svc, skull_job_ret_t ret, void* ud)
 static
 void _release_jobdata(void* ud)
 {
+    SKULLCPP_LOG_TRACE("_release_jobdata: jobdata: " << ud);
     ServiceJobData* jobdata = (ServiceJobData*)ud;
     delete jobdata;
 }
