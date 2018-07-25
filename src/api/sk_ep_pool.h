@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 
+#include "api/sk_service.h"
 #include "api/sk_timer_service.h"
 
 typedef struct sk_ep_pool_t sk_ep_pool_t;
@@ -69,10 +70,14 @@ typedef struct sk_ep_handler_t {
 /**
  * Pick up a end point and send the data out
  */
-sk_ep_status_t sk_ep_send(sk_ep_pool_t*, const sk_entity_t* entity,
-               const sk_ep_handler_t handler,
-               const void* data, size_t count,
-               const sk_ep_cb_t cb, void* ud);
+sk_ep_status_t sk_ep_send(sk_ep_pool_t*         pool,
+                          const sk_service_t*   service,
+                          const sk_entity_t*    entity,
+                          const sk_ep_handler_t handler,
+                          const void*           data,
+                          size_t                count,
+                          const sk_ep_cb_t      cb,
+                          void*                 ud);
 
 #endif
 

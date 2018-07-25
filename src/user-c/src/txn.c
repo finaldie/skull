@@ -41,12 +41,14 @@ skull_txn_status_t skull_txn_status(const skull_txn_t* skull_txn)
 }
 
 // TXNDATA
-const void* skull_txndata_input(const skull_txndata_t* txndata, size_t* buffer_size)
+const void* skull_txndata_input(const skull_txndata_t* txndata,
+                                size_t* buffer_size)
 {
     return sk_txn_input(txndata->txn, buffer_size);
 }
 
-void skull_txndata_output_append(skull_txndata_t* txndata, const void* data,
+void skull_txndata_output_append(skull_txndata_t* txndata,
+                                 const void* data,
                                  size_t size)
 {
     sk_txn_output_append(txndata->txn, data, size);

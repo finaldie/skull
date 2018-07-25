@@ -64,8 +64,6 @@ function action_cpp_module_add()
 
     # copy makefile templates
     cp $LANGUAGE_CPP_PATH/share/Makefile.mod     $module_path/Makefile
-    cp $LANGUAGE_CPP_PATH/share/Makefile.inc     $SKULL_MAKEFILE_FOLDER/Makefile.cpp.inc
-    cp $LANGUAGE_CPP_PATH/share/Makefile.targets $SKULL_MAKEFILE_FOLDER/Makefile.cpp.targets
 
     # generate a static config code for user
     local module_config=$module_path/config/config.yaml
@@ -97,16 +95,6 @@ function action_cpp_common_create()
         cp $LANGUAGE_CPP_PATH/share/gitignore-common \
             $COMMON_CPP_LOCATION/.gitignore
     fi
-
-    # copy common makefile includes and targets
-    cp $LANGUAGE_CPP_PATH/share/Makefile.inc \
-        $SKULL_MAKEFILE_FOLDER/Makefile.cpp.inc
-
-    cp $LANGUAGE_CPP_PATH/share/Makefile.common.targets \
-        $SKULL_MAKEFILE_FOLDER/Makefile.common.cpp.targets
-
-    cp $LANGUAGE_CPP_PATH/share/Makefile.targets \
-        $SKULL_MAKEFILE_FOLDER/Makefile.cpp.targets
 
     # generate the metrics
     action_cpp_gen_metrics $SKULL_METRICS_FILE
@@ -245,8 +233,6 @@ function action_cpp_service_add()
 
     # copy makefile templates
     cp $LANGUAGE_CPP_PATH/share/Makefile.svc      $srv_path/Makefile
-    cp $LANGUAGE_CPP_PATH/share/Makefile.inc      $SKULL_MAKEFILE_FOLDER/Makefile.cpp.inc
-    cp $LANGUAGE_CPP_PATH/share/Makefile.targets  $SKULL_MAKEFILE_FOLDER/Makefile.cpp.targets
 
     # generate a static config code for user
     local srv_config=$srv_path/config/config.yaml

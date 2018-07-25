@@ -18,6 +18,7 @@
 #include "api/sk_const.h"
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
+#include "api/sk_log_helper.h"
 #include "api/sk_metrics.h"
 #include "api/sk_entity.h"
 #include "api/sk_entity_mgr.h"
@@ -89,12 +90,13 @@ typedef struct sk_ep_timerdata_t {
 } sk_ep_timerdata_t;
 
 typedef struct sk_ep_data_t {
-    struct sk_ep_t*    owner;
-    sk_ep_handler_t    handler;
-    sk_ep_cb_t         cb;
-    void*              ud;
-    unsigned long long start;
-    const sk_entity_t* e;       // sk_txn's entity
+    struct sk_ep_t*     owner;
+    const sk_service_t* service;
+    sk_ep_handler_t     handler;
+    sk_ep_cb_t          cb;
+    void*               ud;
+    unsigned long long  start;
+    const sk_entity_t*  e;       // sk_txn's entity
 
     sk_timer_t*        recv_timer;
 
@@ -244,7 +246,13 @@ void _ep_data_release(sk_ep_data_t* ep_data, int release_userdata)
     }
 
     if (release_userdata && ep_data->handler.release) {
+        SK_LOG_SETCOOKIE("service.%s", sk_service_name(ep_data->service));
+        SK_ENV_POS_SAVE(SK_ENV_POS_SERVICE, ep_data->service);
+
         ep_data->handler.release(ep_data->ud);
+
+        SK_ENV_POS_RESTORE();
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 
     free(ep_data);
@@ -569,7 +577,13 @@ void _handle_timeout(fdlist_node_t* ep_node)
 
     sk_ep_ret_t ret = {SK_EP_TIMEOUT, latency};
     if (ep_data->cb) {
+        SK_LOG_SETCOOKIE("service.%s", sk_service_name(ep_data->service));
+        SK_ENV_POS_SAVE(SK_ENV_POS_SERVICE, ep_data->service);
+
         ep_data->cb(ret, NULL, 0, ep_data->ud);
+
+        SK_ENV_POS_RESTORE();
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 
     _ep_node_destroy(ep_node, 1);
@@ -593,7 +607,13 @@ void _handle_error(sk_ep_t* ep)
             sk_print("handle_error, ep: %p, latency: %d\n", (void*)ep, latency);
             sk_ep_ret_t ret = {SK_EP_ERROR, latency};
             if (ep_data->cb) {
+                SK_LOG_SETCOOKIE("service.%s", sk_service_name(ep_data->service));
+                SK_ENV_POS_SAVE(SK_ENV_POS_SERVICE, ep_data->service);
+
                 ep_data->cb(ret, NULL, 0, ep_data->ud);
+
+                SK_ENV_POS_RESTORE();
+                SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
             }
 
             _ep_node_destroy(ep_node, 1);
@@ -615,7 +635,14 @@ void _handle_ok(fdlist_node_t* ep_node, const void* data, size_t len)
     // Try run the ep transaction's callback
     if (ep_data->cb) {
         sk_ep_ret_t ret = {SK_EP_OK, (int)sk_ep_txn_time_consumed(ep_data)};
+
+        SK_LOG_SETCOOKIE("service.%s", sk_service_name(ep_data->service));
+        SK_ENV_POS_SAVE(SK_ENV_POS_SERVICE, ep_data->service);
+
         ep_data->cb(ret, data, len, ep_data->ud);
+
+        SK_ENV_POS_RESTORE();
+        SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
     }
 
     // Setup shutdown timer
@@ -689,8 +716,16 @@ int _try_unpack(fdlist_node_t* ep_node, void* ud)
     sk_ep_readarg_t* readarg = ud;
     const void*      data    = readarg->data;
     size_t           len     = readarg->len;
+    ssize_t          consumed = -1;
 
-    ssize_t consumed = ep_data->handler.unpack(ep_data->ud, data, len);
+    SK_LOG_SETCOOKIE("service.%s", sk_service_name(ep_data->service));
+    SK_ENV_POS_SAVE(SK_ENV_POS_SERVICE, ep_data->service);
+
+    consumed = ep_data->handler.unpack(ep_data->ud, data, len);
+
+    SK_ENV_POS_RESTORE();
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+
     if (consumed < 0) {
         // Error occurred
         readarg->consumed = consumed;
@@ -1020,6 +1055,7 @@ sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 
 static
 fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
+                                     const sk_service_t*    service,
                                      const sk_entity_t*     entity,
                                      const sk_ep_handler_t* handler,
                                      unsigned long long     start,
@@ -1071,6 +1107,7 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
     // Create new ep data
     sk_ep_data_t* ep_data = calloc(1, sizeof(*ep_data) + extra_data_sz);
     ep_data->owner   = ep;
+    ep_data->service = service;
     ep_data->handler = *handler;
     ep_data->cb      = cb;
     ep_data->ud      = ud;
@@ -1129,10 +1166,14 @@ void sk_ep_pool_destroy(sk_ep_pool_t* pool)
     free(pool);
 }
 
-sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
-               const sk_ep_handler_t handler,
-               const void* data, size_t count,
-               sk_ep_cb_t cb, void* ud)
+sk_ep_status_t sk_ep_send(sk_ep_pool_t*         pool,
+                          const sk_service_t*   service,
+                          const sk_entity_t*    entity,
+                          const sk_ep_handler_t handler,
+                          const void*           data,
+                          size_t                count,
+                          const sk_ep_cb_t      cb,
+                          void*                 ud)
 {
     SK_ASSERT(pool);
     unsigned long long start = SK_TIME_NOW();
@@ -1176,7 +1217,8 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t* pool, const sk_entity_t* entity,
     }
 
     fdlist_node_t* ep_node =
-        _ep_mgr_get_or_create(mgr, entity, &handler, start, cb, ud, data, count);
+        _ep_mgr_get_or_create(mgr, service, entity, &handler,
+                              start, cb, ud, data, count);
     if (!ep_node) {
         sk_print("sk_ep_send: error -> create ep failed\n");
         SK_METRICS_EP_ERROR();

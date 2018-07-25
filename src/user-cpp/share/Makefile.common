@@ -1,20 +1,24 @@
 # Include the basic Makefile template
-include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.cpp.inc
+include $(shell skull-config --cpp-inc)
 
-# Include folders
-INC +=
+# Implicit include .Makefile.inc from top folder if exist
+-include $(SKULL_SRCTOP)/.Makefile.inc
 
-# User ldflags and dependency libraries
-DEPS_LDFLAGS +=
+# Including folders
+INC += \
+    $(shell skull-config --common-includes)
+
+# User ldflags
+DEPS_LDFLAGS += \
+    $(shell skull-config --common-ldflags)
+
+# Lib dependencies. Notes: Put skull defaults at the end.
 DEPS_LIBS += \
-    -lskull-api-cpp \
-    -Wl,--no-as-needed \
-    -lprotobuf
+    $(shell skull-config --common-libs)
 
+# Test lib dependencies. Notes: Put skull defaults at the end.
 TEST_DEPS_LIBS += \
-    -lskull-unittest-cpp \
-    -lskull-unittest-c \
-    -lprotobuf
+    $(shell skull-config --common-test-libs)
 
 # Source files
 SRCS = $(shell find src -name "*.c*")
@@ -28,7 +32,7 @@ TEST_SRCS = $(shell find tests -name "*.cpp")
 SUPPRESSION := $(GLOBAL_SUPPRESSION)
 
 # Include the basic Makefile targets
-include $(SKULL_SRCTOP)/.skull/makefiles/Makefile.common.cpp.targets
+include $(shell skull-config --cpp-common-targets)
 
 # Notes: There are some available targets we can use if needed
 #  prepare - This one is called before compilation

@@ -66,6 +66,7 @@ CONFIG_SVC_HEADER = """
 #
 #     services:
 #       foo: {data_mode: rw-pr, enable: 'true', type: cpp}
+#       bar: {data_mode: rw-pw, enable: 'true', type: cpp, max_qsize: 2048}
 #
 # The 'foo' is service name, and there is also an optional item 'max_qsize',
 #   it controls the max service task queue size, by default is 1024

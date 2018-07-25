@@ -10,7 +10,7 @@ export python_path ?= /usr/bin/python3
 SKULL_BIN_DIR = bin
 SKULL_CONFIG_DIR = config
 
-DEPLOY_DIR_ROOT ?= $(shell pwd)/run
+DEPLOY_DIR_ROOT ?= $(SKULL_SRCTOP)/run
 DEPLOY_BIN_ROOT := $(DEPLOY_DIR_ROOT)/bin
 DEPLOY_LIB_ROOT := $(DEPLOY_DIR_ROOT)/lib
 DEPLOY_LOG_ROOT := $(DEPLOY_DIR_ROOT)/log

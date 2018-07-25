@@ -24,9 +24,6 @@ SKULL_CONFIG_FILE=$SKULL_PROJ_ROOT/config/skull-config.yaml
 ## metrics config
 SKULL_METRICS_FILE=$SKULL_PROJ_ROOT/config/metrics.yaml
 
-## Makefiles folder
-SKULL_MAKEFILE_FOLDER=$SKULL_PROJ_ROOT/.skull/makefiles
-
 ## Workflow IDL folder
 SKULL_WORKFLOW_IDL_FOLDER=$SKULL_PROJ_ROOT/idls/
 
