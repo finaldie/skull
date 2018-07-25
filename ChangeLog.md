@@ -1,3 +1,6 @@
+* 2018-07-25 1.2.3
+  * MISC
+    * **Enhancement:** Cleanup makefile templates
 * 2018-07-24 1.2.2
   * Engine
     * **Fix:** Memory stat measurement inaccurate issue in endpoint and service job
