@@ -81,9 +81,10 @@ CONF_TARGET ?= skull-$(PARENT_DIRNAME)-$(DIRNAME).yaml
 
 GLOBAL_SUPPRESSION := $(shell skull-config --valgrind-dir)/musl.supp
 SUPPRESSION ?= $(GLOBAL_SUPPRESSION)
+SUPPRESSIONS += $(patsubst %, --suppressions=%, $(SUPPRESSION))
 
 # valgrind command
 VALGRIND ?= valgrind --tool=memcheck --leak-check=full \
-    --suppressions=$(SUPPRESSION) \
+    $(SUPPRESSIONS) \
     --gen-suppressions=all --error-exitcode=1
 
