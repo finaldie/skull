@@ -1,3 +1,0 @@
-message net_accept {
-    required int32 fd = 1;
-}
