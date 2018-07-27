@@ -5,19 +5,19 @@ CXX ?= g++
 strict ?= true
 
 # Compiling flags
-STD = -std=c++11
+STD ?= -std=c++11
 WARN = -Wall
 BASIC = -fPIC
 EXTRA = -Wextra -Wno-unused-parameter -Wno-unused-function -Wfloat-equal
 EXTRA += -Wdisabled-optimization
-# It's better to use `-fstack-protector-strong`, but most of environment do not
-# have gcc 4.9, so use `-fstack-protector` first
+# It's better to use `-fstack-protector-strong` if gcc >= 4.9, here use
+#  `-fstack-protector` first
 EXTRA += -fstack-protector -fno-omit-frame-pointer
 
 # Enable the following line to build a strong program
 #EXTRA += -pedantic -Wconversion
 
-# Enable compiling checking the padded/inline issue
+# Enable checking the padded/inline issue
 # EXTRA += -Wpadded -Winline
 
 SHARED = -shared
@@ -25,11 +25,11 @@ MACRO = -D_POSIX_C_SOURCE=200809L
 OTHER = -pipe -g -ggdb3
 
 ifeq ($(debug), false)
-OPT = -O2
+OPT ?= -O2
 else
 MACRO += -DSK_DEBUG -finstrument-functions
 OPT = -O0
-# If the compiler is gcc(>=4.8) or clang, enable the following line
+# If the compiler is gcc(>=4.8) or clang(>=3.1), enable the following line
 #EXTRA += -fsanitize=address
 endif
 

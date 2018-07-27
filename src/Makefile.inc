@@ -2,7 +2,7 @@ debug ?= false
 strict ?= true
 
 # compiling flags
-STD = -std=c99
+STD ?= -std=c99
 WARN = -Wall
 EXTRA = -pedantic -Wpadded -Wextra -Wno-unused-parameter
 EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
@@ -15,23 +15,27 @@ INC = \
     -I. \
     -I../deps/flibs/include \
     -I../deps/jemalloc/include \
-    -Iuser-c/include/ \
-    -isystem./pto/idls
+    -Iuser-c/include/
 
 ifeq ($(debug), false)
-OPT = -O2
+OPT ?= -O2
 EXTRA += -fstack-protector
 else
-EXTRA += -fstack-protector-all
-MACRO += -DSK_DEBUG -O0 -finstrument-functions
+OPT = -O0
+EXTRA += -fstack-protector-all -finstrument-functions
+MACRO += -DSK_DEBUG
 endif
 
 ifeq ($(strict),true)
 WARN += -Werror
 endif
 
-# linking flags
-DEPS_LDFLAGS = -L../deps/flibs/lib -rdynamic -Wl,-E
+# Linking flags
+DEPS_LDFLAGS = \
+    -L../deps/flibs/lib \
+    -rdynamic \
+    -Wl,-E
+
 SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
 SKULL_LDFLAGS = $(LDFLAGS) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
