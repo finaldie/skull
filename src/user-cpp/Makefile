@@ -16,15 +16,7 @@ SKULL_LIB_DIR := $(SKULL_LANG_PATH)/lib
 SKULL_ETC_DIR := $(SKULL_LANG_PATH)/etc
 SKULL_SHARE_DIR := $(SKULL_LANG_PATH)/share
 
-CXX ?= g++
-STD = -std=c++11
-INC += \
-    -Iinclude \
-    -I../user-c/include
-
-SKULL_LDFLAGS += $(SHARED)
-
-SKULL_CPP_LIB := libskull-api-cpp.so
+SKULL_CXX_LIB := libskull-api-cpp.so
 SKULL_UT_LIB  := libskull-unittest-cpp.so
 
 DEPS_LDFLAGS = -L../../deps/flibs/lib
@@ -65,7 +57,28 @@ SKULL_UT_OBJS = \
     src/client_imp.o \
     src/unittest_mockapis.o
 
-all: $(SKULL_CPP_LIB) $(SKULL_UT_LIB)
+CXX ?= g++
+CXXSTD ?= -std=c++11
+INC += \
+    -Iinclude \
+    -I../user-c/include
+
+SKULL_3RD_CXXFLAGS = \
+    $(CFLAGS) $(CXXFLAGS) $(CXXSTD) $(WARN) $(MACRO) $(OPT) \
+    $(OTHER) $(INC) $(FEATURE)
+
+SKULL_CXXFLAGS = $(SKULL_3RD_CXXFLAGS) $(EXTRA)
+SKULL_LDFLAGS += $(SHARED)
+
+# CXX and LD
+SKULL_CXX      = $(CXX) $(SKULL_CXXFLAGS)
+SKULL_3RD_CXX  = $(CXX) $(SKULL_3RD_CXXFLAGS)
+
+SKULL_CXX_LD   = $(CXX) $(SKULL_LDFLAGS)
+SKULL_CXX_UTLD = $(CXX) $(SKULL_UTLDFLAGS)
+
+# Targets
+all: $(SKULL_CXX_LIB) $(SKULL_UT_LIB)
 
 install: prepare
 	cp -r $(LOCAL_BIN_DIR)/* $(SKULL_BIN_DIR)
@@ -73,7 +86,7 @@ install: prepare
 	cp -r $(LOCAL_LIB_DIR)/* $(SKULL_LIB_DIR)
 	cp -r $(LOCAL_ETC_DIR)/* $(SKULL_ETC_DIR)
 	cp -r $(LOCAL_SHARE_DIR)/* $(SKULL_SHARE_DIR)
-	cp $(SKULL_CPP_LIB) $(SKULL_UT_LIB) $(prefix)/lib
+	cp $(SKULL_CXX_LIB) $(SKULL_UT_LIB) $(prefix)/lib
 
 prepare:
 	test -d $(SKULL_BIN_DIR) || mkdir -p $(SKULL_BIN_DIR)
@@ -83,14 +96,14 @@ prepare:
 	test -d $(SKULL_SHARE_DIR) || mkdir -p $(SKULL_SHARE_DIR)
 
 clean:
-	rm -f $(SKULL_OBJS) $(SKULL_UT_OBJS) $(SKULL_CPP_LIB) $(SKULL_UT_LIB)
+	rm -f $(SKULL_OBJS) $(SKULL_UT_OBJS) $(SKULL_CXX_LIB) $(SKULL_UT_LIB)
 
 .PHONY: install prepare
 
 %.o : %.cpp
 	$(SKULL_CXX) -c $< -o $@
 
-$(SKULL_CPP_LIB): $(SKULL_OBJS)
+$(SKULL_CXX_LIB): $(SKULL_OBJS)
 	$(SKULL_CXX_LD) -o $@ $^ $(SKULL_LIBS)
 
 $(SKULL_UT_LIB): $(SKULL_UT_OBJS)

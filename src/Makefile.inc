@@ -6,7 +6,8 @@ STD ?= -std=c99
 WARN = -Wall
 EXTRA = -pedantic -Wpadded -Wextra -Wno-unused-parameter
 EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
-EXTRA += -Wconversion -fno-omit-frame-pointer
+EXTRA += -Wconversion
+FEATURE += -fno-omit-frame-pointer
 OTHER = -pipe -g -ggdb3 -fPIC
 SHARED = -shared
 
@@ -19,10 +20,10 @@ INC = \
 
 ifeq ($(debug), false)
 OPT ?= -O2
-EXTRA += -fstack-protector
+FEATURE += -fstack-protector
 else
 OPT = -O0
-EXTRA += -fstack-protector-all -finstrument-functions
+FEATURE += -fstack-protector-all -finstrument-functions
 MACRO += -DSK_DEBUG
 endif
 
@@ -36,22 +37,17 @@ DEPS_LDFLAGS = \
     -rdynamic \
     -Wl,-E
 
-SKULL_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(EXTRA) $(MACRO) $(OPT) $(OTHER) $(INC)
-SKULL_TP_CFLAGS = $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC)
-SKULL_LDFLAGS = $(LDFLAGS) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
-SKULL_UTLDFLAGS = $(LDFLAGS) $(SHARED) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
+SKULL_TP_CFLAGS = \
+    $(CFLAGS) $(STD) $(WARN) $(MACRO) $(OPT) $(OTHER) $(INC) $(FEATURE)
+SKULL_CFLAGS    = $(SKULL_TP_CFLAGS) $(EXTRA)
+SKULL_LDFLAGS   = $(LDFLAGS) $(OPT) $(OTHER) $(DEPS_LDFLAGS)
+SKULL_UTLDFLAGS = $(SKULL_LDFLAGS) $(SHARED)
 
 # CC and LD
-SKULL_CC = $(CC) $(SKULL_CFLAGS)
+SKULL_CC    = $(CC) $(SKULL_CFLAGS)
 SKULL_TP_CC = $(CC) $(SKULL_TP_CFLAGS)
-SKULL_LD = $(CC) $(SKULL_LDFLAGS)
-SKULL_UTLD = $(CC) $(SKULL_UTLDFLAGS)
-
-# CXX and LD
-SKULL_CXX = $(CXX) $(CXXFLAGS) $(SKULL_CFLAGS)
-SKULL_TP_CXX = $(CXX) $(CXXFLAGS) $(SKULL_TP_CFLAGS)
-SKULL_CXX_LD = $(CXX) $(SKULL_LDFLAGS)
-SKULL_CXX_UTLD = $(CXX) $(SKULL_UTLDFLAGS)
+SKULL_LD    = $(CC) $(SKULL_LDFLAGS)
+SKULL_UTLD  = $(CC) $(SKULL_UTLDFLAGS)
 
 # jemalloc
 disable_jemalloc ?= false
