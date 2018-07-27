@@ -57,25 +57,11 @@ SKULL_UT_OBJS = \
     src/client_imp.o \
     src/unittest_mockapis.o
 
-CXX ?= g++
-CXXSTD ?= -std=c++11
 INC += \
     -Iinclude \
     -I../user-c/include
 
-SKULL_3RD_CXXFLAGS = \
-    $(CFLAGS) $(CXXFLAGS) $(CXXSTD) $(WARN) $(MACRO) $(OPT) \
-    $(OTHER) $(INC) $(FEATURE)
-
-SKULL_CXXFLAGS = $(SKULL_3RD_CXXFLAGS) $(EXTRA)
 SKULL_LDFLAGS += $(SHARED)
-
-# CXX and LD
-SKULL_CXX      = $(CXX) $(SKULL_CXXFLAGS)
-SKULL_3RD_CXX  = $(CXX) $(SKULL_3RD_CXXFLAGS)
-
-SKULL_CXX_LD   = $(CXX) $(SKULL_LDFLAGS)
-SKULL_CXX_UTLD = $(CXX) $(SKULL_UTLDFLAGS)
 
 # Targets
 all: $(SKULL_CXX_LIB) $(SKULL_UT_LIB)

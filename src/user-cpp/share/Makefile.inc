@@ -1,7 +1,6 @@
 # The utility Makefile be included by other module Makefiles
 
 debug ?= false
-CXX ?= g++
 strict ?= true
 
 # Compiling flags
@@ -33,7 +32,7 @@ MACRO += -DSK_DEBUG
 FEATURE += -finstrument-functions
 OPT = -O0
 # If the compiler is gcc(>=4.8) or clang(>=3.1), enable the following line
-# EXTRA += -fsanitize=address
+# FEATURE += -fsanitize=address
 endif
 
 ifeq ($(strict),true)

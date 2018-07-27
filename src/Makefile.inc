@@ -3,6 +3,7 @@ strict ?= true
 
 # compiling flags
 STD ?= -std=c99
+CXXSTD ?= -std=c++11
 WARN = -Wall
 EXTRA = -pedantic -Wpadded -Wextra -Wno-unused-parameter
 EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
@@ -48,6 +49,19 @@ SKULL_CC    = $(CC) $(SKULL_CFLAGS)
 SKULL_TP_CC = $(CC) $(SKULL_TP_CFLAGS)
 SKULL_LD    = $(CC) $(SKULL_LDFLAGS)
 SKULL_UTLD  = $(CC) $(SKULL_UTLDFLAGS)
+
+SKULL_TP_CXXFLAGS = \
+    $(CFLAGS) $(CXXFLAGS) $(CXXSTD) $(WARN) $(MACRO) $(OPT) \
+    $(OTHER) $(INC) $(FEATURE)
+
+SKULL_CXXFLAGS = $(SKULL_TP_CXXFLAGS) $(EXTRA)
+
+# CXX and LD
+SKULL_CXX      = $(CXX) $(SKULL_CXXFLAGS)
+SKULL_TP_CXX   = $(CXX) $(SKULL_TP_CXXFLAGS)
+
+SKULL_CXX_LD   = $(CXX) $(SKULL_LDFLAGS)
+SKULL_CXX_UTLD = $(CXX) $(SKULL_UTLDFLAGS)
 
 # jemalloc
 disable_jemalloc ?= false
