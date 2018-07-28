@@ -22,7 +22,7 @@ _Skull_ can be used in generic serving layer or embedded device. E.g. _web logic
 [Changelog](ChangeLog.md)
 
 ## How to Build
-Use _Ubuntu18.04_ as an example. (Tested on `Debian jessie/stretch`, `14.04/16.04/18.04, alpine`, `RHEL6.x` and `Raspberry OS`)
+Use _Ubuntu18.04_ as an example. (Tested on `Debian jessie/stretch`, `14.04/16.04/18.04, alpine`, `RHEL6/7` and `Raspbian`)
 
 ### Install Dependencies
 ```console

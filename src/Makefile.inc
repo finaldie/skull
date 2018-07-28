@@ -2,17 +2,21 @@ debug ?= false
 strict ?= true
 
 # compiling flags
-STD ?= -std=c99
-CXXSTD ?= -std=c++11
-WARN = -Wall
-EXTRA = -pedantic -Wpadded -Wextra -Wno-unused-parameter
-EXTRA += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
-EXTRA += -Wconversion
+STD     ?= -std=c99
+CXXSTD  ?= -std=c++11
+WARN    ?= -Wall
+EXTRA   += -pedantic -Wpadded -Wextra -Wno-unused-parameter
+EXTRA   += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
+EXTRA   += -Wconversion
 FEATURE += -fno-omit-frame-pointer
-OTHER = -pipe -g -ggdb3 -fPIC
-SHARED = -shared
+OTHER   += -pipe -g -ggdb3 -fPIC
+SHARED  += -shared
 
-MACRO = -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE -D_GNU_SOURCE
+MACRO += \
+    -D_POSIX_C_SOURCE=200809L \
+    -D_DEFAULT_SOURCE \
+    -D_GNU_SOURCE
+
 INC = \
     -I. \
     -I../deps/flibs/include \
@@ -20,12 +24,12 @@ INC = \
     -Iuser-c/include/
 
 ifeq ($(debug), false)
-OPT ?= -O2
+OPT     ?= -O2
 FEATURE += -fstack-protector
 else
-OPT = -O0
+OPT      = -O0
 FEATURE += -fstack-protector-all -finstrument-functions
-MACRO += -DSK_DEBUG
+MACRO   += -DSK_DEBUG
 endif
 
 ifeq ($(strict),true)
