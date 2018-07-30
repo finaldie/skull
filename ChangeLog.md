@@ -1,6 +1,7 @@
 * 2018-07-25 1.2.3
   * Engine
     * **Enhancement:** Refine _admin_ `memory` command output (more clear)
+    * **Enhancement:** Refine _admin_ `info` command output (more clear)
   * CLI
     * **New:** Memory tracing tool
   * MISC

@@ -61,7 +61,7 @@ typedef struct sk_service_cfg_t {
     // Max queue size
     int max_qsize;
 
-    int   __padding3;
+    int __padding3;
 } sk_service_cfg_t;
 
 typedef struct sk_config_t {
