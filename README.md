@@ -16,7 +16,7 @@ _Skull_ is a event-driven serving framework with multiple modern designs to allo
 
 It helps people to build an application/server extremely fast and strong, high scalability and flexibility in application layer, and with strong performance in engine level. Read more [here][6].
 
-_Skull_ can be used in generic serving layer or embedded device. E.g. _web logic server_, _game server_, etc.
+_Skull_ can be used in generic serving layer or embedded device. E.g. _web logic server_, _game server_, etc. Check this [DNSTurbo][16] project and [Tailer][19] for a quick start :)
 
 ## Releases
 [Changelog](ChangeLog.md)
@@ -133,7 +133,7 @@ To fix a bug or add a new feature, just **`Fork`** the repo, then apply the fixe
 [16]: https://github.com/finaldie/DNSTurbo
 [17]: https://github.com/finaldie/DNSTurbo#trailer
 [18]: https://www.reddit.com/r/skullengine/
-
+[19]: https://www.youtube.com/watch?v=2u_-Wl7sDdA
 
 [20]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/Dockerfile
 [21]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/Dockerfile.build

@@ -114,12 +114,17 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
 
             newAddr = res[3]
 
-            output = subprocess.check_output(
-                    ADDR2LINE_CMD.format(executable, newAddr), shell=True)
-            humanReadableAddr = output.decode('UTF-8')
+            try:
+                output = subprocess.check_output(
+                        ADDR2LINE_CMD.format(executable, newAddr), shell=True)
+                humanReadableAddr = output.decode('UTF-8')
 
-            array[RET_ADDR_IDX] = humanReadableAddr
-            print(" ".join(array))
+                array[RET_ADDR_IDX] = humanReadableAddr
+                print(" ".join(array), end = ' ')
+
+            except KeyboardInterrupt:
+                if DEBUG: print("KeyboardInterrupt, exit...")
+                break
 
     if inputFile is not None:
         handle.close()
@@ -184,7 +189,10 @@ if __name__ == "__main__":
             res = _findAddr(addrMaps, addr)
             pprint.pprint(res)
 
+    except KeyboardInterrupt as e:
+        if DEBUG: print("KeyboardInterrupt: {}".format(e))
     except Exception as e:
         print("Fatal: " + str(e))
         usage()
         raise
+

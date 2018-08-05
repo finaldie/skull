@@ -80,7 +80,7 @@ function do_trace() {
     fi
 
     # 1. Get skull info via port
-    echo "Connect to skull-engine :$port ..."
+    echo "Connecting to skull-engine :$port ..."
     local infos=`echo "info" | nc 0 7759 -w 1`
     if [ $? -ne 0 ] || [ -z "$infos" ]; then
         echo " - Error in getting infos from port $port, check whether skull-engine is running" >&2
