@@ -1,5 +1,6 @@
 * 2018-07-25 1.2.3
   * Engine
+    * **Fix:** Solve memory API re-entrance issue
     * **Enhancement:** Refine _admin_ `memory` command output (more clear)
     * **Enhancement:** Refine _admin_ `info` command output (more clear)
   * CLI
