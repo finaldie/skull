@@ -3,7 +3,7 @@
     * **Enhancement:** Refine _admin_ `memory` command output (more clear)
     * **Enhancement:** Refine _admin_ `info` command output (more clear)
   * CLI
-    * **New:** Memory tracing tool
+    * **New:** Memory realtime tracing tool `skull trace`
   * MISC
     * **Enhancement:** Cleanup makefile templates
 * 2018-07-24 1.2.2
