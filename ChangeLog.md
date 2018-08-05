@@ -7,6 +7,7 @@
     * **New:** Memory realtime tracing tool `skull trace`
   * MISC
     * **Enhancement:** Cleanup makefile templates
+    * **Enhancement:** Upgrade jemalloc to 5.1.0
 * 2018-07-24 1.2.2
   * Engine
     * **Fix:** Memory stat measurement inaccurate issue in endpoint and service job
