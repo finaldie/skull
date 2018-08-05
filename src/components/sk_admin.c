@@ -17,6 +17,7 @@
 #include "flibs/fmbuf.h"
 
 #include "api/sk_utils.h"
+#include "api/sk_const.h"
 #include "api/sk_env.h"
 #include "api/sk_core.h"
 #include "api/sk_txn.h"
@@ -440,6 +441,10 @@ void _process_status(sk_txn_t* txn)
     _append_response(txn, "\n");
 
     _append_response(txn, IFMT(daemon, "%d\n"), core->cmd_args.daemon);
+    _append_response(txn, IFMT(stdout_forward, "%d\n"),
+                     core->cmd_args.log_stdout_fwd);
+    _append_response(txn, IFMT(log_rolling, "%d\n"),
+                     !core->cmd_args.log_rolling_disabled);
     _append_response(txn, IFMT(max_open_files, "%d\n"), core->max_fds);
 
     // config: config file absolute location
@@ -451,9 +456,18 @@ void _process_status(sk_txn_t* txn)
     _append_response(txn, "\n");
 
     // config: log file absolute location
-    _append_response(txn, IFMT(log_file, "%s\n"), core->config->log_name);
     int log_level = core->config->log_level;
     _append_response(txn, IFMT(log_level, "%s\n"), LEVELS[log_level]);
+    _append_response(txn, IFMT(log_file, "%s/log/%s\n"),
+                     core->working_dir, core->config->log_name);
+
+    if (core->cmd_args.log_stdout_fwd) {
+        _append_response(txn, IFMT(stdout_file, "%s/log/%s\n"),
+                     core->working_dir, SK_LOG_STDOUT_FILE);
+    } else {
+        _append_response(txn, IFMT(stdout_file, "%s/log/%s\n"),
+                     core->working_dir, "stdout.log");
+    }
     _append_response(txn, "\n");
 
     _append_response(txn, IFMT(pid, "%d\n"), core->info.pid);
