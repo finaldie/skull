@@ -17,7 +17,6 @@
 #include "flibs/fmbuf.h"
 
 #include "api/sk_utils.h"
-#include "api/sk_const.h"
 #include "api/sk_env.h"
 #include "api/sk_core.h"
 #include "api/sk_txn.h"
@@ -441,7 +440,7 @@ void _process_status(sk_txn_t* txn)
     _append_response(txn, "\n");
 
     _append_response(txn, IFMT(daemon, "%d\n"), core->cmd_args.daemon);
-    _append_response(txn, IFMT(stdout_forward, "%d\n"),
+    _append_response(txn, IFMT(log_std_forward, "%d\n"),
                      core->cmd_args.log_stdout_fwd);
     _append_response(txn, IFMT(log_rolling, "%d\n"),
                      !core->cmd_args.log_rolling_disabled);
@@ -450,7 +449,7 @@ void _process_status(sk_txn_t* txn)
     // config: config file absolute location
     _append_response(txn, IFMT(binary, "%s\n"), core->cmd_args.binary_path);
     _append_response(txn, IFMT(working_dir, "%s\n"), core->working_dir);
-    _append_response(txn, IFMT(config, "%s\n"), core->config->location);
+    _append_response(txn, IFMT(configuration, "%s\n"), core->config->location);
     _append_response(txn, IFMT(worker_threads, "%d\n"), core->config->threads);
     _append_response(txn, IFMT(bio_threads, "%d\n"), core->config->bio_cnt);
     _append_response(txn, "\n");
@@ -461,12 +460,14 @@ void _process_status(sk_txn_t* txn)
     _append_response(txn, IFMT(log_file, "%s/log/%s\n"),
                      core->working_dir, core->config->log_name);
 
-    if (core->cmd_args.log_stdout_fwd) {
-        _append_response(txn, IFMT(stdout_file, "%s/log/%s\n"),
-                     core->working_dir, SK_LOG_STDOUT_FILE);
-    } else {
-        _append_response(txn, IFMT(stdout_file, "%s/log/%s\n"),
+    if (core->cmd_args.daemon) {
+        _append_response(txn, IFMT(stdout, "%s/log/%s\n"),
                      core->working_dir, "stdout.log");
+        _append_response(txn, IFMT(stderr, "%s/log/%s\n"),
+                     core->working_dir, "stdout.log");
+    } else {
+        _append_response(txn, IFMT(stdout, "/proc/%d/fd/1\n"), core->info.pid);
+        _append_response(txn, IFMT(stderr, "/proc/%d/fd/2\n"), core->info.pid);
     }
     _append_response(txn, "\n");
 

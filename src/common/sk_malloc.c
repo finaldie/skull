@@ -24,8 +24,8 @@
 }
 
 #define SK_MT_HEADER_FMT "%lu.%lu %s %s:%s.%s - "
-#define _SK_MT_ALLOC_FMT(symbol) #symbol " %p %zu bytes from %p %lu ns\n"
-#define _SK_MT_REALLOC_FMT "realloc %p-%p %zu-%zu bytes from %p %lu ns %s\n"
+#define _SK_MT_ALLOC_FMT(symbol) #symbol " %p %zu bytes %lu ns from %p\n"
+#define _SK_MT_REALLOC_FMT "realloc %p-%p %zu-%zu bytes %lu ns from %p %s\n"
 
 #define SK_MT_FMT(symbol) SK_MT_HEADER_FMT _SK_MT_ALLOC_FMT(symbol)
 #define SK_MT_FMT_REALLOC SK_MT_HEADER_FMT _SK_MT_REALLOC_FMT
@@ -296,7 +296,7 @@ void* malloc(size_t sz) {
         fprintf(stderr, SK_MT_FMT(malloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, sz,
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
 
     SK_MEM_EXIT();
@@ -322,7 +322,7 @@ void free(void* ptr) {
         fprintf(stderr, SK_MT_FMT(free),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
 
     SK_MEM_EXIT();
@@ -360,7 +360,7 @@ void* calloc(size_t nmemb, size_t sz) {
         fprintf(stderr, SK_MT_FMT(calloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
 
     SK_MEM_EXIT();
@@ -406,7 +406,7 @@ void* realloc(void* ptr, size_t sz) {
         fprintf(stderr, SK_MT_FMT_REALLOC,
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, nptr, old_sz, new_sz,
-                __builtin_return_address(0), duration, warning);
+                duration, __builtin_return_address(0), warning);
     }
 
     SK_MEM_EXIT();
@@ -434,7 +434,7 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
         fprintf(stderr, SK_MT_FMT(posix_memalign),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, *memptr, _get_malloc_sz(*memptr),
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
 
     SK_MEM_EXIT();
@@ -462,7 +462,7 @@ void* aligned_alloc(size_t alignment, size_t size) {
         fprintf(stderr, SK_MT_FMT(aligned_alloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
 
     SK_MEM_EXIT();
