@@ -2,7 +2,6 @@
 
 #include "flibs/flog.h"
 #include "api/sk_log.h"
-#include "api/sk_log_tpl.h"
 #include "api/sk_env.h"
 
 #include "skull/logger_private.h"

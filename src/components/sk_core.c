@@ -22,7 +22,6 @@
 #include "api/sk_env.h"
 #include "api/sk_log.h"
 #include "api/sk_log_helper.h"
-#include "api/sk_log_tpl.h"
 #include "api/sk_core.h"
 
 // INTERNAL APIs

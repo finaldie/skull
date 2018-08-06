@@ -9,7 +9,6 @@
 
 #include "api/sk_config.h"
 #include "api/sk_log.h"
-#include "api/sk_log_tpl.h"
 #include "api/sk_mon.h"
 #include "api/sk_service.h"
 #include "api/sk_engine.h"
