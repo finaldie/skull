@@ -1,3 +1,6 @@
+* 2018-08-05 1.3.1
+  * MISC
+    * **Enhancement:** Fix typos
 * 2018-07-25 1.2.3
   * Engine
     * **Fix:** Solve memory API re-entrance issue
