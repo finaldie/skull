@@ -278,20 +278,22 @@ int sk_config_getbool(sk_cfg_node_t* node)
 
 int sk_config_getint(sk_cfg_node_t* node)
 {
+    errno = 0;
     long int value = strtol(node->data.value, NULL, 10);
     SK_ASSERT_MSG(errno != EINVAL && errno != ERANGE,
-                  "load config %s, errno: %d, %s\n",
-                  node->data.value, errno, strerror(errno));
+                  "load config [%s], ret: %ld, errno: %d, %s\n",
+                  node->data.value, value, errno, strerror(errno));
 
     return (int)value;
 }
 
 double sk_config_getdouble(sk_cfg_node_t* node)
 {
+    errno = 0;
     double value = strtod(node->data.value, NULL);
     SK_ASSERT_MSG(errno != ERANGE,
-                  "load config %s, errno: %d, %s\n",
-                  node->data.value, errno, strerror(errno));
+                  "load config [%s], ret: %f, errno: %d, %s\n",
+                  node->data.value, value, errno, strerror(errno));
 
     return value;
 }
