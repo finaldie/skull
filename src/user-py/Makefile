@@ -20,8 +20,6 @@ PYTHON_LDFLAGS := $(shell $(python_path)-config --ldflags)
 PYTHON_CFLAGS := $(shell $(python_path)-config --cflags)
 PYTHON_LIBS := $(shell $(python_path)-config --libs)
 
-CXX ?= g++
-STD = -std=c++11
 # Reset macro
 MACRO =
 INC += \
@@ -31,7 +29,7 @@ INC += \
 SKULL_LDFLAGS += $(SHARED) $(PYTHON_LDFLAGS)
 SKULL_CFLAGS += -fno-strict-aliasing
 
-SKULL_CPP_LIB := libskull-api-py.so
+SKULL_CXX_LIB := libskull-api-py.so
 
 DEPS_LDFLAGS +=
 
@@ -45,7 +43,7 @@ SKULL_OBJS = \
     src/capis.o \
     src/txn_idldata.o
 
-all: $(SKULL_CPP_LIB)
+all: $(SKULL_CXX_LIB)
 	$(python_path) setup.py check
 
 install: prepare
@@ -53,7 +51,7 @@ install: prepare
 	cp -r $(LOCAL_LIB_DIR)/* $(SKULL_LIB_DIR)
 	cp -r $(LOCAL_ETC_DIR)/* $(SKULL_ETC_DIR)
 	cp -r $(LOCAL_SHARE_DIR)/* $(SKULL_SHARE_DIR)
-	cp $(SKULL_CPP_LIB) $(prefix)/lib
+	cp $(SKULL_CXX_LIB) $(prefix)/lib
 	$(python_path) setup.py install
 
 prepare:
@@ -63,7 +61,7 @@ prepare:
 	test -d $(SKULL_SHARE_DIR) || mkdir -p $(SKULL_SHARE_DIR)
 
 clean:
-	rm -f $(SKULL_OBJS) $(SKULL_CPP_LIB) src/*.pyc
+	rm -f $(SKULL_OBJS) $(SKULL_CXX_LIB) src/*.pyc
 	$(python_path) setup.py clean && rm -rf $(SKULLPY_BUILD_DIR)
 
 .PHONY: install prepare
@@ -71,6 +69,6 @@ clean:
 %.o : %.cpp
 	$(SKULL_CXX) -c $< -o $@
 
-$(SKULL_CPP_LIB): $(SKULL_OBJS)
+$(SKULL_CXX_LIB): $(SKULL_OBJS)
 	$(SKULL_CXX_LD) -o $@ $^ $(SKULL_LIBS)
 

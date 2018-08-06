@@ -48,11 +48,19 @@
 #define ADMIN_RESP_MAX_LENGTH     (8192)
 #define ADMIN_COUNTER_LINE_LENGTH (256)
 
-#define ADMIN_MODULE_FMT1         " %s - unpack %zu | run %zu | pack %zu ;"
-#define ADMIN_MODULE_FMT2         " %s - unpack %zu | run %zu ;"
-#define ADMIN_MODULE_FMT3         " %s - run %zu | pack %zu ;"
-#define ADMIN_MODULE_FMT4         " %s - run %zu ;"
+#define IFMT(k, fmt)              "%-30s: " fmt, #k
 
+#define MEM_FMT                   "%7s %20s %16s: %zu\n"
+#define MEM_FMT_ARGS(t, n, metrics) \
+    MEM_FMT, t, n, #metrics, st->metrics
+
+#define MODULE_STAT_FMT           "%s - unpack %zu | run %zu | pack %zu ; "
+
+static const char* LEVELS[] = {
+    "Trace", "Debug", "Info", "Warn", "Error", "Fatal"};
+
+static const char* STATUS[] = {
+    "Initializing", "Starting", "Running", "Stopping", "Destroying"};
 
 static sk_module_t _sk_admin_module;
 static sk_module_cfg_t _sk_admin_module_cfg;
@@ -263,7 +271,7 @@ void _status_workflow(sk_txn_t* txn, sk_core_t* core)
         total++;
     }
 
-    _append_response(txn, "workflows: %d\n", total);
+    _append_response(txn, IFMT(workflows, "%d\n"), total);
 }
 
 
@@ -281,12 +289,11 @@ void _status_module(sk_txn_t* txn, sk_core_t* core)
 
         fhash_str_iter_release(&iter);
 
-        _append_response(txn, "modules: %d\n", total);
+        _append_response(txn, IFMT(modules, "%d\n"), total);
     }
 
     {
-        const char* title = "module_list:";
-        _append_response(txn, title, strlen(title));
+        _append_response(txn, IFMT(module_stat, ""));
 
         fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
         sk_module_t* module = NULL;
@@ -295,20 +302,10 @@ void _status_module(sk_txn_t* txn, sk_core_t* core)
             size_t unpacking_cnt = module->stat.unpack;
             size_t running_cnt   = module->stat.run;
             size_t packing_cnt   = module->stat.pack;
+            const char* name     = module->cfg->name;
 
-            if (unpacking_cnt > 0 && packing_cnt > 0) {
-                _append_response(txn, ADMIN_MODULE_FMT1, module->cfg->name,
+            _append_response(txn, MODULE_STAT_FMT, name,
                     unpacking_cnt, running_cnt, packing_cnt);
-            } else if (unpacking_cnt > 0 && !packing_cnt) {
-                _append_response(txn, ADMIN_MODULE_FMT2, module->cfg->name,
-                    unpacking_cnt, running_cnt);
-            } else if (!unpacking_cnt && packing_cnt > 0) {
-                _append_response(txn, ADMIN_MODULE_FMT3, module->cfg->name,
-                    running_cnt, packing_cnt);
-            } else {
-                _append_response(txn, ADMIN_MODULE_FMT4, module->cfg->name,
-                    running_cnt);
-            }
         }
 
         fhash_str_iter_release(&iter);
@@ -331,18 +328,17 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
 
         fhash_str_iter_release(&iter);
 
-        _append_response(txn, "services: %d\n", total);
+        _append_response(txn, IFMT(services, "%d\n"), total);
     }
 
     {
-        const char* title = "service_list:";
-        _append_response(txn, title, strlen(title));
+        _append_response(txn, IFMT(service_stat, ""));
 
         fhash_str_iter iter = fhash_str_iter_new(core->services);
         sk_service_t* service = NULL;
 
         while ((service = fhash_str_next(&iter))) {
-            _append_response(txn, " %s running_tasks: %d ;",
+            _append_response(txn, "%s running_tasks: %d ; ",
                              sk_service_name(service),
                              sk_service_running_taskcnt(service));
         }
@@ -385,10 +381,10 @@ void _status_entity(sk_txn_t* txn, sk_core_t* core)
         _merge_stat(&stat, &tmp);
     }
 
-    _append_response(txn, "entities: total: %d inactive: %d ; none: %d std: %d "
-        "v4tcp: %d v4udp: %d v6tcp: %d v6udp: %d timer: %d "
+    _append_response(txn, IFMT(entities, "total: %d inactive: %d ; none: %d "
+        "std: %d v4tcp: %d v4udp: %d v6tcp: %d v6udp: %d timer: %d "
         "ep_v4tcp: %d ep_v4udp: %d ep_v6tcp: %d ep_v6udp: %d "
-        "ep_timer: %d ep_txn_timer: %d\n",
+        "ep_timer: %d ep_txn_timer: %d\n"),
         stat.total, stat.inactive, stat.entity_none, stat.entity_std,
         stat.entity_sock_v4tcp, stat.entity_sock_v4udp,
         stat.entity_sock_v6tcp, stat.entity_sock_v6udp,
@@ -414,18 +410,18 @@ void _status_resources(sk_txn_t* txn, sk_core_t* core)
     float last_cpu_sys  = cpu_sys  - prev_cpu_sys;
     last_cpu_sys        = last_cpu_sys > 0.000001f ? last_cpu_sys : 0.000001f;
 
-    _append_response(txn, "cpu_user: %.2f\n", last_cpu_user);
-    _append_response(txn, "cpu_sys: %.2f\n",  last_cpu_sys);
-    _append_response(txn, "cpu_user/sys: %.2f\n", last_cpu_user / last_cpu_sys);
+    _append_response(txn, IFMT(cpu_user, "%.2f\n"), last_cpu_user);
+    _append_response(txn, IFMT(cpu_sys, "%.2f\n"),  last_cpu_sys);
+    _append_response(txn, IFMT(cpu_user/sys, "%.2f\n"), last_cpu_user / last_cpu_sys);
 
-    _append_response(txn, "memory_rss(KB): %zu\n", core->info.self_ru.ru_maxrss);
-    _append_response(txn, "swaps: %ld\n", core->info.self_ru.ru_nswap);
-    _append_response(txn, "page_faults: %ld\n", core->info.self_ru.ru_majflt);
-    _append_response(txn, "block_input: %ld\n", core->info.self_ru.ru_inblock);
-    _append_response(txn, "block_output: %ld\n", core->info.self_ru.ru_oublock);
-    _append_response(txn, "signals: %ld\n", core->info.self_ru.ru_nsignals);
-    _append_response(txn, "voluntary_context_switches: %ld\n", core->info.self_ru.ru_nvcsw);
-    _append_response(txn, "involuntary_context_switches: %ld\n", core->info.self_ru.ru_nivcsw);
+    _append_response(txn, IFMT(memory_rss(KB), "%zu\n"), core->info.self_ru.ru_maxrss);
+    _append_response(txn, IFMT(swaps, "%ld\n"), core->info.self_ru.ru_nswap);
+    _append_response(txn, IFMT(page_faults, "%ld\n"), core->info.self_ru.ru_majflt);
+    _append_response(txn, IFMT(block_input, "%ld\n"), core->info.self_ru.ru_inblock);
+    _append_response(txn, IFMT(block_output, "%ld\n"), core->info.self_ru.ru_oublock);
+    _append_response(txn, IFMT(signals, "%ld\n"), core->info.self_ru.ru_nsignals);
+    _append_response(txn, IFMT(voluntary_context_switches, "%ld\n"), core->info.self_ru.ru_nvcsw);
+    _append_response(txn, IFMT(involuntary_context_switches, "%ld\n"), core->info.self_ru.ru_nivcsw);
 
 }
 
@@ -434,67 +430,59 @@ void _process_status(sk_txn_t* txn)
 {
     sk_core_t* core = SK_ENV_CORE;
 
-    // Fill up status
-    sk_core_status_t status = sk_core_status(core);
-    _append_response(txn, "status: %d (0: init 1: starting 2: running "
-                     "3: stopping 4: destroying)\n", status);
+    _append_response(txn, IFMT(version, "%s\n"), core->info.version);
+    _append_response(txn, IFMT(git_sha1, "%s\n"), core->info.git_sha1);
 
-    // static: Fill up version
-    _append_response(txn, "version: %s\n", core->info.version);
-
-    // static: Fill up git sha1
-    _append_response(txn, "git_sha1: %s\n", core->info.git_sha1);
-
-    // static: Fill up compiler info
-    _append_response(txn, "compiler: %s %s\n",
+    _append_response(txn, IFMT(compiler, "%s %s\n"),
                      core->info.compiler, core->info.compiler_version);
+    _append_response(txn, IFMT(compiling_options, "%s\n"),
+                     core->info.compiling_options);
+    _append_response(txn, "\n");
 
-    _append_response(txn, "compiling_options: %s\n", core->info.compiling_options);
+    _append_response(txn, IFMT(daemon, "%d\n"), core->cmd_args.daemon);
+    _append_response(txn, IFMT(log_std_forward, "%d\n"),
+                     core->cmd_args.log_stdout_fwd);
+    _append_response(txn, IFMT(log_rolling, "%d\n"),
+                     !core->cmd_args.log_rolling_disabled);
+    _append_response(txn, IFMT(max_open_files, "%d\n"), core->max_fds);
 
-    // static - system: Fill up pid
-    _append_response(txn, "pid: %d\n", core->info.pid);
+    // config: config file absolute location
+    _append_response(txn, IFMT(binary, "%s\n"), core->cmd_args.binary_path);
+    _append_response(txn, IFMT(working_dir, "%s\n"), core->working_dir);
+    _append_response(txn, IFMT(configuration, "%s\n"), core->config->location);
+    _append_response(txn, IFMT(worker_threads, "%d\n"), core->config->threads);
+    _append_response(txn, IFMT(bio_threads, "%d\n"), core->config->bio_cnt);
+    _append_response(txn, "\n");
 
-    // static - system: open file limitation
-    _append_response(txn, "max_open_files: %d\n", core->max_fds);
+    // config: log file absolute location
+    int log_level = core->config->log_level;
+    _append_response(txn, IFMT(log_level, "%s\n"), LEVELS[log_level]);
+    _append_response(txn, IFMT(log_file, "%s/log/%s\n"),
+                     core->working_dir, core->config->log_name);
 
-    // config: config file location
-    _append_response(txn, "config: %s\n", core->config->location);
+    if (core->cmd_args.daemon) {
+        _append_response(txn, IFMT(stdout, "%s/log/%s\n"),
+                     core->working_dir, "stdout.log");
+        _append_response(txn, IFMT(stderr, "%s/log/%s\n"),
+                     core->working_dir, "stdout.log");
+    } else {
+        _append_response(txn, IFMT(stdout, "/proc/%d/fd/1\n"), core->info.pid);
+        _append_response(txn, IFMT(stderr, "/proc/%d/fd/2\n"), core->info.pid);
+    }
+    _append_response(txn, "\n");
 
-    // config: worker threads
-    _append_response(txn, "worker_threads: %d\n", core->config->threads);
+    _append_response(txn, IFMT(pid, "%d\n"), core->info.pid);
+    _append_response(txn, IFMT(uptime(s), "%ld\n"), time(NULL) - core->starttime);
+    _append_response(txn, IFMT(status, "%s\n"), STATUS[sk_core_status(core)]);
+    _append_response(txn, "\n");
 
-    // config: bio threads
-    _append_response(txn, "bio_threads: %d\n", core->config->bio_cnt);
-
-    // config: log file
-    _append_response(txn, "log_file: %s\n", core->config->log_name);
-
-    // config: log level
-    _append_response(txn, "log_level: %d (0: trace 1: debug 2: info "
-                     "3: warn 4: error 5: fatal)\n", core->config->log_level);
-
-    // dynamic - system: cpu usage
-    // dynamic - system: memory usage
-    // dynamic: uptime (seconds)
-    _append_response(txn, "uptime(s): %ld\n", time(NULL) - core->starttime);
-
-    // static: working dir
-    _append_response(txn, "working_dir: %s\n", core->working_dir);
-
-    // static: workflow
-    _status_workflow(txn, core);
-
-    // static: module
-    _status_module(txn, core);
-
-    // static: service
-    _status_service(txn, core);
-
-    // dynamic: entities
-    _status_entity(txn, core);
-
-    // dynamic: resources
     _status_resources(txn, core);
+    _append_response(txn, "\n");
+
+    _status_workflow(txn, core);
+    _status_module(txn, core);
+    _status_service(txn, core);
+    _status_entity(txn, core);
 }
 
 static
@@ -505,23 +493,23 @@ void __append_jemalloc_stat(void* txn, const char * content)
 
 static
 void __append_mem_stat(sk_txn_t* txn,
-                       const char* t,
-                       const sk_mem_stat_t* stat,
+                       const char* t, // tag
+                       const char* n, // name
+                       const sk_mem_stat_t* st,
                        bool detail)
 {
-    _append_response(txn, "%s.used_sz:%zu\n",        t, sk_mem_allocated(stat));
-
+    _append_response(txn, MEM_FMT, t, n, "used", sk_mem_allocated(st));
     if (!detail) return;
 
-    _append_response(txn, "%s.nmalloc:%d\n",         t, stat->nmalloc);
-    _append_response(txn, "%s.nfree:%d\n",           t, stat->nfree);
-    _append_response(txn, "%s.ncalloc:%d\n",         t, stat->ncalloc);
-    _append_response(txn, "%s.nrealloc:%d\n",        t, stat->nrealloc);
-    _append_response(txn, "%s.nposix_memalign:%d\n", t, stat->nposix_memalign);
-    _append_response(txn, "%s.naligned_alloc:%d\n",  t, stat->naligned_alloc);
-    _append_response(txn, "%s.alloc_sz:%zu\n",       t, stat->alloc_sz);
-    _append_response(txn, "%s.dalloc_sz:%zu\n",      t, stat->dalloc_sz);
-    _append_response(txn, "%s.peak_sz:%zu\n",        t, stat->peak_sz);
+    _append_response(txn, MEM_FMT_ARGS(t, n, nmalloc));
+    _append_response(txn, MEM_FMT_ARGS(t, n, nfree));
+    _append_response(txn, MEM_FMT_ARGS(t, n, ncalloc));
+    _append_response(txn, MEM_FMT_ARGS(t, n, nrealloc));
+    _append_response(txn, MEM_FMT_ARGS(t, n, nposix_memalign));
+    _append_response(txn, MEM_FMT_ARGS(t, n, naligned_alloc));
+    _append_response(txn, MEM_FMT_ARGS(t, n, alloc_sz));
+    _append_response(txn, MEM_FMT_ARGS(t, n, dalloc_sz));
+    _append_response(txn, MEM_FMT_ARGS(t, n, peak_sz));
     _append_response(txn, "\n");
 }
 
@@ -534,32 +522,30 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
     const sk_mem_stat_t* static_stat = sk_mem_static();
     const sk_mem_stat_t* core_stat   = &(core->mstat);
 
-    _append_response(txn, "Initialization:\n");
-    __append_mem_stat(txn, "init", static_stat, detail);
+    _append_response(txn, "========== Skull Memory Measurement ==========\n");
+    __append_mem_stat(txn, ".", "init", static_stat, detail);
     total_allocated += sk_mem_allocated(static_stat);
 
-    _append_response(txn, "\nCore:\n");
-    __append_mem_stat(txn, "core", core_stat, detail);
+    __append_mem_stat(txn, ".", "core", core_stat, detail);
     total_allocated += sk_mem_allocated(core_stat);
 
-    _append_response(txn, "\nModules:\n");
-    __append_mem_stat(txn, sk_admin_module()->cfg->name,
+    __append_mem_stat(txn, "module", sk_admin_module()->cfg->name,
                       &sk_admin_module()->mstat, detail);
     total_allocated += sk_mem_allocated(&sk_admin_module()->mstat);
 
     {
         fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
         sk_module_t* module = NULL;
+
         while ((module = fhash_str_next(&iter))) {
             const sk_mem_stat_t* stat = &module->mstat;
-            __append_mem_stat(txn, module->cfg->name, stat, detail);
+
+            __append_mem_stat(txn, "module", module->cfg->name, stat, detail);
             total_allocated += sk_mem_allocated(stat);
         }
 
         fhash_str_iter_release(&iter);
     }
-
-    _append_response(txn, "\nServices:\n");
 
     {
         fhash_str_iter iter = fhash_str_iter_new(core->services);
@@ -567,21 +553,22 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
 
         while ((service = fhash_str_next(&iter))) {
             const sk_mem_stat_t* stat = sk_service_memstat(service);
-            __append_mem_stat(txn, sk_service_name(service), stat, detail);
+            const char* service_name = sk_service_name(service);
+
+            __append_mem_stat(txn, "service", service_name, stat, detail);
             total_allocated += sk_mem_allocated(stat);
         }
 
         fhash_str_iter_release(&iter);
     }
 
-    _append_response(txn, "\nSummary:\n");
+    _append_response(txn, "\n================== Summary ===================\n");
     _append_response(txn, "Total Allocated: %zu\n", total_allocated);
     _append_response(txn, "Trace Enabled: %d\n\n", sk_mem_trace_status());
 }
 
 static
 void _process_memory_allocator(sk_txn_t* txn) {
-    // Dump jemalloc stat if available
 #   ifdef SKULL_JEMALLOC_LINKED
     je_malloc_stats_print(__append_jemalloc_stat, txn, NULL);
 #   else
@@ -767,8 +754,8 @@ pack_done:
 
 static
 sk_module_cfg_t _sk_admin_module_cfg = {
-    .name = "Admin",
-    .type = "Native"
+    .name = "admin",
+    .type = "built-in"
 };
 
 static
@@ -782,3 +769,4 @@ sk_module_t _sk_admin_module = {
     .pack    = _admin_pack,
     .release = _admin_release
 };
+

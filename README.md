@@ -16,13 +16,24 @@ _Skull_ is a event-driven serving framework with multiple modern designs to allo
 
 It helps people to build an application/server extremely fast and strong, high scalability and flexibility in application layer, and with strong performance in engine level. Read more [here][6].
 
-_Skull_ can be used in generic serving layer or embedded device. E.g. _web logic server_, _game server_, etc.
+_Skull_ can be used in generic serving layer or embedded device. E.g. _web logic server_, _game server_, etc. Want an example? Check this [_DNSTurbo_][16] project, and watch its [_Trailer on Youtube_][19] for a quick start :)
 
 ## Releases
 [Changelog](ChangeLog.md)
 
+## Latest Feature Demo
+*Realtime memory stat tracing*:
+
+![skull-trace](https://github.com/finaldie/misc/blob/master/articals/skull/tracer/skull-trace.gif)
+
 ## How to Build
-Use _Ubuntu18.04_ as an example. (Tested on `Debian jessie/stretch`, `14.04/16.04/18.04, alpine`, `RHEL6.x` and `Raspberry OS`)
+Use _Ubuntu18.04_ as an example. (Tested on `Debian jessie/stretch`, `Ubuntu 14.04/16.04/18.04`, `alpine 3.6/3.8`, `RHEL6/7` and `Raspbian jessie/stretch`)
+
+### Basic System Requirements
+_Skull_ requires:
+ - `Platform`: _Linux_
+ - `C/C++`: _Compiler supports at least `c99`/`c++11` standards or higher_
+ - `Python`: _Python3_
 
 ### Install Dependencies
 ```console
@@ -133,7 +144,7 @@ To fix a bug or add a new feature, just **`Fork`** the repo, then apply the fixe
 [16]: https://github.com/finaldie/DNSTurbo
 [17]: https://github.com/finaldie/DNSTurbo#trailer
 [18]: https://www.reddit.com/r/skullengine/
-
+[19]: https://www.youtube.com/watch?v=2u_-Wl7sDdA
 
 [20]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/Dockerfile
 [21]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/Dockerfile.build

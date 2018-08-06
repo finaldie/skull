@@ -24,8 +24,8 @@
 }
 
 #define SK_MT_HEADER_FMT "%lu.%lu %s %s:%s.%s - "
-#define _SK_MT_ALLOC_FMT(symbol) #symbol " %p %zu bytes from %p %lu ns\n"
-#define _SK_MT_REALLOC_FMT "realloc %p-%p %zu-%zu bytes from %p %lu ns %s\n"
+#define _SK_MT_ALLOC_FMT(symbol) #symbol " %p %zu bytes %lu ns from %p\n"
+#define _SK_MT_REALLOC_FMT "realloc %p-%p %zu-%zu bytes %lu ns from %p %s\n"
 
 #define SK_MT_FMT(symbol) SK_MT_HEADER_FMT _SK_MT_ALLOC_FMT(symbol)
 #define SK_MT_FMT_REALLOC SK_MT_HEADER_FMT _SK_MT_REALLOC_FMT
@@ -47,7 +47,7 @@ size_t _get_malloc_sz(void* ptr) {
 #endif
 
 #define SK_REAL_TYPE(symbol) sk_real_ ## symbol ## _t
-#define SK_REAL(symbol) _sk_real_ ## symbol
+#define SK_REAL(symbol)      _sk_real_ ## symbol
 
 typedef void* (*SK_REAL_TYPE(malloc))  (size_t);
 typedef void  (*SK_REAL_TYPE(free))    (void*);
@@ -91,6 +91,24 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
         size_t peak_sz   = SK_MAX(curr_peak, curr_used); \
         if (SK_ATOMIC_CAS(nstat->peak_sz, curr_peak, peak_sz)) break; \
     } while(1)
+
+/**
+ * Re-entrance control
+ */
+#define SK_MEM_ENTER() \
+    do { \
+        bool ____ready = sk_thread_env_ready(); \
+        sk_thread_env_t* ____env = SK_ENV; \
+        if (____ready && ____env) ____env->mapi_entrance++; \
+        do { \
+
+#define SK_MEM_CHECK_AND_BREAK() \
+            if (unlikely(____env && ____env->mapi_entrance > 1)) break;
+
+#define SK_MEM_EXIT() \
+        } while(0); \
+        if (____ready && ____env) ____env->mapi_entrance--; \
+    } while(0)
 
 // The mem_stat before thread_env been set up (mainly for counting the stat
 //  during the initialization)
@@ -258,8 +276,11 @@ void sk_mem_trace(bool enabled) {
  * Override libc, to measure module/service memory usage
  */
 void* malloc(size_t sz) {
+    void* ptr = NULL;
+    SK_MEM_ENTER();
+
     ulong_t start = sk_gettime();
-    void* ptr = SK_ALLOCATOR(malloc)(sz);
+    ptr = SK_ALLOCATOR(malloc)(sz);
     ulong_t duration = sk_gettime() - start;
 
     const char* tname = NULL, *comp = NULL, *name = NULL;
@@ -270,17 +291,20 @@ void* malloc(size_t sz) {
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
+    SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
         fprintf(stderr, SK_MT_FMT(malloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, sz,
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
 
+    SK_MEM_EXIT();
     return ptr;
 }
 
 void free(void* ptr) {
+    SK_MEM_ENTER();
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(stat)) {
@@ -293,12 +317,15 @@ void free(void* ptr) {
     SK_ALLOCATOR(free)(ptr);
     ulong_t duration = sk_gettime() - start;
 
+    SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
         fprintf(stderr, SK_MT_FMT(free),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
+
+    SK_MEM_EXIT();
 }
 
 /**
@@ -313,8 +340,11 @@ void free(void* ptr) {
  *         size is 0.
  */
 void* calloc(size_t nmemb, size_t sz) {
+    void* ptr = NULL;
+    SK_MEM_ENTER();
+
     ulong_t start = sk_gettime();
-    void* ptr = SK_ALLOCATOR(calloc)(nmemb, sz);
+    ptr = SK_ALLOCATOR(calloc)(nmemb, sz);
     ulong_t duration = sk_gettime() - start;
 
     const char* tname = NULL, *comp = NULL, *name = NULL;
@@ -325,21 +355,26 @@ void* calloc(size_t nmemb, size_t sz) {
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
+    SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
         fprintf(stderr, SK_MT_FMT(calloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
 
+    SK_MEM_EXIT();
     return ptr;
 }
 
 void* realloc(void* ptr, size_t sz) {
+    void* nptr = NULL;
+    SK_MEM_ENTER();
+
     size_t old_sz = _get_malloc_sz(ptr);
 
     ulong_t start = sk_gettime();
-    void* nptr = SK_ALLOCATOR(realloc)(ptr, sz);
+    nptr = SK_ALLOCATOR(realloc)(ptr, sz);
     ulong_t duration = sk_gettime() - start;
 
     size_t new_sz = _get_malloc_sz(nptr);
@@ -366,19 +401,24 @@ void* realloc(void* ptr, size_t sz) {
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
+    SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
         fprintf(stderr, SK_MT_FMT_REALLOC,
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, nptr, old_sz, new_sz,
-                __builtin_return_address(0), duration, warning);
+                duration, __builtin_return_address(0), warning);
     }
 
+    SK_MEM_EXIT();
     return nptr;
 }
 
 int posix_memalign(void **memptr, size_t alignment, size_t size) {
+    int ret = 0;
+    SK_MEM_ENTER();
+
     ulong_t start = sk_gettime();
-    int ret = SK_ALLOCATOR(posix_memalign)(memptr, alignment, size);
+    ret = SK_ALLOCATOR(posix_memalign)(memptr, alignment, size);
     ulong_t duration = sk_gettime() - start;
 
     const char* tname = NULL, *comp = NULL, *name = NULL;
@@ -389,19 +429,24 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
+    SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
         fprintf(stderr, SK_MT_FMT(posix_memalign),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, *memptr, _get_malloc_sz(*memptr),
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
 
+    SK_MEM_EXIT();
     return ret;
 }
 
 void* aligned_alloc(size_t alignment, size_t size) {
+    void* ptr = NULL;
+    SK_MEM_ENTER();
+
     ulong_t start = sk_gettime();
-    void* ptr = SK_ALLOCATOR(aligned_alloc)(alignment, size);
+    ptr = SK_ALLOCATOR(aligned_alloc)(alignment, size);
     ulong_t duration = sk_gettime() - start;
 
     const char* tname = NULL, *comp = NULL, *name = NULL;
@@ -412,13 +457,15 @@ void* aligned_alloc(size_t alignment, size_t size) {
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
+    SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
         fprintf(stderr, SK_MT_FMT(aligned_alloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
-                __builtin_return_address(0), duration);
+                duration, __builtin_return_address(0));
     }
 
+    SK_MEM_EXIT();
     return ptr;
 }
 

@@ -28,9 +28,7 @@ TEST_SRCS = \
     tests/test_module.cpp
 
 # valgrind suppresion file
-#  note: if the suppresion file is exist, then need to append
-#        `--suppressions=$(SUPPRESSION)` to `VALGRIND`
-SUPPRESSION := $(GLOBAL_SUPPRESSION)
+SUPPRESSION +=
 
 # Include the basic Makefile targets
 include $(shell skull-config --cpp-targets)

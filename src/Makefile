@@ -36,7 +36,6 @@ COMMON_OBJS = \
     common/sk_env.o \
     common/sk_workflow.o \
     common/sk_log.o \
-    common/sk_log_tpl.o \
     common/sk_mon.o \
     common/sk_metrics.o \
     common/sk_queue.o \

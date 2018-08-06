@@ -16,7 +16,7 @@ run:
 
 verify:
     - echo "verify"
-    - 'echo "info" | nc 127.0.0.1 7759 -w 1 | grep "status:" | awk ''{print $2}'' | grep "2"'
+    - 'echo "info" | nc 127.0.0.1 7759 -w 1 | grep "status" | awk ''{print $3}'' | grep "Running"'
     - echo "hello skull" | nc 127.0.0.1 7758 -i 1 -w 1 | grep "hello skull"
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello skull"'

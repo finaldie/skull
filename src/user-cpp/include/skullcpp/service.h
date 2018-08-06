@@ -110,28 +110,6 @@ public:
     virtual int createJob(JobNPR, JobNPError) const = 0;
     virtual int createJob(JobNPW, JobNPError) const = 0;
 
-// Use these macros to make a Service::Job easily. In another handler, we still
-//  can use *lambda* instead of them
-#define skull_BindSvcJobR(f, ...) \
-    (skullcpp::Service::JobR) \
-    std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
-
-#define skull_BindSvcJobW(f, ...) \
-    (skullcpp::Service::JobW) \
-    std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
-
-#define skull_BindSvcJobError skull_BindSvcJobR
-
-#define skull_BindSvcJobNPR(f, ...) \
-    (skullcpp::Service::JobNPR) \
-    std::bind(f, std::placeholders::_1, ##__VA_ARGS__)
-
-#define skull_BindSvcJobNPW(f, ...) \
-    (skullcpp::Service::JobNPW) \
-    std::bind(f, std::placeholders::_1, ##__VA_ARGS__)
-
-#define skull_BindSvcJobNPError skull_BindSvcJobNPR
-
 public:
     virtual void set(ServiceData* data) = 0;
 
@@ -171,6 +149,29 @@ public:
     ServiceData() {}
     virtual ~ServiceData() {}
 };
+
+// [Deprecated Macros]
+// Use these macros to create a Service::Job when the compiler doesn't fully
+//  support c++11 not very well. Prefer to use lambda function instead.
+#define skull_BindSvcJobR(f, ...) \
+    (skullcpp::Service::JobR) \
+    std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
+
+#define skull_BindSvcJobW(f, ...) \
+    (skullcpp::Service::JobW) \
+    std::bind(f, std::placeholders::_1, std::placeholders::_2, ##__VA_ARGS__)
+
+#define skull_BindSvcJobError skull_BindSvcJobR
+
+#define skull_BindSvcJobNPR(f, ...) \
+    (skullcpp::Service::JobNPR) \
+    std::bind(f, std::placeholders::_1, ##__VA_ARGS__)
+
+#define skull_BindSvcJobNPW(f, ...) \
+    (skullcpp::Service::JobNPW) \
+    std::bind(f, std::placeholders::_1, ##__VA_ARGS__)
+
+#define skull_BindSvcJobNPError skull_BindSvcJobNPR
 
 } // End of namespace
 

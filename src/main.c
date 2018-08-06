@@ -71,8 +71,8 @@ void sig_handler(int sig, siginfo_t *si, void *uc)
 
 #ifdef SK_DUMP_CORE
     if (sig == SIGSEGV) {
-       fprintf(stderr, "received SIGSEGV signal, abort\n");
-        sk_backtrace_print();
+        fprintf(stderr, "received SIGSEGV signal, abort\n");
+        sk_backtrace_print(0, 20);
         exit(1);
     }
 #endif
