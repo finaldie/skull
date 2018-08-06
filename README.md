@@ -9,7 +9,7 @@
 
 Skull
 =====
-_Skull_ is a event-driven serving framework with multiple modern designs to allow user:
+_Skull_ is an event-driven serving framework with multiple modern designs to allow user:
 * Fast to create a prototype
 * Easy to maintain even a huge project
 * Write code in lock-free environment
