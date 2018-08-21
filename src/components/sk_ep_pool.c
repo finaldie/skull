@@ -1166,15 +1166,14 @@ void sk_ep_pool_destroy(sk_ep_pool_t* pool)
     free(pool);
 }
 
-sk_ep_status_t sk_ep_send(sk_ep_pool_t*         pool,
-                          const sk_service_t*   service,
-                          const sk_entity_t*    entity,
-                          const sk_ep_handler_t handler,
-                          const void*           data,
-                          size_t                count,
-                          const sk_ep_cb_t      cb,
-                          void*                 ud)
-{
+sk_ep_status_t _sk_ep_send(sk_ep_pool_t*         pool,
+                           const sk_service_t*   service,
+                           const sk_entity_t*    entity,
+                           const sk_ep_handler_t handler,
+                           const void*           data,
+                           size_t                count,
+                           const sk_ep_cb_t      cb,
+                           void*                 ud) {
     SK_ASSERT(pool);
     unsigned long long start = SK_TIME_NOW();
 
@@ -1227,4 +1226,25 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t*         pool,
 
     // 4. send via ep
     return _ep_send(ep_node, data, count);
+}
+
+sk_ep_status_t sk_ep_send(sk_ep_pool_t*         pool,
+                          const sk_service_t*   service,
+                          const sk_entity_t*    entity,
+                          const sk_ep_handler_t handler,
+                          const void*           data,
+                          size_t                count,
+                          const sk_ep_cb_t      cb,
+                          void*                 ud) {
+    SK_ASSERT_MSG(service, "calling without service\n");
+    sk_ep_status_t st = SK_EP_OK;
+
+    SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+    SK_ENV_POS_SAVE(SK_ENV_POS_CORE, NULL);
+
+    st = _sk_ep_send(pool, service, entity, handler, data, count, cb, ud);
+
+    SK_ENV_POS_RESTORE();
+    SK_LOG_SETCOOKIE("service.%s", sk_service_name(service));
+    return st;
 }

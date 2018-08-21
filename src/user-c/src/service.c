@@ -134,11 +134,11 @@ sk_obj_t* _create_job_arg(job_data_t* jobdata) {
 static
 sk_service_job_ret_t
 _create_job(sk_service_t*       service,
-                  uint32_t            delayed,
-                  sk_service_job_rw_t type,
-                  sk_service_job      job,
-                  job_data_t*         jobdata,
-                  int                 bidx) {
+            uint32_t            delayed,
+            sk_service_job_rw_t type,
+            sk_service_job      job,
+            job_data_t*         jobdata,
+            int                 bidx) {
 
     sk_env_pos_t pos = SK_ENV_POS;
 
