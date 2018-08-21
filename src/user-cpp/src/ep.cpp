@@ -6,7 +6,7 @@
 #include "srv_utils.h"
 #include "service_imp.h"
 #include "ep_imp.h"
-#include <skullcpp/ep.h>
+#include "skullcpp/ep.h"
 
 namespace skullcpp {
 

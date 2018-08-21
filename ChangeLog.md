@@ -1,4 +1,6 @@
 * 2018-08-05 1.3.1
+  * Engine
+    * **Fix:** Inaccurate memory stat in `ep_send`
   * MISC
     * **Enhancement:** Fix typos
 * 2018-07-25 1.2.3
