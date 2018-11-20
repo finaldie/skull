@@ -448,17 +448,19 @@ void _process_status(sk_txn_t* txn)
 
     // config: config file absolute location
     _append_response(txn, IFMT(binary, "%s\n"), core->cmd_args.binary_path);
-    _append_response(txn, IFMT(working_dir, "%s\n"), core->working_dir);
-    _append_response(txn, IFMT(configuration, "%s\n"), core->config->location);
+    _append_response(txn, IFMT(working_dir,    "%s\n"), core->working_dir);
+    _append_response(txn, IFMT(configuration,  "%s\n"), core->config->location);
     _append_response(txn, IFMT(worker_threads, "%d\n"), core->config->threads);
-    _append_response(txn, IFMT(bio_threads, "%d\n"), core->config->bio_cnt);
+    _append_response(txn, IFMT(bio_threads,    "%d\n"), core->config->bio_cnt);
     _append_response(txn, "\n");
 
     // config: log file absolute location
     int log_level = core->config->log_level;
     _append_response(txn, IFMT(log_level, "%s\n"), LEVELS[log_level]);
-    _append_response(txn, IFMT(log_file, "%s/log/%s\n"),
+    _append_response(txn, IFMT(log_file,  "%s/log/%s\n"),
                      core->working_dir, core->config->log_name);
+    _append_response(txn, IFMT(diag_file, "%s/log/%s\n"),
+                     core->working_dir, core->config->diag_name);
 
     if (core->cmd_args.daemon) {
         _append_response(txn, IFMT(stdout, "%s/log/%s\n"),

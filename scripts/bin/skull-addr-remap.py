@@ -64,10 +64,14 @@ def loadAddrMaps(pid:int):
 
 
 protocols = ["malloc", "calloc", "realloc", "free", "posix_memalign", "aligned_alloc"]
-MEM_TAG = "[MEM_TRACE]"
-ITEMS_PER_LINE = 12
-RET_ADDR_IDX = 11
-ADDR2LINE_CMD = "addr2line -e {} -fpC {}"
+MEM_TAG        = "[MEM_TRACE]"
+LOG_PREFIX     = 6
+ITEMS_PER_LINE = LOG_PREFIX + 12
+
+PROTO_IDX      = LOG_PREFIX + 4
+RET_ADDR_IDX   = LOG_PREFIX + 11
+
+ADDR2LINE_CMD  = "addr2line -e {} -fpC {}"
 
 def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
     handle = sys.stdin
@@ -101,7 +105,7 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
             if DEBUG: print("skip line, no enough items per line: {}".format(line));
             continue
 
-        proto = array[4]  # proto like malloc/calloc
+        proto = array[PROTO_IDX]  # proto like malloc/calloc
         addr  = array[RET_ADDR_IDX] # function return address
 
         res:tuple = _findAddr(addrMaps, addr)

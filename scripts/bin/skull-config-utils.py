@@ -144,7 +144,15 @@ def _dump_config_to_file(cfgYamlObj, filename):
     else:
         content.write('# log_level: info\n\n')
 
-    # 7. Dump 'languages'
+    # 7. Dump 'diagnosis log name'
+    content.write('# Diagnosis File Name\n')
+
+    if cfgYamlObj.get('diag_name'):
+        content.write('diag_name: {}\n\n'.format(cfgYamlObj['diag_name']))
+    else:
+        content.write('# diag_name: diag.log\n\n')
+
+    # 8. Dump 'languages'
     content.write('# Supported Languages: cpp, py\n')
 
     if cfgYamlObj.get('languages'):
@@ -152,7 +160,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
     else:
         content.write('languages: [\'cpp\', \'py\']\n\n')
 
-    # 8. 'Txn Logging'
+    # 9. 'Txn Logging'
     content.write('##\n')
     content.write('# Transaction Logging\n')
     content.write('#  Enable to see the detail execution flow of each transaction\n')
@@ -162,7 +170,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
     else:
         content.write('# txn_logging: false\n\n')
 
-    # 9. Dump 'max_fds'
+    # 10. Dump 'max_fds'
     content.write('##\n')
     content.write('# Max open file limitation\n')
     content.write('#  By default, this value is depend on the ulimit of the process\n')
@@ -174,7 +182,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
     else:
         content.write('# max_fds: 65535\n\n')
 
-    # 10. Dump 'slowlog_ms'
+    # 11. Dump 'slowlog_ms'
     content.write('##\n')
     content.write('# Slow log\n')
     content.write('#  Unit: microsecond.\n')
@@ -188,7 +196,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
     else:
         content.write('# slowlog_ms: 0\n\n')
 
-    # 10. Dump 'workflows'
+    # 12. Dump 'workflows'
     content.write(CONFIG_WF_HEADER)
 
     if cfgYamlObj.get('workflows'):
@@ -200,7 +208,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
 
     content.write('\n')
 
-    # 11. Dump 'services'
+    # 13. Dump 'services'
     content.write(CONFIG_SVC_HEADER)
 
     if cfgYamlObj.get('services'):

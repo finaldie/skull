@@ -22,6 +22,7 @@
 #include "api/sk_env.h"
 #include "api/sk_log.h"
 #include "api/sk_log_helper.h"
+#include "api/sk_malloc.h"
 #include "api/sk_core.h"
 
 // INTERNAL APIs
@@ -332,12 +333,16 @@ void _sk_init_log(sk_core_t* core)
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     SK_LOG_TRACE(core->logger, "skull logger initialization successfully");
+
+    // Create diag log, it contains the information like memory usage/diagnosis
+    sk_mem_tracelog_create(working_dir, config->diag_name, log_level,
+                           core->cmd_args.log_stdout_fwd);
 }
 
 static
 void _sk_init_moniter(sk_core_t* core)
 {
-    core->mon = sk_mon_create();
+    core->mon  = sk_mon_create();
     core->umon = sk_mon_create();
 }
 
@@ -654,6 +659,7 @@ void sk_core_destroy(sk_core_t* core)
     SK_LOG_INFO(core->logger,
              "=================== skull engine stopped ====================");
 
+    sk_mem_tracelog_destroy();
     sk_logger_destroy(core->logger);
 }
 

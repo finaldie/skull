@@ -30,5 +30,12 @@ size_t sk_mem_allocated(const sk_mem_stat_t*);
 bool sk_mem_trace_status();
 void sk_mem_trace(bool enabled);
 
+void sk_mem_tracelog_create(const char* workdir,
+                            const char* logname,
+                            int log_level,
+                            bool stdout_fwd);
+
+void sk_mem_tracelog_destroy();
+
 #endif
 

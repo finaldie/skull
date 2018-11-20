@@ -13,6 +13,7 @@
 #include "api/sk_core.h"
 #include "api/sk_service.h"
 #include "api/sk_malloc.h"
+#include "api/sk_log.h"
 
 // Global Memory Tracer Tag
 #define SK_GMTT "[MEM_TRACE]"
@@ -24,8 +25,8 @@
 }
 
 #define SK_MT_HEADER_FMT "%lu.%lu %s %s:%s.%s - "
-#define _SK_MT_ALLOC_FMT(symbol) #symbol " %p %zu bytes %lu ns from %p\n"
-#define _SK_MT_REALLOC_FMT "realloc %p-%p %zu-%zu bytes %lu ns from %p %s\n"
+#define _SK_MT_ALLOC_FMT(symbol) #symbol " %p %zu bytes %lu ns from %p"
+#define _SK_MT_REALLOC_FMT "realloc %p-%p %zu-%zu bytes %lu ns from %p %s"
 
 #define SK_MT_FMT(symbol) SK_MT_HEADER_FMT _SK_MT_ALLOC_FMT(symbol)
 #define SK_MT_FMT_REALLOC SK_MT_HEADER_FMT _SK_MT_REALLOC_FMT
@@ -46,7 +47,7 @@ size_t _get_malloc_sz(void* ptr) {
 }
 #endif
 
-#define SK_REAL_TYPE(symbol) sk_real_ ## symbol ## _t
+#define SK_REAL_TYPE(symbol)  sk_real_ ## symbol ## _t
 #define SK_REAL(symbol)      _sk_real_ ## symbol
 
 typedef void* (*SK_REAL_TYPE(malloc))  (size_t);
@@ -99,22 +100,27 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
     do { \
         bool ____ready = sk_thread_env_ready(); \
         sk_thread_env_t* ____env = SK_ENV; \
-        if (____ready && ____env) ____env->mapi_entrance++; \
+        int* ____api_entrance = NULL; \
+        if (____ready && ____env) ____api_entrance = &____env->mapi_entrance; \
+        else ____api_entrance = &imapi_entrance; \
+        (*____api_entrance)++; \
         do { \
 
 #define SK_MEM_CHECK_AND_BREAK() \
-            if (unlikely(____env && ____env->mapi_entrance > 1)) break;
+            if (unlikely(*____api_entrance > 1)) break;
 
 #define SK_MEM_EXIT() \
         } while(0); \
-        if (____ready && ____env) ____env->mapi_entrance--; \
+        (*____api_entrance)--; \
     } while(0)
 
 // The mem_stat before thread_env been set up (mainly for counting the stat
 //  during the initialization)
 static sk_mem_stat_t istat;
-
+static int  imapi_entrance = 0;
 static bool itrace_enabled = false;
+
+static sk_logger_t* itrace_logger = NULL;
 
 static
 void _init() {
@@ -223,7 +229,7 @@ sk_mem_stat_t* _get_stat(const char** tname,
                          const char** name) {
     sk_mem_stat_t* stat = NULL;
 
-    if (!sk_thread_env_ready() || unlikely(!SK_ENV)) {
+    if (unlikely(!sk_thread_env_ready() || !SK_ENV)) {
         stat = &istat;
         SK_FILL_TAGS("main", "skull", "init");
     } else {
@@ -265,11 +271,24 @@ size_t sk_mem_allocated(const sk_mem_stat_t* stat) {
 }
 
 bool sk_mem_trace_status() {
-    return itrace_enabled;
+    return itrace_enabled && itrace_logger;
 }
 
 void sk_mem_trace(bool enabled) {
     itrace_enabled = enabled;
+}
+
+void sk_mem_tracelog_create(const char* workdir,
+                            const char* logname,
+                            int log_level,
+                            bool stdout_fwd) {
+    itrace_logger = sk_logger_create(workdir, logname, log_level,
+                                     false, stdout_fwd);
+}
+
+void sk_mem_tracelog_destroy() {
+    sk_mem_trace(false);
+    sk_logger_destroy(itrace_logger);
 }
 
 /**
@@ -293,7 +312,7 @@ void* malloc(size_t sz) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, SK_MT_FMT(malloc),
+        SK_LOG_INFO(itrace_logger, SK_MT_FMT(malloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, sz,
                 duration, __builtin_return_address(0));
@@ -319,7 +338,7 @@ void free(void* ptr) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, SK_MT_FMT(free),
+        SK_LOG_INFO(itrace_logger, SK_MT_FMT(free),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
                 duration, __builtin_return_address(0));
@@ -357,7 +376,7 @@ void* calloc(size_t nmemb, size_t sz) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, SK_MT_FMT(calloc),
+        SK_LOG_INFO(itrace_logger, SK_MT_FMT(calloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
                 duration, __builtin_return_address(0));
@@ -403,7 +422,7 @@ void* realloc(void* ptr, size_t sz) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, SK_MT_FMT_REALLOC,
+        SK_LOG_INFO(itrace_logger, SK_MT_FMT_REALLOC,
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, nptr, old_sz, new_sz,
                 duration, __builtin_return_address(0), warning);
@@ -431,7 +450,7 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, SK_MT_FMT(posix_memalign),
+        SK_LOG_INFO(itrace_logger, SK_MT_FMT(posix_memalign),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, *memptr, _get_malloc_sz(*memptr),
                 duration, __builtin_return_address(0));
@@ -459,7 +478,7 @@ void* aligned_alloc(size_t alignment, size_t size) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        fprintf(stderr, SK_MT_FMT(aligned_alloc),
+        SK_LOG_INFO(itrace_logger, SK_MT_FMT(aligned_alloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
                 duration, __builtin_return_address(0));
