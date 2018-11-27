@@ -21,3 +21,12 @@
    obj:/usr/local/lib/libprotobuf.so.16.0.0
    obj:*
 }
+
+{
+   <Known musl libc issue on Alpine:3.8>
+   Memcheck:Leak
+   fun:calloc
+   fun:__cxa_atexit
+   obj:/usr/local/lib/libprotobuf.so.17.0.0
+   obj:*
+}
