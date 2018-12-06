@@ -41,10 +41,9 @@ typedef struct sk_thread_env_t {
 
     sk_env_pos_t pos;
 
-    // memory allocator api entrance count
-    int          mapi_entrance;
+    int          _padding;
 
-    // Current module or service
+    // Current pointer of module or service
     const void*  current;
 } sk_thread_env_t;
 

@@ -6,6 +6,7 @@
 #include <malloc.h>
 
 #include "flibs/compiler.h"
+#include "flibs/fhash.h"
 #include "api/sk_env.h"
 #include "api/sk_time.h"
 #include "api/sk_const.h"
@@ -99,10 +100,10 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
 #define SK_MEM_ENTER() \
     do { \
         bool ____ready = sk_thread_env_ready(); \
-        sk_thread_env_t* ____env = SK_ENV; \
-        int* ____api_entrance = NULL; \
-        if (____ready && ____env) ____api_entrance = &____env->mapi_entrance; \
-        else ____api_entrance = &imapi_entrance; \
+        sk_thread_env_t* ____env  = SK_ENV; \
+        sk_mem_env_t*    ____menv = _mem_env(); \
+        int* ____api_entrance = (____ready && ____env && ____menv) \
+            ? &____menv->api_entrance : &imem.api_entrance; \
         (*____api_entrance)++; \
         do { \
 
@@ -114,13 +115,47 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
         (*____api_entrance)--; \
     } while(0)
 
-// The mem_stat before thread_env been set up (mainly for counting the stat
-//  during the initialization)
-static sk_mem_stat_t istat;
-static int  imapi_entrance = 0;
-static bool itrace_enabled = false;
+// Thread-local data format
+// TODO: All these thread-local data should use `_Thread_local` keyword in C11
+typedef struct sk_mem_env_t {
+    int api_entrance;
+} sk_mem_env_t;
 
-static sk_logger_t* itrace_logger = NULL;
+/**
+ * The memory structure is divided to two parts majorly: init and runtime parts.
+ * In the runtime part, it also can be divided to 3 parts:
+ *  - core
+ *  - module
+ *  - service
+ */
+typedef struct sk_mem_t {
+    bool          tracing_enabled;
+
+    char          _padding[sizeof(void*) - sizeof(bool)];
+
+    // The mem_stat before thread_env been set up (mainly for counting the stat
+    //  during the initialization)
+    sk_mem_stat_t init;
+    int           api_entrance;
+
+    pthread_key_t key;
+
+    sk_mem_stat_t core;
+
+    // stat hashmap for storing the stat for modules
+    // key: module name. value: stat
+    // notes: the api_entrance counter is in thread_local
+    fhash*        mstats;
+
+    // stat hashmap for storing the stat for services
+    // key: service name. value: stat
+    // notes: the api_entrance counter is in thread_local
+    fhash*        sstats;
+
+    sk_logger_t*  logger;
+} sk_mem_t;
+
+static sk_mem_t imem;
 
 static
 void _init() {
@@ -224,30 +259,44 @@ void* sk_real_aligned_alloc(size_t alignment, size_t size) {
 }
 
 static
+sk_mem_env_t* _mem_env() {
+    sk_mem_env_t* env = pthread_getspecific(imem.key);
+    if (!env) {
+        env = SK_ALLOCATOR(calloc)(1, sizeof(sk_mem_env_t));
+        pthread_setspecific(imem.key, env);
+    }
+
+    return env;
+}
+
+static
 sk_mem_stat_t* _get_stat(const char** tname,
                          const char** component,
                          const char** name) {
     sk_mem_stat_t* stat = NULL;
 
-    if (unlikely(!sk_thread_env_ready() || !SK_ENV)) {
-        stat = &istat;
+    if (unlikely(!(sk_thread_env_ready() && SK_ENV && _mem_env()))) {
+        stat = &imem.init;
         SK_FILL_TAGS("main", "skull", "init");
     } else {
         sk_env_pos_t pos = SK_ENV_POS;
 
         switch (pos) {
-        case SK_ENV_POS_MODULE:
-            stat = &((sk_module_t*)(SK_ENV_CURRENT))->mstat;
-            SK_FILL_TAGS(SK_ENV_NAME, "module",
-                         ((sk_module_t*)(SK_ENV_CURRENT))->cfg->name);
+        case SK_ENV_POS_MODULE: {
+            const char* mname = ((sk_module_t*)(SK_ENV_CURRENT))->cfg->name;
+            stat = (sk_mem_stat_t*)sk_mem_stat_module(mname);
+            SK_FILL_TAGS(SK_ENV_NAME, "module", mname);
             break;
-        case SK_ENV_POS_SERVICE:
-            stat = sk_service_memstat(SK_ENV_CURRENT);
-            SK_FILL_TAGS(SK_ENV_NAME, "service", sk_service_name(SK_ENV_CURRENT));
+        }
+        case SK_ENV_POS_SERVICE: {
+            const char* sname = sk_service_name(SK_ENV_CURRENT);
+            stat = (sk_mem_stat_t*)sk_mem_stat_service(sname);
+            SK_FILL_TAGS(SK_ENV_NAME, "service", sname);
             break;
+        }
         case SK_ENV_POS_CORE:
         default:
-            stat = &SK_ENV_CORE->mstat;
+            stat = &imem.core;
             SK_FILL_TAGS(SK_ENV_NAME, "skull", "core");
             break;
         }
@@ -256,11 +305,62 @@ sk_mem_stat_t* _get_stat(const char** tname,
     return stat;
 }
 
+static
+void _stat_tbl_destroy(fhash* tbl) {
+    if (!tbl) return;
+
+    sk_mem_stat_t* stat = NULL;
+    fhash_str_iter iter = fhash_str_iter_new(tbl);
+    while ((stat = fhash_str_next(&iter)) != NULL) {
+        free(stat);
+    }
+
+    fhash_str_iter_release(&iter);
+    fhash_str_delete(tbl);
+}
+
+static
+void _thread_exit(void* data) {
+    sk_print("[mem] thread exit:\n");
+    free(data);
+}
+
 /**
  * Public APIs
  */
-const sk_mem_stat_t* sk_mem_static() {
-    return &istat;
+void sk_mem_init(const char* workdir,
+                 const char* logname,
+                 int  log_level,
+                 bool stdout_fwd) {
+    pthread_key_create(&imem.key, _thread_exit);
+
+    imem.mstats = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+    imem.sstats = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+
+    imem.logger = sk_logger_create(workdir, logname, log_level,
+                                   false, stdout_fwd);
+}
+
+void sk_mem_destroy() {
+    imem.tracing_enabled = false;
+    pthread_key_delete(imem.key);
+    imem.key = 0;
+
+    _stat_tbl_destroy(imem.mstats);
+    imem.mstats = NULL;
+
+    _stat_tbl_destroy(imem.sstats);
+    imem.sstats = NULL;
+
+    sk_logger_destroy(imem.logger);
+}
+
+const sk_mem_stat_t* sk_mem_stat_static() {
+    return &imem.init;
+}
+
+const sk_mem_stat_t* sk_mem_stat_core() {
+    return &imem.core;
 }
 
 size_t sk_mem_allocated(const sk_mem_stat_t* stat) {
@@ -270,25 +370,28 @@ size_t sk_mem_allocated(const sk_mem_stat_t* stat) {
     return alloc_sz > dalloc_sz ? alloc_sz - dalloc_sz : 0;
 }
 
+void sk_mem_stat_module_register(const char* name) {
+    fhash_str_set(imem.mstats, name, calloc(1, sizeof(sk_mem_stat_t)));
+}
+
+void sk_mem_stat_service_register(const char* name) {
+    fhash_str_set(imem.sstats, name, calloc(1, sizeof(sk_mem_stat_t)));
+}
+
+const sk_mem_stat_t* sk_mem_stat_module (const char* name) {
+    return fhash_str_get(imem.mstats, name);
+}
+
+const sk_mem_stat_t* sk_mem_stat_service(const char* name) {
+    return fhash_str_get(imem.sstats, name);
+}
+
 bool sk_mem_trace_status() {
-    return itrace_enabled && itrace_logger;
+    return imem.tracing_enabled && imem.logger;
 }
 
 void sk_mem_trace(bool enabled) {
-    itrace_enabled = enabled;
-}
-
-void sk_mem_tracelog_create(const char* workdir,
-                            const char* logname,
-                            int log_level,
-                            bool stdout_fwd) {
-    itrace_logger = sk_logger_create(workdir, logname, log_level,
-                                     false, stdout_fwd);
-}
-
-void sk_mem_tracelog_destroy() {
-    sk_mem_trace(false);
-    sk_logger_destroy(itrace_logger);
+    imem.tracing_enabled = enabled;
 }
 
 /**
@@ -312,7 +415,7 @@ void* malloc(size_t sz) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        SK_LOG_INFO(itrace_logger, SK_MT_FMT(malloc),
+        SK_LOG_INFO(imem.logger, SK_MT_FMT(malloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, sz,
                 duration, __builtin_return_address(0));
@@ -338,7 +441,7 @@ void free(void* ptr) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        SK_LOG_INFO(itrace_logger, SK_MT_FMT(free),
+        SK_LOG_INFO(imem.logger, SK_MT_FMT(free),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
                 duration, __builtin_return_address(0));
@@ -376,7 +479,7 @@ void* calloc(size_t nmemb, size_t sz) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        SK_LOG_INFO(itrace_logger, SK_MT_FMT(calloc),
+        SK_LOG_INFO(imem.logger, SK_MT_FMT(calloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
                 duration, __builtin_return_address(0));
@@ -422,7 +525,7 @@ void* realloc(void* ptr, size_t sz) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        SK_LOG_INFO(itrace_logger, SK_MT_FMT_REALLOC,
+        SK_LOG_INFO(imem.logger, SK_MT_FMT_REALLOC,
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, nptr, old_sz, new_sz,
                 duration, __builtin_return_address(0), warning);
@@ -450,7 +553,7 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        SK_LOG_INFO(itrace_logger, SK_MT_FMT(posix_memalign),
+        SK_LOG_INFO(imem.logger, SK_MT_FMT(posix_memalign),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, *memptr, _get_malloc_sz(*memptr),
                 duration, __builtin_return_address(0));
@@ -478,7 +581,7 @@ void* aligned_alloc(size_t alignment, size_t size) {
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
-        SK_LOG_INFO(itrace_logger, SK_MT_FMT(aligned_alloc),
+        SK_LOG_INFO(imem.logger, SK_MT_FMT(aligned_alloc),
                 start / 1000000000l, start % 1000000000l,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
                 duration, __builtin_return_address(0));

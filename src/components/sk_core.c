@@ -26,6 +26,17 @@
 #include "api/sk_core.h"
 
 // INTERNAL APIs
+static
+void _sk_init_mem(sk_core_t* core) {
+    const sk_config_t* config = core->config;
+    sk_mem_init(core->working_dir, config->diag_name, config->log_level,
+                core->cmd_args.log_stdout_fwd);
+}
+
+static
+void _sk_mem_destroy(sk_core_t* core) {
+    sk_mem_destroy();
+}
 
 static
 void _sk_init_admin(sk_core_t* core)
@@ -44,6 +55,8 @@ void _sk_init_admin(sk_core_t* core)
     sk_driver_t* driver = sk_driver_create(core->master, core->admin_wf);
     int ret = flist_push(core->drivers, driver);
     SK_ASSERT(!ret);
+
+    sk_mem_stat_module_register(admin_module->cfg->name);
 }
 
 static
@@ -201,6 +214,8 @@ void _sk_module_init(sk_core_t* core)
         sk_print("module [%s] init...\n", module_name);
         SK_LOG_INFO(core->logger, "module [%s] init...", module_name);
 
+        sk_mem_stat_module_register(module_name);
+
         SK_LOG_SETCOOKIE("module.%s", module_name);
         if (module->init(module->md)) {
             SK_LOG_FATAL(core->logger, "Initialize module %s failed, ABORT!", module_name);
@@ -274,6 +289,8 @@ void _sk_service_init(sk_core_t* core)
         sk_print("init service %s\n", service_name);
         SK_LOG_INFO(core->logger, "init service %s", service_name);
 
+        sk_mem_stat_service_register(service_name);
+
         SK_LOG_SETCOOKIE("service.%s", service_name);
         if (sk_service_start(service)) {
             SK_LOG_FATAL(core->logger, "Initialize service %s failed", service_name);
@@ -333,10 +350,6 @@ void _sk_init_log(sk_core_t* core)
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
     SK_LOG_TRACE(core->logger, "skull logger initialization successfully");
-
-    // Create diag log, it contains the information like memory usage/diagnosis
-    sk_mem_tracelog_create(working_dir, config->diag_name, log_level,
-                           core->cmd_args.log_stdout_fwd);
 }
 
 static
@@ -454,35 +467,38 @@ void sk_core_init(sk_core_t* core)
     // 3. change working-dir to the config dir
     _sk_chdir(core);
 
-    // 4. init logger
+    // 4. memory statistics initialization
+    _sk_init_mem(core);
+
+    // 5. init logger
     _sk_init_log(core);
 
     SK_LOG_INFO(core->logger,
              "================= skull engine initializing =================");
     sk_print("================= skull engine initializing =================\n");
 
-    // 5. init system level parameters
+    // 6. init system level parameters
     _sk_init_sys(core);
 
-    // 6. loader user loaders
+    // 7. loader user loaders
     _sk_init_user_loaders(core);
 
-    // 7. init global monitor
+    // 8. init global monitor
     _sk_init_moniter(core);
 
-    // 8. init engines
+    // 9. init engines
     _sk_setup_engines(core);
 
-    // 9. init admin
+    // 10. init admin
     _sk_init_admin(core);
 
-    // 10. load services
+    // 11. load services
     _sk_setup_services(core);
 
-    // 11. load workflows and related drivers
+    // 12. load workflows and related drivers
     _sk_setup_workflows(core);
 
-    // 12. fill up static information
+    // 13. fill up static information
     _sk_init_coreinfo(core);
 }
 
@@ -659,8 +675,10 @@ void sk_core_destroy(sk_core_t* core)
     SK_LOG_INFO(core->logger,
              "=================== skull engine stopped ====================");
 
-    sk_mem_tracelog_destroy();
     sk_logger_destroy(core->logger);
+
+    // 12. Destroy mem statistics
+    _sk_mem_destroy(core);
 }
 
 // Utils APIs

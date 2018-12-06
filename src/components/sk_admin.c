@@ -521,8 +521,8 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
     sk_core_t* core = SK_ENV_CORE;
     size_t total_allocated = 0;
 
-    const sk_mem_stat_t* static_stat = sk_mem_static();
-    const sk_mem_stat_t* core_stat   = &(core->mstat);
+    const sk_mem_stat_t* static_stat = sk_mem_stat_static();
+    const sk_mem_stat_t* core_stat   = sk_mem_stat_core();
 
     _append_response(txn, "========== Skull Memory Measurement ==========\n");
     __append_mem_stat(txn, ".", "init", static_stat, detail);
@@ -531,16 +531,17 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
     __append_mem_stat(txn, ".", "core", core_stat, detail);
     total_allocated += sk_mem_allocated(core_stat);
 
-    __append_mem_stat(txn, "module", sk_admin_module()->cfg->name,
-                      &sk_admin_module()->mstat, detail);
-    total_allocated += sk_mem_allocated(&sk_admin_module()->mstat);
+    const char* admin_name = sk_admin_module()->cfg->name;
+    const sk_mem_stat_t* admin_st = sk_mem_stat_module(admin_name);
+    __append_mem_stat(txn, "module", admin_name, admin_st, detail);
+    total_allocated += sk_mem_allocated(admin_st);
 
     {
         fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
         sk_module_t* module = NULL;
 
         while ((module = fhash_str_next(&iter))) {
-            const sk_mem_stat_t* stat = &module->mstat;
+            const sk_mem_stat_t* stat = sk_mem_stat_module(module->cfg->name);
 
             __append_mem_stat(txn, "module", module->cfg->name, stat, detail);
             total_allocated += sk_mem_allocated(stat);
@@ -554,8 +555,8 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
         sk_service_t* service = NULL;
 
         while ((service = fhash_str_next(&iter))) {
-            const sk_mem_stat_t* stat = sk_service_memstat(service);
             const char* service_name = sk_service_name(service);
+            const sk_mem_stat_t* stat = sk_mem_stat_service(service_name);
 
             __append_mem_stat(txn, "service", service_name, stat, detail);
             total_allocated += sk_mem_allocated(stat);
