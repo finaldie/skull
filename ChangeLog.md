@@ -1,3 +1,11 @@
+* 2018-12-05 1.3.2
+  * Engine
+    * **Fix:** Fix crash when exiting if tracing enabled
+    * **Enhancement:** Switch mem trace log to diag.log instead of stderr
+    * **Enhancement:** Refine `sk_malloc` to make it independently
+  * MISC
+    * **Fix:** Fix valgrind on alpine-3.8
+    * **Enhancement:** Upgrade `protobuf` to v3.6.1
 * 2018-08-05 1.3.1
   * Engine
     * **Fix:** Inaccurate memory stat in `ep_send`
