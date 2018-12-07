@@ -49,5 +49,10 @@ const sk_mem_stat_t* sk_mem_stat_core();
 bool sk_mem_trace_status();
 void sk_mem_trace(bool enabled);
 
+/**
+ * Dump all the mem stats into log
+ */
+void sk_mem_dump(const char* fmt, ...);
+
 #endif
 

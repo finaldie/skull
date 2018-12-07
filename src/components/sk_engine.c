@@ -10,6 +10,7 @@
 #include "api/sk_core.h"
 #include "api/sk_mon.h"
 #include "api/sk_log.h"
+#include "api/sk_malloc.h"
 #include "api/sk_log_helper.h"
 #include "api/sk_entity_util.h"
 #include "api/sk_engine.h"
@@ -55,7 +56,12 @@ void _timerjob_persec(sk_entity_t* entity, int valid, sk_obj_t* ud)
     core->info.prev_self_ru = core->info.self_ru;
     core->info.self_ru = self_ru;
 
-    // 4. destroy the timer entity
+    // 4. dump mem usage
+    if ((int)sk_metrics_global.uptime.get() % 10 == 0) {
+        sk_mem_dump("CRON");
+    }
+
+    // 5. destroy the timer entity
     sk_entity_safe_destroy(entity);
 }
 

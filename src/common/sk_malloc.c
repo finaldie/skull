@@ -1,12 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <dlfcn.h>
 #include <pthread.h>
 #include <malloc.h>
 
 #include "flibs/compiler.h"
 #include "flibs/fhash.h"
+#include "flibs/fmbuf.h"
 #include "api/sk_env.h"
 #include "api/sk_time.h"
 #include "api/sk_const.h"
@@ -15,6 +17,9 @@
 #include "api/sk_service.h"
 #include "api/sk_malloc.h"
 #include "api/sk_log.h"
+
+#define SK_MEMDUMP_MAX_LENGTH  (8192)
+#define SK_MEMDUMP_LINE_LENGTH (1024)
 
 // Global Memory Tracer Tag
 #define SK_GMTT "[MEM_TRACE]"
@@ -140,6 +145,8 @@ typedef struct sk_mem_t {
 
     pthread_key_t key;
 
+    // Core mem_stat
+    // notes: the api_entrance counter is in thread_local
     sk_mem_stat_t core;
 
     // stat hashmap for storing the stat for modules
@@ -320,9 +327,28 @@ void _stat_tbl_destroy(fhash* tbl) {
 }
 
 static
+void _stats_dump_to_string(fhash* tbl, fmbuf* logbuf) {
+    char line[SK_MEMDUMP_LINE_LENGTH];
+
+    fhash_str_iter iter = fhash_str_iter_new(tbl);
+    sk_mem_stat_t* stat = NULL;
+
+    while ((stat = fhash_str_next(&iter)) != NULL) {
+        int len = snprintf(line, SK_MEMDUMP_LINE_LENGTH,
+                           " %s:%zu",
+                           iter.key,
+                           sk_mem_allocated(stat));
+
+        fmbuf_push(logbuf, line, (size_t)len);
+    }
+
+    fhash_str_iter_release(&iter);
+}
+
+static
 void _thread_exit(void* data) {
     sk_print("[mem] thread exit:\n");
-    free(data);
+    SK_ALLOCATOR(free)(data);
 }
 
 /**
@@ -342,6 +368,8 @@ void sk_mem_init(const char* workdir,
 }
 
 void sk_mem_destroy() {
+    sk_mem_dump("DESTROY");
+
     imem.tracing_enabled = false;
     pthread_key_delete(imem.key);
     imem.key = 0;
@@ -394,6 +422,30 @@ void sk_mem_trace(bool enabled) {
     imem.tracing_enabled = enabled;
 }
 
+void sk_mem_dump(const char* fmt, ...) {
+    char tag[SK_MEMDUMP_LINE_LENGTH];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(tag, SK_MEMDUMP_LINE_LENGTH, fmt, args);
+    va_end(args);
+
+    fmbuf* mlogbuf = fmbuf_create(SK_MEMDUMP_MAX_LENGTH);
+    _stats_dump_to_string(imem.mstats, mlogbuf);
+
+    fmbuf* slogbuf = fmbuf_create(SK_MEMDUMP_MAX_LENGTH);
+    _stats_dump_to_string(imem.sstats, slogbuf);
+
+    SK_LOG_INFO(imem.logger, "[MEM_DUMP %s] Init:%zu; Core:%zu; "
+                "Modules:%s; Services:%s",
+                tag,
+                sk_mem_allocated(&imem.init),
+                sk_mem_allocated(&imem.core),
+                fmbuf_head(mlogbuf), fmbuf_head(slogbuf));
+
+    fmbuf_delete(mlogbuf);
+    fmbuf_delete(slogbuf);
+}
+
 /**
  * Override libc, to measure module/service memory usage
  */
@@ -429,9 +481,10 @@ void free(void* ptr) {
     SK_MEM_ENTER();
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
+    size_t sz = _get_malloc_sz(ptr);
     if (likely(stat)) {
         SK_ATOMIC_INC(stat->nfree);
-        SK_ATOMIC_ADD(stat->dalloc_sz, _get_malloc_sz(ptr));
+        SK_ATOMIC_ADD(stat->dalloc_sz, sz);
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
@@ -443,7 +496,7 @@ void free(void* ptr) {
     if (unlikely(sk_mem_trace_status())) {
         SK_LOG_INFO(imem.logger, SK_MT_FMT(free),
                 start / 1000000000l, start % 1000000000l,
-                SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
+                SK_GMTT, tname, comp, name, ptr, sz,
                 duration, __builtin_return_address(0));
     }
 

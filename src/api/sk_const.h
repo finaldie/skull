@@ -9,8 +9,8 @@ struct sk_const_t;
 // logger cookies
 #define SK_CORE_LOG_COOKIE                   "skull.core"
 
-// per-thread log buffer size - 20MB
-#define SK_LOG_MAX_PERTHREAD_BUFSIZE         (1024lu * 1024 * 20)
+// per-thread log buffer size - 10MB
+#define SK_LOG_MAX_PERTHREAD_BUFSIZE         (1024lu * 1024 * 10)
 
 // log file rolling size - 1GB
 #define SK_LOG_ROLLING_SIZE                  (1024lu * 1024 * 1024)
