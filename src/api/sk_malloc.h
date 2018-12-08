@@ -17,10 +17,9 @@ typedef struct sk_mem_stat_t {
     size_t peak_sz;
 } sk_mem_stat_t;
 
-void sk_mem_init(const char* workdir,
-                 const char* logname,
-                 int  log_level,
-                 bool stdout_fwd);
+void sk_mem_init();
+void sk_mem_init_log(const char* workdir, const char* logname, int log_level,
+                     bool stdout_fwd);
 void sk_mem_destroy();
 
 /**

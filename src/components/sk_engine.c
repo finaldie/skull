@@ -57,7 +57,7 @@ void _timerjob_persec(sk_entity_t* entity, int valid, sk_obj_t* ud)
     core->info.self_ru = self_ru;
 
     // 4. dump mem usage
-    if ((int)sk_metrics_global.uptime.get() % 10 == 0) {
+    if ((int)sk_metrics_global.uptime.get() % SK_MEM_DUMP_INTERVAL == 0) {
         sk_mem_dump("CRON");
     }
 

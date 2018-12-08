@@ -27,10 +27,10 @@
 
 // INTERNAL APIs
 static
-void _sk_init_mem(sk_core_t* core) {
+void _sk_init_mem_log(sk_core_t* core) {
     const sk_config_t* config = core->config;
-    sk_mem_init(core->working_dir, config->diag_name, config->log_level,
-                core->cmd_args.log_stdout_fwd);
+    sk_mem_init_log(core->working_dir, config->diag_name, config->log_level,
+                    core->cmd_args.log_stdout_fwd);
 }
 
 static
@@ -183,8 +183,20 @@ void _sk_setup_workflows(sk_core_t* core)
 }
 
 static
-void _sk_init_config(sk_core_t* core)
-{
+void _sk_init_env(sk_core_t* core) {
+    sk_thread_env_init();
+
+    // create a thread env for the master thread, this is necessary since during
+    // the phase of loading modules, user may log something, if the thread_env
+    // does not exist, the logs will be dropped
+    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "master");
+    sk_thread_env_set(env);
+
+    sk_mem_init();
+}
+
+static
+void _sk_init_config(sk_core_t* core) {
     core->config = sk_config_create(core->cmd_args.config_location);
     sk_config_print(core->config);
 }
@@ -331,20 +343,16 @@ static
 void _sk_init_log(sk_core_t* core)
 {
     const sk_config_t* config = core->config;
-    const char* working_dir = core->working_dir;
-    const char* log_name = config->log_name;
-    int log_level = config->log_level;
 
-    core->logger = sk_logger_create(working_dir, log_name, log_level,
+    // memory statistics logger initialization
+    _sk_init_mem_log(core);
+
+    // core logger initialization
+    core->logger = sk_logger_create(core->working_dir, config->log_name,
+                                    config->log_level,
                                     core->cmd_args.log_rolling_disabled,
                                     core->cmd_args.log_stdout_fwd);
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
-
-    // create a thread env for the master thread, this is necessary since during
-    // the phase of loading modules, user may log something, if the thread_env
-    // does not exist, the logs will be dropped
-    sk_thread_env_t* env = sk_thread_env_create(core, NULL, "master");
-    sk_thread_env_set(env);
 
     // set the core logging cookie
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
@@ -459,7 +467,7 @@ void sk_core_init(sk_core_t* core)
     core->status = SK_CORE_INIT;
 
     // 1. prepare the thread env
-    sk_thread_env_init();
+    _sk_init_env(core);
 
     // 2. load config
     _sk_init_config(core);
@@ -467,43 +475,45 @@ void sk_core_init(sk_core_t* core)
     // 3. change working-dir to the config dir
     _sk_chdir(core);
 
-    // 4. memory statistics initialization
-    _sk_init_mem(core);
-
-    // 5. init logger
+    // 4. init logger
     _sk_init_log(core);
+
+    sk_mem_dump("ENGINE INIT");
 
     SK_LOG_INFO(core->logger,
              "================= skull engine initializing =================");
     sk_print("================= skull engine initializing =================\n");
 
-    // 6. init system level parameters
+    // 5. init system level parameters
     _sk_init_sys(core);
 
-    // 7. loader user loaders
+    // 6. loader user loaders
     _sk_init_user_loaders(core);
 
-    // 8. init global monitor
+    // 7. init global monitor
     _sk_init_moniter(core);
 
-    // 9. init engines
+    // 8. init engines
     _sk_setup_engines(core);
 
-    // 10. init admin
+    // 9. init admin
     _sk_init_admin(core);
 
-    // 11. load services
+    // 10. load services
     _sk_setup_services(core);
 
-    // 12. load workflows and related drivers
+    // 11. load workflows and related drivers
     _sk_setup_workflows(core);
 
-    // 13. fill up static information
+    // 12. fill up static information
     _sk_init_coreinfo(core);
+
+    sk_mem_dump("ENGINE INIT-DONE");
 }
 
 void sk_core_start(sk_core_t* core)
 {
+    sk_mem_dump("ENGINE START");
     SK_LOG_INFO(core->logger,
              "================== skull engine starting ==================");
     sk_print("================== skull engine starting ==================\n");
@@ -575,6 +585,7 @@ void sk_core_start(sk_core_t* core)
     SK_LOG_INFO(core->logger,
              "================== skull engine is ready ====================");
     sk_print("================== skull engine is ready ====================\n");
+    sk_mem_dump("ENGINE START-DONE");
 
     int ret = sk_engine_start(master, master_env, 0);
     if (ret) {
@@ -598,6 +609,8 @@ void sk_core_stop(sk_core_t* core)
 {
     if (!core) return;
 
+    sk_mem_dump("ENGINE STOP");
+
     SK_LOG_INFO(core->logger,
              "=================== skull engine stopping ===================");
     sk_print("=================== skull engine stopping ===================\n");
@@ -618,6 +631,8 @@ void sk_core_stop(sk_core_t* core)
         SK_LOG_INFO(core->logger, "Stopping engine bio[%d]...", i + 1);
         sk_engine_stop(core->bio[i]);
     }
+
+    sk_mem_dump("ENGINE STOP-DONE");
 }
 
 void sk_core_destroy(sk_core_t* core)
@@ -625,6 +640,8 @@ void sk_core_destroy(sk_core_t* core)
     if (!core) {
         return;
     }
+
+    sk_mem_dump("ENGINE DESTROY");
 
     SK_LOG_INFO(core->logger,
              "================== skull engine destroying ==================");
@@ -678,6 +695,7 @@ void sk_core_destroy(sk_core_t* core)
     sk_logger_destroy(core->logger);
 
     // 12. Destroy mem statistics
+    sk_mem_dump("ENGINE DESTROY-DONE");
     _sk_mem_destroy(core);
 }
 

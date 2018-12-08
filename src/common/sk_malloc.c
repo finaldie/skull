@@ -354,22 +354,20 @@ void _thread_exit(void* data) {
 /**
  * Public APIs
  */
-void sk_mem_init(const char* workdir,
-                 const char* logname,
-                 int  log_level,
-                 bool stdout_fwd) {
+void sk_mem_init() {
     pthread_key_create(&imem.key, _thread_exit);
 
     imem.mstats = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     imem.sstats = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+}
 
+void sk_mem_init_log(const char* workdir, const char* logname, int log_level,
+                     bool stdout_fwd) {
     imem.logger = sk_logger_create(workdir, logname, log_level,
                                    false, stdout_fwd);
 }
 
 void sk_mem_destroy() {
-    sk_mem_dump("DESTROY");
-
     imem.tracing_enabled = false;
     pthread_key_delete(imem.key);
     imem.key = 0;
