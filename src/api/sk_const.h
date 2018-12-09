@@ -55,7 +55,7 @@ struct sk_const_t;
 #define SK_EVENTLOOP_MAX_EVENTS              (65535)
 
 // thread env name len
-#define SK_ENV_NAME_LEN                      (24)
+#define SK_ENV_NAME_LEN                      (16)
 
 // config
 #define SK_CONFIG_LOCATION_LEN               (1024)
