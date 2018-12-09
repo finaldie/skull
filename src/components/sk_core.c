@@ -478,7 +478,7 @@ void sk_core_init(sk_core_t* core)
     // 4. init logger
     _sk_init_log(core);
 
-    sk_mem_dump("ENGINE INIT");
+    sk_mem_dump("ENGINE-INIT");
 
     SK_LOG_INFO(core->logger,
              "================= skull engine initializing =================");
@@ -508,16 +508,17 @@ void sk_core_init(sk_core_t* core)
     // 12. fill up static information
     _sk_init_coreinfo(core);
 
-    sk_mem_dump("ENGINE INIT-DONE");
+    sk_mem_dump("ENGINE-INIT-DONE");
 }
 
 void sk_core_start(sk_core_t* core)
 {
-    sk_mem_dump("ENGINE START");
+    core->status = SK_CORE_STARTING;
+
+    sk_mem_dump("ENGINE-START");
     SK_LOG_INFO(core->logger,
              "================== skull engine starting ==================");
     sk_print("================== skull engine starting ==================\n");
-    core->status = SK_CORE_STARTING;
 
     // 1. Complete the master_env
     //   notes: This *master_env* will be deleted when thread exit
@@ -585,7 +586,7 @@ void sk_core_start(sk_core_t* core)
     SK_LOG_INFO(core->logger,
              "================== skull engine is ready ====================");
     sk_print("================== skull engine is ready ====================\n");
-    sk_mem_dump("ENGINE START-DONE");
+    sk_mem_dump("ENGINE-START-DONE");
 
     int ret = sk_engine_start(master, master_env, 0);
     if (ret) {
@@ -607,14 +608,13 @@ void sk_core_start(sk_core_t* core)
 
 void sk_core_stop(sk_core_t* core)
 {
-    if (!core) return;
+    core->status = SK_CORE_STOPPING;
 
-    sk_mem_dump("ENGINE STOP");
+    sk_mem_dump("ENGINE-STOP");
 
     SK_LOG_INFO(core->logger,
              "=================== skull engine stopping ===================");
     sk_print("=================== skull engine stopping ===================\n");
-    core->status = SK_CORE_STOPPING;
 
     // 1. stop master
     SK_LOG_INFO(core->logger, "Stopping engine master...");
@@ -632,21 +632,18 @@ void sk_core_stop(sk_core_t* core)
         sk_engine_stop(core->bio[i]);
     }
 
-    sk_mem_dump("ENGINE STOP-DONE");
+    sk_mem_dump("ENGINE-STOP-DONE");
 }
 
 void sk_core_destroy(sk_core_t* core)
 {
-    if (!core) {
-        return;
-    }
+    core->status = SK_CORE_DESTROYING;
 
-    sk_mem_dump("ENGINE DESTROY");
+    sk_mem_dump("ENGINE-DESTROY");
 
     SK_LOG_INFO(core->logger,
              "================== skull engine destroying ==================");
     sk_print("================== skull engine destroying ==================\n");
-    core->status = SK_CORE_DESTROYING;
 
     // 1. destroy drivers
     sk_driver_t* driver = NULL;
@@ -695,7 +692,7 @@ void sk_core_destroy(sk_core_t* core)
     sk_logger_destroy(core->logger);
 
     // 12. Destroy mem statistics
-    sk_mem_dump("ENGINE DESTROY-DONE");
+    sk_mem_dump("ENGINE-DESTROY-DONE");
     _sk_mem_destroy(core);
 }
 

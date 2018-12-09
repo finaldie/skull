@@ -9,7 +9,7 @@
  * Unit: nanoseconds. clockid = CLOCK_MONOTONIC by default
  *
  * @return  0: error.
- *         >0: succeed
+ *         >0: succeed, return the nanoseconds
  */
 ulong_t sk_gettime();
 
