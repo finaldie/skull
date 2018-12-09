@@ -13,6 +13,7 @@
 #include "api/sk_time.h"
 #include "api/sk_const.h"
 #include "api/sk_utils.h"
+#include "api/sk_atomic.h"
 #include "api/sk_core.h"
 #include "api/sk_service.h"
 #include "api/sk_malloc.h"
@@ -83,13 +84,6 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
         } \
     } while(0)
 
-/**
- * Inner atomic operations. TODO: Use C11 __Atomic to replace all these
- */
-#define SK_ATOMIC_INC(v) __sync_add_and_fetch(&(v), 1)
-#define SK_ATOMIC_ADD(v, delta) __sync_add_and_fetch(&(v), (delta))
-#define SK_ATOMIC_CAS(v, expect, value) \
-    __sync_bool_compare_and_swap(&(v), (expect), (value))
 #define SK_ATOMIC_UPDATE_PEAKSZ(nstat) \
     do { \
         size_t curr_peak = nstat->peak_sz; \
