@@ -90,7 +90,7 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
         size_t curr_used = sk_mem_allocated(nstat); \
         if (curr_peak == curr_used) break; \
         size_t peak_sz   = SK_MAX(curr_peak, curr_used); \
-        if (SK_ATOMIC_CAS(nstat->peak_sz, curr_peak, peak_sz)) break; \
+        if (SK_ATOMIC_CAS(&nstat->peak_sz, curr_peak, peak_sz)) break; \
     } while(1)
 
 /**
@@ -103,7 +103,7 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
         sk_mem_env_t*    ____menv = _mem_env(); \
         int* ____api_entrance = (____ready && ____env && ____menv) \
             ? &____menv->api_entrance : &imem.api_entrance; \
-        (*____api_entrance)++; \
+        _sk_api_entrance_inc(____api_entrance); \
         do { \
 
 #define SK_MEM_CHECK_AND_BREAK() \
@@ -111,7 +111,7 @@ static SK_REAL_TYPE(aligned_alloc)  SK_REAL(aligned_alloc)  = NULL;
 
 #define SK_MEM_EXIT() \
         } while(0); \
-        (*____api_entrance)--; \
+        _sk_api_entrance_dec(____api_entrance); \
     } while(0)
 
 // Thread-local data format
@@ -157,6 +157,24 @@ typedef struct sk_mem_t {
 } sk_mem_t;
 
 static sk_mem_t imem;
+
+static inline
+int _sk_api_entrance_inc(int* entrance) {
+    if (entrance != &imem.api_entrance) {
+        return (*entrance)++;
+    } else {
+        return SK_ATOMIC_INC(entrance);
+    }
+}
+
+static inline
+int _sk_api_entrance_dec(int* entrance) {
+    if (entrance != &imem.api_entrance) {
+        return (*entrance)--;
+    } else {
+        return SK_ATOMIC_SUB(entrance, 1);
+    }
+}
 
 static
 void _init() {
@@ -452,8 +470,8 @@ void* malloc(size_t sz) {
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(stat)) {
-        SK_ATOMIC_INC(stat->nmalloc);
-        SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(ptr));
+        SK_ATOMIC_INC(&stat->nmalloc);
+        SK_ATOMIC_ADD(&stat->alloc_sz, _get_malloc_sz(ptr));
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
@@ -461,7 +479,7 @@ void* malloc(size_t sz) {
     if (unlikely(sk_mem_trace_status())) {
         SK_LOG_INFO(imem.logger, SK_MT_FMT(malloc),
                 start / 1000000000l, start % 1000000000l,
-                SK_GMTT, tname, comp, name, ptr, sz,
+                SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
                 duration, __builtin_return_address(0));
     }
 
@@ -475,8 +493,8 @@ void free(void* ptr) {
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     size_t sz = _get_malloc_sz(ptr);
     if (likely(stat)) {
-        SK_ATOMIC_INC(stat->nfree);
-        SK_ATOMIC_ADD(stat->dalloc_sz, sz);
+        SK_ATOMIC_INC(&stat->nfree);
+        SK_ATOMIC_ADD(&stat->dalloc_sz, sz);
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
@@ -517,8 +535,8 @@ void* calloc(size_t nmemb, size_t sz) {
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(stat)) {
-        SK_ATOMIC_INC(stat->ncalloc);
-        SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(ptr));
+        SK_ATOMIC_INC(&stat->ncalloc);
+        SK_ATOMIC_ADD(&stat->alloc_sz, _get_malloc_sz(ptr));
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
@@ -554,15 +572,15 @@ void* realloc(void* ptr, size_t sz) {
     }
 
     if (likely(stat)) {
-        SK_ATOMIC_INC(stat->nrealloc);
+        SK_ATOMIC_INC(&stat->nrealloc);
 
         if (unlikely(!ptr)) {
-            SK_ATOMIC_ADD(stat->alloc_sz, new_sz);
+            SK_ATOMIC_ADD(&stat->alloc_sz, new_sz);
         } else if (sz == 0) {
-            SK_ATOMIC_ADD(stat->dalloc_sz, old_sz);
+            SK_ATOMIC_ADD(&stat->dalloc_sz, old_sz);
         } else if (old_sz != new_sz) {
-            SK_ATOMIC_ADD(stat->alloc_sz, new_sz);
-            SK_ATOMIC_ADD(stat->dalloc_sz, old_sz);
+            SK_ATOMIC_ADD(&stat->alloc_sz, new_sz);
+            SK_ATOMIC_ADD(&stat->dalloc_sz, old_sz);
         }
 
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
@@ -591,8 +609,8 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(!ret && stat)) {
-        SK_ATOMIC_INC(stat->nposix_memalign);
-        SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(*memptr));
+        SK_ATOMIC_INC(&stat->nposix_memalign);
+        SK_ATOMIC_ADD(&stat->alloc_sz, _get_malloc_sz(*memptr));
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
@@ -619,8 +637,8 @@ void* aligned_alloc(size_t alignment, size_t size) {
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
     if (likely(stat)) {
-        SK_ATOMIC_INC(stat->naligned_alloc);
-        SK_ATOMIC_ADD(stat->alloc_sz, _get_malloc_sz(ptr));
+        SK_ATOMIC_INC(&stat->naligned_alloc);
+        SK_ATOMIC_ADD(&stat->alloc_sz, _get_malloc_sz(ptr));
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
