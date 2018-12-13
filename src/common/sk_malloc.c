@@ -578,9 +578,13 @@ void* realloc(void* ptr, size_t sz) {
             SK_ATOMIC_ADD(&stat->alloc_sz, new_sz);
         } else if (sz == 0) {
             SK_ATOMIC_ADD(&stat->dalloc_sz, old_sz);
-        } else if (old_sz != new_sz) {
-            SK_ATOMIC_ADD(&stat->alloc_sz, new_sz);
-            SK_ATOMIC_ADD(&stat->dalloc_sz, old_sz);
+        } else {
+            if (ptr != nptr) {
+                SK_ATOMIC_ADD(&stat->alloc_sz,  new_sz);
+                SK_ATOMIC_ADD(&stat->dalloc_sz, old_sz);
+            } else if (new_sz > old_sz) {
+                SK_ATOMIC_ADD(&stat->alloc_sz, new_sz - old_sz);
+            }
         }
 
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
