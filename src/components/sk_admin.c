@@ -567,7 +567,7 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
 
     _append_response(txn, "\n================== Summary ===================\n");
     _append_response(txn, "Total Allocated: %zu\n", total_allocated);
-    _append_response(txn, "Trace Enabled: %d\n\n", sk_mem_trace_status());
+    _append_response(txn, "Tracing Enabled: %d\n\n", sk_mem_trace_status());
 }
 
 static

@@ -339,22 +339,27 @@ void _stat_tbl_destroy(fhash* tbl) {
 }
 
 static
-void _stats_dump_to_string(fhash* tbl, fmbuf* logbuf) {
+size_t _stats_dump_to_string(fhash* tbl, fmbuf* logbuf) {
     char line[SK_MEMDUMP_LINE_LENGTH];
 
     fhash_str_iter iter = fhash_str_iter_new(tbl);
     sk_mem_stat_t* stat = NULL;
+    size_t usage = 0;
 
     while ((stat = fhash_str_next(&iter)) != NULL) {
+        size_t sz = sk_mem_allocated(stat);
+
         int len = snprintf(line, SK_MEMDUMP_LINE_LENGTH,
                            " %s:%zu",
                            iter.key,
-                           sk_mem_allocated(stat));
+                           sz);
 
         fmbuf_push(logbuf, line, (size_t)len);
+        usage += sz;
     }
 
     fhash_str_iter_release(&iter);
+    return usage;
 }
 
 static
@@ -439,17 +444,19 @@ void sk_mem_dump(const char* fmt, ...) {
     vsnprintf(tag, SK_MEMDUMP_LINE_LENGTH, fmt, args);
     va_end(args);
 
+    size_t total_sz = 0, init_sz = 0, core_sz = 0;
+    total_sz += init_sz = sk_mem_allocated(&imem.init);
+    total_sz += core_sz = sk_mem_allocated(&imem.core);
+
     fmbuf* mlogbuf = fmbuf_create(SK_MEMDUMP_MAX_LENGTH);
-    _stats_dump_to_string(imem.mstats, mlogbuf);
+    total_sz += _stats_dump_to_string(imem.mstats, mlogbuf);
 
     fmbuf* slogbuf = fmbuf_create(SK_MEMDUMP_MAX_LENGTH);
-    _stats_dump_to_string(imem.sstats, slogbuf);
+    total_sz += _stats_dump_to_string(imem.sstats, slogbuf);
 
-    SK_LOG_INFO(imem.logger, "[MEM_DUMP %s] Init:%zu; Core:%zu; "
+    SK_LOG_INFO(imem.logger, "[MEM_DUMP %s] Total:%zu; Init:%zu; Core:%zu; "
                 "Modules:%s; Services:%s",
-                tag,
-                sk_mem_allocated(&imem.init),
-                sk_mem_allocated(&imem.core),
+                tag, total_sz, init_sz, core_sz,
                 fmbuf_head(mlogbuf), fmbuf_head(slogbuf));
 
     fmbuf_delete(mlogbuf);

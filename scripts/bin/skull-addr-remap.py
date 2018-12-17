@@ -361,7 +361,7 @@ def _reportMemStat():
             avgMs = 'n/a' if avgNs < 0 else "%.2f" % (avgNs / 1000000)
 
             maxCost = block['maxCost']
-            maxMs = 'n/a' if maxCost < 0 else "{:.2}".format(maxCost * 1000)
+            maxMs = 'n/a' if maxCost < 0 else "%.2f" % (maxCost * 1000)
 
             record = {
                 'usage'   : block['usage'],

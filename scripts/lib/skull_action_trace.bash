@@ -109,7 +109,7 @@ function do_trace() {
     echo " - Got skull-engine: $skull_bin"
 
     if $follow; then
-        tail -f $diag | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid
+        tail -F $diag | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid
     else
         tail -n $count $diag | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid
     fi
