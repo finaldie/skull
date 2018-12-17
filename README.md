@@ -29,6 +29,16 @@ _Skull_ can be used in generic serving layer or embedded device. E.g. _web logic
 
 ![skull-trace](https://github.com/finaldie/misc/blob/master/articals/skull/tracer/skull-trace-report.gif)
 
+## Documentations
+* [High Level Introduction][6]
+* [How To Start][7]
+* [How to Test][8]
+* [How to Deploy][9]
+* [Monitoring][10]
+* [API Docs - Cpp][11]
+* [API Docs - Python][12]
+* [Integrate with Nginx][13]
+
 ## How to Build
 Use _Ubuntu18.04_ as an example. (Tested on `Debian jessie/stretch`, `Ubuntu 14.04/16.04/18.04`, `alpine 3.6/3.8`, `RHEL6/7` and `Raspbian jessie/stretch`)
 
@@ -109,16 +119,6 @@ Name                  | Description |
 ----------------------|-------------|
 [Skull-Perf Cases][5] | Including some basic perf cases |
 [DNSTurbo][16]        | Smart DNS Client based on _Skull_. [Trailer][17] |
-
-## Documentations
-* [High Level Introduction][6]
-* [How To Start][7]
-* [How to Test][8]
-* [How to Deploy][9]
-* [Monitoring][10]
-* [API Docs - Cpp][11]
-* [API Docs - Python][12]
-* [Integrate with Nginx][13]
 
 ## Contribution and Discussion
 To discuss any issues, there are some ways we can use:
