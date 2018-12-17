@@ -70,6 +70,7 @@ sk_config_t* _create_config()
     config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
     config->log_level = FLOG_LEVEL_INFO;
     strncpy(config->log_name, "skull.log", sizeof("skull.log"));
+    strncpy(config->diag_name, "diag.log", sizeof("diag.log"));
     config->txn_logging = false;
 
     return config;
@@ -239,10 +240,25 @@ void _load_log_name(sk_cfg_node_t* child, sk_config_t* config)
     const char* log_name = child->data.value;
 
     if (log_name && strlen(log_name)) {
-        strncpy(config->log_name, log_name, SK_CONFIG_LOGNAME_LEN - 1);
+        strncpy(config->log_name, log_name, SK_CONFIG_LOGNAME_LEN);
     } else {
         sk_print_err("Fatal: empty log name, please configure a non-empty "
                      "log name\n");
+        exit(1);
+    }
+}
+
+static
+void _load_diaglog_name(sk_cfg_node_t* child, sk_config_t* config)
+{
+    SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
+    const char* log_name = child->data.value;
+
+    if (log_name && strlen(log_name)) {
+        strncpy(config->diag_name, log_name, SK_CONFIG_LOGNAME_LEN);
+    } else {
+        sk_print_err("Fatal: empty diag log name, please configure a non-empty "
+                     "diag log name\n");
         exit(1);
     }
 }
@@ -420,6 +436,9 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
         } else if (0 == strcmp(key, "log_name")) {
             // load log name
             _load_log_name(child, config);
+        } else if (0 == strcmp(key, "diag_log")) {
+            // load mem log name
+            _load_diaglog_name(child, config);
         } else if (0 == strcmp(key, "log_level")) {
             // load log level: trace|debug|info|warn|error|fatal
             _load_log_level(child, config);
@@ -480,6 +499,7 @@ void sk_config_print(sk_config_t* config)
     sk_print("dump sk_config:\n");
     sk_print("thread_num: %d\n", config->threads);
     sk_print("log_name: %s\n", config->log_name);
+    sk_print("diag_name: %s\n", config->diag_name);
     sk_print("log_level: %d\n", config->log_level);
 
     sk_workflow_cfg_t* workflow = NULL;

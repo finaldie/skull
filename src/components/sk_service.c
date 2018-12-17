@@ -27,8 +27,6 @@ struct sk_service_t {
     sk_queue_t*    pending_tasks; // This queue is only avaliable in master
     sk_srv_data_t* data;
     fhash*         apis;          // key: api name; value: sk_service_api_t
-
-    sk_mem_stat_t  mstat;         // memory stat
 };
 
 // Internal APIs of service
@@ -364,10 +362,6 @@ const char* sk_service_type(const sk_service_t* service)
 const sk_service_cfg_t* sk_service_config(const sk_service_t* service)
 {
     return service->cfg;
-}
-
-sk_mem_stat_t* sk_service_memstat(const sk_service_t* service) {
-    return (sk_mem_stat_t*)&service->mstat;
 }
 
 int sk_service_running_taskcnt(const sk_service_t* service)

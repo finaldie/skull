@@ -87,7 +87,7 @@ void _logger_apply(int log_level, bool rolling_disabled, bool stdout_fwd) {
     // set file rolling size: 1GB
     flog_set_roll_size(rolling_disabled ? 0 : SK_LOG_ROLLING_SIZE);
 
-    // set log buffer size(per-thread): 20MB
+    // set log buffer size(per-thread): 10MB
     flog_set_buffer_size(SK_LOG_MAX_PERTHREAD_BUFSIZE);
 
     // set up the notification callback, we can handle it if there are some

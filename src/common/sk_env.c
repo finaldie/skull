@@ -9,10 +9,9 @@ static pthread_key_t sk_env_key = 0;
 static bool sk_env_ready = false;
 
 static
-void _sk_thread_exit(void* data)
-{
+void _sk_thread_exit(void* data) {
+    // Notes: The data (sk_thread_env) will be deleted by engines
     sk_print("thread exit: %s\n", ((sk_thread_env_t*)data)->name);
-    free(data);
 }
 
 

@@ -8,22 +8,22 @@
 
 // Per-thread data and macros, in most of time, we only need to use these macros
 #define SK_ENV              (sk_thread_env())
-#define SK_ENV_CORE         (sk_thread_env()->core)
+#define SK_ENV_CORE         (SK_ENV->core)
+#define SK_ENV_ENGINE       (SK_ENV->engine)
+#define SK_ENV_NAME         (SK_ENV->name)
+#define SK_ENV_POS          (SK_ENV->pos)
+#define SK_ENV_CURRENT      (SK_ENV->current)
 
-#define SK_ENV_CONFIG       (sk_thread_env()->core->config)
-#define SK_ENV_WORKFLOWS    (sk_thread_env()->core->workflows)
-#define SK_ENV_LOGGER       (sk_thread_env()->core->logger)
-#define SK_ENV_ENGINE       (sk_thread_env()->engine)
-#define SK_ENV_SCHED        (sk_thread_env()->engine->sched)
-#define SK_ENV_ENTITY_MGR   (sk_thread_env()->engine->entity_mgr)
-#define SK_ENV_EVENTLOOP    (sk_thread_env()->engine->evlp)
-#define SK_ENV_MON          (sk_thread_env()->engine->mon)
-#define SK_ENV_TMSVC        (sk_thread_env()->engine->timer_svc)
+#define SK_ENV_CONFIG       (SK_ENV_CORE->config)
+#define SK_ENV_WORKFLOWS    (SK_ENV_CORE->workflows)
+#define SK_ENV_LOGGER       (SK_ENV_CORE->logger)
+#define SK_ENV_SCHED        (SK_ENV_ENGINE->sched)
+#define SK_ENV_ENTITY_MGR   (SK_ENV_ENGINE->entity_mgr)
+#define SK_ENV_EVENTLOOP    (SK_ENV_ENGINE->evlp)
+#define SK_ENV_MON          (SK_ENV_ENGINE->mon)
+#define SK_ENV_TMSVC        (SK_ENV_ENGINE->timer_svc)
+#define SK_ENV_EP           (SK_ENV_ENGINE->ep_pool)
 #define SK_ENV_MASTER_SCHED (SK_ENV_CORE->master->sched)
-#define SK_ENV_EP           (sk_thread_env()->engine->ep_pool)
-#define SK_ENV_POS          (sk_thread_env()->pos)
-#define SK_ENV_CURRENT      (sk_thread_env()->current)
-#define SK_ENV_NAME         (sk_thread_env()->name)
 
 typedef enum sk_env_pos_t {
     SK_ENV_POS_CORE    = 0,
@@ -36,15 +36,14 @@ typedef struct sk_thread_env_t {
     sk_core_t*   core;
     sk_engine_t* engine;
 
-    // used for logging or debugging
+    // Used for logging or debugging
     char name[SK_ENV_NAME_LEN];
 
     sk_env_pos_t pos;
 
-    // memory allocator api entrance count
-    int          mapi_entrance;
+    int          _padding;
 
-    // Current module or service
+    // Current pointer of module or service
     const void*  current;
 } sk_thread_env_t;
 

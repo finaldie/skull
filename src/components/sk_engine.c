@@ -10,6 +10,7 @@
 #include "api/sk_core.h"
 #include "api/sk_mon.h"
 #include "api/sk_log.h"
+#include "api/sk_malloc.h"
 #include "api/sk_log_helper.h"
 #include "api/sk_entity_util.h"
 #include "api/sk_engine.h"
@@ -55,7 +56,12 @@ void _timerjob_persec(sk_entity_t* entity, int valid, sk_obj_t* ud)
     core->info.prev_self_ru = core->info.self_ru;
     core->info.self_ru = self_ru;
 
-    // 4. destroy the timer entity
+    // 4. dump mem usage
+    if ((int)sk_metrics_global.uptime.get() % SK_MEM_DUMP_INTERVAL == 0) {
+        sk_mem_dump("CRON");
+    }
+
+    // 5. destroy the timer entity
     sk_entity_safe_destroy(entity);
 }
 
@@ -116,15 +122,16 @@ void sk_engine_destroy(sk_engine_t* engine)
     sk_entity_mgr_destroy(engine->entity_mgr);
     sk_eventloop_destroy(engine->evlp);
     sk_mon_destroy(engine->mon);
+    free(engine->env);
     free(engine);
 }
 
 void* _sk_engine_thread(void* arg)
 {
     // 1. Set thread_env if exist
-    sk_thread_env_t* thread_env = arg;
-    if (thread_env) {
-        sk_thread_env_set(thread_env);
+    sk_thread_env_t* env = arg;
+    if (env) {
+        sk_thread_env_set(env);
     }
 
     // 2. Now, after `sk_thread_env_set`, we can use SK_ENV_xxx macros.
@@ -143,7 +150,7 @@ void* _sk_engine_thread(void* arg)
     } else {
 #ifdef _GNU_SOURCE
         // Set the thread name
-        int rc = pthread_setname_np(pthread_self(), thread_env->name);
+        int rc = pthread_setname_np(pthread_self(), env->name);
         if (rc != 0) {
             fprintf(stderr, "Error in pthread_setname_np, rc = %d\n", rc);
             exit(1);
@@ -159,6 +166,8 @@ void* _sk_engine_thread(void* arg)
 
 int sk_engine_start(sk_engine_t* engine, void* env, int new_thread)
 {
+    engine->env = env;
+
     if (new_thread) {
         return pthread_create(&engine->io_thread, NULL, _sk_engine_thread, env);
     } else {

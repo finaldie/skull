@@ -44,7 +44,7 @@ skull_start_memcheck() {
     local supp_arg=""
 
     for supp_file in $supp_files; do
-        supp_arg="$supp_arg --suppressions="${supp_file}" "
+        supp_arg="$supp_arg --suppressions=${supp_file} "
     done
 
     # Run valgrind to start skull

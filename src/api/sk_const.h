@@ -6,11 +6,14 @@ struct sk_const_t;
 // dump core
 #define SK_MAX_BACKTRACE                     (50)
 
+// memory cron job interval (second)
+#define SK_MEM_DUMP_INTERVAL                 (5)
+
 // logger cookies
 #define SK_CORE_LOG_COOKIE                   "skull.core"
 
-// per-thread log buffer size - 20MB
-#define SK_LOG_MAX_PERTHREAD_BUFSIZE         (1024lu * 1024 * 20)
+// per-thread log buffer size - 10MB
+#define SK_LOG_MAX_PERTHREAD_BUFSIZE         (1024lu * 1024 * 10)
 
 // log file rolling size - 1GB
 #define SK_LOG_ROLLING_SIZE                  (1024lu * 1024 * 1024)
@@ -52,11 +55,11 @@ struct sk_const_t;
 #define SK_EVENTLOOP_MAX_EVENTS              (65535)
 
 // thread env name len
-#define SK_ENV_NAME_LEN                      (24)
+#define SK_ENV_NAME_LEN                      (16)
 
 // config
 #define SK_CONFIG_LOCATION_LEN               (1024)
-#define SK_CONFIG_LOGNAME_LEN                (1024)
+#define SK_CONFIG_LOGNAME_LEN                (128)
 
 #define SK_CONFIG_NO_PORT                    (-1)
 #define SK_CONFIG_DEFAULT_CMD_PORT           (7759)

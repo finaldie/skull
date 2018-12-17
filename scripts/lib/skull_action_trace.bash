@@ -92,17 +92,26 @@ function do_trace() {
     echo " - Got pid: $pid"
 
     # 3. Get std_forward
-    local stderr_file=$(_get_value_from_info "$infos" "stderr")
-    echo " - Got stderr_file: $stderr_file"
+    local std_forward=$(_get_value_from_info "$infos" "log_std_forward")
+    echo " - Got std_forward: $std_forward"
 
-    # 4. Get skull-engine
+    # 4. Get diag file
+    local diag="/dev/null"
+    if [ $std_forward -eq 1 ]; then
+        diag=$(_get_value_from_info "$infos" "stdout")
+    else
+        diag=$(_get_value_from_info "$infos" "diag_file")
+    fi
+    echo " - Got diag_file: $diag"
+
+    # 5. Get skull-engine
     local skull_bin=$(_get_value_from_info "$infos" "binary")
     echo " - Got skull-engine: $skull_bin"
 
     if $follow; then
-        tail -f $stderr_file | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid
+        tail -F $diag | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid
     else
-        tail -n $count $stderr_file | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid
+        tail -n $count $diag | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid
     fi
 }
 

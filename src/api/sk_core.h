@@ -59,6 +59,8 @@ typedef struct sk_core_info_t {
     struct rusage self_ru;
 } sk_core_info_t;
 
+struct sk_thread_env_t;
+
 // Core data structure
 // NOTES: All the members must be thread-safe for read action after
 //  initialization
@@ -68,8 +70,6 @@ typedef struct sk_core_t {
     sk_mon_t*        umon; // user mon
 
     // ======= public  =======
-    sk_core_info_t   info;
-
     sk_cmd_args_t    cmd_args;
     sk_config_t*     config;
 
@@ -100,8 +100,10 @@ typedef struct sk_core_t {
 
     time_t           starttime;
 
-    // memory stat
-    sk_mem_stat_t    mstat;
+    // main thread env (weak reference)
+    struct sk_thread_env_t* env;
+
+    sk_core_info_t   info;
 } sk_core_t;
 
 void sk_core_init(sk_core_t* core);

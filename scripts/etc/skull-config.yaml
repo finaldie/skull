@@ -24,6 +24,9 @@ log_name: skull.log
 #
 log_level: debug
 
+# Diagnosis File Name
+diag_name: diag.log
+
 # Supported Languages: cpp, py
 languages: ['cpp', 'py']
 

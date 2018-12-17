@@ -73,6 +73,9 @@ typedef struct sk_config_t {
     // be put at the `log` folder)
     char log_name[SK_CONFIG_LOGNAME_LEN];
 
+    // log file for memory diagnosis and tracing
+    char diag_name[SK_CONFIG_LOGNAME_LEN];
+
     // how many worker threads will be created after skull starting
     int threads;
 

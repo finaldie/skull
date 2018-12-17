@@ -22,9 +22,22 @@ _Skull_ can be used in generic serving layer or embedded device. E.g. _web logic
 [Changelog](ChangeLog.md)
 
 ## Latest Feature Demo
-*Realtime memory stat tracing*:
+**Memory tracing reports**:
+* _Memory Usage_
+* _Cross-Scope Malloc/Free_
+* _Memory Leak_
 
-![skull-trace](https://github.com/finaldie/misc/blob/master/articals/skull/tracer/skull-trace.gif)
+![skull-trace](https://github.com/finaldie/misc/blob/master/articals/skull/tracer/skull-trace-report.gif)
+
+## Documentations
+* [High Level Introduction][6]
+* [How To Start][7]
+* [How to Test][8]
+* [How to Deploy][9]
+* [Monitoring][10]
+* [API Docs - Cpp][11]
+* [API Docs - Python][12]
+* [Integrate with Nginx][13]
 
 ## How to Build
 Use _Ubuntu18.04_ as an example. (Tested on `Debian jessie/stretch`, `Ubuntu 14.04/16.04/18.04`, `alpine 3.6/3.8`, `RHEL6/7` and `Raspbian jessie/stretch`)
@@ -74,12 +87,12 @@ And the below table is the current images:<br>
 
 Tag              | Dockerfile         | Notes                         |
 -----------------|--------------------|-------------------------------|
-1.2              | ([Dockerfile][20]) | 1.2 Debian runtime image      |
-1.2-build        | ([Dockerfile][21]) | 1.2 Debian dev/building image |
-1.2-ubuntu       | ([Dockerfile][22]) | 1.2 Ubuntu runtime image      |
-1.2-ubuntu-build | ([Dockerfile][23]) | 1.2 Ubuntu dev/building image |
-1.2-alpine       | ([Dockerfile][24]) | 1.2 Alpine runtime image      |
-1.2-alpine-build | ([Dockerfile][25]) | 1.2 Alpine dev/building image |
+1.3              | ([Dockerfile][20]) | 1.3 Debian runtime image      |
+1.3-build        | ([Dockerfile][21]) | 1.3 Debian dev/building image |
+1.3-ubuntu       | ([Dockerfile][22]) | 1.3 Ubuntu runtime image      |
+1.3-ubuntu-build | ([Dockerfile][23]) | 1.3 Ubuntu dev/building image |
+1.3-alpine       | ([Dockerfile][24]) | 1.3 Alpine runtime image      |
+1.3-alpine-build | ([Dockerfile][25]) | 1.3 Alpine dev/building image |
 
 ## A Quick Demo
 After installing _Skull_ into the system, run the following steps to
@@ -106,16 +119,6 @@ Name                  | Description |
 ----------------------|-------------|
 [Skull-Perf Cases][5] | Including some basic perf cases |
 [DNSTurbo][16]        | Smart DNS Client based on _Skull_. [Trailer][17] |
-
-## Documentations
-* [High Level Introduction][6]
-* [How To Start][7]
-* [How to Test][8]
-* [How to Deploy][9]
-* [Monitoring][10]
-* [API Docs - Cpp][11]
-* [API Docs - Python][12]
-* [Integrate with Nginx][13]
 
 ## Contribution and Discussion
 To discuss any issues, there are some ways we can use:
@@ -146,12 +149,12 @@ To fix a bug or add a new feature, just **`Fork`** the repo, then apply the fixe
 [18]: https://www.reddit.com/r/skullengine/
 [19]: https://www.youtube.com/watch?v=2u_-Wl7sDdA
 
-[20]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/Dockerfile
-[21]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/Dockerfile.build
-[22]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/ubuntu/Dockerfile
-[23]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/ubuntu/Dockerfile.build
-[24]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/alpine/Dockerfile
-[25]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.2/alpine/Dockerfile.build
+[20]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/Dockerfile
+[21]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/Dockerfile.build
+[22]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/ubuntu/Dockerfile
+[23]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/ubuntu/Dockerfile.build
+[24]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/alpine/Dockerfile
+[25]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/alpine/Dockerfile.build
 
 [30]: https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/
 [31]: https://hub.docker.com/r/finaldie/skull/
