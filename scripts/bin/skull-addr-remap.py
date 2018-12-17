@@ -33,6 +33,12 @@ MEMLEAK_THRESHOLD = 10 # N times larger than avg latency
 # =========== Global non-static variables ===========
 DEBUG = False
 
+TRACING_START_TIME = 0
+TRACING_END_TIME   = 0
+
+REPORT_START_TIME  = 0
+REPORT_END_TIME    = 0
+
 # Memory usage map during tracing
 """
 MemMap is for tracking the runtime alloc/dalloc actions, then we can use it
@@ -106,6 +112,7 @@ MemStat = {
             node: skull-engine,
             from: 'xxx at xxx',
             cost: 12341241.123456789,
+            maxCost: 1000.123456789,
         },
         ...
     },
@@ -303,6 +310,7 @@ def _createMemStat(node, hrAddr):
         'node'   : node,
         'from'   : hrAddr,
         'cost'   : 0.0,
+        'maxCost': -1.0,
     }
 
 def recordMemStat(scopeName, node, hrAddr, sAddr, isAlloc:bool, dataSz, cost=None):
@@ -327,6 +335,7 @@ def recordMemStat(scopeName, node, hrAddr, sAddr, isAlloc:bool, dataSz, cost=Non
         block['usage']   -= dataSz
         block['ndalloc'] += 1
         block['cost']    += cost
+        block['maxCost']   = max(cost, block['maxCost'])
 
 def _getMemStat(sAddr, scopeName):
     block = MemStat.get(sAddr)
@@ -334,7 +343,7 @@ def _getMemStat(sAddr, scopeName):
 
     return block.get(scopeName)
 
-def _calculateLatencyNs(memStat:dict):
+def _calAvgNs(memStat:dict):
     return -1 if memStat['ndalloc'] == 0 else memStat['cost'] / memStat['ndalloc'] * 1000000000
 
 def _reportMemStat():
@@ -348,17 +357,21 @@ def _reportMemStat():
         for scope in MemStat[sAddr]:
             block = MemStat[sAddr][scope]
 
-            latencyNs = _calculateLatencyNs(block)
-            latencyMs = 'n/a' if latencyNs < 0 else "%.2f" % (latencyNs / 1000000)
+            avgNs = _calAvgNs(block)
+            avgMs = 'n/a' if avgNs < 0 else "%.2f" % (avgNs / 1000000)
+
+            maxCost = block['maxCost']
+            maxMs = 'n/a' if maxCost < 0 else "{:.2}".format(maxCost * 1000)
 
             record = {
-                'usage'    : block['usage'],
-                'scope'    : scope,
-                'latencyMs': latencyMs,
-                'nalloc'   : block['nalloc'],
-                'ndalloc'  : block['ndalloc'],
-                'node'     : block['node'],
-                'from'     : block['from']
+                'usage'   : block['usage'],
+                'scope'   : scope,
+                'avgMs'   : avgMs,
+                'maxMs'   : maxMs,
+                'nalloc'  : block['nalloc'],
+                'ndalloc' : block['ndalloc'],
+                'node'    : os.path.basename(block['node']),
+                'from'    : block['from']
             }
 
             rawList.append(record)
@@ -370,17 +383,21 @@ def _reportMemStat():
     sortedRes = sorted(rawList, key = lambda record: record['usage'],
             reverse = True)
 
-    print("\n=============== Memory Usage Report ===============")
-    print("usage\tscope\tnalloc\tndalloc\tlatencyMs\tnode\tfrom")
+    title = ['usage', 'scope', 'nalloc', 'ndalloc', 'avgMs', 'maxMs', 'node',
+             'from']
+    fmt   = '{:<10}{:<16}{:<8}{:<8}{:<10}{:<10}{:<25}{}'
+
+    print("\n{:=^80}".format(' Memory Usage Report '))
+    print(fmt.format(*title))
 
     for record in sortedRes:
-        print("{}\t{}\t{}\t{}\t{}\t{}\t{}".format(
-            record['usage'], record['scope'], record['nalloc'],
-            record['ndalloc'], record['latencyMs'], record['node'],
-            record['from']), end = '')
+        print(fmt.format(
+            record['usage'],   record['scope'], record['nalloc'],
+            record['ndalloc'], record['avgMs'], record['maxMs'],
+            record['node'],    record['from']), end = '')
 
-    print("\nTotal Usage: {} B, #Alloc: {}, #Dealloc: {}".format(
-    totalUsage, totalAllocCnt, totalDeallocCnt))
+    print("\nTotal Usage: {} Bytes, #Alloc: {}, #Dealloc: {}".format(
+          totalUsage, totalAllocCnt, totalDeallocCnt))
 
 def _reportCrossScope():
     rawList = []
@@ -403,25 +420,29 @@ def _reportCrossScope():
     sortedList = sorted(rawList, key = lambda record : record['usage'],
             reverse = True)
 
-    print("\n=============== CrossScope Malloc/Free Report ===============")
+    print("\n{:=^80}".format(' CrossScope Malloc/Free Report '))
 
     if len(sortedList) == 0:
-        print("Great! No cross-scope issues found")
+        print("Great work! No cross-scope issues found")
         return
 
-    for record in sortedList:
-        print("usage\tsize/c\ttimes\talloced_in\tfreed_in")
+    title = ['usage', 'size/c', 'times', 'alloced_in', 'freed_in']
+    fmt   = "{:<10}{:<10}{:<10}{:<16}{:<16}"
 
-        print("{}\t{}\t{}\t{}\t{}".format(
+    for record in sortedList:
+        print(fmt.format(*title))
+
+        print(fmt.format(
             record['usage'], record['size'], record['count'],
             record['alloced_in'], record['freed_in']))
 
-        print("\nAlloced from:\t{}".format(record['alloced_from']))
-        print("Freed   from:\t{}".format(record['freed_from']))
-        print("---------------------------------------------")
+        print("\nAlloced from: {}".format(record['alloced_from']))
+        print("Freed   from: {}".format(record['freed_from']))
+        print("{:-^80}".format(''))
 
 
-def _reportMemLeak(now):
+def _reportMemLeak():
+    now = TRACING_END_TIME
     rawList  = []
     hidenCnt = 0
 
@@ -435,56 +456,77 @@ def _reportMemLeak(now):
             timeSec = block['start'] # use this, not 'time' field
 
             memStat = _getMemStat(sAddr, scopeName)
-            avgLatencyNs = _calculateLatencyNs(memStat)
-
+            avgNs   = _calAvgNs(memStat)
+            maxNs   = memStat['maxCost'] * 1000000000
             latencyNs = (now - timeSec) * 1000000000
 
-            if avgLatencyNs < 0:
-                rawList.append(("Possible", scopeName, block, memStat, latencyNs, avgLatencyNs))
+            if maxNs < 0:
+                rawList.append(("Possible", scopeName, block, memStat, latencyNs, avgNs, maxNs))
             else:
-                if latencyNs > MEMLEAK_THRESHOLD * avgLatencyNs:
-                    rawList.append(("Likely", scopeName, block, memStat, latencyNs, avgLatencyNs))
+                if latencyNs > MEMLEAK_THRESHOLD * maxNs:
+                    rawList.append(("Likely", scopeName, block, memStat, latencyNs, avgNs, maxNs))
                 else:
-                    rawList.append(("Noleak", scopeName, block, memStat, latencyNs, avgLatencyNs))
+                    rawList.append(("Noleak", scopeName, block, memStat, latencyNs, avgNs, maxNs))
 
     sortedList = sorted(rawList, key = lambda x: x[0])
 
-    print("\n=============== MemLeak Report (Experimental) ===============")
     #pprint.pprint(MemMap)
-    print("reason\tsurvivalMs\tavgLatencyMs\tusage\tnalloc\tndalloc\tscope\tnode\tfrom")
+
+    title = ['reason', 'ttlMs', 'avgMs', 'maxMs', 'usage', 'nalloc',
+            'ndalloc', 'scope', 'node', 'from']
+    fmt   = '{:<10}{:<10}{:<10}{:<10}{:<10}{:<8}{:<8}{:<16}{:<25}{}'
+
+    print("\n{:=^80}".format(' MemLeak Report (Experimental) '))
+    print(fmt.format(*title))
 
     for record in sortedList:
-        reason       = record[0]
-        scopeName    = record[1]
-        block        = record[2]
-        memStat      = record[3]
-        latencyNs    = record[4]
-        avgLatencyNs = record[5]
+        reason    = record[0]
+        scopeName = record[1]
+        block     = record[2]
+        memStat   = record[3]
+        latencyNs = record[4]
+        avgNs     = record[5]
+        maxNs     = record[6]
 
         if reason == 'Noleak':
             hidenCnt += 1
             continue
 
         latencyMs = "%.2f" % (latencyNs / 1000000)
-        avgLatencyMs = 'n/a' if avgLatencyNs < 0 else "%.2f" % (avgLatencyNs / 1000000)
+        avgMs = 'n/a' if avgNs < 0 else "%.2f" % (avgNs / 1000000)
+        maxMs = 'n/a' if maxNs < 0 else "%.2f" % (maxNs / 1000000)
 
-        print("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}".format(
-            reason, latencyMs, avgLatencyMs, block['sz'], memStat['nalloc'],
-            memStat['ndalloc'], scopeName, block['node'], block['from']),
-            end = '')
+        print(fmt.format(
+            reason, latencyMs, avgMs, maxMs, block['sz'], memStat['nalloc'],
+            memStat['ndalloc'], scopeName, os.path.basename(block['node']),
+            block['from']), end = '')
 
-    print("\nTotal {} data blocks are hided".format(hidenCnt))
+    print("\nTotal {} data blocks are hided\n".format(hidenCnt))
 
 def report():
-    now = time.clock_gettime(time.CLOCK_MONOTONIC)
+    global REPORT_START_TIME
+    global REPORT_END_TIME
+
+    REPORT_START_TIME = time.clock_gettime(time.CLOCK_MONOTONIC)
 
     _reportMemStat()
     _reportCrossScope()
+    _reportMemLeak()
 
-    _reportMemLeak(now)
+    REPORT_END_TIME = time.clock_gettime(time.CLOCK_MONOTONIC)
+
+    print("{:=^80}".format(''))
+    print("Tracing time: {:.3} s, Report generation time: {:.3} s".format(
+        TRACING_END_TIME - TRACING_START_TIME,
+        REPORT_END_TIME - REPORT_START_TIME
+    ))
 
 def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
     global DEBUG
+    global TRACING_START_TIME
+    global TRACING_END_TIME
+
+    TRACING_START_TIME = time.clock_gettime(time.CLOCK_MONOTONIC)
 
     handle = sys.stdin
     if inputFile is not None:
@@ -548,7 +590,7 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
                 if DEBUG: print("KeyboardInterrupt, exit...")
                 break
 
-    report()
+    TRACING_END_TIME = time.clock_gettime(time.CLOCK_MONOTONIC)
 
     if inputFile is not None:
         handle.close()
@@ -628,6 +670,7 @@ if __name__ == "__main__":
             print("Addr2line output after utf-8 decode: {}".format(hrAddr))
         else:
             doAddrRemapping(addrMaps, executable, input)
+            report()
 
     except KeyboardInterrupt as e:
         if DEBUG: print("KeyboardInterrupt: {}".format(e))
