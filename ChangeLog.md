@@ -1,4 +1,6 @@
 * 2018-12-17 1.3.3
+  * Engine
+    * **Enhancement:** Make cron timer more accurate
   * MISC
     * **Enhancement:** Upgrade `flibs` to v1.2.1
 * 2018-12-05 1.3.2

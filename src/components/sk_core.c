@@ -10,6 +10,7 @@
 #include "api/sk_types.h"
 #include "api/sk_utils.h"
 #include "api/sk_eventloop.h"
+#include "api/sk_time.h"
 #include "api/sk_pto.h"
 #include "api/sk_config.h"
 #include "api/sk_module.h"
@@ -188,6 +189,7 @@ void _sk_setup_workflows(sk_core_t* core)
 
 static
 void _sk_init_env(sk_core_t* core) {
+    sk_time_init();
     sk_thread_env_init();
 
     // Create a thread env for the main thread, this is necessary since during
@@ -205,7 +207,10 @@ void _sk_init_env(sk_core_t* core) {
 static
 void _sk_init_config(sk_core_t* core) {
     core->config = sk_config_create(core->cmd_args.config_location);
+
+#ifdef SK_DEBUG
     sk_config_print(core->config);
+#endif
 }
 
 static

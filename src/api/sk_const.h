@@ -77,5 +77,9 @@ struct sk_const_t;
 // service
 #define SK_SRV_MAX_TASK                      (1024)
 
+// sk_time
+#define SK_NS_PER_SEC                        (1000000000l)
+#define SK_NS_PER_MS                         (1000000l)
+
 #endif
 

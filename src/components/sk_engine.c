@@ -79,8 +79,8 @@ void _timer_data_destroy(sk_ud_t ud)
 
 static
 sk_timer_t* _create_timer(sk_engine_t* engine,
-                                  uint32_t expiration, // unit: millisecond
-                                  sk_timer_triggered timer_cb)
+                          uint32_t expiration, // unit: millisecond
+                          sk_timer_triggered timer_cb)
 {
     sk_entity_t* timer_entity = sk_entity_create(NULL, SK_ENTITY_TIMER);
     sk_ud_t cb_data  = {.ud = timer_entity};
