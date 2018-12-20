@@ -372,10 +372,10 @@ void _status_time(sk_txn_t* txn, sk_core_t* core) {
     sk_time_info_t info;
     sk_time_info(&info);
 
-    _append_response(txn, IFMT(clock_id,  "%d\n"),  info.monotonic_id);
     _append_response(txn, IFMT(clock_res, "%lu\n"), info.res.tv_nsec);
-    _append_response(txn, IFMT(clock_coarse_id,  "%d\n"),  info.monotonic_coarse_id);
     _append_response(txn, IFMT(clock_coarse_res, "%lu\n"), info.res_coarse.tv_nsec);
+    _append_response(txn, IFMT(clock_id, "%d\n"), info.monotonic_id);
+    _append_response(txn, IFMT(clock_coarse_id, "%d\n"), info.monotonic_coarse_id);
 }
 
 static
