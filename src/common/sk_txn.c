@@ -165,8 +165,11 @@ void sk_txn_dump_tasks(const sk_txn_t* txn)
     fhash_u64_iter task_iter = fhash_u64_iter_new(txn->task_tbl);
     sk_txn_task_t* task = NULL;
     while ((task = fhash_u64_next(&task_iter))) {
-        sk_print(" - txn task: id: %d, apiname: %s, request_sz: %zu, response_sz: %zu, status: %d, start: %llu, end: %llu, pendings: %u\n",
-            (int)task->id, task->task_data.api_name, task->task_data.request_sz, task->task_data.response_sz, task->status, task->start,
+        sk_print(" - txn task: id: %d, apiname: %s, request_sz: %zu,"
+                 " response_sz: %zu, status: %d, start: %lu, end: %lu,"
+                 " pendings: %u\n",
+            (int)task->id, task->task_data.api_name, task->task_data.request_sz,
+            task->task_data.response_sz, task->status, task->start,
             task->end, task->task_data.pendings);
     }
 }

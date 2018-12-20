@@ -49,6 +49,8 @@
 #define ADMIN_RESP_MAX_LENGTH     (8192)
 #define ADMIN_COUNTER_LINE_LENGTH (256)
 
+#define CFMT                      "%-55s %f\n"
+
 #define IFMT(k, fmt)              "%-30s: " fmt, #k
 
 #define MEM_FMT                   "%7s %20s %16s: %zu\n"
@@ -105,6 +107,22 @@ void _process_help(sk_txn_t* txn)
 }
 
 static
+void _append_response(sk_txn_t* txn, const char* fmt, ...)
+{
+    sk_admin_data_t* admin_data = sk_txn_udata(txn);
+    char line[ADMIN_LINE_MAX_LENGTH];
+    memset(line, 0, sizeof(line));
+    int len = 0;
+
+    va_list args;
+    va_start(args, fmt);
+    len = vsnprintf(line, ADMIN_LINE_MAX_LENGTH, fmt, args);
+    va_end(args);
+
+    fmbuf_push(admin_data->response, line, (size_t)len);
+}
+
+static
 void _mon_cb(const char* name, double value, void* ud)
 {
     sk_admin_data_t* admin_data = ud;
@@ -112,7 +130,7 @@ void _mon_cb(const char* name, double value, void* ud)
 
     char metrics_str[ADMIN_COUNTER_LINE_LENGTH];
     int printed = snprintf(metrics_str, ADMIN_COUNTER_LINE_LENGTH,
-                           "%s: %f\n", name, value);
+                           CFMT, name, value);
 
     if (printed < 0) {
         sk_print("metrics buffer is too small(%d), name: %s, value: %f\n",
@@ -181,13 +199,17 @@ void _process_metrics(sk_txn_t* txn)
     // 1. snapshot global metrics
     sk_mon_snapshot_t* global_snapshot = sk_mon_snapshot(core->mon);
     _fill_first_line(global_snapshot, admin_data);
+    _append_response(txn, "\n");
+
     _transport_mon_snapshot(global_snapshot, admin_data);
     sk_mon_snapshot_destroy(global_snapshot);
+    _append_response(txn, "\n");
 
     // 2. snapshot master metrics
     sk_mon_snapshot_t* master_snapshot = sk_mon_snapshot(core->master->mon);
     _transport_mon_snapshot(master_snapshot, admin_data);
     sk_mon_snapshot_destroy(master_snapshot);
+    _append_response(txn, "\n");
 
     // 3. snapshot workers metrics
     int threads = core->config->threads;
@@ -196,6 +218,7 @@ void _process_metrics(sk_txn_t* txn)
         sk_mon_snapshot_t* worker_snapshot = sk_mon_snapshot(worker->mon);
         _transport_mon_snapshot(worker_snapshot, admin_data);
         sk_mon_snapshot_destroy(worker_snapshot);
+        _append_response(txn, "\n");
     }
 
     // 4. snapshot bio metrics
@@ -204,12 +227,14 @@ void _process_metrics(sk_txn_t* txn)
         sk_mon_snapshot_t* bio_snapshot = sk_mon_snapshot(bio->mon);
         _transport_mon_snapshot(bio_snapshot, admin_data);
         sk_mon_snapshot_destroy(bio_snapshot);
+        _append_response(txn, "\n");
     }
 
     // 5. shapshot user metrics
     sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot(core->umon);
     _transport_mon_snapshot(user_snapshot, admin_data);
     sk_mon_snapshot_destroy(user_snapshot);
+    _append_response(txn, "\n");
 }
 
 static
@@ -243,22 +268,6 @@ void _process_last_snapshot(sk_txn_t* txn)
     // 4. shapshot user metrics
     sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot_latest(core->umon);
     _transport_mon_snapshot(user_snapshot, admin_data);
-}
-
-static
-void _append_response(sk_txn_t* txn, const char* fmt, ...)
-{
-    sk_admin_data_t* admin_data = sk_txn_udata(txn);
-    char line[ADMIN_LINE_MAX_LENGTH];
-    memset(line, 0, sizeof(line));
-    int len = 0;
-
-    va_list args;
-    va_start(args, fmt);
-    len = vsnprintf(line, ADMIN_LINE_MAX_LENGTH, fmt, args);
-    va_end(args);
-
-    fmbuf_push(admin_data->response, line, (size_t)len);
 }
 
 static

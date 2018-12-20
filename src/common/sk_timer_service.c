@@ -107,6 +107,16 @@ void _timer_triggered(fev_state* state, void* arg)
     timer->triggered = 1;
     sk_print("tmsvc: timer triggered %p\n", (void*)timer);
 
+    long start = fev_tmsvc_timer_starttime(timer->timer);
+    long expiration = fev_tmsvc_timer_expiration(timer->timer);
+    long delay = (long)sk_time_ms() - start - expiration;
+
+    sk_metrics_global.timer_triggered.inc(1);
+    sk_metrics_worker.timer_triggered.inc(1);
+
+    sk_metrics_global.timer_delayed.inc((double)delay);
+    sk_metrics_worker.timer_delayed.inc((double)delay);
+
     sk_sched_send(SK_ENV_SCHED, SK_ENV_SCHED, timer->entity, NULL, 0,
                   SK_PTO_TIMER_TRIGGERED, timer, timer->trigger, timer->ud);
 }
@@ -142,8 +152,8 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
     fhash_u64_set(svc->timers, (uint64_t) (uintptr_t) timer, timer);
 
     // update metrics
-    sk_metrics_global.timer_emit.inc(1);
-    sk_metrics_worker.timer_emit.inc(1);
+    sk_metrics_global.timer_created.inc(1);
+    sk_metrics_worker.timer_created.inc(1);
     return timer;
 }
 
@@ -165,8 +175,8 @@ void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
     svc->timer_alive--;
 
     // update metrics
-    sk_metrics_global.timer_complete.inc(1);
-    sk_metrics_worker.timer_complete.inc(1);
+    sk_metrics_global.timer_completed.inc(1);
+    sk_metrics_worker.timer_completed.inc(1);
 }
 
 int sk_timer_valid(const sk_timer_t* timer)
@@ -178,6 +188,9 @@ void sk_timer_cancel(sk_timer_t* timer)
 {
     if (!timer) return;
     timer->valid = 0;
+
+    sk_metrics_global.timer_canceled.inc(1);
+    sk_metrics_worker.timer_canceled.inc(1);
 }
 
 sk_entity_t* sk_timer_entity(const sk_timer_t* timer)

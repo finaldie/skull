@@ -20,7 +20,7 @@ void sk_entity_tcp_create(sk_entity_t* entity, void* evbuff)
     tdata->evbuff = evbuff;
     sk_entity_setopt(entity, sk_entity_tcp_opt, tdata);
 
-    sk_metrics_global.connection_create.inc(1);
+    sk_metrics_global.connection_opened.inc(1);
 }
 
 static
@@ -51,7 +51,7 @@ void _tcp_destroy(sk_entity_t* entity, void* ud)
     if (!ud) return;
 
     sk_print("tcp entity destroy\n");
-    sk_metrics_global.connection_destroy.inc(1);
+    sk_metrics_global.connection_closed.inc(1);
 
     sk_tcp_data_t* tdata = ud;
     int fd = fevbuff_destroy(tdata->evbuff);

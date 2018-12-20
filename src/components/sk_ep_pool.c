@@ -180,7 +180,7 @@ int  sk_ep_timeout(sk_ep_data_t* ep_data)
     }
 
     ulong_t consumed = sk_time_ms() - ep_data->start;
-    sk_print("sk_ep_timeout: consumed: %llu, timeout value: %d\n",
+    sk_print("sk_ep_timeout: consumed: %lu, timeout value: %d\n",
              consumed, ep_data->handler.timeout);
 
     if (consumed >= ep_data->handler.timeout) {
