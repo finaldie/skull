@@ -23,7 +23,7 @@ verify:
     - cat ${RUN}/project/run/log/skull.log | grep "skull engine is ready"
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "timer job triggered" | grep "bio-1:service.s1" | wc -l | grep "5"'
-    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response: 2"'
+    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response" | grep "2"'
 
 post-verify:
     - echo "post-verify"

@@ -22,7 +22,7 @@ verify:
     - 'cat ${RUN}/project/run/log/skull.log | grep "receive data: hello skull"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "module_pack(test): data sz:12"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "query reponse: ip ="'
-    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response: 1"'
+    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response" | grep "1"'
 
 post-verify:
     - echo "post-verify"

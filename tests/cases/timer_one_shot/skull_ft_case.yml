@@ -25,7 +25,7 @@ verify:
     - 'cat ${RUN}/project/run/log/skull.log | grep "service job create failed"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "service job create successful1"'
     - 'cat ${RUN}/project/run/log/skull.log | grep "timer job triggered1"'
-    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response: 2"'
+    - 'echo "metrics" | nc -w 1 127.0.0.1 7759 | grep "global.response" | grep "2"'
 
 post-verify:
     - echo "post-verify"
