@@ -22,6 +22,7 @@
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
 #include "api/sk_mon.h"
+#include "api/sk_time.h"
 #include "api/sk_malloc.h"
 #include "api/sk_admin.h"
 
@@ -338,7 +339,7 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
         sk_service_t* service = NULL;
 
         while ((service = fhash_str_next(&iter))) {
-            _append_response(txn, "%s running_tasks: %d ; ",
+            _append_response(txn, "%s tasks: %d ; ",
                              sk_service_name(service),
                              sk_service_running_taskcnt(service));
         }
@@ -364,6 +365,17 @@ void _merge_stat(sk_entity_mgr_stat_t* stat, const sk_entity_mgr_stat_t* merging
     stat->entity_ep_v6tcp     += merging->entity_ep_v6tcp;
     stat->entity_ep_v6udp     += merging->entity_ep_v6udp;
     stat->entity_ep_txn_timer += merging->entity_ep_txn_timer;
+}
+
+static
+void _status_time(sk_txn_t* txn, sk_core_t* core) {
+    sk_time_info_t info;
+    sk_time_info(&info);
+
+    _append_response(txn, IFMT(clock_id,  "%d\n"),  info.monotonic_id);
+    _append_response(txn, IFMT(clock_res, "%lu\n"), info.res.tv_nsec);
+    _append_response(txn, IFMT(clock_coarse_id,  "%d\n"),  info.monotonic_coarse_id);
+    _append_response(txn, IFMT(clock_coarse_res, "%lu\n"), info.res_coarse.tv_nsec);
 }
 
 static
@@ -471,6 +483,9 @@ void _process_status(sk_txn_t* txn)
         _append_response(txn, IFMT(stdout, "/proc/%d/fd/1\n"), core->info.pid);
         _append_response(txn, IFMT(stderr, "/proc/%d/fd/2\n"), core->info.pid);
     }
+    _append_response(txn, "\n");
+
+    _status_time(txn, core);
     _append_response(txn, "\n");
 
     _append_response(txn, IFMT(pid, "%d\n"), core->info.pid);

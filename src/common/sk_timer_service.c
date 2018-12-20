@@ -7,6 +7,7 @@
 #include "api/sk_env.h"
 #include "api/sk_sched.h"
 #include "api/sk_pto.h"
+#include "api/sk_time.h"
 #include "api/sk_metrics.h"
 #include "api/sk_timer_service.h"
 
@@ -34,7 +35,7 @@ struct sk_timer_t {
     uint32_t triggered :1;
     uint32_t _reserved :30;
 
-    int _padding;
+    uint32_t interval;
 };
 
 sk_timersvc_t* sk_timersvc_create(void* evlp)
@@ -75,16 +76,24 @@ int  sk_timersvc_process(sk_timersvc_t* svc) {
     return fev_tmsvc_process(svc->timer_service);
 }
 
-sk_timer_t* sk_timersvc_first(sk_timersvc_t* svc) {
-    ftimer_node* node = fev_tmsvc_first(svc->timer_service);
+sk_timer_t* sk_timersvc_top(const sk_timersvc_t* svc) {
+    ftimer_node* node = fev_tmsvc_top(svc->timer_service);
     return fev_tmsvc_timer_data(node);
 }
 
-long sk_timersvc_timer_expiration(sk_timer_t* timer) {
-    return fev_tmsvc_timer_expiration(timer->timer);
+long sk_timersvc_timer_remaining(const sk_timer_t* timer) {
+    return fev_tmsvc_timer_remaining(timer->timer);
 }
 
-uint32_t sk_timersvc_timeralive_cnt(sk_timersvc_t* svc)
+long sk_timersvc_timer_expiration(const sk_timer_t* timer) {
+    return timer ? fev_tmsvc_timer_expiration(timer->timer) : -1;
+}
+
+long sk_timersvc_timer_interval(const sk_timer_t* timer) {
+    return timer ? (long)timer->interval : -1;
+}
+
+uint32_t sk_timersvc_timeralive_cnt(const sk_timersvc_t* svc)
 {
     return svc->timer_alive;
 }
@@ -104,7 +113,8 @@ void _timer_triggered(fev_state* state, void* arg)
 
 sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
                                      sk_entity_t* entity,
-                                     uint32_t expiration, // unit: millisecond
+                                     uint32_t delay, // unit: millisecond
+                                     uint32_t interval,
                                      sk_timer_triggered trigger,
                                      sk_obj_t* ud)
 {
@@ -116,12 +126,13 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t* svc,
     sk_print("tmsvc: create timer %p\n", (void*)timer);
     timer->owner  = svc;
     timer->entity = entity;
-    timer->timer  = fev_tmsvc_timer_add(svc->timer_service, (long)expiration,
-                                        _timer_triggered, timer);
+    timer->timer  = fev_tmsvc_timer_add(svc->timer_service, (long)delay,
+                                        (long)interval, _timer_triggered, timer);
     //sk_print("fev_timer %p\n", (void*) timer->timer);
     timer->trigger = trigger;
     timer->ud      = ud;
     timer->valid   = 1;
+    timer->interval = interval;
 
     svc->timer_alive++;
 
@@ -158,7 +169,7 @@ void sk_timersvc_timer_destroy(sk_timersvc_t* svc, sk_timer_t* timer)
     sk_metrics_worker.timer_complete.inc(1);
 }
 
-int sk_timer_valid(sk_timer_t* timer)
+int sk_timer_valid(const sk_timer_t* timer)
 {
     return timer && timer->valid;
 }
@@ -169,13 +180,12 @@ void sk_timer_cancel(sk_timer_t* timer)
     timer->valid = 0;
 }
 
-sk_entity_t* sk_timer_entity(sk_timer_t* timer)
+sk_entity_t* sk_timer_entity(const sk_timer_t* timer)
 {
     return timer->entity;
 }
 
-sk_timersvc_t* sk_timer_svc(sk_timer_t* timer)
-{
+sk_timersvc_t* sk_timer_svc(const sk_timer_t* timer) {
     return timer->owner;
 }
 
@@ -191,7 +201,6 @@ int sk_timer_reset(sk_timer_t* timer) {
 int sk_timer_resetn(sk_timer_t* timer, uint32_t expiration) {
     if (!timer) return 1;
     if (timer->triggered) return 1;
-
 
     int ret = fev_tmsvc_timer_resetn(timer->timer, (long)expiration);
     SK_ASSERT_MSG(!ret, "Reset timer failed\n");

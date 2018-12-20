@@ -5,9 +5,17 @@
 
 #include "api/sk_types.h"
 
+typedef struct sk_time_info_t {
+    struct timespec res;
+    struct timespec res_coarse;
+
+    clockid_t monotonic_id;
+    clockid_t monotonic_coarse_id;
+} sk_time_info_t;
+
 void sk_time_init();
 
-ulong_t sk_time_res();
+sk_time_info_t* sk_time_info(sk_time_info_t*);
 
 /**
  * Unit: nanoseconds. clockid = CLOCK_MONOTONIC by default

@@ -8,6 +8,7 @@
 #include "api/sk_eventloop.h"
 #include "api/sk_env.h"
 #include "api/sk_core.h"
+#include "api/sk_time.h"
 #include "api/sk_mon.h"
 #include "api/sk_log.h"
 #include "api/sk_malloc.h"
@@ -15,40 +16,27 @@
 #include "api/sk_entity_util.h"
 #include "api/sk_engine.h"
 
-#define SK_ENGINE_SECOND_INTERVAL (1000)
-#define SK_ENGINE_MINUTE_INTERVAL (1000 * 60)
-
 static
 sk_timer_t* _create_timer(sk_engine_t* engine,
-                                  uint32_t expiration, // unit: millisecond
-                                  sk_timer_triggered timer_cb);
+                          uint32_t expiration, // unit: millisecond
+                          sk_timer_triggered timer_cb);
 
 // Triggered every 60 seconds
 static
 void _timerjob_permin(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
-    // 1. create next timer
-    _create_timer(SK_ENV_ENGINE, SK_ENGINE_MINUTE_INTERVAL, _timerjob_permin);
-
-    // 2. make a snapshot
     sk_core_t* core = SK_ENV_CORE;
     sk_mon_snapshot_all(core);
-
-    // 3. destroy the timer entity
-    sk_entity_safe_destroy(entity);
 }
 
 // Triggered every 1 second
 static
 void _timerjob_persec(sk_entity_t* entity, int valid, sk_obj_t* ud)
 {
-    // 1. create next timer
-    _create_timer(SK_ENV_ENGINE, SK_ENGINE_SECOND_INTERVAL, _timerjob_persec);
-
-    // 2. update uptime
+    // 1. update uptime
     sk_metrics_global.uptime.inc(1);
 
-    // 3. record resource usage
+    // 2. record resource usage
     sk_core_t* core = SK_ENV_CORE;
     struct rusage self_ru;
     getrusage(RUSAGE_SELF, &self_ru);
@@ -56,13 +44,10 @@ void _timerjob_persec(sk_entity_t* entity, int valid, sk_obj_t* ud)
     core->info.prev_self_ru = core->info.self_ru;
     core->info.self_ru = self_ru;
 
-    // 4. dump mem usage
+    // 3. dump mem usage
     if ((int)sk_metrics_global.uptime.get() % SK_MEM_DUMP_INTERVAL == 0) {
         sk_mem_dump("CRON");
     }
-
-    // 5. destroy the timer entity
-    sk_entity_safe_destroy(entity);
 }
 
 static
@@ -89,7 +74,7 @@ sk_timer_t* _create_timer(sk_engine_t* engine,
     sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
 
     sk_timer_t* timer = sk_timersvc_timer_create(engine->timer_svc,
-                    timer_entity, expiration, timer_cb, param_obj);
+                    timer_entity, expiration, expiration, timer_cb, param_obj);
 
     SK_ASSERT(timer);
     return timer;
@@ -112,9 +97,7 @@ sk_engine_t* sk_engine_create(sk_engine_type_t type, int max_fds, int flags)
 
 void sk_engine_destroy(sk_engine_t* engine)
 {
-    if (!engine) {
-        return;
-    }
+    if (!engine) return;
 
     sk_sched_destroy(engine->sched);
     sk_ep_pool_destroy(engine->ep_pool);

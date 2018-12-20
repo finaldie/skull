@@ -80,6 +80,11 @@ struct sk_const_t;
 // sk_time
 #define SK_NS_PER_SEC                        (1000000000l)
 #define SK_NS_PER_MS                         (1000000l)
+#define SK_MS_PER_SEC                        (1000l)
+
+// sk_engine
+#define SK_ENGINE_SECOND_INTERVAL            (1000)
+#define SK_ENGINE_MINUTE_INTERVAL            (1000 * 60)
 
 #endif
 

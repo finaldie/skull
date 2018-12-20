@@ -196,15 +196,13 @@ void _job_cb (sk_service_t* sk_svc, sk_service_job_ret_t ret,
 
         if (jobdata->cb_.job) {
             jobdata->cb_.job(&service, skull_ret, jobdata->ud,
-                             task_data->request, task_data->request_sz,
+                             task_data->request,  task_data->request_sz,
                              task_data->response, task_data->response_sz);
         }
 
-        // Reduce pending tasks counts
         task_data->pendings--;
         sk_print("service task pending cnt: %u\n", task_data->pendings);
 
-        // Try to call api callback
         sk_service_api_complete(sk_svc, service.txn,
                                 task_data, task_data->api_name);
     } else {

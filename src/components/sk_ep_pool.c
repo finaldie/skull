@@ -469,7 +469,7 @@ sk_timer_t* _ep_create_timer(sk_ep_t* ep,
 
     sk_timer_t* timer =
         sk_timersvc_timer_create(mgr->owner->tmsvc, timerdata->timer_entity,
-            timeout, timer_cb, param_obj);
+            timeout, 0, timer_cb, param_obj);
     SK_ASSERT(timer);
 
     return timer;
@@ -498,7 +498,7 @@ sk_timer_t* _ep_node_create_timer(fdlist_node_t* ep_node,
 
     sk_timer_t* timer =
         sk_timersvc_timer_create(mgr->owner->tmsvc, timerdata->timer_entity,
-            timeout, timer_cb, param_obj);
+            timeout, 0, timer_cb, param_obj);
     SK_ASSERT(timer);
 
     return timer;

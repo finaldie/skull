@@ -705,7 +705,7 @@ sk_service_job_create(sk_service_t*       service,
         sk_timersvc_t* timersvc = SK_ENV_TMSVC;
         sk_timer_t* timer =
             sk_timersvc_timer_create(
-                timersvc, jobdata->entity, delayed, _job_triggered, param_obj);
+                timersvc, jobdata->entity, delayed, 0, _job_triggered, param_obj);
         SK_ASSERT(timer);
     } else {
         _job_triggered(jobdata->entity, 1, param_obj);
