@@ -2,7 +2,7 @@
   * Engine
     * **Enhancement:** Make cron timer more accurate
   * MISC
-    * **Enhancement:** Upgrade `flibs` to v1.2.1
+    * **Enhancement:** Upgrade `flibs` to v1.2.2
 * 2018-12-05 1.3.2
   * Engine
     * **New:** Setup cron job to dump mem stats
