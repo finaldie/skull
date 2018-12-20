@@ -1,6 +1,9 @@
 * 2018-12-17 1.3.3
   * Engine
+    * **New:** Expose clock status in admin module
+    * **Fix:** Replace all `ftime_gettime` with `sk_time_us`
     * **Enhancement:** Make cron timer more accurate
+    * **Enhancement:** Add more apis for `sk_time`
   * MISC
     * **Enhancement:** Upgrade `flibs` to v1.2.2
 * 2018-12-05 1.3.2
