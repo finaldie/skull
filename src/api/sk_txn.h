@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "api/sk_types.h"
 
 struct sk_workflow_t;
 struct sk_entity_t;
@@ -43,8 +44,8 @@ int sk_txn_is_first_module(const sk_txn_t* txn);
 int sk_txn_is_last_module(const sk_txn_t* txn);
 
 // sk_txn's alive time from it be created (unit: micro-second)
-unsigned long long sk_txn_alivetime(const sk_txn_t* txn);
-unsigned long long sk_txn_starttime(const sk_txn_t* txn);
+ulong_t sk_txn_alivetime(const sk_txn_t* txn);
+ulong_t sk_txn_starttime(const sk_txn_t* txn);
 
 int sk_txn_timeout(const sk_txn_t* txn);
 
@@ -114,21 +115,21 @@ sk_txn_taskdata_t* sk_txn_taskdata(const sk_txn_t* txn, uint64_t task_id);
 uint64_t sk_txn_task_id(const sk_txn_task_t* taskdata);
 int sk_txn_task_done(const sk_txn_taskdata_t* taskdata);
 
-unsigned long long sk_txn_task_starttime(const sk_txn_t*, uint64_t task_id);
+ulong_t sk_txn_task_starttime(const sk_txn_t*, uint64_t task_id);
 
 /**
  * Get the whole life time of the txn task, unit microsecond
  *
  * @note If the task has not completed, it return 0
  */
-unsigned long long sk_txn_task_lifetime(const sk_txn_t*, uint64_t task_id);
+ulong_t sk_txn_task_lifetime(const sk_txn_t*, uint64_t task_id);
 
 /**
  * Get the whole live time of the txn task, unit microsecond
  *
  * @note If the task has already completed, the result equals to 'lifetime' api
  */
-unsigned long long sk_txn_task_livetime(const sk_txn_t*, uint64_t task_id);
+ulong_t sk_txn_task_livetime(const sk_txn_t*, uint64_t task_id);
 
 /**
  * Add a transaction log

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "flibs/compiler.h"
 #include "api/sk_const.h"
 #include "api/sk_time.h"
 
@@ -38,16 +39,20 @@ sk_time_info_t* sk_time_info(sk_time_info_t* info) {
 
 ulong_t sk_time_ns() {
     struct timespec tp;
-    if (clock_gettime(itime.monotonic_id, &tp)) {
+    if (unlikely(clock_gettime(itime.monotonic_id, &tp))) {
         return 0;
     }
 
     return (ulong_t)tp.tv_sec * SK_NS_PER_SEC + (ulong_t)tp.tv_nsec;
 }
 
+ulong_t sk_time_us() {
+    return sk_time_ns() / SK_NS_PER_US;
+}
+
 ulong_t sk_time_ms() {
     struct timespec tp;
-    if (clock_gettime(itime.monotonic_coarse_id, &tp)) {
+    if (unlikely(clock_gettime(itime.monotonic_coarse_id, &tp))) {
         return 0;
     }
 

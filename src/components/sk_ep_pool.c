@@ -13,11 +13,11 @@
 #include "flibs/fev.h"
 #include "flibs/fev_buff.h"
 #include "flibs/fnet.h"
-#include "flibs/ftime.h"
 
 #include "api/sk_const.h"
 #include "api/sk_utils.h"
 #include "api/sk_env.h"
+#include "api/sk_time.h"
 #include "api/sk_log_helper.h"
 #include "api/sk_metrics.h"
 #include "api/sk_entity.h"
@@ -25,8 +25,6 @@
 #include "api/sk_entity_util.h"
 #include "api/sk_timer_service.h"
 #include "api/sk_ep_pool.h"
-
-#define SK_TIME_NOW() (ftime_gettime() / 1000L)
 
 #define SK_METRICS_EP_OK() { \
     sk_metrics_global.ep_ok.inc(1); \
@@ -95,7 +93,7 @@ typedef struct sk_ep_data_t {
     sk_ep_handler_t     handler;
     sk_ep_cb_t          cb;
     void*               ud;
-    unsigned long long  start;
+    ulong_t             start;
     const sk_entity_t*  e;       // sk_txn's entity
 
     sk_timer_t*        recv_timer;
@@ -123,7 +121,7 @@ typedef struct sk_ep_t {
     int                 ntxn;
     int                 flags;
 
-    unsigned long long  start;
+    ulong_t             start;
     sk_timer_t*         conn_timer;
     sk_timer_t*         shutdown_timer;
     struct sk_ep_mgr_t* owner;
@@ -181,7 +179,7 @@ int  sk_ep_timeout(sk_ep_data_t* ep_data)
         return 0;
     }
 
-    unsigned long long consumed = SK_TIME_NOW() - ep_data->start;
+    ulong_t consumed = sk_time_ms() - ep_data->start;
     sk_print("sk_ep_timeout: consumed: %llu, timeout value: %d\n",
              consumed, ep_data->handler.timeout);
 
@@ -193,21 +191,21 @@ int  sk_ep_timeout(sk_ep_data_t* ep_data)
 }
 
 static
-unsigned long long sk_ep_time_consumed(sk_ep_t* ep)
+ulong_t sk_ep_time_consumed(sk_ep_t* ep)
 {
-    return SK_TIME_NOW() - ep->start;
+    return sk_time_ms() - ep->start;
 }
 
 static
-unsigned long long sk_ep_txn_time_consumed(sk_ep_data_t* ep_data)
+ulong_t sk_ep_txn_time_consumed(sk_ep_data_t* ep_data)
 {
-    return SK_TIME_NOW() - ep_data->start;
+    return sk_time_ms() - ep_data->start;
 }
 
 static
-unsigned long long sk_ep_txn_time_left(sk_ep_data_t* ep_data)
+ulong_t sk_ep_txn_time_left(sk_ep_data_t* ep_data)
 {
-    unsigned long long consumed = SK_TIME_NOW() - ep_data->start;
+    ulong_t consumed = sk_time_ms() - ep_data->start;
     if (consumed >= ep_data->handler.timeout) {
         return 0;
     } else {
@@ -542,7 +540,7 @@ sk_ep_status_t _ep_send(fdlist_node_t* ep_node, const void* data, size_t len)
         // Create or refresh shutdown timer
         _ep_create_shutdown_timer(ep, ep_data->handler.timeout * 2);
 
-        unsigned long long time_left = sk_ep_txn_time_left(ep_data);
+        ulong_t time_left = sk_ep_txn_time_left(ep_data);
         if (time_left == 0) {
             sk_print("time left is 0 for this ep txn, set recv timeout to 1ms, alive time: %d\n",
                      (int)sk_ep_txn_time_consumed(ep_data));
@@ -922,8 +920,7 @@ entity_destroy:
 // Currently only support ipv4
 static
 int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
-                       sk_ep_t* ep, unsigned long long start,
-                       fdlist_node_t* ep_node)
+                       sk_ep_t* ep, ulong_t start, fdlist_node_t* ep_node)
 {
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
     if (sk_ep_timeout(ep_data)) {
@@ -963,7 +960,7 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         SK_ASSERT(sockfd >= 0);
 
         if (ep_data->handler.timeout > 0) {
-            unsigned long long time_left = sk_ep_txn_time_left(ep_data);
+            ulong_t time_left = sk_ep_txn_time_left(ep_data);
             if (time_left == 0) {
                 sk_print("create_entity_tcp: timed out1, set connection timeout to 1ms, fd: %d\n", ep->fd);
                 time_left = 1;
@@ -992,8 +989,7 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 
 static
 int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
-                       sk_ep_t* ep, unsigned long long start,
-                       fdlist_node_t* ep_node)
+                       sk_ep_t* ep, ulong_t start, fdlist_node_t* ep_node)
 {
     fnet_sockaddr_t addr;
     socklen_t addrlen = 0;
@@ -1024,7 +1020,7 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 static
 sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
                     uint64_t ekey, const char* ipkey,
-                    unsigned long long start)
+                    ulong_t start)
 {
     // Decide entity sock type
     sk_entity_type_t etype = SK_ENTITY_NONE;
@@ -1046,7 +1042,7 @@ sk_ep_t* _ep_create(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     ep->txns    = fdlist_create();
     ep->ntxn    = 0;
     ep->flags   = 0;
-    ep->start   = SK_TIME_NOW();
+    ep->start   = sk_time_ms();
     ep->fd      = -1;
     SK_ASSERT(ep->entity);
 
@@ -1058,7 +1054,7 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
                                      const sk_service_t*    service,
                                      const sk_entity_t*     entity,
                                      const sk_ep_handler_t* handler,
-                                     unsigned long long     start,
+                                     ulong_t                start,
                                      sk_ep_cb_t             cb,
                                      void*                  ud,
                                      const void*            data,
@@ -1175,7 +1171,7 @@ sk_ep_status_t _sk_ep_send(sk_ep_pool_t*         pool,
                            const sk_ep_cb_t      cb,
                            void*                 ud) {
     SK_ASSERT(pool);
-    unsigned long long start = SK_TIME_NOW();
+    ulong_t start = sk_time_ms();
 
     // 1. check
     if (!data || !count) {

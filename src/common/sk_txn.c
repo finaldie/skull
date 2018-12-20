@@ -4,10 +4,10 @@
 
 #include "flibs/flist.h"
 #include "flibs/fmbuf.h"
-#include "flibs/ftime.h"
 #include "flibs/fhash.h"
 
 #include "api/sk_env.h"
+#include "api/sk_time.h"
 #include "api/sk_sched.h"
 #include "api/sk_entity.h"
 #include "api/sk_utils.h"
@@ -18,8 +18,8 @@
 struct sk_txn_task_t {
     uint64_t id;
     // record the time of start and end
-    unsigned long long start;
-    unsigned long long end;   // If end is non-zero, means the task is done
+    ulong_t  start;
+    ulong_t  end;   // If end is non-zero, means the task is done
 
     sk_txn_taskdata_t task_data;
 
@@ -50,7 +50,7 @@ struct sk_txn_t {
     int             complete_tasks;
 
     // Unit: micro-second
-    unsigned long long  start_time;
+    ulong_t         start_time;
 
     sk_txn_state_t  state;
 
@@ -71,7 +71,7 @@ sk_txn_task_t* _sk_txn_task_create(
 
     sk_txn_task_t* task = calloc(1, sizeof(*task));
     task->id    = task_id;
-    task->start = ftime_gettime();
+    task->start = sk_time_us();
 
     if (task_data) {
         task->task_data = *task_data;
@@ -107,7 +107,7 @@ sk_txn_t* sk_txn_create(sk_workflow_t* wf, sk_entity_t* entity)
     txn->workflow_idx  = flist_new_iter(wf->modules);
     txn->task_tbl      = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
     txn->latest_taskid = 0;
-    txn->start_time    = ftime_gettime();
+    txn->start_time    = sk_time_us();
     txn->state         = SK_TXN_INIT;
     txn->transaction   = sk_mbuf_create(SK_TXN_DEFAULT_INIT_SIZE,
                                         SK_TXN_DEFAULT_MAX_SIZE);
@@ -254,13 +254,13 @@ int sk_txn_is_last_module(const sk_txn_t* txn)
     return txn->current == sk_workflow_last_module(txn->workflow);
 }
 
-unsigned long long sk_txn_starttime(const sk_txn_t* txn) {
+ulong_t sk_txn_starttime(const sk_txn_t* txn) {
     return txn->start_time;
 }
 
-unsigned long long sk_txn_alivetime(const sk_txn_t* txn)
+ulong_t sk_txn_alivetime(const sk_txn_t* txn)
 {
-    return ftime_gettime() - txn->start_time;
+    return sk_time_us() - txn->start_time;
 }
 
 void sk_txn_setudata(sk_txn_t* txn, const void* data)
@@ -314,7 +314,7 @@ void sk_txn_task_setcomplete(sk_txn_t* txn, uint64_t task_id,
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
 
-    task->end = ftime_gettime();
+    task->end = sk_time_us();
     task->status = status;
 
     txn->complete_tasks++;
@@ -337,14 +337,14 @@ sk_txn_taskdata_t* sk_txn_taskdata(const sk_txn_t* txn, uint64_t task_id)
     return &task->task_data;
 }
 
-unsigned long long sk_txn_task_starttime(const sk_txn_t* txn, uint64_t task_id) {
+ulong_t sk_txn_task_starttime(const sk_txn_t* txn, uint64_t task_id) {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
 
     return task->start;
 }
 
-unsigned long long sk_txn_task_lifetime(const sk_txn_t* txn, uint64_t task_id)
+ulong_t sk_txn_task_lifetime(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -356,7 +356,7 @@ unsigned long long sk_txn_task_lifetime(const sk_txn_t* txn, uint64_t task_id)
     return task->end - task->start;
 }
 
-unsigned long long sk_txn_task_livetime(const sk_txn_t* txn, uint64_t task_id)
+ulong_t sk_txn_task_livetime(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -365,7 +365,7 @@ unsigned long long sk_txn_task_livetime(const sk_txn_t* txn, uint64_t task_id)
     if (task->status != SK_TXN_TASK_RUNNING) {
         return task->end - task->start;
     } else {
-        return ftime_gettime() - task->start;
+        return sk_time_us() - task->start;
     }
 }
 
@@ -437,8 +437,8 @@ int sk_txn_timeout(const sk_txn_t* txn)
         return 0;
     }
 
-    unsigned long long alivetime_ms = sk_txn_alivetime(txn) / 1000;
-    if (alivetime_ms > (unsigned long long)timeout) {
+    ulong_t alivetime_ms = sk_txn_alivetime(txn) / SK_US_PER_MS;
+    if (alivetime_ms > (ulong_t)timeout) {
         return 1;
     }
 
