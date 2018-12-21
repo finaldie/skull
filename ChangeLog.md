@@ -1,3 +1,8 @@
+* 2018-12-21 1.4.1
+  * Engine
+    * **New:** Introduce tracing level into `sk_malloc`
+  * CLI
+    * **Enhancement:** `skull-trace` refine output and optimize tracing performance
 * 2018-12-17 1.3.3
   * Engine
     * **New:** Expose clock status in admin module
