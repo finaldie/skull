@@ -242,10 +242,13 @@ void _sk_module_init(sk_core_t* core)
 
         SK_LOG_SETCOOKIE("module.%s", module_name);
         if (module->init(module->md)) {
-            SK_LOG_FATAL(core->logger, "Initialize module %s failed, ABORT!", module_name);
+            SK_LOG_FATAL(core->logger, "Initialize module %s failed, ABORT!",
+                         module_name);
             exit(1);
         }
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+
+        sk_mem_dump("ENGINE-INIT-MODULE-DONE-%s", module_name);
     }
 
     fhash_str_iter_release(&iter);
@@ -321,6 +324,7 @@ void _sk_service_init(sk_core_t* core)
             exit(1);
         }
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+        sk_mem_dump("ENGINE-INIT-SERVICE-DONE-%s", service_name);
     }
 
     fhash_str_iter_release(&srv_iter);
@@ -473,7 +477,7 @@ void _sk_init_coreinfo(sk_core_t* core)
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
-// execution orders, DO NOT modify the calling order before fully understand it.
+// execution orders, DO NOT modify the order before fully understand it.
 void sk_core_init(sk_core_t* core)
 {
     core->status = SK_CORE_INIT;
@@ -498,24 +502,31 @@ void sk_core_init(sk_core_t* core)
 
     // 5. init system level parameters
     _sk_init_sys(core);
+    sk_mem_dump("ENGINE-INIT-SYS-DONE");
 
     // 6. loader user loaders
     _sk_init_user_loaders(core);
+    sk_mem_dump("ENGINE-INIT-LOADER-DONE");
 
     // 7. init global monitor
     _sk_init_moniter(core);
+    sk_mem_dump("ENGINE-INIT-MONITORING-DONE");
 
     // 8. init engines
     _sk_setup_engines(core);
+    sk_mem_dump("ENGINE-INIT-ENGINES-DONE");
 
     // 9. init admin
     _sk_init_admin(core);
+    sk_mem_dump("ENGINE-INIT-ADMIN-DONE");
 
     // 10. load services
     _sk_setup_services(core);
+    sk_mem_dump("ENGINE-INIT-SERVICES-DONE");
 
     // 11. load workflows and related drivers
     _sk_setup_workflows(core);
+    sk_mem_dump("ENGINE-INIT-WORKFLOWS-DONE");
 
     // 12. fill up static information
     _sk_init_coreinfo(core);

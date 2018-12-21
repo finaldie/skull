@@ -30,8 +30,13 @@ ADDR2LINE_CMD  = "addr2line -e {} -fpC {}"
 
 MEMLEAK_THRESHOLD = 10 # N times larger than avg latency
 
+NUM_OF_ADDR       = 3
+
+NUM_OF_PROCESSED  = 100
+
 # =========== Global non-static variables ===========
 DEBUG = False
+EXTRACT = False
 
 TRACING_START_TIME = 0
 TRACING_END_TIME   = 0
@@ -83,13 +88,18 @@ CrossScope map for recording how many data are transfer from one scope to
 
 CrossScope = {
     '0xfdabb01': {
+        'count' : 10,
+        'alloced_in' : 'skull.core',
         'alloced': {
             node: 'skull-engine',
+            naddr: 0x7faad,
             from: 'sk_init at main.c:10',
             sz: 1024,
         },
+        'freed_in': 'skull.core',
         'freed': {
             node: 'skull-engine',
+            naddr: 0x4dacd,
             from: 'sk_release at main.c:20',
             sz: 1024,
         },
@@ -155,7 +165,7 @@ def loadAddrMaps(pid:int):
         if len(varList) < 6:
             continue
 
-        range:str = varList[0]
+        range:str    = varList[0]
         pathName:str = varList[5]
         if DEBUG: print("range: {} ,pathName: {}".format(range, pathName))
 
@@ -174,7 +184,7 @@ def loadAddrMaps(pid:int):
     if DEBUG: pprint.pprint(maps) # debug
     return maps
 
-def recordAction(lineArray, addrMeta, sAddr, hrAddr):
+def recordAction(lineArray, addrMeta, sAddr):
     proto      = lineArray[IDX_PROTO] # e.g. malloc, free..
     timeNs     = float(lineArray[IDX_TIME])
     tag        = lineArray[IDX_TAG]   # e.g. master:skull.core
@@ -192,7 +202,7 @@ def recordAction(lineArray, addrMeta, sAddr, hrAddr):
     details:dict = block.setdefault('details', {})
 
     if proto in PROTOCOL_ALLOC:
-        createRecord(scopeName, block, timeNs, dataAddr, int(dataSz), pathName, hrAddr, sAddr, nAddr)
+        createRecord(scopeName, block, timeNs, dataAddr, int(dataSz), pathName, sAddr, nAddr)
 
     elif proto == PROTOCOL_REALLOC:
         # 1. Split old and new size and pointers
@@ -205,13 +215,13 @@ def recordAction(lineArray, addrMeta, sAddr, hrAddr):
 
         # 2. update counters and detail.local accordingly
         if oldPtr == '(nil)': # pure allocation
-            createRecord(scopeName, block, timeNs, newPtr, newSz, pathName, hrAddr, sAddr, nAddr)
+            createRecord(scopeName, block, timeNs, newPtr, newSz, pathName, sAddr, nAddr)
         elif newPtr == '(nil)': # pure free
-            removeRecord(scopeName, block, timeNs, oldPtr, oldSz, pathName, hrAddr, sAddr, nAddr)
+            removeRecord(scopeName, block, timeNs, oldPtr, oldSz, pathName, sAddr, nAddr)
         else: # movement
             if oldPtr != newPtr: # data moved
-                createRecord(scopeName, block, timeNs, newPtr, newSz, pathName, hrAddr, sAddr, nAddr)
-                removeRecord(scopeName, block, timeNs, oldPtr, oldSz, pathName, hrAddr, sAddr, nAddr)
+                createRecord(scopeName, block, timeNs, newPtr, newSz, pathName, sAddr, nAddr)
+                removeRecord(scopeName, block, timeNs, oldPtr, oldSz, pathName, sAddr, nAddr)
             else: # data not moved, buffer got expanded
                 detail = details.get(oldPtr)
 
@@ -222,12 +232,11 @@ def recordAction(lineArray, addrMeta, sAddr, hrAddr):
                     block['usage'] += diffSz
 
     else: # free action
-        removeRecord(scopeName, block, timeNs, dataAddr, int(dataSz), pathName, hrAddr, sAddr, nAddr)
+        removeRecord(scopeName, block, timeNs, dataAddr, int(dataSz), pathName, sAddr, nAddr)
 
-def createRecordData(timeSec:float, dataSz:int, pathName, hrAddr, sAddr, nAddr):
+def createRecordData(timeSec:float, dataSz:int, pathName, sAddr, nAddr):
     return {
         'node' : pathName,
-        'from' : hrAddr,
         'sz'   : dataSz,
         'saddr': sAddr,
         'naddr': nAddr,
@@ -235,19 +244,21 @@ def createRecordData(timeSec:float, dataSz:int, pathName, hrAddr, sAddr, nAddr):
         'start': time.clock_gettime(time.CLOCK_MONOTONIC),
     }
 
-def createRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, hrAddr, sAddr, nAddr):
+def createRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, sAddr, nAddr):
     # 1. update counters
     block['usage']  += dataSz
     block['nalloc'] += 1
 
     # 2. update details.location
     details = block.get('details')
-    details[dataAddr] = createRecordData(timeNs, dataSz, pathName, hrAddr, sAddr, nAddr)
+    details[dataAddr] = createRecordData(timeNs, dataSz, pathName, sAddr, nAddr)
 
     # 3. update mem stat
-    recordMemStat(scopeName, pathName, hrAddr, sAddr, True, dataSz)
+    recordMemStat(scopeName, pathName, sAddr, nAddr, True, dataSz)
 
-def removeRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, hrAddr, sAddr, nAddr):
+def removeRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, sAddr, nAddr):
+    global DEBUG
+
     if dataAddr == "(nil)":
         return
 
@@ -259,13 +270,14 @@ def removeRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, 
     # 2. If found, update counters
     if detail is None:
         # ignore
-        print("Unmatched free: {}, try to free it cross scope".format(dataAddr))
-        collectCrossScope(scopeName, timeNs, dataAddr, dataSz, pathName, hrAddr, sAddr, nAddr)
+        if DEBUG: print("Unmatched free: {}, try to free it cross scope".format(dataAddr))
+        collectCrossScope(scopeName, timeNs, dataAddr, dataSz, pathName, sAddr, nAddr)
         return
 
     # 3. Record stat. Notes: need to use the address information from allocation
     # block
-    recordMemStat(scopeName, pathName, detail['from'], detail['saddr'], False, dataSz, timeNs - detail['time'])
+    recordMemStat(scopeName, pathName, detail['saddr'], detail['naddr'],
+            False, dataSz, timeNs - detail['time'])
 
     # 4. Update counters and remove the record from dict
     block['usage']   -= int(dataSz)
@@ -273,7 +285,7 @@ def removeRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, 
 
     details.pop(dataAddr)
 
-def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, hrAddr, sAddr, nAddr):
+def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, sAddr, nAddr):
     for name in MemMap:
         block = MemMap[name]
 
@@ -291,7 +303,7 @@ def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, hrAddr, 
                 CrossScope[key] = {
                     'alloced'   : record,
                     'alloced_in': name,
-                    'freed': createRecordData(timeNs, dataSz, pathName, hrAddr, sAddr, nAddr),
+                    'freed': createRecordData(timeNs, dataSz, pathName, sAddr, nAddr),
                     'freed_in'  : rawScopeName,
                     'count'     : 1
                 }
@@ -299,21 +311,21 @@ def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, hrAddr, 
                 crossScopeRecord['count'] += 1
 
             print(" - Cross scope data freed: {}".format(dataAddr))
-            removeRecord(name, block, timeNs, dataAddr, dataSz, pathName, hrAddr, sAddr, nAddr)
+            removeRecord(name, block, timeNs, dataAddr, dataSz, pathName, sAddr, nAddr)
             break
 
-def _createMemStat(node, hrAddr):
+def _createMemStat(node, nAddr):
     return {
         'usage'  : 0,
         'nalloc' : 0,
         'ndalloc': 0,
         'node'   : node,
-        'from'   : hrAddr,
+        'nAddr'  : nAddr,
         'cost'   : 0.0,
         'maxCost': -1.0,
     }
 
-def recordMemStat(scopeName, node, hrAddr, sAddr, isAlloc:bool, dataSz, cost=None):
+def recordMemStat(scopeName, node, sAddr, nAddr, isAlloc:bool, dataSz, cost=None):
     entry = MemStat.get(sAddr)
     if entry is None:
         if isAlloc is False: return
@@ -325,7 +337,7 @@ def recordMemStat(scopeName, node, hrAddr, sAddr, isAlloc:bool, dataSz, cost=Non
     if block is None:
         if isAlloc is False: return
 
-        entry[scopeName] = _createMemStat(node, hrAddr)
+        entry[scopeName] = _createMemStat(node, nAddr)
         block = entry[scopeName]
 
     if isAlloc:
@@ -371,7 +383,7 @@ def _reportMemStat():
                 'nalloc'  : block['nalloc'],
                 'ndalloc' : block['ndalloc'],
                 'node'    : os.path.basename(block['node']),
-                'from'    : block['from']
+                'from'    : addr2Line(block['node'], block['nAddr'])
             }
 
             rawList.append(record)
@@ -405,14 +417,20 @@ def _reportCrossScope():
     for key in CrossScope:
         detail = CrossScope[key]
 
+        alloced_from = addr2Line(detail['alloced']['node'],
+                                 detail['alloced']['naddr']).replace('\n', '')
+
+        freed_from = addr2Line(detail['freed']['node'],
+                               detail['freed']['naddr']).replace('\n', '')
+
         record = {
             'count'       : detail['count'],
             'size'        : detail['alloced']['sz'],
             'usage'       : detail['alloced']['sz'] * detail['count'],
             'alloced_in'  : detail['alloced_in'],
-            'alloced_from': str(detail['alloced']['from']).replace('\n', ''),
+            'alloced_from': alloced_from,
             'freed_in'    : detail['freed_in'],
-            'freed_from'  : str(detail['freed']['from']).replace('\n', ''),
+            'freed_from'  : freed_from,
         }
 
         rawList.append(record)
@@ -436,7 +454,8 @@ def _reportCrossScope():
             record['usage'], record['size'], record['count'],
             record['alloced_in'], record['freed_in']))
 
-        print("\nAlloced from: {}".format(record['alloced_from']))
+        print()
+        print("Alloced from: {}".format(record['alloced_from']))
         print("Freed   from: {}".format(record['freed_from']))
         print("{:-^80}".format(''))
 
@@ -496,10 +515,12 @@ def _reportMemLeak():
         avgMs = 'n/a' if avgNs < 0 else "%.2f" % (avgNs / 1000000)
         maxMs = 'n/a' if maxNs < 0 else "%.2f" % (maxNs / 1000000)
 
+        allocated_from = addr2Line(block['node'], block['naddr'])
+
         print(fmt.format(
             reason, latencyMs, avgMs, maxMs, block['sz'], memStat['nalloc'],
             memStat['ndalloc'], scopeName, os.path.basename(block['node']),
-            block['from']), end = '')
+            allocated_from), end = '')
 
     print("\nTotal {} data blocks are hided\n".format(hidenCnt))
 
@@ -521,6 +542,32 @@ def report():
         REPORT_END_TIME - REPORT_START_TIME
     ))
 
+def addr2Line(pathName, nAddr):
+    global DEBUG
+
+    output = subprocess.check_output(
+                ADDR2LINE_CMD.format(pathName, nAddr), shell=True)
+
+    hrAddr:str = output.decode('UTF-8')
+
+    return hrAddr
+
+
+def printTracing(lineArray, lineno, node, nAddr):
+    global EXTRACT
+
+    if EXTRACT:
+        hrAddr = addr2Line(node, nAddr)
+
+        lineArray[IDX_RET_ADDR] = (
+                hrAddr if not hrAddr.startswith('??') else "{}\n".format(node))
+
+        print(" ".join(lineArray), end = '')
+
+    elif lineno % NUM_OF_PROCESSED == 0:
+        print("#", end = '')
+        sys.stdout.flush()
+
 def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
     global DEBUG
     global TRACING_START_TIME
@@ -535,6 +582,8 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
         except Exception as e:
             print("Error: Cannot open {}: {}".format(inputFile, str(e)))
             raise
+
+    lineno = 0
 
     while True:
         try:
@@ -559,32 +608,26 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
             if DEBUG: print("skip line, no enough items per line: {}".format(line));
             continue
 
+        lineno += 1
         proto = array[IDX_PROTO]    # proto like malloc/calloc
-        addr  = array[IDX_RET_ADDR] # function return address
+        sAddr = array[IDX_RET_ADDR] # function return address
 
-        res:tuple = _findAddr(addrMaps, addr)
+        res:tuple = _findAddr(addrMaps, sAddr)
         if res[0] is None:
-            print("Warning: cannot find address in maps: {}".format(addr))
+            print("Warning: cannot find address in maps: {}".format(sAddr))
             print("{}".format(line), end = '')
         else:
             if DEBUG: print("Found addr {} in {}, base: {}, range: {} -> {}".format(
-                addr, res[0], res[1], res[2], res[3]))
+                sAddr, res[0], res[1], res[2], res[3]))
 
             pathName = res[0] # e.g. /lib/x86_64-linux-gnu/ld-2.27.so
             newAddr  = res[3] # Re-calculated address
 
             try:
-                output = subprocess.check_output(
-                        ADDR2LINE_CMD.format(pathName, newAddr), shell=True)
-
-                if DEBUG: print("raw addr2line output: {}".format(output))
-                hrAddr:str = output.decode('UTF-8')
-
-                array[IDX_RET_ADDR] = hrAddr if not hrAddr.startswith('??') else "{}\n".format(pathName)
-                print(" ".join(array), end = '')
+                printTracing(array, lineno, pathName, newAddr)
 
                 # Collect all usage data into global dict
-                recordAction(array, res, addr, hrAddr)
+                recordAction(array, res, sAddr)
 
             except KeyboardInterrupt:
                 if DEBUG: print("KeyboardInterrupt, exit...")
@@ -624,7 +667,7 @@ def _findAddr(addrMaps:dict, saddr:str):
 ################################################################################
 def usage():
     print ("usage:")
-    print ("  skull-addr-remapping.py -e exe -p pid [-f inputDataFile] [-a addr] [-d]")
+    print ("  skull-addr-remapping.py -e exe -p pid [-f inputDataFile] [-a addr] [-d] [-D]")
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -632,11 +675,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        pid = 0
+        pid   = 0
         input = None
-        addr = None
+        addr  = None
         executable = ""
-        opts, args = getopt.getopt(sys.argv[1:7], 'e:p:f:a:d')
+        opts, args = getopt.getopt(sys.argv[1:7], 'e:p:f:a:dD')
 
         for op, value in opts:
             if op == "-e":
@@ -648,6 +691,8 @@ if __name__ == "__main__":
             elif op == "-a":
                 addr = value
             elif op == "-d":
+                EXTRACT = True
+            elif op == "-D":
                 DEBUG = True
 
         # Now run the process func according the mode
@@ -663,10 +708,7 @@ if __name__ == "__main__":
             pathName = res[0] # e.g. /lib/x86_64-linux-gnu/ld-2.27.so
             newAddr  = res[3]
 
-            cmd = ADDR2LINE_CMD.format(pathName, newAddr)
-            output = subprocess.check_output(cmd, shell=True)
-
-            hrAddr:str = output.decode('UTF-8')
+            hrAddr:str = addr2Line(pathName, newAddr)
             print("Addr2line output after utf-8 decode: {}".format(hrAddr))
         else:
             doAddrRemapping(addrMaps, executable, input)
