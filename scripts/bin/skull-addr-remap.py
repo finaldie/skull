@@ -30,7 +30,7 @@ ADDR2LINE_CMD  = "addr2line -e {} -fpC {}"
 
 MEMLEAK_THRESHOLD = 10 # N times larger than avg latency
 
-NUM_OF_ADDR       = 3
+NUM_OF_FRAME      = 3
 
 NUM_OF_PROCESSED  = 100
 
@@ -58,12 +58,12 @@ MemMap = {
         details: {
             '0xFF45aac': {
                 node: 'skull-engine',
-                from: 'sk_init at main.c:10',
-                time: 99123.123456789,
-                start: 99123.123456789,
                 sz: 1024,
                 saddr: 0x7524fabcd,
                 naddr: 0x2524f,
+                frames: [saddr1, saddr2, ...],
+                time: 99123.123456789,
+                start: 99123.123456789,
             },
             ...
         }
@@ -93,14 +93,14 @@ CrossScope = {
         'alloced': {
             node: 'skull-engine',
             naddr: 0x7faad,
-            from: 'sk_init at main.c:10',
+            frames: [saddr1, saddr2, ...]
             sz: 1024,
         },
         'freed_in': 'skull.core',
         'freed': {
             node: 'skull-engine',
             naddr: 0x4dacd,
-            from: 'sk_release at main.c:20',
+            frames: [saddr1, saddr2, ...]
             sz: 1024,
         },
     }
@@ -121,6 +121,7 @@ MemStat = {
             ndalloc: 10,
             node: skull-engine,
             naddr: 0x7faad,
+            frames: [saddr1, saddr2, ...]
             cost: 12341241.123456789,
             maxCost: 1000.123456789,
         },
@@ -606,7 +607,7 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
             continue
 
         array = line.split()
-        if len(array) != ITEMS_PER_LINE:
+        if len(array) < ITEMS_PER_LINE:
             if DEBUG: print("skip line, no enough items per line: {}".format(line));
             continue
 

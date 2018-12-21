@@ -45,8 +45,15 @@ const sk_mem_stat_t* sk_mem_stat_static();
  */
 const sk_mem_stat_t* sk_mem_stat_core();
 
-bool sk_mem_trace_status();
-void sk_mem_trace(bool enabled);
+int sk_mem_trace_level();
+
+/**
+ * Tracing Level
+ *  0: Disable
+ *  1: Caller only
+ *  (2-N): Caller
+ */
+void sk_mem_trace(int level);
 
 /**
  * Dump all the mem stats into log

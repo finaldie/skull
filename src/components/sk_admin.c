@@ -8,6 +8,7 @@
 #include <strings.h>
 #include <stdarg.h>
 #include <time.h>
+#include <errno.h>
 
 #ifdef SKULL_JEMALLOC_LINKED
 # include "jemalloc/jemalloc.h"
@@ -32,7 +33,7 @@
     " - counter | metrics\n" \
     " - last\n" \
     " - info | status\n" \
-    " - memory [detail|full|trace=true|trace=false]\n"
+    " - memory [detail|full|trace=n]\n"
 
 #define ADMIN_CMD_HELP            "help"
 #define ADMIN_CMD_METRICS         "metrics"
@@ -591,7 +592,7 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
 
     _append_response(txn, "\n================== Summary ===================\n");
     _append_response(txn, "Total Allocated: %zu\n", total_allocated);
-    _append_response(txn, "Tracing Enabled: %d\n\n", sk_mem_trace_status());
+    _append_response(txn, "Tracing Level:   %d\n\n", sk_mem_trace_level());
 }
 
 static
@@ -604,8 +605,33 @@ void _process_memory_allocator(sk_txn_t* txn) {
 }
 
 static
-void _process_memory(sk_admin_data_t* admin_data, sk_txn_t* txn)
-{
+int _parse_tracing_level(char* subcmd) {
+    // Extract first token 'trace'
+    char* token = strsep(&subcmd, "=");
+    // Extract second token 'number of level'
+    token = strsep(&subcmd, "=");
+
+    errno = 0;
+    int lv = (int)strtol(token, NULL, 10);
+    if (errno) {
+	return -1;
+    }
+
+    return lv;
+}
+
+void _process_memory_tracing(sk_txn_t* txn, const char* subcmd) {
+    int lv = _parse_tracing_level((char*)subcmd);
+    if (lv < 0) {
+        _append_response(txn, "Error: Invalid tracing level\n\n");
+	return;
+    }
+
+    sk_mem_trace(lv);
+}
+
+static
+void _process_memory(sk_admin_data_t* admin_data, sk_txn_t* txn) {
     const char* subcommand = NULL;
     if (admin_data->argc == 1) {
         subcommand = "info";
@@ -617,11 +643,8 @@ void _process_memory(sk_admin_data_t* admin_data, sk_txn_t* txn)
         _process_memory_info(txn, false);
     } else if (0 == strcasecmp("detail", subcommand)) {
         _process_memory_info(txn, true);
-    } else if (0 == strcasecmp("trace=true", subcommand)) {
-        sk_mem_trace(true);
-        _process_memory_info(txn, false);
-    } else if (0 == strcasecmp("trace=false", subcommand)) {
-        sk_mem_trace(false);
+    } else if (0 == strncasecmp("trace=", subcommand, 6)) {
+	_process_memory_tracing(txn, subcommand);
         _process_memory_info(txn, false);
     } else if (0 == strcasecmp("full", subcommand)) {
         _process_memory_info(txn, true);
