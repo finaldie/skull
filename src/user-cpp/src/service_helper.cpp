@@ -92,6 +92,7 @@ void _release_jobdata(void* ud)
     delete jobdata;
 }
 
+// Pending job
 int ServiceImp::createJob(uint32_t delayed, JobR job, JobError jobErr) const {
     ServiceJobData* jobdata = new ServiceJobData(job, jobErr);
 
@@ -114,20 +115,33 @@ int ServiceImp::createJob(JobW job, JobError jobErr) const {
     return createJob((uint32_t)0, job, jobErr);
 }
 
-int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNPR job,
-                          JobNPError jobErr) const {
+// No pending job
+int ServiceImp::createJob(uint32_t delayed, uint32_t interval,int bioIdx,
+                          JobNPR job, JobNPError jobErr) const {
     ServiceJobData* jobdata = new ServiceJobData(job, jobErr);
 
-    return skull_service_job_create_np(this->svc, delayed, SKULL_JOB_READ,
-                    _job_triggered_np, jobdata, _release_jobdata, bioIdx);
+    return skull_service_job_create_np(this->svc, delayed, interval,
+                    SKULL_JOB_READ, _job_triggered_np, jobdata,
+                    _release_jobdata, bioIdx);
+}
+
+int ServiceImp::createJob(uint32_t delayed, uint32_t interval, int bioIdx,
+                          JobNPW job, JobNPError jobErr) const {
+    ServiceJobData* jobdata = new ServiceJobData(job, jobErr);
+
+    return skull_service_job_create_np(this->svc, delayed, interval,
+                    SKULL_JOB_WRITE, _job_triggered_np, jobdata,
+                    _release_jobdata, bioIdx);
+}
+
+int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNPR job,
+                          JobNPError jobErr) const {
+    return createJob(delayed, (uint32_t)0, bioIdx, job, jobErr);
 }
 
 int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNPW job,
                           JobNPError jobErr) const {
-    ServiceJobData* jobdata = new ServiceJobData(job, jobErr);
-
-    return skull_service_job_create_np(this->svc, delayed, SKULL_JOB_WRITE,
-                    _job_triggered_np, jobdata, _release_jobdata, bioIdx);
+    return createJob(delayed, (uint32_t)0, bioIdx, job, jobErr);
 }
 
 int ServiceImp::createJob(uint32_t delayed, JobNPR job, JobNPError jobErr) const {

@@ -135,6 +135,7 @@ static
 sk_service_job_ret_t
 _create_job(sk_service_t*       service,
             uint32_t            delayed,
+            uint32_t            interval,
             sk_service_job_rw_t type,
             sk_service_job      job,
             job_data_t*         jobdata,
@@ -152,7 +153,7 @@ _create_job(sk_service_t*       service,
     SK_ENV_POS_SAVE(SK_ENV_POS_CORE, NULL);
 
     sk_obj_t* arg = _create_job_arg(jobdata);
-    ret = sk_service_job_create(service, delayed, type, job, arg, bidx);
+    ret = sk_service_job_create(service, delayed, interval, type, job, arg, bidx);
 
     if (ret != SK_SRV_JOB_OK) {
         sk_obj_destroy(arg);
@@ -248,7 +249,7 @@ skull_service_job_create(skull_service_t* service, uint32_t delayed,
     sk_service_job_rw_t job_rw = type == SKULL_JOB_READ
                                     ? SK_SRV_JOB_READ : SK_SRV_JOB_WRITE;
 
-    sk_service_job_ret_t sret = _create_job(sk_svc, delayed,
+    sk_service_job_ret_t sret = _create_job(sk_svc, delayed, 0,
                                     job_rw, _job_cb, jobdata, 0);
 
     if (sret != SK_SRV_JOB_OK) {
@@ -266,9 +267,14 @@ create_job_error:
 }
 
 skull_job_ret_t
-skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
-                            skull_job_rw_t type, skull_job_np_t job,
-                            void* ud, skull_job_udfree_t udfree, int bidx)
+skull_service_job_create_np(skull_service_t* service,
+                            uint32_t delayed,
+                            uint32_t interval,
+                            skull_job_rw_t type,
+                            skull_job_np_t job,
+                            void* ud,
+                            skull_job_udfree_t udfree,
+                            int bidx)
 {
     skull_job_ret_t ret = SKULL_JOB_OK;
 
@@ -292,7 +298,7 @@ skull_service_job_create_np(skull_service_t* service, uint32_t delayed,
     jobdata->ud         = ud;
 
     sk_service_job_ret_t sret =
-        _create_job(sk_svc, delayed, job_rw, _job_cb, jobdata, bidx);
+        _create_job(sk_svc, delayed, interval, job_rw, _job_cb, jobdata, bidx);
 
     if (sret != SK_SRV_JOB_OK) {
         ret = SKULL_JOB_ERROR_BIO;

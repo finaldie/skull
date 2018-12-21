@@ -492,6 +492,7 @@ skull_service_job_create(skull_service_t*   svc,
 skull_job_ret_t
 skull_service_job_create_np(skull_service_t*   svc,
                             uint32_t           delayed,
+                            uint32_t           interval,
                             skull_job_rw_t     type,
                             skull_job_np_t     job,
                             void*              ud,

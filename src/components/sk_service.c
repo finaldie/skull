@@ -557,8 +557,8 @@ void sk_service_api_complete(const sk_service_t* service,
     // If api task done, schedule it back to caller (a worker) to run task_cb
     sk_print("sk_txn task has all set, trigger task_cb\n");
 
-    sk_entity_t* entity = sk_txn_entity(txn);
-    sk_sched_t* api_caller = sk_entity_sched(entity);
+    sk_entity_t* entity     = sk_txn_entity(txn);
+    sk_sched_t*  api_caller = sk_entity_sched(entity);
 
     // Notes: Do not complete the svc task again, here we set svc_task_done to
     //  `false`
@@ -669,6 +669,7 @@ int sk_service_iocall(sk_service_t* service, sk_txn_t* txn,
 sk_service_job_ret_t
 sk_service_job_create(sk_service_t*       service,
                       uint32_t            delayed,
+                      uint32_t            interval,
                       sk_service_job_rw_t type,
                       sk_service_job      job,
                       const sk_obj_t*     ud,
@@ -700,17 +701,14 @@ sk_service_job_create(sk_service_t*       service,
 
     sk_obj_t* param_obj = sk_obj_create(opt, cb_data);
 
-    // 2. Create sk_timer with callback data or create job immediately
-    if (delayed > 0) {
-        sk_timersvc_t* timersvc = SK_ENV_TMSVC;
-        sk_timer_t* timer =
-            sk_timersvc_timer_create(
-                timersvc, jobdata->entity, delayed, 0, _job_triggered, param_obj);
-        SK_ASSERT(timer);
-    } else {
-        _job_triggered(jobdata->entity, 1, param_obj);
-        sk_obj_destroy(param_obj);
-    }
+    // 2. Create sk_timer with callback data
+    sk_timersvc_t* timersvc = SK_ENV_TMSVC;
+    sk_timer_t* timer =
+        sk_timersvc_timer_create(
+            timersvc, jobdata->entity, delayed, interval, _job_triggered,
+            param_obj);
+
+    SK_ASSERT(timer);
 
     // 3. Record metrics
     sk_metrics_global.srv_timer_emit.inc(1);

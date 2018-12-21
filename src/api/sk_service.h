@@ -188,6 +188,7 @@ int sk_service_iocall(sk_service_t*, sk_txn_t* txn, const char* api_name,
 sk_service_job_ret_t
 sk_service_job_create(sk_service_t*       svc,
                       uint32_t            delayed,
+                      uint32_t            interval,
                       sk_service_job_rw_t type,
                       sk_service_job      job,
                       const sk_obj_t*     ud,

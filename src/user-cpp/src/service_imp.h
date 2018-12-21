@@ -22,6 +22,8 @@ public:
     int createJob(JobR, JobError) const;
     int createJob(JobW, JobError) const;
 
+    int createJob(uint32_t delayed, uint32_t interval, int bioIdx, JobNPR, JobNPError) const;
+    int createJob(uint32_t delayed, uint32_t interval, int bioIdx, JobNPW, JobNPError) const;
     int createJob(uint32_t delayed, int bioIdx, JobNPR, JobNPError) const;
     int createJob(uint32_t delayed, int bioIdx, JobNPW, JobNPError) const;
     int createJob(int bioIdx, JobNPR, JobNPError) const;
