@@ -75,6 +75,16 @@ int ServiceImp::createJob(JobW job, JobError err) const {
     return 0;
 }
 
+int ServiceImp::createJob(uint32_t delayed, uint32_t interval, int bioIdx,
+                          JobNPR job, JobNPError jobErr) const {
+    return 0;
+}
+
+int ServiceImp::createJob(uint32_t delayed, uint32_t interval, int bioIdx,
+                          JobNPW job, JobNPError jobErr) const {
+    return 0;
+}
+
 int ServiceImp::createJob(uint32_t delayed, int bioIdx, JobNPR job, JobNPError err) const {
     return 0;
 }

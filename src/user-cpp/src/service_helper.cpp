@@ -116,7 +116,7 @@ int ServiceImp::createJob(JobW job, JobError jobErr) const {
 }
 
 // No pending job
-int ServiceImp::createJob(uint32_t delayed, uint32_t interval,int bioIdx,
+int ServiceImp::createJob(uint32_t delayed, uint32_t interval, int bioIdx,
                           JobNPR job, JobNPError jobErr) const {
     ServiceJobData* jobdata = new ServiceJobData(job, jobErr);
 
