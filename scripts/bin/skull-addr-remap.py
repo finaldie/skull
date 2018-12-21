@@ -25,17 +25,19 @@ IDX_PROTO      = LOG_PREFIX + 4
 IDX_DATA_ADDR  = LOG_PREFIX + 5
 IDX_DATA_SIZE  = LOG_PREFIX + 6
 IDX_RET_ADDR   = LOG_PREFIX + 11
+IDX_FRAME_START = LOG_PREFIX + 12
 
 ADDR2LINE_CMD  = "addr2line -e {} -fpC {}"
 
-MEMLEAK_THRESHOLD = 10 # N times larger than avg latency
+MEMLEAK_THRESHOLD  = 10 # N times larger than avg latency
+MEMLEAK_MAX_REPORT = 10
 
-NUM_OF_FRAME      = 3
+MAX_FRAME          = 3  # Besides first caller, how many additional frames
 
-NUM_OF_PROCESSED  = 100
+NUM_OF_PROCESSED   = 100
 
 # =========== Global non-static variables ===========
-DEBUG = False
+DEBUG   = False
 EXTRACT = False
 
 TRACING_START_TIME = 0
@@ -185,7 +187,7 @@ def loadAddrMaps(pid:int):
     if DEBUG: pprint.pprint(maps) # debug
     return maps
 
-def recordAction(lineArray, sAddr, addrMeta):
+def recordAction(lineArray, sAddr, addrMeta, frames):
     proto      = lineArray[IDX_PROTO] # e.g. malloc, free..
     timeNs     = float(lineArray[IDX_TIME])
     tag        = lineArray[IDX_TAG]   # e.g. master:skull.core
@@ -203,7 +205,8 @@ def recordAction(lineArray, sAddr, addrMeta):
     details:dict = block.setdefault('details', {})
 
     if proto in PROTOCOL_ALLOC:
-        createRecord(scopeName, block, timeNs, dataAddr, int(dataSz), pathName, sAddr, nAddr)
+        createRecord(scopeName, block, timeNs, dataAddr, int(dataSz), pathName,
+                sAddr, nAddr, frames)
 
     elif proto == PROTOCOL_REALLOC:
         # 1. Split old and new size and pointers
@@ -216,13 +219,17 @@ def recordAction(lineArray, sAddr, addrMeta):
 
         # 2. update counters and detail.local accordingly
         if oldPtr == '(nil)': # pure allocation
-            createRecord(scopeName, block, timeNs, newPtr, newSz, pathName, sAddr, nAddr)
+            createRecord(scopeName, block, timeNs, newPtr, newSz, pathName,
+                    sAddr, nAddr, frames)
         elif newPtr == '(nil)': # pure free
-            removeRecord(scopeName, block, timeNs, oldPtr, oldSz, pathName, sAddr, nAddr)
+            removeRecord(scopeName, block, timeNs, oldPtr, oldSz, pathName,
+                    sAddr, nAddr, frames)
         else: # movement
             if oldPtr != newPtr: # data moved
-                createRecord(scopeName, block, timeNs, newPtr, newSz, pathName, sAddr, nAddr)
-                removeRecord(scopeName, block, timeNs, oldPtr, oldSz, pathName, sAddr, nAddr)
+                createRecord(scopeName, block, timeNs, newPtr, newSz, pathName,
+                        sAddr, nAddr, frames)
+                removeRecord(scopeName, block, timeNs, oldPtr, oldSz, pathName,
+                        sAddr, nAddr, frames)
             else: # data not moved, buffer got expanded
                 detail = details.get(oldPtr)
 
@@ -233,31 +240,36 @@ def recordAction(lineArray, sAddr, addrMeta):
                     block['usage'] += diffSz
 
     else: # free action
-        removeRecord(scopeName, block, timeNs, dataAddr, int(dataSz), pathName, sAddr, nAddr)
+        removeRecord(scopeName, block, timeNs, dataAddr, int(dataSz), pathName,
+                sAddr, nAddr, frames)
 
-def createRecordData(timeSec:float, dataSz:int, pathName, sAddr, nAddr):
+def createRecordData(timeSec:float, dataSz:int, node, sAddr, nAddr, frames):
     return {
-        'node' : pathName,
-        'sz'   : dataSz,
-        'saddr': sAddr,
-        'naddr': nAddr,
-        'time' : timeSec,
-        'start': time.clock_gettime(time.CLOCK_MONOTONIC),
+        'node'  : node,
+        'sz'    : dataSz,
+        'saddr' : sAddr,
+        'naddr' : nAddr,
+        'frames': frames,
+        'time'  : timeSec,
+        'start' : time.clock_gettime(time.CLOCK_MONOTONIC),
     }
 
-def createRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, sAddr, nAddr):
+def createRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName,
+        sAddr, nAddr, frames):
     # 1. update counters
     block['usage']  += dataSz
     block['nalloc'] += 1
 
     # 2. update details.location
     details = block.get('details')
-    details[dataAddr] = createRecordData(timeNs, dataSz, pathName, sAddr, nAddr)
+    details[dataAddr] = createRecordData(
+            timeNs, dataSz, pathName, sAddr, nAddr, frames)
 
     # 3. update mem stat
-    recordMemStat(scopeName, pathName, sAddr, nAddr, True, dataSz)
+    recordMemStat(scopeName, pathName, sAddr, nAddr, frames, True, dataSz)
 
-def removeRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, sAddr, nAddr):
+def removeRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName,
+        sAddr, nAddr, frames):
     global DEBUG
 
     if dataAddr == "(nil)":
@@ -272,13 +284,14 @@ def removeRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, 
     if detail is None:
         # ignore
         if DEBUG: print("Unmatched free: {}, try to free it cross scope".format(dataAddr))
-        collectCrossScope(scopeName, timeNs, dataAddr, dataSz, pathName, sAddr, nAddr)
+        collectCrossScope(scopeName, timeNs, dataAddr, dataSz, pathName, sAddr,
+                nAddr, frames)
         return
 
     # 3. Record stat. Notes: need to use the address information from allocation
     # block
     recordMemStat(scopeName, pathName, detail['saddr'], detail['naddr'],
-            False, dataSz, timeNs - detail['time'])
+            detail['frames'], False, dataSz, timeNs - detail['time'])
 
     # 4. Update counters and remove the record from dict
     block['usage']   -= int(dataSz)
@@ -286,7 +299,8 @@ def removeRecord(scopeName, block:dict, timeNs, dataAddr, dataSz:int, pathName, 
 
     details.pop(dataAddr)
 
-def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, sAddr, nAddr):
+def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, sAddr,
+        nAddr, frames):
     for name in MemMap:
         block = MemMap[name]
 
@@ -306,7 +320,7 @@ def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, sAddr, n
                     'alloced'   : record,
                     'alloced_in': name,
                     'freed'     : createRecordData(timeNs, dataSz, pathName,
-                                                   sAddr, nAddr),
+                                                   sAddr, nAddr, frames),
                     'freed_in'  : rawScopeName,
                     'count'     : 1
                 }
@@ -314,21 +328,23 @@ def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, sAddr, n
                 crossScopeRecord['count'] += 1
 
             print(" - Cross scope data freed: {}".format(dataAddr))
-            removeRecord(name, block, timeNs, dataAddr, dataSz, pathName, sAddr, nAddr)
+            removeRecord(name, block, timeNs, dataAddr, dataSz, pathName, sAddr,
+                    nAddr, frames)
             break
 
-def _createMemStat(node, nAddr):
+def _createMemStat(node, nAddr, frames):
     return {
         'usage'  : 0,
         'nalloc' : 0,
         'ndalloc': 0,
         'node'   : node,
         'naddr'  : nAddr,
+        'frames' : frames,
         'cost'   : 0.0,
         'maxCost': -1.0,
     }
 
-def recordMemStat(scopeName, node, sAddr, nAddr, isAlloc:bool, dataSz, cost=None):
+def recordMemStat(scopeName, node, sAddr, nAddr, frames, isAlloc:bool, dataSz, cost=None):
     entry = MemStat.get(sAddr)
     if entry is None:
         if isAlloc is False: return
@@ -340,7 +356,7 @@ def recordMemStat(scopeName, node, sAddr, nAddr, isAlloc:bool, dataSz, cost=None
     if block is None:
         if isAlloc is False: return
 
-        entry[scopeName] = _createMemStat(node, nAddr)
+        entry[scopeName] = _createMemStat(node, nAddr, frames)
         block = entry[scopeName]
 
     if isAlloc:
@@ -350,7 +366,7 @@ def recordMemStat(scopeName, node, sAddr, nAddr, isAlloc:bool, dataSz, cost=None
         block['usage']   -= dataSz
         block['ndalloc'] += 1
         block['cost']    += cost
-        block['maxCost']   = max(cost, block['maxCost'])
+        block['maxCost']  = max(cost, block['maxCost'])
 
 def _getMemStat(sAddr, scopeName):
     block = MemStat.get(sAddr)
@@ -483,16 +499,20 @@ def _reportMemLeak():
             latencyNs = (now - timeSec) * 1000000000
 
             if maxNs < 0:
-                rawList.append(("Possible", scopeName, block, memStat, latencyNs, avgNs, maxNs))
+                rawList.append(("Possible", scopeName, block, memStat,
+                    latencyNs, avgNs, maxNs))
             else:
                 if latencyNs > MEMLEAK_THRESHOLD * maxNs:
-                    rawList.append(("Likely", scopeName, block, memStat, latencyNs, avgNs, maxNs))
+                    rawList.append(("Likely", scopeName, block, memStat,
+                        latencyNs, avgNs, maxNs))
                 else:
-                    rawList.append(("Noleak", scopeName, block, memStat, latencyNs, avgNs, maxNs))
+                    rawList.append(("Noleak", scopeName, block, memStat,
+                        latencyNs, avgNs, maxNs))
 
     sortedList = sorted(rawList, key = lambda x: x[0])
 
-    #pprint.pprint(MemMap)
+    global DEBUG
+    if DEBUG: pprint.pprint(MemMap)
 
     title = ['reason', 'ttlMs', 'avgMs', 'maxMs', 'usage', 'nalloc',
             'ndalloc', 'scope', 'node', 'from']
@@ -615,6 +635,10 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
         proto = array[IDX_PROTO]    # proto like malloc/calloc
         sAddr = array[IDX_RET_ADDR] # function return address
 
+        frames = []
+        for i in range(IDX_FRAME_START, IDX_FRAME_START + MAX_FRAME):
+            frames.append(array[i])
+
         res:tuple = _findAddr(addrMaps, sAddr)
 
         if res[0] is None:
@@ -631,7 +655,7 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
                 printTracing(array, lineno, pathName, newAddr)
 
                 # Collect all usage data into global dict
-                recordAction(array, sAddr, res)
+                recordAction(array, sAddr, res, frames)
 
             except KeyboardInterrupt:
                 if DEBUG: print("KeyboardInterrupt, exit...")

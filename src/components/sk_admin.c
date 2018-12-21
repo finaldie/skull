@@ -614,7 +614,7 @@ int _parse_tracing_level(char* subcmd) {
     errno = 0;
     int lv = (int)strtol(token, NULL, 10);
     if (errno) {
-	return -1;
+        return -1;
     }
 
     return lv;
@@ -624,7 +624,7 @@ void _process_memory_tracing(sk_txn_t* txn, const char* subcmd) {
     int lv = _parse_tracing_level((char*)subcmd);
     if (lv < 0) {
         _append_response(txn, "Error: Invalid tracing level\n\n");
-	return;
+        return;
     }
 
     sk_mem_trace(lv);
@@ -644,7 +644,7 @@ void _process_memory(sk_admin_data_t* admin_data, sk_txn_t* txn) {
     } else if (0 == strcasecmp("detail", subcommand)) {
         _process_memory_info(txn, true);
     } else if (0 == strncasecmp("trace=", subcommand, 6)) {
-	_process_memory_tracing(txn, subcommand);
+        _process_memory_tracing(txn, subcommand);
         _process_memory_info(txn, false);
     } else if (0 == strcasecmp("full", subcommand)) {
         _process_memory_info(txn, true);
