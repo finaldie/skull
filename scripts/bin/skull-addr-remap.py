@@ -120,7 +120,7 @@ MemStat = {
             nalloc: 10,
             ndalloc: 10,
             node: skull-engine,
-            from: 'xxx at xxx',
+            naddr: 0x7faad,
             cost: 12341241.123456789,
             maxCost: 1000.123456789,
         },
@@ -184,7 +184,7 @@ def loadAddrMaps(pid:int):
     if DEBUG: pprint.pprint(maps) # debug
     return maps
 
-def recordAction(lineArray, addrMeta, sAddr):
+def recordAction(lineArray, sAddr, addrMeta):
     proto      = lineArray[IDX_PROTO] # e.g. malloc, free..
     timeNs     = float(lineArray[IDX_TIME])
     tag        = lineArray[IDX_TAG]   # e.g. master:skull.core
@@ -292,7 +292,8 @@ def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, sAddr, n
         if dataAddr in block['details']:
             record = block['details'][dataAddr]
             if record['sz'] != dataSz:
-                print(" - Warning: Unmatched size for cross-scope data free: alloced: {}, freed: {}".format(record['sz'], dataSz))
+                print(" - Warning: Unmatched size for cross-scope data free: " \
+                      "alloced: {}, freed: {}".format(record['sz'], dataSz))
 
             allocAddr = record['saddr']
 
@@ -303,7 +304,8 @@ def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, sAddr, n
                 CrossScope[key] = {
                     'alloced'   : record,
                     'alloced_in': name,
-                    'freed': createRecordData(timeNs, dataSz, pathName, sAddr, nAddr),
+                    'freed'     : createRecordData(timeNs, dataSz, pathName,
+                                                   sAddr, nAddr),
                     'freed_in'  : rawScopeName,
                     'count'     : 1
                 }
@@ -320,7 +322,7 @@ def _createMemStat(node, nAddr):
         'nalloc' : 0,
         'ndalloc': 0,
         'node'   : node,
-        'nAddr'  : nAddr,
+        'naddr'  : nAddr,
         'cost'   : 0.0,
         'maxCost': -1.0,
     }
@@ -383,7 +385,7 @@ def _reportMemStat():
                 'nalloc'  : block['nalloc'],
                 'ndalloc' : block['ndalloc'],
                 'node'    : os.path.basename(block['node']),
-                'from'    : addr2Line(block['node'], block['nAddr'])
+                'from'    : addr2Line(block['node'], block['naddr'])
             }
 
             rawList.append(record)
@@ -613,6 +615,7 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
         sAddr = array[IDX_RET_ADDR] # function return address
 
         res:tuple = _findAddr(addrMaps, sAddr)
+
         if res[0] is None:
             print("Warning: cannot find address in maps: {}".format(sAddr))
             print("{}".format(line), end = '')
@@ -627,7 +630,7 @@ def doAddrRemapping(addrMaps:dict, executable:str, inputFile:str):
                 printTracing(array, lineno, pathName, newAddr)
 
                 # Collect all usage data into global dict
-                recordAction(array, res, sAddr)
+                recordAction(array, sAddr, res)
 
             except KeyboardInterrupt:
                 if DEBUG: print("KeyboardInterrupt, exit...")
