@@ -39,15 +39,17 @@
 #define SK_FRAME(n) \
     (n < ____nframe ? ____frames[n] : NULL)
 
-#define SK_MAX_FRAME (5)
-#define SK_FRAME_FMT " %p %p %p"
+#define SK_MAX_FRAME (11)
+#define SK_FRAME_FMT " %p %p %p %p %p %p %p %p %p"
 #define SK_BACKTRACE() \
     int   ____nframe = 0; \
     int   ____max_frame = SK_MIN(imem.tracing_level + 1, SK_MAX_FRAME); \
     void* ____frames[____max_frame]; \
     if (____max_frame > 2) ____nframe = backtrace(____frames, ____max_frame);
 
-#define SK_FRAMES SK_FRAME(2), SK_FRAME(3), SK_FRAME(4)
+#define SK_FRAMES \
+    SK_FRAME(2), SK_FRAME(3), SK_FRAME(4), SK_FRAME(5), SK_FRAME(6), \
+    SK_FRAME(7), SK_FRAME(8), SK_FRAME(9), SK_FRAME(10)
 
 // Macros for logging format
 #define SK_MT_HEADER_FMT "%lu.%lu %s %s:%s.%s - "

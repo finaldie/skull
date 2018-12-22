@@ -32,7 +32,7 @@ ADDR2LINE_CMD  = "addr2line -e {} -fpC {}"
 MEMLEAK_THRESHOLD  = 10 # N times larger than avg latency
 MEMLEAK_MAX_REPORT = 10
 
-MAX_FRAME          = 3  # Besides first caller, how many additional frames
+MAX_FRAME          = 9  # Besides first caller, how many additional frames
 
 NUM_OF_PROCESSED   = 100
 
@@ -402,7 +402,7 @@ def _reportMemStat():
                 'nalloc'  : block['nalloc'],
                 'ndalloc' : block['ndalloc'],
                 'node'    : os.path.basename(block['node']),
-                'from'    : addr2Line(block['node'], block['naddr'])
+                'from'    : addr2line(block['node'], block['naddr'])
             }
 
             rawList.append(record)
@@ -436,10 +436,10 @@ def _reportCrossScope():
     for key in CrossScope:
         detail = CrossScope[key]
 
-        alloced_from = addr2Line(detail['alloced']['node'],
+        alloced_from = addr2line(detail['alloced']['node'],
                                  detail['alloced']['naddr']).replace('\n', '')
 
-        freed_from = addr2Line(detail['freed']['node'],
+        freed_from = addr2line(detail['freed']['node'],
                                detail['freed']['naddr']).replace('\n', '')
 
         record = {
@@ -478,6 +478,39 @@ def _reportCrossScope():
         print("Freed   from: {}".format(record['freed_from']))
         print("{:-^80}".format(''))
 
+def _dumpMemLeakStacks(stacks):
+    for record in stacks:
+        lineno  = record[0]
+        block   = record[1]
+        hrAddr1 = record[2]
+
+        sAddr1  = block['saddr']
+        frames  = block['frames']
+
+        print()
+        print("[{}]".format(lineno))
+
+        title = ['#F', 'Address', 'FrameInfo']
+        fmt   = '{:<3}{:<20}{}'
+        print(fmt.format(*title))
+
+        sz = len(frames)
+        order = reversed(range(0, sz))
+
+        for i in order:
+            sAddri = frames[i]
+            if sAddri == '(nil)':
+                continue
+
+            res:tuple = _findAddr(addrMaps, sAddri)
+
+            node   = res[0] # e.g. /lib/x86_64-linux-gnu/ld-2.27.so
+            nAddri = res[3] # Re-calculated address
+
+            hrAddri:str = addr2line(node, nAddri)
+            print(fmt.format(i + 1, sAddri, hrAddri), end = '')
+
+        print(fmt.format(0, sAddr1, hrAddr1), end = '')
 
 def _reportMemLeak():
     now = TRACING_END_TIME
@@ -514,14 +547,19 @@ def _reportMemLeak():
     global DEBUG
     if DEBUG: pprint.pprint(MemMap)
 
-    title = ['reason', 'ttlMs', 'avgMs', 'maxMs', 'usage', 'nalloc',
+    title = ['#', 'reason', 'ttlMs', 'avgMs', 'maxMs', 'usage', 'nalloc',
             'ndalloc', 'scope', 'node', 'from']
-    fmt   = '{:<10}{:<10}{:<10}{:<10}{:<10}{:<8}{:<8}{:<16}{:<25}{}'
+    fmt   = '{:<3}{:<10}{:<10}{:<10}{:<10}{:<10}{:<8}{:<8}{:<16}{:<25}{}'
 
     print("\n{:=^80}".format(' MemLeak Report (Experimental) '))
     print(fmt.format(*title))
 
+    lineno = -1
+    stacks = []
+
     for record in sortedList:
+        lineno += 1
+
         reason    = record[0]
         scopeName = record[1]
         block     = record[2]
@@ -530,7 +568,8 @@ def _reportMemLeak():
         avgNs     = record[5]
         maxNs     = record[6]
 
-        if reason == 'Noleak':
+        global MEMLEAK_MAX_REPORT
+        if reason == 'Noleak' or lineno >= MEMLEAK_MAX_REPORT:
             hidenCnt += 1
             continue
 
@@ -538,14 +577,18 @@ def _reportMemLeak():
         avgMs = 'n/a' if avgNs < 0 else "%.2f" % (avgNs / 1000000)
         maxMs = 'n/a' if maxNs < 0 else "%.2f" % (maxNs / 1000000)
 
-        allocated_from = addr2Line(block['node'], block['naddr'])
+        allocated_from = addr2line(block['node'], block['naddr'])
 
         print(fmt.format(
-            reason, latencyMs, avgMs, maxMs, block['sz'], memStat['nalloc'],
-            memStat['ndalloc'], scopeName, os.path.basename(block['node']),
-            allocated_from), end = '')
+            lineno, reason, latencyMs, avgMs, maxMs, block['sz'],
+            memStat['nalloc'], memStat['ndalloc'], scopeName,
+            os.path.basename(block['node']), allocated_from), end = '')
+
+        stacks.append((lineno, block, allocated_from))
 
     print("\nTotal {} data blocks are hided\n".format(hidenCnt))
+
+    _dumpMemLeakStacks(stacks)
 
 def report():
     global REPORT_START_TIME
@@ -564,8 +607,9 @@ def report():
         TRACING_END_TIME - TRACING_START_TIME,
         REPORT_END_TIME - REPORT_START_TIME
     ))
+    print()
 
-def addr2Line(pathName, nAddr):
+def addr2line(pathName, nAddr):
     global DEBUG
 
     output = subprocess.check_output(
@@ -580,7 +624,7 @@ def printTracing(lineArray, lineno, node, nAddr):
     global EXTRACT
 
     if EXTRACT:
-        hrAddr = addr2Line(node, nAddr)
+        hrAddr = addr2line(node, nAddr)
 
         lineArray[IDX_RET_ADDR] = (
                 hrAddr if not hrAddr.startswith('??') else "{}\n".format(node))
@@ -736,7 +780,7 @@ if __name__ == "__main__":
             pathName = res[0] # e.g. /lib/x86_64-linux-gnu/ld-2.27.so
             newAddr  = res[3]
 
-            hrAddr:str = addr2Line(pathName, newAddr)
+            hrAddr:str = addr2line(pathName, newAddr)
             print("Addr2line output after utf-8 decode: {}".format(hrAddr))
         else:
             doAddrRemapping(addrMaps, executable, input)
