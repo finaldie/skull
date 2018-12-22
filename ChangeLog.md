@@ -2,6 +2,7 @@
   * Engine
     * **New:** Introduce tracing level into `sk_malloc`
   * CLI
+    * **New:** `skull-trace` dumps stack frames in memleak report
     * **Enhancement:** `skull-trace` refine output and optimize tracing performance
 * 2018-12-17 1.3.3
   * Engine
