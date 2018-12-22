@@ -22,6 +22,7 @@
 #include "api/sk_txn.h"
 #include "api/sk_log.h"
 #include "api/sk_mon.h"
+#include "api/sk_time.h"
 #include "api/sk_malloc.h"
 #include "api/sk_admin.h"
 
@@ -47,6 +48,8 @@
 #define ADMIN_LINE_MAX_LENGTH     (1024)
 #define ADMIN_RESP_MAX_LENGTH     (8192)
 #define ADMIN_COUNTER_LINE_LENGTH (256)
+
+#define CFMT                      "%-55s %f\n"
 
 #define IFMT(k, fmt)              "%-30s: " fmt, #k
 
@@ -104,6 +107,22 @@ void _process_help(sk_txn_t* txn)
 }
 
 static
+void _append_response(sk_txn_t* txn, const char* fmt, ...)
+{
+    sk_admin_data_t* admin_data = sk_txn_udata(txn);
+    char line[ADMIN_LINE_MAX_LENGTH];
+    memset(line, 0, sizeof(line));
+    int len = 0;
+
+    va_list args;
+    va_start(args, fmt);
+    len = vsnprintf(line, ADMIN_LINE_MAX_LENGTH, fmt, args);
+    va_end(args);
+
+    fmbuf_push(admin_data->response, line, (size_t)len);
+}
+
+static
 void _mon_cb(const char* name, double value, void* ud)
 {
     sk_admin_data_t* admin_data = ud;
@@ -111,7 +130,7 @@ void _mon_cb(const char* name, double value, void* ud)
 
     char metrics_str[ADMIN_COUNTER_LINE_LENGTH];
     int printed = snprintf(metrics_str, ADMIN_COUNTER_LINE_LENGTH,
-                           "%s: %f\n", name, value);
+                           CFMT, name, value);
 
     if (printed < 0) {
         sk_print("metrics buffer is too small(%d), name: %s, value: %f\n",
@@ -180,13 +199,17 @@ void _process_metrics(sk_txn_t* txn)
     // 1. snapshot global metrics
     sk_mon_snapshot_t* global_snapshot = sk_mon_snapshot(core->mon);
     _fill_first_line(global_snapshot, admin_data);
+    _append_response(txn, "\n");
+
     _transport_mon_snapshot(global_snapshot, admin_data);
     sk_mon_snapshot_destroy(global_snapshot);
+    _append_response(txn, "\n");
 
     // 2. snapshot master metrics
     sk_mon_snapshot_t* master_snapshot = sk_mon_snapshot(core->master->mon);
     _transport_mon_snapshot(master_snapshot, admin_data);
     sk_mon_snapshot_destroy(master_snapshot);
+    _append_response(txn, "\n");
 
     // 3. snapshot workers metrics
     int threads = core->config->threads;
@@ -195,6 +218,7 @@ void _process_metrics(sk_txn_t* txn)
         sk_mon_snapshot_t* worker_snapshot = sk_mon_snapshot(worker->mon);
         _transport_mon_snapshot(worker_snapshot, admin_data);
         sk_mon_snapshot_destroy(worker_snapshot);
+        _append_response(txn, "\n");
     }
 
     // 4. snapshot bio metrics
@@ -203,12 +227,14 @@ void _process_metrics(sk_txn_t* txn)
         sk_mon_snapshot_t* bio_snapshot = sk_mon_snapshot(bio->mon);
         _transport_mon_snapshot(bio_snapshot, admin_data);
         sk_mon_snapshot_destroy(bio_snapshot);
+        _append_response(txn, "\n");
     }
 
     // 5. shapshot user metrics
     sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot(core->umon);
     _transport_mon_snapshot(user_snapshot, admin_data);
     sk_mon_snapshot_destroy(user_snapshot);
+    _append_response(txn, "\n");
 }
 
 static
@@ -242,22 +268,6 @@ void _process_last_snapshot(sk_txn_t* txn)
     // 4. shapshot user metrics
     sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot_latest(core->umon);
     _transport_mon_snapshot(user_snapshot, admin_data);
-}
-
-static
-void _append_response(sk_txn_t* txn, const char* fmt, ...)
-{
-    sk_admin_data_t* admin_data = sk_txn_udata(txn);
-    char line[ADMIN_LINE_MAX_LENGTH];
-    memset(line, 0, sizeof(line));
-    int len = 0;
-
-    va_list args;
-    va_start(args, fmt);
-    len = vsnprintf(line, ADMIN_LINE_MAX_LENGTH, fmt, args);
-    va_end(args);
-
-    fmbuf_push(admin_data->response, line, (size_t)len);
 }
 
 static
@@ -338,7 +348,7 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
         sk_service_t* service = NULL;
 
         while ((service = fhash_str_next(&iter))) {
-            _append_response(txn, "%s running_tasks: %d ; ",
+            _append_response(txn, "%s tasks: %d ; ",
                              sk_service_name(service),
                              sk_service_running_taskcnt(service));
         }
@@ -364,6 +374,17 @@ void _merge_stat(sk_entity_mgr_stat_t* stat, const sk_entity_mgr_stat_t* merging
     stat->entity_ep_v6tcp     += merging->entity_ep_v6tcp;
     stat->entity_ep_v6udp     += merging->entity_ep_v6udp;
     stat->entity_ep_txn_timer += merging->entity_ep_txn_timer;
+}
+
+static
+void _status_time(sk_txn_t* txn, sk_core_t* core) {
+    sk_time_info_t info;
+    sk_time_info(&info);
+
+    _append_response(txn, IFMT(clock_res, "%lu\n"), info.res.tv_nsec);
+    _append_response(txn, IFMT(clock_coarse_res, "%lu\n"), info.res_coarse.tv_nsec);
+    _append_response(txn, IFMT(clock_id, "%d\n"), info.monotonic_id);
+    _append_response(txn, IFMT(clock_coarse_id, "%d\n"), info.monotonic_coarse_id);
 }
 
 static
@@ -471,6 +492,9 @@ void _process_status(sk_txn_t* txn)
         _append_response(txn, IFMT(stdout, "/proc/%d/fd/1\n"), core->info.pid);
         _append_response(txn, IFMT(stderr, "/proc/%d/fd/2\n"), core->info.pid);
     }
+    _append_response(txn, "\n");
+
+    _status_time(txn, core);
     _append_response(txn, "\n");
 
     _append_response(txn, IFMT(pid, "%d\n"), core->info.pid);

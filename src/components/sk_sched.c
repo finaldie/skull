@@ -563,15 +563,16 @@ void sk_sched_start(sk_sched_t* sched)
         sk_print("nalive_timers: %u\n", nalive_timers);
 
         if (nalive_timers) {
-            sk_timer_t* first_timer = sk_timersvc_first(sched->tmsvc);
+            sk_timer_t* top = sk_timersvc_top(sched->tmsvc);
 
-            if (first_timer) {
-                long texp = sk_timersvc_timer_expiration(first_timer);
+            if (top) {
+                long texp = sk_timersvc_timer_remaining(top);
                 sk_print("texp: %ld, nalive_timers: %u\n", texp, nalive_timers);
 
                 waitms = texp > 0 ? (int)texp : 0;
             } else {
-                sk_print("first timer invalid, first_timer: %p\n", (void*)first_timer);
+                // Unlikely happens here
+                sk_print("No timer available, set waitms to %d\n", waitms);
             }
         }
 

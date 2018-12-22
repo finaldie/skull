@@ -11,16 +11,22 @@ global:
             desc: The total amount of entities be created
         entity_destroy:
             desc: The total amount of entities be destroyed
-        connection_create:
+        connection_opened:
             desc: The total connections be created
-        connection_destroy:
+        connection_closed:
             desc: How many connections be destroyed
         uptime:
             desc: System uptime, every second +1
-        timer_emit:
-            desc: How many timers be emitted
-        timer_complete:
-            desc: How many timers be completed
+        timer_created:
+            desc: How many timers were created
+        timer_triggered:
+            desc: How many timers were triggered
+        timer_canceled:
+            desc: How many timers were canceled
+        timer_completed:
+            desc: How many timers were completed
+        timer_delayed:
+            desc: "Sum latency (micro-seconds) of all triggered timers"
         srv_iocall:
             desc: How many service iocalls be invoked
         srv_iocall_complete:
@@ -65,14 +71,20 @@ worker:
             desc: The total amount of entities be created
         entity_destroy:
             desc: The total amount of entities be destroyed
-        connection_create:
+        connection_opened:
             desc: The total count of the connections be hold in this thread
-        connection_destroy:
+        connection_closed:
             desc: How many connections be destroyed in this thread
-        timer_emit:
+        timer_created:
             desc: How many timers be emitted
-        timer_complete:
+        timer_triggered:
+            desc: How many timers were triggered
+        timer_canceled:
+            desc: How many timers were canceled
+        timer_completed:
             desc: How many timers be completed
+        timer_delayed:
+            desc: "Sum latency (micro-seconds) of all triggered timers"
         srv_iocall:
             desc: How many service iocalls be invoked
         srv_iocall_complete:

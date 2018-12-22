@@ -64,6 +64,22 @@ public:
      * Create a no pending service job
      *
      * @param delayed  unit milliseconds
+     * @param interval unit milliseconds. 0: not a repeated job
+     * @param bio_idx  background io idx
+     *                  - (-1)  : random pick up one
+     *                  - (0)   : do not use bio
+     *                  - (> 0) : use the idx of bio
+     * @param job      Job callback function
+     *
+     * @return 0 on success, 1 on failure
+     */
+    virtual int createJob(uint32_t delayed, uint32_t interval, int bioIdx, JobNPR, JobNPError) const = 0;
+    virtual int createJob(uint32_t delayed, uint32_t interval, int bioIdx, JobNPW, JobNPError) const = 0;
+
+    /**
+     * Create a no pending service job
+     *
+     * @param delayed  unit milliseconds
      * @param bio_idx  background io idx
      *                  - (-1)  : random pick up one
      *                  - (0)   : do not use bio

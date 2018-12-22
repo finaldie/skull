@@ -12,9 +12,9 @@ api-cpp: core
 api-py: core
 
 ifeq ($(disable_jemalloc), false)
-dep: flibs metrics skull-ft protobuf jemalloc
+dep: metrics flibs skull-ft protobuf jemalloc
 else
-dep: flibs metrics skull-ft protobuf
+dep: metrics flibs skull-ft protobuf
 endif
 
 core:

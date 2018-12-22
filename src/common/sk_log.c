@@ -73,19 +73,19 @@ sk_logger_t* _logger_create(const char* workdir,
 }
 
 static
-void _logger_apply(int log_level, bool rolling_disabled, bool stdout_fwd) {
+void _logger_apply(flog_file_t* logger, int log_level, bool rolling_disabled, bool stdout_fwd) {
     if (stdout_fwd) {
         rolling_disabled = true; // Force set it to true
     }
 
     // set log level
-    flog_set_level(log_level);
+    flog_set_level(logger, log_level);
 
     // set flush inverval: 1 second
-    flog_set_flush_interval(SK_LOG_FLUSH_INTERVAL);
+    flog_set_flush_interval(logger, SK_LOG_FLUSH_INTERVAL);
 
     // set file rolling size: 1GB
-    flog_set_roll_size(rolling_disabled ? 0 : SK_LOG_ROLLING_SIZE);
+    flog_set_rolling_size(logger, rolling_disabled ? 0 : SK_LOG_ROLLING_SIZE);
 
     // set log buffer size(per-thread): 10MB
     flog_set_buffer_size(SK_LOG_MAX_PERTHREAD_BUFSIZE);
@@ -104,7 +104,7 @@ sk_logger_t* sk_logger_create(const char* workdir,
 {
     flog_file_t* logger = _logger_create(workdir, log_name, stdout_fwd);
 
-    _logger_apply(log_level, rolling_disabled, stdout_fwd);
+    _logger_apply(logger, log_level, rolling_disabled, stdout_fwd);
 
     return logger;
 }

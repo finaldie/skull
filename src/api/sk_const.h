@@ -77,5 +77,17 @@ struct sk_const_t;
 // service
 #define SK_SRV_MAX_TASK                      (1024)
 
+// sk_time
+#define SK_NS_PER_SEC                        (1000000000l)
+#define SK_NS_PER_MS                         (1000000l)
+#define SK_NS_PER_US                         (1000l)
+#define SK_US_PER_SEC                        (1000000l)
+#define SK_US_PER_MS                         (1000l)
+#define SK_MS_PER_SEC                        (1000l)
+
+// sk_engine
+#define SK_ENGINE_SECOND_INTERVAL            (1000)
+#define SK_ENGINE_MINUTE_INTERVAL            (1000 * 60)
+
 #endif
 

@@ -481,7 +481,10 @@ sk_config_t* sk_config_create(const char* filename)
     const char* location = config->location;
 
     sk_cfg_node_t* root = sk_config_load(location);
+
+#ifdef SK_DEBUG
     sk_config_dump(root);
+#endif
 
     // pick useful information to skull_config struct
     _load_config(root, config);

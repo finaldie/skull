@@ -470,9 +470,9 @@ void* malloc(size_t sz) {
     void* ptr = NULL;
     SK_MEM_ENTER();
 
-    ulong_t start = sk_gettime();
+    ulong_t start = sk_time_ns();
     ptr = SK_ALLOCATOR(malloc)(sz);
-    ulong_t duration = sk_gettime() - start;
+    ulong_t duration = sk_time_ns() - start;
 
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
@@ -505,9 +505,9 @@ void free(void* ptr) {
         SK_ATOMIC_UPDATE_PEAKSZ(stat);
     }
 
-    ulong_t start = sk_gettime();
+    ulong_t start = sk_time_ns();
     SK_ALLOCATOR(free)(ptr);
-    ulong_t duration = sk_gettime() - start;
+    ulong_t duration = sk_time_ns() - start;
 
     SK_MEM_CHECK_AND_BREAK();
     if (unlikely(sk_mem_trace_status())) {
@@ -535,9 +535,9 @@ void* calloc(size_t nmemb, size_t sz) {
     void* ptr = NULL;
     SK_MEM_ENTER();
 
-    ulong_t start = sk_gettime();
+    ulong_t start = sk_time_ns();
     ptr = SK_ALLOCATOR(calloc)(nmemb, sz);
-    ulong_t duration = sk_gettime() - start;
+    ulong_t duration = sk_time_ns() - start;
 
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
@@ -565,9 +565,9 @@ void* realloc(void* ptr, size_t sz) {
 
     size_t old_sz = _get_malloc_sz(ptr);
 
-    ulong_t start = sk_gettime();
+    ulong_t start = sk_time_ns();
     nptr = SK_ALLOCATOR(realloc)(ptr, sz);
-    ulong_t duration = sk_gettime() - start;
+    ulong_t duration = sk_time_ns() - start;
 
     size_t new_sz = _get_malloc_sz(nptr);
     const char* tname = NULL, *comp = NULL, *name = NULL;
@@ -613,9 +613,9 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
     int ret = 0;
     SK_MEM_ENTER();
 
-    ulong_t start = sk_gettime();
+    ulong_t start = sk_time_ns();
     ret = SK_ALLOCATOR(posix_memalign)(memptr, alignment, size);
-    ulong_t duration = sk_gettime() - start;
+    ulong_t duration = sk_time_ns() - start;
 
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);
@@ -641,9 +641,9 @@ void* aligned_alloc(size_t alignment, size_t size) {
     void* ptr = NULL;
     SK_MEM_ENTER();
 
-    ulong_t start = sk_gettime();
+    ulong_t start = sk_time_ns();
     ptr = SK_ALLOCATOR(aligned_alloc)(alignment, size);
-    ulong_t duration = sk_gettime() - start;
+    ulong_t duration = sk_time_ns() - start;
 
     const char* tname = NULL, *comp = NULL, *name = NULL;
     sk_mem_stat_t* stat = _get_stat(&tname, &comp, &name);

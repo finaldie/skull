@@ -29,7 +29,9 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     sk_print("timer triggered proto: valid: %d\n", timer_valid);
     timer_cb(entity, timer_valid, ud);
 
-    sk_timersvc_timer_destroy(timersvc, timer);
+    if (!sk_timersvc_timer_interval(timer)) {
+        sk_timersvc_timer_destroy(timersvc, timer);
+    }
     return 0;
 }
 

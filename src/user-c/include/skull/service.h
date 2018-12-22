@@ -79,9 +79,10 @@ skull_service_job_create(skull_service_t*   svc,
                          skull_job_udfree_t udfree);
 
 /**
- * Create a service job which would NOT pending a service api call
+ * Create a service job which does NOT make service api call into pending mode
  *
  * @param delayed  unit milliseconds
+ * @param interval unit milliseconds. 0 means not a repeated job
  * @param type     read or write type of job
  * @param job      job callback function
  * @param ud       user data
@@ -102,6 +103,7 @@ skull_service_job_create(skull_service_t*   svc,
 skull_job_ret_t
 skull_service_job_create_np(skull_service_t*   svc,
                             uint32_t           delayed,
+                            uint32_t           interval,
                             skull_job_rw_t     type,
                             skull_job_np_t     job,
                             void*              ud,
