@@ -56,6 +56,13 @@ global:
         ep_error:
             desc: How many ep transactions encounter error
 
+        log_error_write: true
+        log_error_async_push: true
+        log_error_async_pop: true
+        log_truncated: true
+        log_buffer_full: true
+        log_buffer_released: true
+
 worker:
     mode: thread
     metrics:

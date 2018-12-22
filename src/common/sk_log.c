@@ -8,6 +8,7 @@
 #include "api/sk_const.h"
 #include "api/sk_env.h"
 #include "api/sk_log.h"
+#include "api/sk_metrics.h"
 
 // INTERNAL APIs
 static
@@ -15,21 +16,27 @@ void _skull_log_notification_cb(flog_event_t event)
 {
     switch (event) {
     case FLOG_EVENT_ERROR_WRITE:
+        sk_metrics_global.log_error_write.inc(1);
         sk_print_err("Fatal: skull write log occur errors!\n");
         break;
     case FLOG_EVENT_ERROR_ASYNC_PUSH:
+        sk_metrics_global.log_error_async_push.inc(1);
         sk_print_err("Fatal: skull async push occur errors!\n");
         break;
     case FLOG_EVENT_ERROR_ASYNC_POP:
+        sk_metrics_global.log_error_async_pop.inc(1);
         sk_print_err("Fatal: skull async pop occur errors!\n");
         break;
     case FLOG_EVENT_TRUNCATED:
+        sk_metrics_global.log_truncated.inc(1);
         sk_print_err("Fatal: skull write log which was truncated!\n");
         break;
     case FLOG_EVENT_BUFFER_FULL:
+        sk_metrics_global.log_buffer_full.inc(1);
         sk_print_err("Fatal: skull logger buffer is full!\n");
         break;
     case FLOG_EVENT_USER_BUFFER_RELEASED:
+        sk_metrics_global.log_buffer_released.inc(1);
         sk_print("Info: skull logger quit gracefully\n");
         break;
     default:

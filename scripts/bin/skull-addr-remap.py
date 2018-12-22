@@ -449,6 +449,7 @@ def _dumpFrames(frames, fmt):
         print(fmt.format(i + 1, sAddri, hrAddri), end = '')
 
 def __dumpCrossScopeStacks(lineno, block, tag):
+    print()
     print("[{}] {}".format(lineno, tag))
 
     title = ['#F', 'Address', 'FrameInfo']

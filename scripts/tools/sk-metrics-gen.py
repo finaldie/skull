@@ -109,9 +109,13 @@ def gen_c_header_metrics(scope_name, metrics_obj):
 
     for name in metrics_map:
         items = metrics_map[name]
-        desc = items['desc']
 
-        content += "    // " + desc + "\n"
+        if isinstance(items, dict):
+            desc = items['desc']
+            content += "    // " + desc + "\n"
+        elif isinstance(items, str):
+            content += "    // " + items + "\n"
+
         content += "    sk_metrics_t " + name + ";\n"
 
     # assemble tailer
@@ -210,7 +214,7 @@ def process_core():
     generate_c_source()
 
 def usage():
-    print ("usage: skull-metrics-gen.py -c yaml_file")
+    print ("usage: sk-metrics-gen.py -c yaml_file")
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

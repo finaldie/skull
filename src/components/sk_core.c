@@ -77,6 +77,7 @@ void _sk_setup_engines(sk_core_t* core)
 
     // 1. Create master engine
     core->master = sk_engine_create(SK_ENGINE_MASTER, core->max_fds, 0);
+    sk_mem_dump("ENGINE-INIT-MASTER-DONE");
 
     // 1.1 Now, fix the master env 'engine' link
     core->env->engine = core->master;
@@ -97,6 +98,7 @@ void _sk_setup_engines(sk_core_t* core)
         sk_engine_link(core->workers[i], core->master);
 
         SK_LOG_INFO(core->logger, "io bridge [%d] init successfully", i);
+        sk_mem_dump("ENGINE-INIT-WORKER-DONE-%d", i);
     }
 
     // 3. Create background io engine
@@ -110,6 +112,7 @@ void _sk_setup_engines(sk_core_t* core)
 
         core->bio[i] = bio;
         SK_LOG_INFO(core->logger, "bio engine [%d] init successfully", i + 1);
+        sk_mem_dump("ENGINE-INIT-BIO-DONE-%d", i);
     }
 
     SK_LOG_INFO(core->logger, "skull engines init successfully");
@@ -447,8 +450,8 @@ void _sk_init_sys(sk_core_t* core)
     int conf_max_fds = core->config->max_fds;
     core->max_fds = SK_MIN(conf_max_fds, soft_limit);
 
-    SK_LOG_INFO(core->logger, "current open file limit(soft): %d,"
-                " conf_max_fds: %d, set max_fds to: %d",
+    SK_LOG_INFO(core->logger, "Open files limitation (soft): %d,"
+                " config max_fds: %d, set max_fds to: %d",
                 soft_limit, core->config->max_fds, core->max_fds);
 }
 
