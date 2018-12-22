@@ -59,14 +59,14 @@ void _sk_%s_%s_inc(double value)\n\
 FUNC_GLOBAL_SET_CONTENT = "static\n\
 void _sk_%s_%s_set(double value)\n\
 {\n\
-    sk_mon_t* mon = SK_ENV_MON;\n\
+    sk_mon_t* mon = SK_ENV_CORE->mon;\n\
     sk_mon_set(mon, \"skull.core.g.%s.%s\", value);\n\
 }\n\n"
 
 FUNC_GLOBAL_GET_CONTENT = "static\n\
 double _sk_%s_%s_get()\n\
 {\n\
-    sk_mon_t* mon = SK_ENV_MON;\n\
+    sk_mon_t* mon = SK_ENV_CORE->mon;\n\
     return sk_mon_get(mon, \"skull.core.g.%s.%s\");\n\
 }\n\n"
 
