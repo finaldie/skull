@@ -93,6 +93,23 @@ void sk_mon_inc(sk_mon_t* sk_mon, const char* name, double value)
     pthread_mutex_unlock(&sk_mon->lock);
 }
 
+void sk_mon_set(sk_mon_t* sk_mon, const char* name, double value)
+{
+    SK_ASSERT(name);
+    key_sz_t name_len = (key_sz_t)strlen(name);
+    SK_ASSERT(name_len);
+
+    pthread_mutex_lock(&sk_mon->lock);
+    {
+        fhash_set(sk_mon->mon_tbl, name, name_len,
+                  &value, sizeof(value));
+
+        //sk_print("metrics set: %s - %f, thread name: %s\n",
+        //         name, value, SK_ENV->name);
+    }
+    pthread_mutex_unlock(&sk_mon->lock);
+}
+
 double sk_mon_get(sk_mon_t* sk_mon, const char* name)
 {
     SK_ASSERT(name);

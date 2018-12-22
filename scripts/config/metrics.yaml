@@ -61,7 +61,6 @@ global:
         log_error_async_pop: true
         log_truncated: true
         log_buffer_full: true
-        log_buffer_released: true
 
 worker:
     mode: thread

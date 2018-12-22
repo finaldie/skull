@@ -208,6 +208,12 @@ void _sk_init_env(sk_core_t* core) {
 }
 
 static
+void _sk_env_destroy(sk_core_t* core) {
+    _sk_mem_destroy(core);
+    free(core->env);
+}
+
+static
 void _sk_init_config(sk_core_t* core) {
     core->config = sk_config_create(core->cmd_args.config_location);
 
@@ -614,11 +620,8 @@ void sk_core_stop(sk_core_t* core)
 {
     core->status = SK_CORE_STOPPING;
 
-    // Downgrade mem tracing level to 1 if tracing enabled
-    if (sk_mem_trace_level() > 1) {
-        sk_mem_trace(1);
-    }
-
+    // Stop tracing if enabled
+    sk_mem_trace(0);
     sk_mem_dump("ENGINE-STOP");
 
     SK_LOG_INFO(core->logger,
@@ -702,7 +705,7 @@ void sk_core_destroy(sk_core_t* core)
 
     // 12. Destroy mem statistics
     sk_mem_dump("ENGINE-DESTROY-DONE");
-    _sk_mem_destroy(core);
+    _sk_env_destroy(core);
 }
 
 // Utils APIs

@@ -36,7 +36,6 @@ void _skull_log_notification_cb(flog_event_t event)
         sk_print_err("Fatal: skull logger buffer is full!\n");
         break;
     case FLOG_EVENT_USER_BUFFER_RELEASED:
-        sk_metrics_global.log_buffer_released.inc(1);
         sk_print("Info: skull logger quit gracefully\n");
         break;
     default:

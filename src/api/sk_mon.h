@@ -13,6 +13,7 @@ sk_mon_t* sk_mon_create();
 void sk_mon_destroy(sk_mon_t*);
 
 void sk_mon_inc(sk_mon_t*, const char* name, double value);
+void sk_mon_set(sk_mon_t*, const char* name, double value);
 double sk_mon_get(sk_mon_t*, const char* name);
 
 sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t*);

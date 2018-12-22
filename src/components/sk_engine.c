@@ -105,7 +105,7 @@ void sk_engine_destroy(sk_engine_t* engine)
     sk_entity_mgr_destroy(engine->entity_mgr);
     sk_eventloop_destroy(engine->evlp);
     sk_mon_destroy(engine->mon);
-    free(engine->env);
+    if (engine->type != SK_ENGINE_MASTER) free(engine->env);
     free(engine);
 }
 

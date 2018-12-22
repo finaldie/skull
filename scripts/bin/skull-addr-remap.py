@@ -448,9 +448,9 @@ def _dumpFrames(frames, fmt):
         hrAddri:str = addr2line(node, nAddri)
         print(fmt.format(i + 1, sAddri, hrAddri), end = '')
 
-def __dumpCrossScopeStacks(lineno, block, tag):
+def __dumpCrossScopeStacks(lineno, block, tag, scopeName):
     print()
-    print("[{}] {}".format(lineno, tag))
+    print("[{}] {} ({})".format(lineno, tag, scopeName))
 
     title = ['#F', 'Address', 'FrameInfo']
     fmt   = '{:<3}{:<20}{}'
@@ -465,8 +465,11 @@ def _dumpCrossScopeStacks(stacks):
         lineno = record[0]
         block  = record[1]
 
-        __dumpCrossScopeStacks(lineno, block['alloced'], 'Allocation Stack')
-        __dumpCrossScopeStacks(lineno, block['freed'], 'Free Stack')
+        __dumpCrossScopeStacks(lineno, block['alloced'],
+                'Allocation Stacks', block['alloced_in'])
+
+        __dumpCrossScopeStacks(lineno, block['freed'],
+                'Deallocation Stacks', block['alloced_in'])
 
 def _reportCrossScope():
     rawList = []

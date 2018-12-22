@@ -100,7 +100,7 @@ typedef struct sk_core_t {
 
     time_t           starttime;
 
-    // main thread env (weak reference)
+    // main thread env
     struct sk_thread_env_t* env;
 
     sk_core_info_t   info;
