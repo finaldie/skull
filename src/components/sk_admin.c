@@ -545,6 +545,7 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
     // 1. Dump skull core mem stat
     sk_core_t* core = SK_ENV_CORE;
     size_t total_allocated = 0;
+    size_t peak = 0;
 
     const sk_mem_stat_t* static_stat = sk_mem_stat_static();
     const sk_mem_stat_t* core_stat   = sk_mem_stat_core();
@@ -552,14 +553,17 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
     _append_response(txn, "========== Skull Memory Measurement ==========\n");
     __append_mem_stat(txn, ".", "init", static_stat, detail);
     total_allocated += sk_mem_allocated(static_stat);
+    peak += static_stat->peak_sz;
 
     __append_mem_stat(txn, ".", "core", core_stat, detail);
     total_allocated += sk_mem_allocated(core_stat);
+    peak += core_stat->peak_sz;
 
     const char* admin_name = sk_admin_module()->cfg->name;
     const sk_mem_stat_t* admin_st = sk_mem_stat_module(admin_name);
     __append_mem_stat(txn, "module", admin_name, admin_st, detail);
     total_allocated += sk_mem_allocated(admin_st);
+    peak += admin_st->peak_sz;
 
     {
         fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
@@ -570,6 +574,7 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
 
             __append_mem_stat(txn, "module", module->cfg->name, stat, detail);
             total_allocated += sk_mem_allocated(stat);
+            peak += stat->peak_sz;
         }
 
         fhash_str_iter_release(&iter);
@@ -585,14 +590,16 @@ void _process_memory_info(sk_txn_t* txn, bool detail) {
 
             __append_mem_stat(txn, "service", service_name, stat, detail);
             total_allocated += sk_mem_allocated(stat);
+            peak += stat->peak_sz;
         }
 
         fhash_str_iter_release(&iter);
     }
 
     _append_response(txn, "\n================== Summary ===================\n");
-    _append_response(txn, "Total Allocated: %zu\n", total_allocated);
-    _append_response(txn, "Tracing Level:   %d\n\n", sk_mem_trace_level());
+    _append_response(txn, "Total Allocated:    %zu\n", total_allocated);
+    _append_response(txn, "Overall Peak Usage: %zu\n", peak);
+    _append_response(txn, "Tracing Level:      %d\n\n", sk_mem_trace_level());
 }
 
 static
