@@ -16,7 +16,7 @@ void sk_timer_cancel(sk_timer_t*);
 sk_entity_t* sk_timer_entity(const sk_timer_t*);
 sk_timersvc_t* sk_timer_svc(const sk_timer_t*);
 
-sk_timersvc_t* sk_timersvc_create(void* evlp);
+sk_timersvc_t* sk_timersvc_create(void* evlp, uint32_t init_sz);
 void sk_timersvc_destroy(sk_timersvc_t*);
 int  sk_timersvc_process(sk_timersvc_t*);
 

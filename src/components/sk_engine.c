@@ -85,8 +85,8 @@ sk_engine_t* sk_engine_create(sk_engine_type_t type, int max_fds, int flags)
     sk_engine_t* engine = calloc(1, sizeof(*engine));
     engine->type       = type;
     engine->evlp       = sk_eventloop_create(max_fds);
-    engine->timer_svc  = sk_timersvc_create(engine->evlp);
-    engine->entity_mgr = sk_entity_mgr_create(0);
+    engine->timer_svc  = sk_timersvc_create(engine->evlp, SK_ENGINE_INIT_TIMER_SIZE);
+    engine->entity_mgr = sk_entity_mgr_create(SK_ENGINE_INIT_ENTITY_POOL);
     engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr,
                                          engine->timer_svc, flags);
     engine->mon        = sk_mon_create();

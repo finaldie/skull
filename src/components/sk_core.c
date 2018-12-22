@@ -30,7 +30,7 @@
 static
 void _sk_init_mem_log(sk_core_t* core) {
     const sk_config_t* config = core->config;
-    sk_mem_init_log(core->working_dir, config->diag_name, config->log_level,
+    sk_mem_init_log(core->working_dir, config->diag_name, FLOG_LEVEL_TRACE,
                     core->cmd_args.log_stdout_fwd);
 }
 
@@ -445,27 +445,11 @@ void _sk_init_sys(sk_core_t* core)
     // 1.2 Set the new limitation if needed
     int soft_limit = (int)limit.rlim_cur;
     int conf_max_fds = core->config->max_fds;
-    core->max_fds = conf_max_fds > soft_limit ? conf_max_fds : soft_limit;
+    core->max_fds = SK_MIN(conf_max_fds, soft_limit);
 
-    SK_LOG_INFO(core->logger, "current open file limit(soft): %d", soft_limit);
-
-    if (core->max_fds > soft_limit) {
-        struct rlimit new_limit;
-        new_limit.rlim_cur = (rlim_t)core->max_fds;
-        new_limit.rlim_max = (rlim_t)core->max_fds;
-
-        SK_LOG_INFO(core->logger, "set max open file to %d", core->max_fds);
-        if (setrlimit(RLIMIT_NOFILE, &new_limit)) {
-            fprintf(stderr, "Error: set max open file limitation failed: %s",
-                    strerror(errno));
-
-            SK_LOG_WARN(core->logger,
-                "set max open file limitation failed: %s, will use the default value: %d",
-                strerror(errno), soft_limit);
-
-            core->max_fds = soft_limit;
-        }
-    }
+    SK_LOG_INFO(core->logger, "current open file limit(soft): %d,"
+                " conf_max_fds: %d, set max_fds to: %d",
+                soft_limit, core->config->max_fds, core->max_fds);
 }
 
 static
@@ -626,6 +610,11 @@ void sk_core_start(sk_core_t* core)
 void sk_core_stop(sk_core_t* core)
 {
     core->status = SK_CORE_STOPPING;
+
+    // Downgrade mem tracing level to 1 if tracing enabled
+    if (sk_mem_trace_level() > 1) {
+        sk_mem_trace(1);
+    }
 
     sk_mem_dump("ENGINE-STOP");
 

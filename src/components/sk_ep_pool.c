@@ -312,8 +312,8 @@ sk_ep_mgr_t* sk_ep_mgr_create(sk_ep_pool_t* owner, int max)
 
     sk_ep_mgr_t* mgr = calloc(1, sizeof(*mgr));
     mgr->owner = owner;
-    mgr->eps   = sk_entity_mgr_create(0);
-    mgr->ee    = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
+    mgr->eps   = sk_entity_mgr_create(SK_EP_POOL_MIN);
+    mgr->ee    = fhash_u64_create(SK_EP_POOL_MIN, FHASH_MASK_AUTO_REHASH);
     mgr->tmp   = flist_create();
     mgr->max   = max;
 

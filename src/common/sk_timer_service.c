@@ -11,8 +11,6 @@
 #include "api/sk_metrics.h"
 #include "api/sk_timer_service.h"
 
-#define TIMER_CHECK_DISABLED 0
-
 struct sk_timersvc_t {
     fev_timer_svc* timer_service;
 
@@ -38,12 +36,12 @@ struct sk_timer_t {
     uint32_t interval;
 };
 
-sk_timersvc_t* sk_timersvc_create(void* evlp)
+sk_timersvc_t* sk_timersvc_create(void* evlp, uint32_t init_sz)
 {
     sk_timersvc_t* svc = calloc(1, sizeof(*svc));
     svc->timer_service =
-        fev_tmsvc_create(evlp, TIMER_CHECK_DISABLED, FEV_TMSVC_SINGLE_LINKED);
-    svc->timers = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
+        fev_tmsvc_create(evlp, SK_TIMER_LOOP_DISABLED, FEV_TMSVC_SINGLE_LINKED);
+    svc->timers = fhash_u64_create(init_sz, FHASH_MASK_AUTO_REHASH);
 
     SK_ASSERT(svc->timer_service);
     SK_ASSERT(svc->timers);

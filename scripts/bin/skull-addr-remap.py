@@ -29,12 +29,11 @@ IDX_FRAME_START = LOG_PREFIX + 12
 
 ADDR2LINE_CMD  = "addr2line -e {} -fpC {}"
 
-MEMLEAK_THRESHOLD  = 10 # N times larger than avg latency
-MEMLEAK_MAX_REPORT = 10
+MEMLEAK_THRESHOLD = 10 # N times larger than avg latency
 
-MAX_FRAME          = 9  # Besides first caller, how many additional frames
-
-NUM_OF_PROCESSED   = 100
+MAX_FRAME         = 9  # Besides first caller, how many additional frames
+MAX_REPORT        = 10
+NUM_OF_PROCESSED  = 100
 
 # =========== Global non-static variables ===========
 DEBUG   = False
@@ -89,18 +88,20 @@ CrossScope map for recording how many data are transfer from one scope to
  another.
 
 CrossScope = {
-    '0xfdabb01': {
+    '0xfdabb01_0aafdf_100': {
         'count' : 10,
         'alloced_in' : 'skull.core',
         'alloced': {
             node: 'skull-engine',
+            saddr: 0x7ffafdc,
             naddr: 0x7faad,
             frames: [saddr1, saddr2, ...]
             sz: 1024,
         },
-        'freed_in': 'skull.core',
+        'freed_in': 'module.response',
         'freed': {
             node: 'skull-engine',
+            saddr: 0x8ffafdc,
             naddr: 0x4dacd,
             frames: [saddr1, saddr2, ...]
             sz: 1024,
@@ -327,7 +328,7 @@ def collectCrossScope(rawScopeName, timeNs, dataAddr, dataSz, pathName, sAddr,
             else:
                 crossScopeRecord['count'] += 1
 
-            print(" - Cross scope data freed: {}".format(dataAddr))
+            if DEBUG: print(" - Cross scope data freed: {}".format(dataAddr))
             removeRecord(name, block, timeNs, dataAddr, dataSz, pathName, sAddr,
                     nAddr, frames)
             break
@@ -430,26 +431,56 @@ def _reportMemStat():
     print("\nTotal Usage: {} Bytes, #Alloc: {}, #Dealloc: {}".format(
           totalUsage, totalAllocCnt, totalDeallocCnt))
 
+def _dumpFrames(frames, fmt):
+    sz = len(frames)
+    order = reversed(range(0, sz))
+
+    for i in order:
+        sAddri = frames[i]
+        if sAddri == '(nil)':
+            continue
+
+        res:tuple = _findAddr(addrMaps, sAddri)
+
+        node   = res[0] # e.g. /lib/x86_64-linux-gnu/ld-2.27.so
+        nAddri = res[3] # Re-calculated address
+
+        hrAddri:str = addr2line(node, nAddri)
+        print(fmt.format(i + 1, sAddri, hrAddri), end = '')
+
+def __dumpCrossScopeStacks(lineno, block, tag):
+    print("[{}] {}".format(lineno, tag))
+
+    title = ['#F', 'Address', 'FrameInfo']
+    fmt   = '{:<3}{:<20}{}'
+
+    _dumpFrames(block['frames'], fmt)
+
+    hrAddr1:str = addr2line(block['node'], block['naddr'])
+    print(fmt.format(0, block['saddr'], hrAddr1), end = '')
+
+def _dumpCrossScopeStacks(stacks):
+    for record in stacks:
+        lineno = record[0]
+        block  = record[1]
+
+        __dumpCrossScopeStacks(lineno, block['alloced'], 'Allocation Stack')
+        __dumpCrossScopeStacks(lineno, block['freed'], 'Free Stack')
+
 def _reportCrossScope():
     rawList = []
 
     for key in CrossScope:
         detail = CrossScope[key]
 
-        alloced_from = addr2line(detail['alloced']['node'],
-                                 detail['alloced']['naddr']).replace('\n', '')
-
-        freed_from = addr2line(detail['freed']['node'],
-                               detail['freed']['naddr']).replace('\n', '')
-
         record = {
             'count'       : detail['count'],
             'size'        : detail['alloced']['sz'],
             'usage'       : detail['alloced']['sz'] * detail['count'],
+            'alloced'     : detail['alloced'],
             'alloced_in'  : detail['alloced_in'],
-            'alloced_from': alloced_from,
+            'freed'       : detail['freed'],
             'freed_in'    : detail['freed_in'],
-            'freed_from'  : freed_from,
         }
 
         rawList.append(record)
@@ -457,26 +488,37 @@ def _reportCrossScope():
     sortedList = sorted(rawList, key = lambda record : record['usage'],
             reverse = True)
 
-    print("\n{:=^80}".format(' CrossScope Malloc/Free Report '))
+    print("\n{:=^80}".format(' Top {} CrossScope Malloc/Free Report '.format(
+        MAX_REPORT)))
 
     if len(sortedList) == 0:
         print("Great work! No cross-scope issues found")
         return
 
-    title = ['usage', 'size/c', 'times', 'alloced_in', 'freed_in']
-    fmt   = "{:<10}{:<10}{:<10}{:<16}{:<16}"
+    title = ['#', 'usage', 'size/c', 'times', 'alloced_in', 'freed_in']
+    fmt   = "{:<3}{:<10}{:<10}{:<10}{:<16}{:<16}"
+
+    print(fmt.format(*title))
+
+    lineno   = -1
+    hidenCnt = 0
+    stacks = []
 
     for record in sortedList:
-        print(fmt.format(*title))
+        lineno += 1
+
+        if lineno >= MAX_REPORT:
+            hidenCnt += 1
+            continue
 
         print(fmt.format(
-            record['usage'], record['size'], record['count'],
+            lineno, record['usage'], record['size'], record['count'],
             record['alloced_in'], record['freed_in']))
 
-        print()
-        print("Alloced from: {}".format(record['alloced_from']))
-        print("Freed   from: {}".format(record['freed_from']))
-        print("{:-^80}".format(''))
+        stacks.append((lineno, record))
+
+    print("\nTotal {} records are hided\n".format(hidenCnt))
+    _dumpCrossScopeStacks(stacks)
 
 def _dumpMemLeakStacks(stacks):
     for record in stacks:
@@ -494,22 +536,7 @@ def _dumpMemLeakStacks(stacks):
         fmt   = '{:<3}{:<20}{}'
         print(fmt.format(*title))
 
-        sz = len(frames)
-        order = reversed(range(0, sz))
-
-        for i in order:
-            sAddri = frames[i]
-            if sAddri == '(nil)':
-                continue
-
-            res:tuple = _findAddr(addrMaps, sAddri)
-
-            node   = res[0] # e.g. /lib/x86_64-linux-gnu/ld-2.27.so
-            nAddri = res[3] # Re-calculated address
-
-            hrAddri:str = addr2line(node, nAddri)
-            print(fmt.format(i + 1, sAddri, hrAddri), end = '')
-
+        _dumpFrames(frames, fmt)
         print(fmt.format(0, sAddr1, hrAddr1), end = '')
 
 def _reportMemLeak():
@@ -551,7 +578,8 @@ def _reportMemLeak():
             'ndalloc', 'scope', 'node', 'from']
     fmt   = '{:<3}{:<10}{:<10}{:<10}{:<10}{:<10}{:<8}{:<8}{:<16}{:<25}{}'
 
-    print("\n{:=^80}".format(' MemLeak Report (Experimental) '))
+    print("\n{:=^80}".format(' Top {} MemLeak Report (Experimental) '.format(
+        MAX_REPORT)))
     print(fmt.format(*title))
 
     lineno = -1
@@ -568,8 +596,7 @@ def _reportMemLeak():
         avgNs     = record[5]
         maxNs     = record[6]
 
-        global MEMLEAK_MAX_REPORT
-        if reason == 'Noleak' or lineno >= MEMLEAK_MAX_REPORT:
+        if reason == 'Noleak' or lineno >= MAX_REPORT:
             hidenCnt += 1
             continue
 
@@ -603,7 +630,7 @@ def report():
     REPORT_END_TIME = time.clock_gettime(time.CLOCK_MONOTONIC)
 
     print("{:=^80}".format(''))
-    print("Tracing time: {:.3} s, Report generation time: {:.3} s".format(
+    print("Tracing time: %.3f s, Report generation time: %.3f s" % (
         TRACING_END_TIME - TRACING_START_TIME,
         REPORT_END_TIME - REPORT_START_TIME
     ))
@@ -781,7 +808,7 @@ if __name__ == "__main__":
             newAddr  = res[3]
 
             hrAddr:str = addr2line(pathName, newAddr)
-            print("Addr2line output after utf-8 decode: {}".format(hrAddr))
+            print("Addr2line(utf-8): {}".format(hrAddr))
         else:
             doAddrRemapping(addrMaps, executable, input)
             report()

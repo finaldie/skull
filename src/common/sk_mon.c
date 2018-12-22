@@ -47,7 +47,8 @@ sk_mon_t* sk_mon_create()
 {
     sk_mon_t* sk_mon = calloc(1, sizeof(*sk_mon));
 
-    sk_mon->mon_tbl = fhash_create(0, _sk_mon_hash_opt, FHASH_MASK_AUTO_REHASH);
+    sk_mon->mon_tbl = fhash_create(SK_MON_DEFAULT_SIZE, _sk_mon_hash_opt,
+                                   FHASH_MASK_AUTO_REHASH);
     SK_ASSERT(sk_mon->mon_tbl);
 
     int ret = pthread_mutex_init(&sk_mon->lock, NULL);
@@ -206,7 +207,7 @@ sk_mon_snapshot_t* _sk_mon_snapshot_create(time_t start, time_t end)
     snapshot->start = start;
     snapshot->end   = end;
     snapshot->snapshot =
-        fhash_create(0, _sk_mon_hash_opt, FHASH_MASK_AUTO_REHASH);
+        fhash_create(SK_MON_DEFAULT_SIZE, _sk_mon_hash_opt, FHASH_MASK_AUTO_REHASH);
 
     return snapshot;
 }

@@ -64,11 +64,12 @@ sk_config_t* _create_config()
 {
     sk_config_t* config = calloc(1, sizeof(*config));
     config->threads   = 1;
+    config->log_level = FLOG_LEVEL_INFO;
     config->workflows = flist_create();
     config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
-    config->langs     = flist_create();
     config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
-    config->log_level = FLOG_LEVEL_INFO;
+    config->langs     = flist_create();
+    config->max_fds   = SK_DEFAULT_OPEN_FILES;
     strncpy(config->log_name, "skull.log", sizeof("skull.log"));
     strncpy(config->diag_name, "diag.log", sizeof("diag.log"));
     config->txn_logging = false;

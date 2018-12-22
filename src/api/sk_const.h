@@ -3,6 +3,9 @@
 
 struct sk_const_t;
 
+// System
+#define SK_DEFAULT_OPEN_FILES                (1024)
+
 // dump core
 #define SK_MAX_BACKTRACE                     (50)
 
@@ -66,7 +69,8 @@ struct sk_const_t;
 #define SK_CONFIG_VALUE_MAXLEN               (256)
 
 // ep pool
-#define SK_EP_POOL_MAX                       (1024)
+#define SK_EP_POOL_MAX                       (8192)
+#define SK_EP_POOL_MIN                       (128)
 #define SK_EP_KEY_MAX                        (64)
 #define SK_EP_DEFAULT_SHUTDOWN_MS            (1000)
 
@@ -88,6 +92,14 @@ struct sk_const_t;
 // sk_engine
 #define SK_ENGINE_SECOND_INTERVAL            (1000)
 #define SK_ENGINE_MINUTE_INTERVAL            (1000 * 60)
+#define SK_ENGINE_INIT_ENTITY_POOL           (1024)
+#define SK_ENGINE_INIT_TIMER_SIZE            (1024)
+
+// sk_timer_service
+#define SK_TIMER_LOOP_DISABLED               (0)
+
+// sk_mon
+#define SK_MON_DEFAULT_SIZE                  (100)
 
 #endif
 
