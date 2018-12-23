@@ -37,6 +37,11 @@ NUM_OF_PROCESSED  = 100
 
 MEMLEAK_WHITELIST = ['deps/flibs/fhash']
 
+# memleak reasons
+MEMLEAK_NOLEAK   = 'NoLeak'
+MEMLEAK_POSSIBLE = 'Possible'
+MEMLEAK_LIKELY   = 'Likely'
+
 # =========== Global non-static variables ===========
 DEBUG   = False
 EXTRACT = False
@@ -573,14 +578,14 @@ def _reportMemLeak():
             latencyNs = (now - timeSec) * 1000000000
 
             if maxNs < 0:
-                rawList.append(("Possible", scopeName, block, memStat,
+                rawList.append((MEMLEAK_POSSIBLE, scopeName, block, memStat,
                     latencyNs, avgNs, maxNs))
             else:
                 if latencyNs > MEMLEAK_THRESHOLD * maxNs:
-                    rawList.append(("Likely", scopeName, block, memStat,
+                    rawList.append((MEMLEAK_LIKELY, scopeName, block, memStat,
                         latencyNs, avgNs, maxNs))
                 else:
-                    rawList.append(("Noleak", scopeName, block, memStat,
+                    rawList.append((MEMLEAK_NOLEAK, scopeName, block, memStat,
                         latencyNs, avgNs, maxNs))
 
     sortedList = sorted(rawList, key = lambda x: x[0])
@@ -596,8 +601,11 @@ def _reportMemLeak():
         MAX_REPORT)))
     print(fmt.format(*title))
 
-    lineno = -1
-    stacks = []
+    lineno   = -1
+    noleak   = 0
+    possible = 0
+    likely   = 0
+    stacks   = []
 
     for record in sortedList:
         reason    = record[0]
@@ -608,8 +616,14 @@ def _reportMemLeak():
         avgNs     = record[5]
         maxNs     = record[6]
 
+        if reason == MEMLEAK_NOLEAK:
+            noleak += 1
+        elif reason == MEMLEAK_POSSIBLE:
+            possible += 1
+        else:
+            likely += 1
 
-        if lineno >= MAX_REPORT or reason == 'Noleak':
+        if lineno >= MAX_REPORT or reason == MEMLEAK_NOLEAK:
             hidenCnt += 1
             continue
 
@@ -630,11 +644,16 @@ def _reportMemLeak():
 
         stacks.append((lineno, block, allocated_from))
 
-    print("\nTotal {} data blocks are hided\n".format(hidenCnt))
+    print()
+    print("Total {} data blocks are hided".format(hidenCnt))
+    print("Likely: {}, Possible: {}, NoLeak: {}".format(likely, possible, noleak))
+    print()
 
     _dumpMemLeakStacks(stacks)
 
 def report():
+    global TRACING_START_TIME
+    global TRACING_END_TIME
     global REPORT_START_TIME
     global REPORT_END_TIME
 

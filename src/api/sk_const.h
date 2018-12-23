@@ -53,6 +53,8 @@ struct sk_const_t;
 #define SK_SCHED_MAX_IO_BRIDGE               (48)
 #define SK_SCHED_MAX_ROUTING_HOP             (255)
 #define SK_SCHED_DEFAULT_WAITMS              (1000)
+#define SK_SCHED_IO_BRIDGE_SZ                (65535)
+#define SK_SCHED_IO_INIT_SZ                  (32)
 
 // eventloop max events
 #define SK_EVENTLOOP_MAX_EVENTS              (65535)

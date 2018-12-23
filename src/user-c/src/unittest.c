@@ -201,6 +201,11 @@ void sk_mon_inc(sk_mon_t* sk_mon, const char* name, double value)
     // No implementation, note: test metrics in FT
 }
 
+void sk_mon_set(sk_mon_t* sk_mon, const char* name, double value)
+{
+    // No implementation, note: test metrics in FT
+}
+
 double sk_mon_get(sk_mon_t* sk_mon, const char* name)
 {
     // No implementation, note: test metrics in FT
