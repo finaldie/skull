@@ -86,8 +86,7 @@ typedef struct sk_srv_task_t {
             sk_service_job job;
             sk_obj_t*      ud;
             int            valid;
-
-            int            _padding;
+            uint32_t       interval;
         } timer;
     } data;
 } sk_srv_task_t;

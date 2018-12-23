@@ -22,7 +22,9 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     SK_ASSERT(SK_ENV_ENGINE == SK_ENV_CORE->master);
     SK_ASSERT(sk_pto_check(SK_PTO_SVC_TIMER_DONE, msg));
 
-    sk_service_t* service = sk_pto_arg(SK_PTO_SVC_TIMER_DONE, msg, 0)->p;
+    uint32_t id = SK_PTO_SVC_TIMER_DONE;
+    sk_service_t* service  = sk_pto_arg(id, msg, 0)->p;
+    uint32_t      interval = sk_pto_arg(id, msg, 1)->u32;
 
     // 1. mark task complete
     sk_service_task_setcomplete(service);
@@ -31,7 +33,9 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     sk_service_schedule_tasks(service);
 
     // 3. Destory timer entity
-    sk_entity_safe_destroy(entity);
+    if (!interval) {
+        sk_entity_safe_destroy(entity);
+    }
 
     // 4. Update service timer metrics
     sk_metrics_global.srv_timer_complete.inc(1);

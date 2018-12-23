@@ -29,6 +29,7 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     int            valid = sk_pto_arg(id, msg, 3)->i;
     int            bidx  = sk_pto_arg(id, msg, 4)->i;
     sk_service_job_rw_t type = sk_pto_arg(id, msg, 5)->u32;
+    uint32_t       interval  = sk_pto_arg(id, msg, 6)->u32;
 
     // 1. Create a service task (access -> write)
     sk_srv_task_t task;
@@ -44,6 +45,7 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     task.data.timer.job    = ujob;
     task.data.timer.ud     = udata;
     task.data.timer.valid  = valid;
+    task.data.timer.interval  = interval;
 
     // 2. Push to service task queue
     sk_print("push task to service queue\n");

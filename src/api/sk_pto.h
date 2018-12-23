@@ -165,32 +165,34 @@ typedef struct sk_pto_service_task_run_t {
 
 // SK_PTO_SVC_TASK_DONE
 typedef struct sk_pto_service_task_done_t {
-   sk_arg_t service_name;  // char*
-   sk_arg_t resume_wf;     // bool
-   sk_arg_t svc_task_done; // bool
+    sk_arg_t service_name;  // char*
+    sk_arg_t resume_wf;     // bool
+    sk_arg_t svc_task_done; // bool
 } sk_pto_service_task_done_t;
 
 // SK_PTO_SVC_TASK_CB
 typedef struct sk_pto_service_task_cb_t {
-   sk_arg_t taskdata;      // void*
-   sk_arg_t service_name;  // char*
-   sk_arg_t api_name;      // char*
-   sk_arg_t task_status;   // int
-   sk_arg_t svc_task_done; // bool
+    sk_arg_t taskdata;      // void*
+    sk_arg_t service_name;  // char*
+    sk_arg_t api_name;      // char*
+    sk_arg_t task_status;   // int
+    sk_arg_t svc_task_done; // bool
 } sk_pto_service_task_cb_t;
 
 // SK_PTO_SVC_TIMER_RUN
 typedef struct sk_pto_service_timer_run_t {
-   sk_arg_t svc;    // void*
-   sk_arg_t job;    // func
-   sk_arg_t ud;     // void*
-   sk_arg_t valid;  // bool
-   sk_arg_t status; // int
+    sk_arg_t svc;    // void*
+    sk_arg_t job;    // func
+    sk_arg_t ud;     // void*
+    sk_arg_t valid;  // bool
+    sk_arg_t status; // int
+    sk_arg_t interval; // uint32
 } sk_pto_service_timer_run_t;
 
 // SK_PTO_SVC_TIMER_DONE
 typedef struct sk_pto_service_timer_done_t {
-    sk_arg_t svc;   // void*
+    sk_arg_t svc;      // void*
+    sk_arg_t interval; // uint32
 } sk_pto_service_timer_done_t;
 
 // SK_PTO_STDIN_START
@@ -198,19 +200,20 @@ struct sk_pto_stdin_start_t;
 
 // SK_PTO_TIMER_EMIT
 typedef struct sk_pto_timer_emit_t {
-   sk_arg_t svc;   // void*
-   sk_arg_t job;   // func
-   sk_arg_t udata; // void*
-   sk_arg_t valid; // bool
-   sk_arg_t bidx;  // int
-   sk_arg_t type;  // int
+    sk_arg_t svc;   // void*
+    sk_arg_t job;   // func
+    sk_arg_t udata; // void*
+    sk_arg_t valid; // bool
+    sk_arg_t bidx;  // int
+    sk_arg_t type;  // int
+    sk_arg_t interval; // uint32
 } sk_pto_timer_emit_t;
 
 // SK_PTO_TIMER_TRIGGERED
 typedef struct sk_pto_timer_triggered_t {
-   sk_arg_t timer_obj; // void*
-   sk_arg_t timer_cb;  // func
-   sk_arg_t ud;        // void*
+    sk_arg_t timer_obj; // void*
+    sk_arg_t timer_cb;  // func
+    sk_arg_t ud;        // void*
 } sk_pto_timer_triggered_t;
 
 // SK_PTO_WORKFLOW_RUN
