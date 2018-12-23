@@ -58,7 +58,7 @@
 #define MEM_FMT_ARGS(t, n, metrics) \
     MEM_FMT, t, n, #metrics, st->metrics
 
-#define MODULE_STAT_FMT           "%s - unpack %zu | run %zu | pack %zu ; "
+#define MODULE_STAT_FMT           "%s unpack:%zu run:%zu pack:%zu; "
 
 static const char* LEVELS[] = {
     "Trace", "Debug", "Info", "Warn", "Error", "Fatal"};
@@ -310,7 +310,7 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
         sk_service_t* service = NULL;
 
         while ((service = fhash_str_next(&iter))) {
-            _append_response(txn, "%s tasks: %d ; ",
+            _append_response(txn, "%s tasks:%d; ",
                              sk_service_name(service),
                              sk_service_running_taskcnt(service));
         }
@@ -378,10 +378,10 @@ void _status_entity(sk_txn_t* txn, sk_core_t* core)
         _merge_stat(&stat, core->bio[i]);
     }
 
-    _append_response(txn, IFMT(entities, "total: %d inactive: %d ; none: %d "
-        "std: %d v4tcp: %d v4udp: %d v6tcp: %d v6udp: %d timer: %d "
-        "ep_v4tcp: %d ep_v4udp: %d ep_v6tcp: %d ep_v6udp: %d "
-        "ep_timer: %d ep_txn_timer: %d\n"),
+    _append_response(txn, IFMT(entities, "total:%d inactive:%d; none:%d "
+        "std:%d v4tcp:%d v4udp:%d v6tcp:%d v6udp:%d timer:%d "
+        "ep_v4tcp:%d ep_v4udp:%d ep_v6tcp:%d ep_v6udp:%d "
+        "ep_timer:%d ep_txn_timer:%d\n"),
         stat.total, stat.inactive, stat.entity_none, stat.entity_std,
         stat.entity_sock_v4tcp, stat.entity_sock_v4udp,
         stat.entity_sock_v6tcp, stat.entity_sock_v6udp,
