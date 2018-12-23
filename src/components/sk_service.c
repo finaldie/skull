@@ -431,6 +431,9 @@ void sk_service_schedule_normaltask(sk_service_t* service,
 void sk_service_schedule_task(sk_service_t* service,
                               const sk_srv_task_t* task)
 {
+    SK_ASSERT(SK_ENV_ENGINE == SK_ENV_CORE->master);
+    sk_print("service schedule one task\n");
+
     if (task->io_status == SK_SRV_IO_STATUS_OK) {
         sk_service_schedule_normaltask(service, task);
     } else {

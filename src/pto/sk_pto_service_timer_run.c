@@ -43,17 +43,9 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src /*master*/,
     SK_ENV_POS_RESTORE();
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
-    if (status == SK_SRV_JOB_OK) {
-        // Notify master the service task has completed
-        sk_sched_send(sched, src, entity, NULL, 0, SK_PTO_SVC_TIMER_DONE,
-                      service, interval);
-    } else {
-        // Destory timer entity directly since we won't call timer complete
-        if (!interval) {
-            sk_entity_safe_destroy(entity);
-        }
-    }
-
+    // Notify master the service task has been completed
+    sk_sched_send(sched, src, entity, NULL, 0, SK_PTO_SVC_TIMER_DONE,
+                  service, status, interval);
     return 0;
 }
 

@@ -131,31 +131,33 @@ void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
 {
     pthread_mutex_lock(&sk_mon->lock);
     {
-        // 1. Release latest snapshot
-        sk_mon_snapshot_destroy(sk_mon->latest);
-
-        // 2. Create snapshot
+        // 1. Create snapshot
         time_t now = time(NULL);
-        sk_mon->latest =
+        sk_mon_snapshot_t* snapshot =
             _sk_mon_snapshot_create(sk_mon->start, now);
 
-        // 3. Reset data and fill into snapshot
+        // 2. Reset data and fill into snapshot
         sk_mon->start = now;
 
         fhash_iter iter = fhash_iter_new(sk_mon->mon_tbl);
         void* value = NULL;
 
         while((value = fhash_next(&iter))) {
-            // 3.1 Fill old data into snapshot
-            fhash_set(sk_mon->latest->snapshot, iter.key, iter.key_sz,
+            // 2.1 Fill old data into snapshot
+            fhash_set(snapshot->snapshot, iter.key, iter.key_sz,
                       iter.value, iter.value_sz);
 
-            // 3.2 Reset data
+            // 2.2 Reset data
             double value = 0.0f;
             fhash_set(sk_mon->mon_tbl, iter.key, iter.key_sz,
                       &value, sizeof(value));
         }
         fhash_iter_release(&iter);
+
+        // 3. Release old latest snapshot and reset
+        sk_mon_snapshot_t* old = sk_mon->latest;
+        sk_mon->latest = snapshot;
+        sk_mon_snapshot_destroy(old);
     }
     pthread_mutex_unlock(&sk_mon->lock);
 

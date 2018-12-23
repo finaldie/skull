@@ -192,6 +192,7 @@ typedef struct sk_pto_service_timer_run_t {
 // SK_PTO_SVC_TIMER_DONE
 typedef struct sk_pto_service_timer_done_t {
     sk_arg_t svc;      // void*
+    sk_arg_t status;   // int
     sk_arg_t interval; // uint32
 } sk_pto_service_timer_done_t;
 

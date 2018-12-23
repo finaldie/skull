@@ -36,7 +36,7 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     memset(&task, 0, sizeof(task));
 
     task.base.type = type == SK_SRV_JOB_READ
-                                ? SK_QUEUE_ELEM_READ : SK_QUEUE_ELEM_WRITE;
+        ? SK_QUEUE_ELEM_READ : SK_QUEUE_ELEM_WRITE;
     task.type              = SK_SRV_TASK_TIMER;
     task.io_status         = SK_SRV_IO_STATUS_OK;
     task.bidx              = bidx;
@@ -45,7 +45,7 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     task.data.timer.job    = ujob;
     task.data.timer.ud     = udata;
     task.data.timer.valid  = valid;
-    task.data.timer.interval  = interval;
+    task.data.timer.interval = interval;
 
     // 2. Push to service task queue
     sk_print("push task to service queue\n");
@@ -53,9 +53,6 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     if (ret != SK_SRV_STATUS_OK) {
         SK_ASSERT_MSG(ret == SK_SRV_STATUS_BUSY, "ret: %d\n", ret);
         task.io_status = SK_SRV_IO_STATUS_BUSY;
-
-        sk_metrics_worker.srv_timer_busy.inc(1);
-        sk_metrics_global.srv_timer_busy.inc(1);
 
         SK_LOG_DEBUG(SK_ENV_LOGGER, "ServiceJob Busy, service: %s", sk_service_name(svc));
 
