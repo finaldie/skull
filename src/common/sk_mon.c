@@ -162,8 +162,18 @@ void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
     sk_print("snapshot one done\n");
 }
 
-sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t* sk_mon)
+static
+sk_mon_snapshot_t* sk_mon_snapshot_latest(sk_mon_t* sk_mon)
 {
+    return sk_mon->latest;
+}
+
+sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t* sk_mon, int loc)
+{
+    if (loc) {
+        return sk_mon_snapshot_latest(sk_mon);
+    }
+
     sk_mon_snapshot_t* snapshot = NULL;
 
     pthread_mutex_lock(&sk_mon->lock);
@@ -182,11 +192,6 @@ sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t* sk_mon)
     pthread_mutex_unlock(&sk_mon->lock);
 
     return snapshot;
-}
-
-sk_mon_snapshot_t* sk_mon_snapshot_latest(sk_mon_t* sk_mon)
-{
-    return sk_mon->latest;
 }
 
 void sk_mon_snapshot_all(sk_core_t* core)

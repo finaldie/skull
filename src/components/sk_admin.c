@@ -98,16 +98,6 @@ void _sk_admin_data_destroy(sk_admin_data_t* admin_data)
 }
 
 static
-void _process_help(sk_txn_t* txn)
-{
-    sk_admin_data_t* admin_data = sk_txn_udata(txn);
-
-    // Populate the response
-    fmbuf_push(admin_data->response, ADMIN_CMD_HELP_CONTENT,
-               sizeof(ADMIN_CMD_HELP_CONTENT));
-}
-
-static
 void _append_response(sk_txn_t* txn, const char* fmt, ...)
 {
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
@@ -121,6 +111,11 @@ void _append_response(sk_txn_t* txn, const char* fmt, ...)
     va_end(args);
 
     fmbuf_push(admin_data->response, line, (size_t)len);
+}
+
+static
+void _process_help(sk_txn_t* txn) {
+    _append_response(txn, ADMIN_CMD_HELP_CONTENT);
 }
 
 static
@@ -164,8 +159,7 @@ void _transport_mon_snapshot(sk_mon_snapshot_t* snapshot,
 }
 
 static
-void _fill_data_string(time_t time, sk_admin_data_t* admin_data)
-{
+void _fill_data_string(sk_txn_t* txn, time_t time) {
     struct tm tm;
     gmtime_r(&time, &tm);
 
@@ -174,32 +168,31 @@ void _fill_data_string(time_t time, sk_admin_data_t* admin_data)
              (tm.tm_year + 1900), tm.tm_mon + 1, tm.tm_mday,
              tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-    fmbuf_push(admin_data->response, time_str, 19);
+    _append_response(txn, time_str);
 }
 
 static
-void _fill_first_line(sk_mon_snapshot_t* snapshot,
-                      sk_admin_data_t* admin_data)
-{
-
+void _fill_first_line(sk_txn_t* txn, sk_mon_snapshot_t* snapshot) {
     time_t start = sk_mon_snapshot_starttime(snapshot);
     time_t end   = sk_mon_snapshot_endtime(snapshot);
 
-    _fill_data_string(start, admin_data);
-    fmbuf_push(admin_data->response, " to ", 4);
-    _fill_data_string(end, admin_data);
-    fmbuf_push(admin_data->response, "\n", 1);
+    _fill_data_string(txn, start);
+    _append_response(txn, " to ");
+    _fill_data_string(txn, end);
+    _append_response(txn, "\n");
 }
 
 static
-void _process_metrics(sk_txn_t* txn)
+void _process_metrics(sk_txn_t* txn, int loc)
 {
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
     sk_core_t* core = SK_ENV_CORE;
 
     // 1. snapshot global metrics
-    sk_mon_snapshot_t* global_snapshot = sk_mon_snapshot(core->mon);
-    _fill_first_line(global_snapshot, admin_data);
+    sk_mon_snapshot_t* global_snapshot = sk_mon_snapshot(core->mon, loc);
+    if (!global_snapshot) return;
+
+    _fill_first_line(txn, global_snapshot);
     _append_response(txn, "\n");
 
     _transport_mon_snapshot(global_snapshot, admin_data);
@@ -207,7 +200,7 @@ void _process_metrics(sk_txn_t* txn)
     _append_response(txn, "\n");
 
     // 2. snapshot master metrics
-    sk_mon_snapshot_t* master_snapshot = sk_mon_snapshot(core->master->mon);
+    sk_mon_snapshot_t* master_snapshot = sk_mon_snapshot(core->master->mon, loc);
     _transport_mon_snapshot(master_snapshot, admin_data);
     sk_mon_snapshot_destroy(master_snapshot);
     _append_response(txn, "\n");
@@ -216,7 +209,7 @@ void _process_metrics(sk_txn_t* txn)
     int threads = core->config->threads;
     for (int i = 0; i < threads; i++) {
         sk_engine_t* worker = core->workers[i];
-        sk_mon_snapshot_t* worker_snapshot = sk_mon_snapshot(worker->mon);
+        sk_mon_snapshot_t* worker_snapshot = sk_mon_snapshot(worker->mon, loc);
         _transport_mon_snapshot(worker_snapshot, admin_data);
         sk_mon_snapshot_destroy(worker_snapshot);
         _append_response(txn, "\n");
@@ -225,54 +218,18 @@ void _process_metrics(sk_txn_t* txn)
     // 4. snapshot bio metrics
     for (int i = 0; i < core->config->bio_cnt; i++) {
         sk_engine_t* bio = core->bio[i];
-        sk_mon_snapshot_t* bio_snapshot = sk_mon_snapshot(bio->mon);
+        sk_mon_snapshot_t* bio_snapshot = sk_mon_snapshot(bio->mon, loc);
         _transport_mon_snapshot(bio_snapshot, admin_data);
         sk_mon_snapshot_destroy(bio_snapshot);
         _append_response(txn, "\n");
     }
 
     // 5. shapshot user metrics
-    sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot(core->umon);
+    sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot(core->umon, loc);
     _transport_mon_snapshot(user_snapshot, admin_data);
     sk_mon_snapshot_destroy(user_snapshot);
-    _append_response(txn, "\n");
-}
 
-static
-void _process_last_snapshot(sk_txn_t* txn)
-{
-    sk_admin_data_t* admin_data = sk_txn_udata(txn);
-    sk_core_t* core = SK_ENV_CORE;
-
-    // 1. snapshot global metrics
-    sk_mon_snapshot_t* global_snapshot = sk_mon_snapshot_latest(core->mon);
-    if (!global_snapshot) {
-        return;
-    }
-
-    _fill_first_line(global_snapshot, admin_data);
-    _transport_mon_snapshot(global_snapshot, admin_data);
-    _append_response(txn, "\n");
-
-    // 2. snapshot master metrics
-    sk_mon_t* master_mon = core->master->mon;
-    sk_mon_snapshot_t* master_snapshot = sk_mon_snapshot_latest(master_mon);
-    _transport_mon_snapshot(master_snapshot, admin_data);
-    _append_response(txn, "\n");
-
-    // 3. snapshot workers metrics
-    int threads = core->config->threads;
-    for (int i = 0; i < threads; i++) {
-        sk_engine_t* worker = core->workers[i];
-        sk_mon_snapshot_t* worker_snapshot = sk_mon_snapshot_latest(worker->mon);
-        _transport_mon_snapshot(worker_snapshot, admin_data);
-        _append_response(txn, "\n");
-    }
-
-    // 4. shapshot user metrics
-    sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot_latest(core->umon);
-    _transport_mon_snapshot(user_snapshot, admin_data);
-    _append_response(txn, "\n");
+    _fill_first_line(txn, global_snapshot);
 }
 
 static
@@ -364,21 +321,22 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
 }
 
 static
-void _merge_stat(sk_entity_mgr_stat_t* stat, const sk_entity_mgr_stat_t* merging)
+void _merge_one_stat(sk_entity_mgr_stat_t* target,
+                     const sk_entity_mgr_stat_t* stat)
 {
-    stat->total               += merging->total;
-    stat->inactive            += merging->inactive;
-    stat->entity_none         += merging->entity_none;
-    stat->entity_sock_v4tcp   += merging->entity_sock_v4tcp;
-    stat->entity_sock_v4udp   += merging->entity_sock_v4udp;
-    stat->entity_sock_v6tcp   += merging->entity_sock_v6tcp;
-    stat->entity_sock_v6udp   += merging->entity_sock_v6udp;
-    stat->entity_timer        += merging->entity_timer;
-    stat->entity_ep_v4tcp     += merging->entity_ep_v4tcp;
-    stat->entity_ep_v4udp     += merging->entity_ep_v4udp;
-    stat->entity_ep_v6tcp     += merging->entity_ep_v6tcp;
-    stat->entity_ep_v6udp     += merging->entity_ep_v6udp;
-    stat->entity_ep_txn_timer += merging->entity_ep_txn_timer;
+    target->total               += stat->total;
+    target->inactive            += stat->inactive;
+    target->entity_none         += stat->entity_none;
+    target->entity_sock_v4tcp   += stat->entity_sock_v4tcp;
+    target->entity_sock_v4udp   += stat->entity_sock_v4udp;
+    target->entity_sock_v6tcp   += stat->entity_sock_v6tcp;
+    target->entity_sock_v6udp   += stat->entity_sock_v6udp;
+    target->entity_timer        += stat->entity_timer;
+    target->entity_ep_v4tcp     += stat->entity_ep_v4tcp;
+    target->entity_ep_v4udp     += stat->entity_ep_v4udp;
+    target->entity_ep_v6tcp     += stat->entity_ep_v6tcp;
+    target->entity_ep_v6udp     += stat->entity_ep_v6udp;
+    target->entity_ep_txn_timer += stat->entity_ep_txn_timer;
 }
 
 static
@@ -393,18 +351,31 @@ void _status_time(sk_txn_t* txn, sk_core_t* core) {
 }
 
 static
+void _merge_stat(sk_entity_mgr_stat_t* target,
+                 const sk_engine_t* engine) {
+    sk_entity_mgr_stat_t tmp = sk_entity_mgr_stat(engine->entity_mgr);
+    _merge_one_stat(target, &tmp);
+
+    tmp = sk_entity_mgr_stat(sk_ep_pool_emgr(engine->ep_pool, SK_EP_TCP));
+    _merge_one_stat(target, &tmp);
+
+    tmp = sk_entity_mgr_stat(sk_ep_pool_emgr(engine->ep_pool, SK_EP_UDP));
+    _merge_one_stat(target, &tmp);
+}
+
+static
 void _status_entity(sk_txn_t* txn, sk_core_t* core)
 {
-    sk_entity_mgr_stat_t stat = sk_entity_mgr_stat(core->master->entity_mgr);
+    sk_entity_mgr_stat_t stat;
+    memset(&stat, 0, sizeof(stat));
+    _merge_stat(&stat, core->master);
 
     for (int i = 0; i < core->config->threads; i++) {
-        sk_entity_mgr_stat_t tmp = sk_entity_mgr_stat(core->workers[i]->entity_mgr);
-        _merge_stat(&stat, &tmp);
+        _merge_stat(&stat, core->workers[i]);
     }
 
     for (int i = 0; i < core->config->bio_cnt; i++) {
-        sk_entity_mgr_stat_t tmp = sk_entity_mgr_stat(core->bio[i]->entity_mgr);
-        _merge_stat(&stat, &tmp);
+        _merge_stat(&stat, core->bio[i]);
     }
 
     _append_response(txn, IFMT(entities, "total: %d inactive: %d ; none: %d "
@@ -729,9 +700,9 @@ int _admin_run(void* md, sk_txn_t* txn)
         _process_help(txn);
     } else if (0 == strcasecmp(ADMIN_CMD_METRICS, command) ||
                0 == strcasecmp(ADMIN_CMD_COUNTER, command)) {
-        _process_metrics(txn);
+        _process_metrics(txn, 0);
     } else if (0 == strcasecmp(ADMIN_CMD_LAST_SNAPSHOT, command)) {
-        _process_last_snapshot(txn);
+        _process_metrics(txn, -1);
     } else if (0 == strcasecmp(ADMIN_CMD_STATUS, command) ||
                0 == strcasecmp(ADMIN_CMD_INFO, command)) {
         _process_status(txn);

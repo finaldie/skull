@@ -8,8 +8,7 @@ WARN    ?= -Wall
 EXTRA   += -pedantic -Wpadded -Wextra -Wno-unused-parameter
 EXTRA   += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
 EXTRA   += -Wconversion
-#FEATURE += -fno-omit-frame-pointer
-FEATURE +=
+FEATURE += -fno-omit-frame-pointer
 OTHER   += -pipe -g -ggdb3 -fPIC
 SHARED  += -shared
 

@@ -1162,6 +1162,15 @@ void sk_ep_pool_destroy(sk_ep_pool_t* pool)
     free(pool);
 }
 
+const sk_entity_mgr_t*
+sk_ep_pool_emgr(const sk_ep_pool_t* pool, sk_ep_type_t type) {
+    if (type == SK_EP_TCP) {
+        return pool->tcp->eps;
+    } else {
+        return pool->udp->eps;
+    }
+}
+
 sk_ep_status_t _sk_ep_send(sk_ep_pool_t*         pool,
                            const sk_service_t*   service,
                            const sk_entity_t*    entity,
