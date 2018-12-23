@@ -46,34 +46,11 @@ void _skull_log_notification_cb(flog_event_t event)
 
 // Internal
 static
-sk_logger_t* _logger_create(const char* workdir,
-                            const char* log_name,
+sk_logger_t* _logger_create(const char* log_path,
                             bool  stdout_fwd) {
-    char full_name[SK_LOG_MAX_PATH_LEN];
-    memset(full_name, 0, SK_LOG_MAX_PATH_LEN);
-
-    if (stdout_fwd) {
-        snprintf(full_name, SK_LOG_MAX_PATH_LEN, "%s", SK_LOG_STDOUT_FILE);
-    } else {
-        size_t workdir_len  = strlen(workdir);
-        size_t log_name_len = strlen(log_name);
-
-        // Notes: we add more 5 bytes space for the string of fullname "/log/"
-        size_t full_name_sz = workdir_len + log_name_len + 5 + 1;
-        SK_ASSERT_MSG(full_name_sz < SK_LOG_MAX_PATH_LEN,
-                      "Full log path is too long (>= %d), workdir: %s, name: %s\n",
-                      SK_LOG_MAX_PATH_LEN, workdir, log_name);
-
-        // Construct the full log name and then create async logger
-        // NOTES: the log file will be put at log/xxx
-        snprintf(full_name, SK_LOG_MAX_PATH_LEN, "%s/log/%s",
-                 workdir, log_name);
-
-    }
-
-    flog_file_t* logger = flog_create(full_name, FLOG_F_ASYNC);
+    flog_file_t* logger = flog_create(log_path, FLOG_F_ASYNC);
     SK_ASSERT_MSG(logger, "Logger creation failure: %s : %s\n",
-                  full_name, strerror(errno));
+                  log_path, strerror(errno));
 
     return logger;
 }
@@ -102,13 +79,12 @@ void _logger_apply(flog_file_t* logger, int log_level, bool rolling_disabled, bo
 }
 
 // Public APIs
-sk_logger_t* sk_logger_create(const char* workdir,
-                              const char* log_name,
-                              int   log_level,
-                              bool  rolling_disabled,
-                              bool  stdout_fwd)
+sk_logger_t* sk_logger_create(const char* log_path,
+                              int  log_level,
+                              bool rolling_disabled,
+                              bool stdout_fwd)
 {
-    flog_file_t* logger = _logger_create(workdir, log_name, stdout_fwd);
+    flog_file_t* logger = _logger_create(log_path, stdout_fwd);
 
     _logger_apply(logger, log_level, rolling_disabled, stdout_fwd);
 

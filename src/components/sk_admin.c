@@ -252,11 +252,13 @@ void _process_last_snapshot(sk_txn_t* txn)
 
     _fill_first_line(global_snapshot, admin_data);
     _transport_mon_snapshot(global_snapshot, admin_data);
+    _append_response(txn, "\n");
 
     // 2. snapshot master metrics
     sk_mon_t* master_mon = core->master->mon;
     sk_mon_snapshot_t* master_snapshot = sk_mon_snapshot_latest(master_mon);
     _transport_mon_snapshot(master_snapshot, admin_data);
+    _append_response(txn, "\n");
 
     // 3. snapshot workers metrics
     int threads = core->config->threads;
@@ -264,11 +266,13 @@ void _process_last_snapshot(sk_txn_t* txn)
         sk_engine_t* worker = core->workers[i];
         sk_mon_snapshot_t* worker_snapshot = sk_mon_snapshot_latest(worker->mon);
         _transport_mon_snapshot(worker_snapshot, admin_data);
+        _append_response(txn, "\n");
     }
 
     // 4. shapshot user metrics
     sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot_latest(core->umon);
     _transport_mon_snapshot(user_snapshot, admin_data);
+    _append_response(txn, "\n");
 }
 
 static
@@ -479,10 +483,8 @@ void _process_status(sk_txn_t* txn)
     // config: log file absolute location
     int log_level = core->config->log_level;
     _append_response(txn, IFMT(log_level, "%s\n"), LEVELS[log_level]);
-    _append_response(txn, IFMT(log_file,  "%s/log/%s\n"),
-                     core->working_dir, core->config->log_name);
-    _append_response(txn, IFMT(diag_file, "%s/log/%s\n"),
-                     core->working_dir, core->config->diag_name);
+    _append_response(txn, IFMT(log_file,  "%s\n"), core->log_path);
+    _append_response(txn, IFMT(diag_file, "%s\n"), core->diag_path);
 
     if (core->cmd_args.daemon) {
         _append_response(txn, IFMT(stdout, "%s/log/%s\n"),

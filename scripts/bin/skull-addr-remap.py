@@ -588,7 +588,7 @@ def _reportMemLeak():
                     rawList.append((MEMLEAK_NOLEAK, scopeName, block, memStat,
                         latencyNs, avgNs, maxNs))
 
-    sortedList = sorted(rawList, key = lambda x: x[0])
+    sortedList = sorted(rawList, key = lambda x: (x[0], x[4]))
 
     global DEBUG
     if DEBUG: pprint.pprint(MemMap)

@@ -15,8 +15,7 @@
 
 typedef flog_file_t sk_logger_t;
 
-sk_logger_t* sk_logger_create(const char* workdir,
-                              const char* log_name,
+sk_logger_t* sk_logger_create(const char* log_path,
                               int   log_level,
                               bool  rolling_disabled,
                               bool  stdout_fwd);

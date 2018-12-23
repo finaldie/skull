@@ -64,7 +64,7 @@ struct sk_const_t;
 
 // config
 #define SK_CONFIG_LOCATION_LEN               (1024)
-#define SK_CONFIG_LOGNAME_LEN                (128)
+#define SK_CONFIG_LOGNAME_LEN                (64)
 
 #define SK_CONFIG_NO_PORT                    (-1)
 #define SK_CONFIG_DEFAULT_CMD_PORT           (7759)

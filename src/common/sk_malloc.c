@@ -18,7 +18,6 @@
 #include "api/sk_core.h"
 #include "api/sk_service.h"
 #include "api/sk_malloc.h"
-#include "api/sk_log.h"
 
 #define SK_MEMDUMP_MAX_LENGTH  (8192)
 #define SK_MEMDUMP_LINE_LENGTH (1024)
@@ -404,10 +403,8 @@ void sk_mem_init() {
     imem.sstats = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 }
 
-void sk_mem_init_log(const char* workdir, const char* logname, int log_level,
-                     bool stdout_fwd) {
-    imem.logger = sk_logger_create(workdir, logname, log_level,
-                                   false, stdout_fwd);
+void sk_mem_init_log(const sk_logger_t* logger) {
+    imem.logger = (sk_logger_t*)logger;
 }
 
 void sk_mem_destroy() {
@@ -421,7 +418,7 @@ void sk_mem_destroy() {
     _stat_tbl_destroy(imem.sstats);
     imem.sstats = NULL;
 
-    sk_logger_destroy(imem.logger);
+    imem.logger = NULL;
 }
 
 const sk_mem_stat_t* sk_mem_stat_static() {

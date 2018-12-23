@@ -27,11 +27,46 @@
 #include "api/sk_core.h"
 
 // INTERNAL APIs
+
+static
+int _sk_snprintf_logpath(char* path, size_t sz, const char* workdir,
+                         const char* logname, bool std_fwd) {
+    if (std_fwd) {
+        return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s", SK_LOG_STDOUT_FILE);
+    } else if (logname[0] == '/') {
+        return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s", logname);
+    } else {
+        size_t workdir_len = strlen(workdir);
+        size_t logname_len = strlen(logname);
+
+        // Notes: we add more 5 bytes space for the string of fullname "/log/"
+        size_t full_name_sz = workdir_len + logname_len + 5 + 1;
+        SK_ASSERT_MSG(full_name_sz < SK_LOG_MAX_PATH_LEN,
+            "Full log path is too long (>= %d), workdir: %s, name: %s\n",
+            SK_LOG_MAX_PATH_LEN, workdir, logname);
+
+        // Construct the full log name and then create async logger
+        // NOTES: the log file will be put at log/xxx
+        return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s/log/%s", workdir, logname);
+    }
+}
+
 static
 void _sk_init_mem_log(sk_core_t* core) {
-    const sk_config_t* config = core->config;
-    sk_mem_init_log(core->working_dir, config->diag_name, FLOG_LEVEL_TRACE,
-                    core->cmd_args.log_stdout_fwd);
+    const sk_config_t*   config   =  core->config;
+    const sk_cmd_args_t* cmd_args = &core->cmd_args;
+
+    _sk_snprintf_logpath(core->diag_path, SK_LOG_MAX_PATH_LEN,
+                         core->working_dir, config->diag_name,
+                         cmd_args->log_stdout_fwd);
+
+    core->logger_diag = sk_logger_create(core->diag_path,
+                         config->log_level,
+                         cmd_args->log_rolling_disabled,
+                         cmd_args->log_stdout_fwd);
+    SK_ASSERT_MSG(core->logger_diag, "create diagnosis logger failed\n");
+
+    sk_mem_init_log(core->logger_diag);
 }
 
 static
@@ -367,16 +402,20 @@ void _sk_service_destroy(sk_core_t* core)
 static
 void _sk_init_log(sk_core_t* core)
 {
-    const sk_config_t* config = core->config;
+    const sk_config_t*   config   =  core->config;
+    const sk_cmd_args_t* cmd_args = &core->cmd_args;
 
     // memory statistics logger initialization
     _sk_init_mem_log(core);
 
     // core logger initialization
-    core->logger = sk_logger_create(core->working_dir, config->log_name,
-                                    config->log_level,
-                                    core->cmd_args.log_rolling_disabled,
-                                    core->cmd_args.log_stdout_fwd);
+    _sk_snprintf_logpath(core->log_path, SK_LOG_MAX_PATH_LEN, core->working_dir,
+                         config->log_name, cmd_args->log_stdout_fwd);
+
+    core->logger = sk_logger_create(core->log_path,
+                         config->log_level,
+                         cmd_args->log_rolling_disabled,
+                         cmd_args->log_stdout_fwd);
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
 
     // set the core logging cookie
@@ -702,9 +741,14 @@ void sk_core_destroy(sk_core_t* core)
              "=================== skull engine stopped ====================");
 
     sk_logger_destroy(core->logger);
+    core->logger = NULL;
 
-    // 12. Destroy mem statistics
+    // 12. Destroy env and mem statistics
     sk_mem_dump("ENGINE-DESTROY-DONE");
+
+    sk_logger_destroy(core->logger_diag);
+    core->logger_diag = NULL;
+
     _sk_env_destroy(core);
 }
 

@@ -17,6 +17,7 @@
 #define SK_ENV_CONFIG       (SK_ENV_CORE->config)
 #define SK_ENV_WORKFLOWS    (SK_ENV_CORE->workflows)
 #define SK_ENV_LOGGER       (SK_ENV_CORE->logger)
+#define SK_ENV_LOGGER_DIAG  (SK_ENV_CORE->logger_diag)
 #define SK_ENV_SCHED        (SK_ENV_ENGINE->sched)
 #define SK_ENV_ENTITY_MGR   (SK_ENV_ENGINE->entity_mgr)
 #define SK_ENV_EVENTLOOP    (SK_ENV_ENGINE->evlp)
