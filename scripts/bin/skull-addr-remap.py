@@ -35,6 +35,8 @@ MAX_FRAME         = 9  # Besides first caller, how many additional frames
 MAX_REPORT        = 10
 NUM_OF_PROCESSED  = 100
 
+MEMLEAK_WHITELIST = ['deps/flibs/fhash']
+
 # =========== Global non-static variables ===========
 DEBUG   = False
 EXTRACT = False
@@ -543,6 +545,14 @@ def _dumpMemLeakStacks(stacks):
         _dumpFrames(frames, fmt)
         print(fmt.format(0, sAddr1, hrAddr1), end = '')
 
+def _isMemLeakWhiteList(hrAddr):
+    for item in MEMLEAK_WHITELIST:
+        if item in hrAddr:
+            return True
+
+    return False
+
+
 def _reportMemLeak():
     now = TRACING_END_TIME
     rawList  = []
@@ -590,8 +600,6 @@ def _reportMemLeak():
     stacks = []
 
     for record in sortedList:
-        lineno += 1
-
         reason    = record[0]
         scopeName = record[1]
         block     = record[2]
@@ -600,15 +608,20 @@ def _reportMemLeak():
         avgNs     = record[5]
         maxNs     = record[6]
 
-        if reason == 'Noleak' or lineno >= MAX_REPORT:
+
+        if lineno >= MAX_REPORT or reason == 'Noleak':
             hidenCnt += 1
             continue
 
+        allocated_from = addr2line(block['node'], block['naddr'])
+        if _isMemLeakWhiteList(allocated_from):
+            hidenCnt += 1
+            continue
+
+        lineno += 1
         latencyMs = "%.2f" % (latencyNs / 1000000)
         avgMs = 'n/a' if avgNs < 0 else "%.2f" % (avgNs / 1000000)
         maxMs = 'n/a' if maxNs < 0 else "%.2f" % (maxNs / 1000000)
-
-        allocated_from = addr2line(block['node'], block['naddr'])
 
         print(fmt.format(
             lineno, reason, latencyMs, avgMs, maxMs, block['sz'],
