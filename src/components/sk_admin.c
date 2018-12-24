@@ -196,13 +196,12 @@ void _process_metrics(sk_txn_t* txn, int loc)
     _append_response(txn, "\n");
 
     _transport_mon_snapshot(global_snapshot, admin_data);
-    sk_mon_snapshot_destroy(global_snapshot);
     _append_response(txn, "\n");
 
     // 2. snapshot master metrics
     sk_mon_snapshot_t* master_snapshot = sk_mon_snapshot(core->master->mon, loc);
     _transport_mon_snapshot(master_snapshot, admin_data);
-    sk_mon_snapshot_destroy(master_snapshot);
+    if (!loc) sk_mon_snapshot_destroy(master_snapshot);
     _append_response(txn, "\n");
 
     // 3. snapshot workers metrics
@@ -211,7 +210,7 @@ void _process_metrics(sk_txn_t* txn, int loc)
         sk_engine_t* worker = core->workers[i];
         sk_mon_snapshot_t* worker_snapshot = sk_mon_snapshot(worker->mon, loc);
         _transport_mon_snapshot(worker_snapshot, admin_data);
-        sk_mon_snapshot_destroy(worker_snapshot);
+        if (!loc) sk_mon_snapshot_destroy(worker_snapshot);
         _append_response(txn, "\n");
     }
 
@@ -220,16 +219,17 @@ void _process_metrics(sk_txn_t* txn, int loc)
         sk_engine_t* bio = core->bio[i];
         sk_mon_snapshot_t* bio_snapshot = sk_mon_snapshot(bio->mon, loc);
         _transport_mon_snapshot(bio_snapshot, admin_data);
-        sk_mon_snapshot_destroy(bio_snapshot);
+        if (!loc) sk_mon_snapshot_destroy(bio_snapshot);
         _append_response(txn, "\n");
     }
 
     // 5. shapshot user metrics
     sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot(core->umon, loc);
     _transport_mon_snapshot(user_snapshot, admin_data);
-    sk_mon_snapshot_destroy(user_snapshot);
+    if (!loc) sk_mon_snapshot_destroy(user_snapshot);
 
     _fill_first_line(txn, global_snapshot);
+    if (!loc) sk_mon_snapshot_destroy(global_snapshot);
 }
 
 static
@@ -702,7 +702,7 @@ int _admin_run(void* md, sk_txn_t* txn)
                0 == strcasecmp(ADMIN_CMD_COUNTER, command)) {
         _process_metrics(txn, 0);
     } else if (0 == strcasecmp(ADMIN_CMD_LAST_SNAPSHOT, command)) {
-        _process_metrics(txn, -1);
+        _process_metrics(txn, 1);
     } else if (0 == strcasecmp(ADMIN_CMD_STATUS, command) ||
                0 == strcasecmp(ADMIN_CMD_INFO, command)) {
         _process_status(txn);

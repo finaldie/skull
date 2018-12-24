@@ -102,6 +102,7 @@ struct sk_const_t;
 
 // sk_mon
 #define SK_MON_DEFAULT_SIZE                  (100)
+#define SK_MON_DEFAULT_WINDOW                (2)
 
 #endif
 

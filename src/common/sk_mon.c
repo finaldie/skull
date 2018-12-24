@@ -11,7 +11,7 @@ struct sk_mon_snapshot_t {
     time_t start;
     time_t end;
 
-    fhash* snapshot;
+    fhash* map;
 };
 
 struct sk_mon_t {
@@ -19,7 +19,8 @@ struct sk_mon_t {
     pthread_mutex_t lock;
     time_t          start;
 
-    sk_mon_snapshot_t* latest;
+    // Window size at least >= 2
+    sk_mon_snapshot_t* prev[SK_MON_DEFAULT_WINDOW];
 };
 
 static sk_mon_snapshot_t* _sk_mon_snapshot_create(time_t start, time_t end);
@@ -66,7 +67,9 @@ void sk_mon_destroy(sk_mon_t* sk_mon)
     }
 
     fhash_delete(sk_mon->mon_tbl);
-    sk_mon_snapshot_destroy(sk_mon->latest);
+    for (int i = 0; i < SK_MON_DEFAULT_WINDOW; i++) {
+        sk_mon_snapshot_destroy(sk_mon->prev[i]);
+    }
     int ret = pthread_mutex_destroy(&sk_mon->lock);
     SK_ASSERT(ret == 0);
     free(sk_mon);
@@ -127,7 +130,7 @@ double sk_mon_get(sk_mon_t* sk_mon, const char* name)
     return raw_value;
 }
 
-void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
+void sk_mon_snapshot_and_reset(sk_mon_t* sk_mon)
 {
     pthread_mutex_lock(&sk_mon->lock);
     {
@@ -144,7 +147,7 @@ void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
 
         while((value = fhash_next(&iter))) {
             // 2.1 Fill old data into snapshot
-            fhash_set(snapshot->snapshot, iter.key, iter.key_sz,
+            fhash_set(snapshot->map, iter.key, iter.key_sz,
                       iter.value, iter.value_sz);
 
             // 2.2 Reset data
@@ -154,10 +157,15 @@ void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
         }
         fhash_iter_release(&iter);
 
-        // 3. Release old latest snapshot and reset
-        sk_mon_snapshot_t* old = sk_mon->latest;
-        sk_mon->latest = snapshot;
-        sk_mon_snapshot_destroy(old);
+        // 3. Insert new one in front and release oldest snapshot
+        for (int i = 0; i < SK_MON_DEFAULT_WINDOW; i++) {
+            sk_mon_snapshot_t* tmp = sk_mon->prev[i];
+            sk_mon->prev[i] = snapshot;
+            snapshot = tmp;
+        }
+
+        // Now, the snapshot is pointed to oldest one
+        sk_mon_snapshot_destroy(snapshot);
     }
     pthread_mutex_unlock(&sk_mon->lock);
 
@@ -165,28 +173,31 @@ void sk_mon_reset_and_snapshot(sk_mon_t* sk_mon)
 }
 
 static
-sk_mon_snapshot_t* sk_mon_snapshot_latest(sk_mon_t* sk_mon)
+sk_mon_snapshot_t* sk_mon_snapshot_prev(sk_mon_t* sk_mon, int loc)
 {
-    return sk_mon->latest;
+    if (loc < 0 || loc >= SK_MON_DEFAULT_WINDOW) return NULL;
+    return sk_mon->prev[loc];
 }
 
 sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t* sk_mon, int loc)
 {
-    if (loc) {
-        return sk_mon_snapshot_latest(sk_mon);
-    }
-
     sk_mon_snapshot_t* snapshot = NULL;
 
     pthread_mutex_lock(&sk_mon->lock);
     {
+        if (loc) {
+            snapshot = sk_mon_snapshot_prev(sk_mon, loc - 1);
+            pthread_mutex_unlock(&sk_mon->lock);
+            return snapshot;
+        }
+
         snapshot = _sk_mon_snapshot_create(sk_mon->start, time(NULL));
 
         fhash_iter iter = fhash_iter_new(sk_mon->mon_tbl);
         void* value = NULL;
 
         while((value = fhash_next(&iter))) {
-            fhash_set(snapshot->snapshot, iter.key, iter.key_sz,
+            fhash_set(snapshot->map, iter.key, iter.key_sz,
                       iter.value, iter.value_sz);
         }
         fhash_iter_release(&iter);
@@ -199,26 +210,26 @@ sk_mon_snapshot_t* sk_mon_snapshot(sk_mon_t* sk_mon, int loc)
 void sk_mon_snapshot_all(sk_core_t* core)
 {
     // 1. snapshot global metrics
-    sk_mon_reset_and_snapshot(core->mon);
+    sk_mon_snapshot_and_reset(core->mon);
 
     // 2. snapshot master metrics
-    sk_mon_reset_and_snapshot(core->master->mon);
+    sk_mon_snapshot_and_reset(core->master->mon);
 
     // 3. snapshot workers metrics
     int threads = core->config->threads;
     for (int i = 0; i < threads; i++) {
         sk_engine_t* worker = core->workers[i];
-        sk_mon_reset_and_snapshot(worker->mon);
+        sk_mon_snapshot_and_reset(worker->mon);
     }
 
     // 4. snaphost bio metrics
     for (int i = 0; i < core->config->bio_cnt; i++) {
         sk_engine_t* bio = core->bio[i];
-        sk_mon_reset_and_snapshot(bio->mon);
+        sk_mon_snapshot_and_reset(bio->mon);
     }
 
     // 5. shapshot user metrics
-    sk_mon_reset_and_snapshot(core->umon);
+    sk_mon_snapshot_and_reset(core->umon);
 
     sk_print("snapshot all done\n");
 }
@@ -230,7 +241,7 @@ sk_mon_snapshot_t* _sk_mon_snapshot_create(time_t start, time_t end)
     sk_mon_snapshot_t* snapshot = calloc(1, sizeof(*snapshot));
     snapshot->start = start;
     snapshot->end   = end;
-    snapshot->snapshot =
+    snapshot->map =
         fhash_create(SK_MON_DEFAULT_SIZE, _sk_mon_hash_opt, FHASH_MASK_AUTO_REHASH);
 
     return snapshot;
@@ -240,7 +251,7 @@ void sk_mon_snapshot_destroy(sk_mon_snapshot_t* snapshot)
 {
     if (!snapshot) return;
 
-    fhash_delete(snapshot->snapshot);
+    fhash_delete(snapshot->map);
     free(snapshot);
 }
 
@@ -256,7 +267,7 @@ time_t sk_mon_snapshot_endtime(sk_mon_snapshot_t* snapshot)
 
 void sk_mon_snapshot_foreach(sk_mon_snapshot_t* ss, sk_mon_cb cb, void* ud)
 {
-    fhash_iter iter = fhash_iter_new(ss->snapshot);
+    fhash_iter iter = fhash_iter_new(ss->map);
     void* value = NULL;
 
     while((value = fhash_next(&iter))) {
