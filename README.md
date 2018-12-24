@@ -27,7 +27,7 @@ _Skull_ can be used in generic serving layer or embedded device. E.g. _web logic
 * _Cross-Scope Malloc/Free_
 * _Memory Leak_
 
-![skull-trace](https://github.com/finaldie/misc/blob/master/articals/skull/tracer/skull-trace-report.gif)
+![skull-trace](https://github.com/finaldie/misc/blob/master/articals/skull/tracer/skull-trace-newformat.gif)
 
 ## Documentations
 * [High Level Introduction][6]

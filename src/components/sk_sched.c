@@ -49,12 +49,12 @@ struct sk_sched_t {
 };
 
 // INTERNAL APIs
-static
+static inline
 void _event_destroy(sk_event_t* event)
 {
     if (!event) return;
 
-    sk_print("destroy an event: {pto_id: %u, hop: %u}\n",
+    sk_print("Destroy an event: {pto_id: %u, hop: %u}\n",
              event->pto_id, event->hop);
     free(event->data);
 }

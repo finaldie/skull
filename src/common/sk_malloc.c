@@ -31,20 +31,30 @@
     *name = n; \
 }
 
-// Macro for getting caller frame return address
+// Macros for getting caller frame return address
+#define SK_MAX_FRAME (11)
+#define SK_FRAME_FMT " %p %p %p %p %p %p %p %p %p"
+
 #define SK_FRAME0 \
     (__builtin_return_address(0))
 
-#define SK_FRAME(n) \
+#ifndef SK_MEM_BACKTRACE_DISABLED
+
+# define SK_FRAME(n) \
     (n < ____nframe ? ____frames[n] : NULL)
 
-#define SK_MAX_FRAME (11)
-#define SK_FRAME_FMT " %p %p %p %p %p %p %p %p %p"
-#define SK_BACKTRACE() \
+# define SK_BACKTRACE() \
     int   ____nframe = 0; \
     int   ____max_frame = SK_MIN(imem.tracing_level + 1, SK_MAX_FRAME); \
     void* ____frames[____max_frame]; \
     if (____max_frame > 2) ____nframe = backtrace(____frames, ____max_frame);
+
+#else
+
+# define SK_FRAME(n) (NULL)
+# define SK_BACKTRACE()
+
+#endif
 
 #define SK_FRAMES \
     SK_FRAME(2), SK_FRAME(3), SK_FRAME(4), SK_FRAME(5), SK_FRAME(6), \

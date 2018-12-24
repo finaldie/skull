@@ -33,7 +33,7 @@ MEMLEAK_THRESHOLD = 10 # N times larger than avg latency
 
 MAX_FRAME         = 9  # Besides first caller, how many additional frames
 MAX_REPORT        = 10
-NUM_OF_PROCESSED  = 100
+NUM_OF_PROCESSED  = 50
 
 MEMLEAK_WHITELIST = ['deps/flibs/fhash', '_sk_mon_snapshot_create']
 
