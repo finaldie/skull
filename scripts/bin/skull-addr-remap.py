@@ -476,7 +476,7 @@ def _dumpCrossScopeStacks(stacks):
                 'Allocation Stacks', block['alloced_in'])
 
         __dumpCrossScopeStacks(lineno, block['freed'],
-                'Deallocation Stacks', block['alloced_in'])
+                'Deallocation Stacks', block['freed_in'])
 
 def _reportCrossScope():
     rawList = []
