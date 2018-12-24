@@ -87,12 +87,12 @@ And the below table is the current images:<br>
 
 Tag              | Dockerfile         | Notes                         |
 -----------------|--------------------|-------------------------------|
-1.3              | ([Dockerfile][20]) | 1.3 Debian runtime image      |
-1.3-build        | ([Dockerfile][21]) | 1.3 Debian dev/building image |
-1.3-ubuntu       | ([Dockerfile][22]) | 1.3 Ubuntu runtime image      |
-1.3-ubuntu-build | ([Dockerfile][23]) | 1.3 Ubuntu dev/building image |
-1.3-alpine       | ([Dockerfile][24]) | 1.3 Alpine runtime image      |
-1.3-alpine-build | ([Dockerfile][25]) | 1.3 Alpine dev/building image |
+1.4              | ([Dockerfile][20]) | 1.4 Debian runtime image      |
+1.4-build        | ([Dockerfile][21]) | 1.4 Debian dev/building image |
+1.4-ubuntu       | ([Dockerfile][22]) | 1.4 Ubuntu runtime image      |
+1.4-ubuntu-build | ([Dockerfile][23]) | 1.4 Ubuntu dev/building image |
+1.4-alpine       | ([Dockerfile][24]) | 1.4 Alpine runtime image      |
+1.4-alpine-build | ([Dockerfile][25]) | 1.4 Alpine dev/building image |
 
 ## A Quick Demo
 After installing _Skull_ into the system, run the following steps to
@@ -149,12 +149,12 @@ To fix a bug or add a new feature, just **`Fork`** the repo, then apply the fixe
 [18]: https://www.reddit.com/r/skullengine/
 [19]: https://www.youtube.com/watch?v=2u_-Wl7sDdA
 
-[20]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/Dockerfile
-[21]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/Dockerfile.build
-[22]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/ubuntu/Dockerfile
-[23]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/ubuntu/Dockerfile.build
-[24]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/alpine/Dockerfile
-[25]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.3/alpine/Dockerfile.build
+[20]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.4/Dockerfile
+[21]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.4/Dockerfile.build
+[22]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.4/ubuntu/Dockerfile
+[23]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.4/ubuntu/Dockerfile.build
+[24]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.4/alpine/Dockerfile
+[25]: https://github.com/finaldie/dockerfiles/blob/master/skull/1.4/alpine/Dockerfile.build
 
 [30]: https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/
 [31]: https://hub.docker.com/r/finaldie/skull/

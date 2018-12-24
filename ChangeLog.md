@@ -1,6 +1,11 @@
 * 2018-12-21 1.4.1
   * Engine
     * **New:** Introduce tracing level into `sk_malloc`
+    * **New:** Add `sk_mon_set` api
+    * **Fix:** Service cron job crash issue
+    * **Fix:** Refine __Admin Module__ `info` and `counter` output
+    * **Enhancement:** Add more counters for logger
+    * **Enhancement:** Introduce tracing level concept
   * CLI
     * **New:** `skull-trace` dumps stack frames in memleak report
     * **Enhancement:** `skull-trace` refine output and optimize tracing performance
