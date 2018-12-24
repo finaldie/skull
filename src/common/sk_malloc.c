@@ -38,7 +38,7 @@
 #define SK_FRAME0 \
     (__builtin_return_address(0))
 
-#ifndef SK_MEM_BACKTRACE_DISABLED
+#ifndef SK_MEM_NO_BACKTRACE
 
 # define SK_FRAME(n) \
     (n < ____nframe ? ____frames[n] : NULL)
