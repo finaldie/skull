@@ -35,7 +35,7 @@ MAX_FRAME         = 9  # Besides first caller, how many additional frames
 MAX_REPORT        = 10
 NUM_OF_PROCESSED  = 100
 
-MEMLEAK_WHITELIST = ['deps/flibs/fhash']
+MEMLEAK_WHITELIST = ['deps/flibs/fhash', '_sk_mon_snapshot_create']
 
 # memleak reasons
 MEMLEAK_NOLEAK   = 'NoLeak'
@@ -440,9 +440,8 @@ def _reportMemStat():
 
 def _dumpFrames(frames, fmt):
     sz = len(frames)
-    order = reversed(range(0, sz))
 
-    for i in order:
+    for i in range(0, sz):
         sAddri = frames[i]
         if sAddri == '(nil)':
             continue
@@ -462,10 +461,10 @@ def __dumpCrossScopeStacks(lineno, block, tag, scopeName):
     title = ['#F', 'Address', 'FrameInfo']
     fmt   = '{:<3}{:<20}{}'
 
-    _dumpFrames(block['frames'], fmt)
-
     hrAddr1:str = addr2line(block['node'], block['naddr'])
     print(fmt.format(0, block['saddr'], hrAddr1), end = '')
+
+    _dumpFrames(block['frames'], fmt)
 
 def _dumpCrossScopeStacks(stacks):
     for record in stacks:
@@ -513,7 +512,7 @@ def _reportCrossScope():
 
     lineno   = -1
     hidenCnt = 0
-    stacks = []
+    stacks   = []
 
     for record in sortedList:
         lineno += 1
@@ -547,8 +546,8 @@ def _dumpMemLeakStacks(stacks):
         fmt   = '{:<3}{:<20}{}'
         print(fmt.format(*title))
 
-        _dumpFrames(frames, fmt)
         print(fmt.format(0, sAddr1, hrAddr1), end = '')
+        _dumpFrames(frames, fmt)
 
 def _isMemLeakWhiteList(hrAddr):
     for item in MEMLEAK_WHITELIST:
@@ -588,7 +587,7 @@ def _reportMemLeak():
                     rawList.append((MEMLEAK_NOLEAK, scopeName, block, memStat,
                         latencyNs, avgNs, maxNs))
 
-    sortedList = sorted(rawList, key = lambda x: (x[0], x[4]))
+    sortedList = sorted(rawList, key = lambda x: (x[4]), reverse = True)
 
     global DEBUG
     if DEBUG: pprint.pprint(MemMap)
