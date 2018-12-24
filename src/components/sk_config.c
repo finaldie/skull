@@ -64,11 +64,12 @@ sk_config_t* _create_config()
 {
     sk_config_t* config = calloc(1, sizeof(*config));
     config->threads   = 1;
+    config->log_level = FLOG_LEVEL_INFO;
     config->workflows = flist_create();
     config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
-    config->langs     = flist_create();
     config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
-    config->log_level = FLOG_LEVEL_INFO;
+    config->langs     = flist_create();
+    config->max_fds   = SK_DEFAULT_OPEN_FILES;
     strncpy(config->log_name, "skull.log", sizeof("skull.log"));
     strncpy(config->diag_name, "diag.log", sizeof("diag.log"));
     config->txn_logging = false;
@@ -473,6 +474,25 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
     fhash_str_iter_release(&iter);
 }
 
+static
+bool _validate_logname(const char* name) {
+    if (!name || name[0] == '\0') return false;
+    if (strchr(name, '/')) {
+        return name[0] == '/' && strlen(name) > 1;
+    }
+
+    return true;
+}
+
+static
+void _post_load(const sk_config_t* config) {
+    SK_ASSERT_MSG(_validate_logname(config->log_name),
+                  "Invalid log name %s\n", config->log_name);
+
+    SK_ASSERT_MSG(_validate_logname(config->diag_name),
+                  "Invalid diag log name %s\n", config->diag_name);
+}
+
 sk_config_t* sk_config_create(const char* filename)
 {
     // create sk_config
@@ -489,6 +509,7 @@ sk_config_t* sk_config_create(const char* filename)
     // pick useful information to skull_config struct
     _load_config(root, config);
     sk_config_delete(root);
+    _post_load(config);
     return config;
 }
 

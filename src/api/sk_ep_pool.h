@@ -79,5 +79,10 @@ sk_ep_status_t sk_ep_send(sk_ep_pool_t*         pool,
                           const sk_ep_cb_t      cb,
                           void*                 ud);
 
+struct sk_entity_mgr_t;
+
+const struct sk_entity_mgr_t*
+sk_ep_pool_emgr(const sk_ep_pool_t*, sk_ep_type_t);
+
 #endif
 

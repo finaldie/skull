@@ -29,8 +29,10 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src /*master*/,
     sk_obj_t*      ud      = sk_pto_arg(id, msg, 2)->p;
     int            valid   = sk_pto_arg(id, msg, 3)->b;
     sk_service_job_ret_t status = sk_pto_arg(id, msg, 4)->u32;
+    uint32_t       interval = sk_pto_arg(id, msg, 5)->u32;
 
-    sk_print("In timer run: job: %p\n", (void*)(intptr_t)job);
+    sk_print("In timer run: job: %p. interval: %u\n",
+             (void*)(intptr_t)job, interval);
 
     // Run timer job
     SK_LOG_SETCOOKIE("service.%s", sk_service_name(service));
@@ -41,15 +43,9 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src /*master*/,
     SK_ENV_POS_RESTORE();
     SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
 
-    if (status == SK_SRV_JOB_OK) {
-        // Notify master the service task has completed
-        sk_sched_send(sched, src, entity, NULL, 0, SK_PTO_SVC_TIMER_DONE,
-                      service);
-    } else {
-        // Destory timer entity directly since we won't call timer complete
-        sk_entity_safe_destroy(entity);
-    }
-
+    // Notify master the service task has been completed
+    sk_sched_send(sched, src, entity, NULL, 0, SK_PTO_SVC_TIMER_DONE,
+                  service, status, interval);
     return 0;
 }
 

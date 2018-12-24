@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "api/sk_log.h"
+
 typedef struct sk_mem_stat_t {
     int nmalloc;
     int nfree;
@@ -18,8 +20,7 @@ typedef struct sk_mem_stat_t {
 } sk_mem_stat_t;
 
 void sk_mem_init();
-void sk_mem_init_log(const char* workdir, const char* logname, int log_level,
-                     bool stdout_fwd);
+void sk_mem_init_log(const sk_logger_t*);
 void sk_mem_destroy();
 
 /**
@@ -45,8 +46,15 @@ const sk_mem_stat_t* sk_mem_stat_static();
  */
 const sk_mem_stat_t* sk_mem_stat_core();
 
-bool sk_mem_trace_status();
-void sk_mem_trace(bool enabled);
+int sk_mem_trace_level();
+
+/**
+ * Tracing Level
+ *  0: Disable
+ *  1: Caller only
+ *  (2-N): Caller
+ */
+void sk_mem_trace(int level);
 
 /**
  * Dump all the mem stats into log

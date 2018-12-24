@@ -5,6 +5,7 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include <malloc.h>
+#include <execinfo.h>
 
 #include "flibs/compiler.h"
 #include "flibs/fhash.h"
@@ -17,7 +18,6 @@
 #include "api/sk_core.h"
 #include "api/sk_service.h"
 #include "api/sk_malloc.h"
-#include "api/sk_log.h"
 
 #define SK_MEMDUMP_MAX_LENGTH  (8192)
 #define SK_MEMDUMP_LINE_LENGTH (1024)
@@ -31,12 +31,42 @@
     *name = n; \
 }
 
+// Macros for getting caller frame return address
+#define SK_MAX_FRAME (11)
+#define SK_FRAME_FMT " %p %p %p %p %p %p %p %p %p"
+
+#define SK_FRAME0 \
+    (__builtin_return_address(0))
+
+#ifndef SK_MEM_NO_BACKTRACE
+
+# define SK_FRAME(n) \
+    (n < ____nframe ? ____frames[n] : NULL)
+
+# define SK_BACKTRACE() \
+    int   ____nframe = 0; \
+    int   ____max_frame = SK_MIN(imem.tracing_level + 1, SK_MAX_FRAME); \
+    void* ____frames[____max_frame]; \
+    if (____max_frame > 2) ____nframe = backtrace(____frames, ____max_frame);
+
+#else
+
+# define SK_FRAME(n) (NULL)
+# define SK_BACKTRACE()
+
+#endif
+
+#define SK_FRAMES \
+    SK_FRAME(2), SK_FRAME(3), SK_FRAME(4), SK_FRAME(5), SK_FRAME(6), \
+    SK_FRAME(7), SK_FRAME(8), SK_FRAME(9), SK_FRAME(10)
+
+// Macros for logging format
 #define SK_MT_HEADER_FMT "%lu.%lu %s %s:%s.%s - "
 #define _SK_MT_ALLOC_FMT(symbol) #symbol " %p %zu bytes %lu ns from %p"
-#define _SK_MT_REALLOC_FMT "realloc %p-%p %zu-%zu bytes %lu ns from %p %s"
+#define _SK_MT_REALLOC_FMT "realloc %p-%p %zu-%zu bytes %lu ns from %p"
 
-#define SK_MT_FMT(symbol) SK_MT_HEADER_FMT _SK_MT_ALLOC_FMT(symbol)
-#define SK_MT_FMT_REALLOC SK_MT_HEADER_FMT _SK_MT_REALLOC_FMT
+#define SK_MT_FMT(symbol) SK_MT_HEADER_FMT _SK_MT_ALLOC_FMT(symbol) SK_FRAME_FMT
+#define SK_MT_FMT_REALLOC SK_MT_HEADER_FMT _SK_MT_REALLOC_FMT SK_FRAME_FMT " %s"
 
 #ifdef SKULL_JEMALLOC_LINKED
 # include "jemalloc/jemalloc.h"
@@ -128,9 +158,9 @@ typedef struct sk_mem_env_t {
  *  - service
  */
 typedef struct sk_mem_t {
-    bool          tracing_enabled;
+    int           tracing_level;
 
-    char          _padding[sizeof(void*) - sizeof(bool)];
+    char          _padding[sizeof(void*) - sizeof(int)];
 
     // The mem_stat before thread_env been set up (mainly for counting the stat
     //  during the initialization)
@@ -362,6 +392,11 @@ size_t _stats_dump_to_string(fhash* tbl, fmbuf* logbuf) {
     return usage;
 }
 
+static inline
+bool sk_mem_trace_enabled() {
+    return imem.tracing_level && imem.logger;
+}
+
 static
 void _thread_exit(void* data) {
     sk_print("[mem] thread exit:\n");
@@ -378,14 +413,12 @@ void sk_mem_init() {
     imem.sstats = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 }
 
-void sk_mem_init_log(const char* workdir, const char* logname, int log_level,
-                     bool stdout_fwd) {
-    imem.logger = sk_logger_create(workdir, logname, log_level,
-                                   false, stdout_fwd);
+void sk_mem_init_log(const sk_logger_t* logger) {
+    imem.logger = (sk_logger_t*)logger;
 }
 
 void sk_mem_destroy() {
-    imem.tracing_enabled = false;
+    imem.tracing_level = 0;
     pthread_key_delete(imem.key);
     imem.key = 0;
 
@@ -395,7 +428,7 @@ void sk_mem_destroy() {
     _stat_tbl_destroy(imem.sstats);
     imem.sstats = NULL;
 
-    sk_logger_destroy(imem.logger);
+    imem.logger = NULL;
 }
 
 const sk_mem_stat_t* sk_mem_stat_static() {
@@ -429,12 +462,13 @@ const sk_mem_stat_t* sk_mem_stat_service(const char* name) {
     return fhash_str_get(imem.sstats, name);
 }
 
-bool sk_mem_trace_status() {
-    return imem.tracing_enabled && imem.logger;
+int sk_mem_trace_level() {
+    return imem.tracing_level;
 }
 
-void sk_mem_trace(bool enabled) {
-    imem.tracing_enabled = enabled;
+void sk_mem_trace(int level) {
+    level = level < 0 ? 0 : (level < SK_MAX_FRAME ? level : SK_MAX_FRAME - 1);
+    imem.tracing_level = level;
 }
 
 void sk_mem_dump(const char* fmt, ...) {
@@ -483,11 +517,13 @@ void* malloc(size_t sz) {
     }
 
     SK_MEM_CHECK_AND_BREAK();
-    if (unlikely(sk_mem_trace_status())) {
+    if (unlikely(sk_mem_trace_enabled())) {
+        SK_BACKTRACE();
+
         SK_LOG_INFO(imem.logger, SK_MT_FMT(malloc),
-                start / 1000000000l, start % 1000000000l,
+                start / SK_NS_PER_SEC, start % SK_NS_PER_SEC,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
-                duration, __builtin_return_address(0));
+                duration, SK_FRAME0, SK_FRAMES);
     }
 
     SK_MEM_EXIT();
@@ -510,11 +546,13 @@ void free(void* ptr) {
     ulong_t duration = sk_time_ns() - start;
 
     SK_MEM_CHECK_AND_BREAK();
-    if (unlikely(sk_mem_trace_status())) {
+    if (unlikely(sk_mem_trace_enabled())) {
+        SK_BACKTRACE();
+
         SK_LOG_INFO(imem.logger, SK_MT_FMT(free),
-                start / 1000000000l, start % 1000000000l,
+                start / SK_NS_PER_SEC, start % SK_NS_PER_SEC,
                 SK_GMTT, tname, comp, name, ptr, sz,
-                duration, __builtin_return_address(0));
+                duration, SK_FRAME0, SK_FRAMES);
     }
 
     SK_MEM_EXIT();
@@ -548,11 +586,13 @@ void* calloc(size_t nmemb, size_t sz) {
     }
 
     SK_MEM_CHECK_AND_BREAK();
-    if (unlikely(sk_mem_trace_status())) {
+    if (unlikely(sk_mem_trace_enabled())) {
+        SK_BACKTRACE();
+
         SK_LOG_INFO(imem.logger, SK_MT_FMT(calloc),
-                start / 1000000000l, start % 1000000000l,
+                start / SK_NS_PER_SEC, start % SK_NS_PER_SEC,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
-                duration, __builtin_return_address(0));
+                duration, SK_FRAME0, SK_FRAMES);
     }
 
     SK_MEM_EXIT();
@@ -598,11 +638,13 @@ void* realloc(void* ptr, size_t sz) {
     }
 
     SK_MEM_CHECK_AND_BREAK();
-    if (unlikely(sk_mem_trace_status())) {
+    if (unlikely(sk_mem_trace_enabled())) {
+        SK_BACKTRACE();
+
         SK_LOG_INFO(imem.logger, SK_MT_FMT_REALLOC,
-                start / 1000000000l, start % 1000000000l,
+                start / SK_NS_PER_SEC, start % SK_NS_PER_SEC,
                 SK_GMTT, tname, comp, name, ptr, nptr, old_sz, new_sz,
-                duration, __builtin_return_address(0), warning);
+                duration, SK_FRAME0, SK_FRAMES, warning);
     }
 
     SK_MEM_EXIT();
@@ -626,11 +668,13 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
     }
 
     SK_MEM_CHECK_AND_BREAK();
-    if (unlikely(sk_mem_trace_status())) {
+    if (unlikely(sk_mem_trace_enabled())) {
+        SK_BACKTRACE();
+
         SK_LOG_INFO(imem.logger, SK_MT_FMT(posix_memalign),
-                start / 1000000000l, start % 1000000000l,
+                start / SK_NS_PER_SEC, start % SK_NS_PER_SEC,
                 SK_GMTT, tname, comp, name, *memptr, _get_malloc_sz(*memptr),
-                duration, __builtin_return_address(0));
+                duration, SK_FRAME0, SK_FRAMES);
     }
 
     SK_MEM_EXIT();
@@ -654,11 +698,13 @@ void* aligned_alloc(size_t alignment, size_t size) {
     }
 
     SK_MEM_CHECK_AND_BREAK();
-    if (unlikely(sk_mem_trace_status())) {
+    if (unlikely(sk_mem_trace_enabled())) {
+        SK_BACKTRACE();
+
         SK_LOG_INFO(imem.logger, SK_MT_FMT(aligned_alloc),
-                start / 1000000000l, start % 1000000000l,
+                start / SK_NS_PER_SEC, start % SK_NS_PER_SEC,
                 SK_GMTT, tname, comp, name, ptr, _get_malloc_sz(ptr),
-                duration, __builtin_return_address(0));
+                duration, SK_FRAME0, SK_FRAMES);
     }
 
     SK_MEM_EXIT();

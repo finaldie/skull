@@ -27,11 +27,46 @@
 #include "api/sk_core.h"
 
 // INTERNAL APIs
+
+static
+int _sk_snprintf_logpath(char* path, size_t sz, const char* workdir,
+                         const char* logname, bool std_fwd) {
+    if (std_fwd) {
+        return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s", SK_LOG_STDOUT_FILE);
+    } else if (logname[0] == '/') {
+        return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s", logname);
+    } else {
+        size_t workdir_len = strlen(workdir);
+        size_t logname_len = strlen(logname);
+
+        // Notes: we add more 5 bytes space for the string of fullname "/log/"
+        size_t full_name_sz = workdir_len + logname_len + 5 + 1;
+        SK_ASSERT_MSG(full_name_sz < SK_LOG_MAX_PATH_LEN,
+            "Full log path is too long (>= %d), workdir: %s, name: %s\n",
+            SK_LOG_MAX_PATH_LEN, workdir, logname);
+
+        // Construct the full log name and then create async logger
+        // NOTES: the log file will be put at log/xxx
+        return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s/log/%s", workdir, logname);
+    }
+}
+
 static
 void _sk_init_mem_log(sk_core_t* core) {
-    const sk_config_t* config = core->config;
-    sk_mem_init_log(core->working_dir, config->diag_name, config->log_level,
-                    core->cmd_args.log_stdout_fwd);
+    const sk_config_t*   config   =  core->config;
+    const sk_cmd_args_t* cmd_args = &core->cmd_args;
+
+    _sk_snprintf_logpath(core->diag_path, SK_LOG_MAX_PATH_LEN,
+                         core->working_dir, config->diag_name,
+                         cmd_args->log_stdout_fwd);
+
+    core->logger_diag = sk_logger_create(core->diag_path,
+                         config->log_level,
+                         cmd_args->log_rolling_disabled,
+                         cmd_args->log_stdout_fwd);
+    SK_ASSERT_MSG(core->logger_diag, "create diagnosis logger failed\n");
+
+    sk_mem_init_log(core->logger_diag);
 }
 
 static
@@ -77,6 +112,7 @@ void _sk_setup_engines(sk_core_t* core)
 
     // 1. Create master engine
     core->master = sk_engine_create(SK_ENGINE_MASTER, core->max_fds, 0);
+    sk_mem_dump("ENGINE-INIT-MASTER-DONE");
 
     // 1.1 Now, fix the master env 'engine' link
     core->env->engine = core->master;
@@ -97,6 +133,7 @@ void _sk_setup_engines(sk_core_t* core)
         sk_engine_link(core->workers[i], core->master);
 
         SK_LOG_INFO(core->logger, "io bridge [%d] init successfully", i);
+        sk_mem_dump("ENGINE-INIT-WORKER-DONE-%d", i);
     }
 
     // 3. Create background io engine
@@ -110,6 +147,7 @@ void _sk_setup_engines(sk_core_t* core)
 
         core->bio[i] = bio;
         SK_LOG_INFO(core->logger, "bio engine [%d] init successfully", i + 1);
+        sk_mem_dump("ENGINE-INIT-BIO-DONE-%d", i);
     }
 
     SK_LOG_INFO(core->logger, "skull engines init successfully");
@@ -205,6 +243,12 @@ void _sk_init_env(sk_core_t* core) {
 }
 
 static
+void _sk_env_destroy(sk_core_t* core) {
+    _sk_mem_destroy(core);
+    free(core->env);
+}
+
+static
 void _sk_init_config(sk_core_t* core) {
     core->config = sk_config_create(core->cmd_args.config_location);
 
@@ -242,10 +286,13 @@ void _sk_module_init(sk_core_t* core)
 
         SK_LOG_SETCOOKIE("module.%s", module_name);
         if (module->init(module->md)) {
-            SK_LOG_FATAL(core->logger, "Initialize module %s failed, ABORT!", module_name);
+            SK_LOG_FATAL(core->logger, "Initialize module %s failed, ABORT!",
+                         module_name);
             exit(1);
         }
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+
+        sk_mem_dump("ENGINE-INIT-MODULE-DONE-%s", module_name);
     }
 
     fhash_str_iter_release(&iter);
@@ -321,6 +368,7 @@ void _sk_service_init(sk_core_t* core)
             exit(1);
         }
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
+        sk_mem_dump("ENGINE-INIT-SERVICE-DONE-%s", service_name);
     }
 
     fhash_str_iter_release(&srv_iter);
@@ -354,16 +402,20 @@ void _sk_service_destroy(sk_core_t* core)
 static
 void _sk_init_log(sk_core_t* core)
 {
-    const sk_config_t* config = core->config;
+    const sk_config_t*   config   =  core->config;
+    const sk_cmd_args_t* cmd_args = &core->cmd_args;
 
     // memory statistics logger initialization
     _sk_init_mem_log(core);
 
     // core logger initialization
-    core->logger = sk_logger_create(core->working_dir, config->log_name,
-                                    config->log_level,
-                                    core->cmd_args.log_rolling_disabled,
-                                    core->cmd_args.log_stdout_fwd);
+    _sk_snprintf_logpath(core->log_path, SK_LOG_MAX_PATH_LEN, core->working_dir,
+                         config->log_name, cmd_args->log_stdout_fwd);
+
+    core->logger = sk_logger_create(core->log_path,
+                         config->log_level,
+                         cmd_args->log_rolling_disabled,
+                         cmd_args->log_stdout_fwd);
     SK_ASSERT_MSG(core->logger, "create core logger failed\n");
 
     // set the core logging cookie
@@ -441,27 +493,11 @@ void _sk_init_sys(sk_core_t* core)
     // 1.2 Set the new limitation if needed
     int soft_limit = (int)limit.rlim_cur;
     int conf_max_fds = core->config->max_fds;
-    core->max_fds = conf_max_fds > soft_limit ? conf_max_fds : soft_limit;
+    core->max_fds = SK_MIN(conf_max_fds, soft_limit);
 
-    SK_LOG_INFO(core->logger, "current open file limit(soft): %d", soft_limit);
-
-    if (core->max_fds > soft_limit) {
-        struct rlimit new_limit;
-        new_limit.rlim_cur = (rlim_t)core->max_fds;
-        new_limit.rlim_max = (rlim_t)core->max_fds;
-
-        SK_LOG_INFO(core->logger, "set max open file to %d", core->max_fds);
-        if (setrlimit(RLIMIT_NOFILE, &new_limit)) {
-            fprintf(stderr, "Error: set max open file limitation failed: %s",
-                    strerror(errno));
-
-            SK_LOG_WARN(core->logger,
-                "set max open file limitation failed: %s, will use the default value: %d",
-                strerror(errno), soft_limit);
-
-            core->max_fds = soft_limit;
-        }
-    }
+    SK_LOG_INFO(core->logger, "Open files limitation (soft): %d,"
+                " config max_fds: %d, set max_fds to: %d",
+                soft_limit, core->config->max_fds, core->max_fds);
 }
 
 static
@@ -473,7 +509,7 @@ void _sk_init_coreinfo(sk_core_t* core)
 // APIs
 
 // The skull core context initialization function, please *BE CAREFUL* for the
-// execution orders, DO NOT modify the calling order before fully understand it.
+// execution orders, DO NOT modify the order before fully understand it.
 void sk_core_init(sk_core_t* core)
 {
     core->status = SK_CORE_INIT;
@@ -498,24 +534,31 @@ void sk_core_init(sk_core_t* core)
 
     // 5. init system level parameters
     _sk_init_sys(core);
+    sk_mem_dump("ENGINE-INIT-SYS-DONE");
 
     // 6. loader user loaders
     _sk_init_user_loaders(core);
+    sk_mem_dump("ENGINE-INIT-LOADER-DONE");
 
     // 7. init global monitor
     _sk_init_moniter(core);
+    sk_mem_dump("ENGINE-INIT-MONITORING-DONE");
 
     // 8. init engines
     _sk_setup_engines(core);
+    sk_mem_dump("ENGINE-INIT-ENGINES-DONE");
 
     // 9. init admin
     _sk_init_admin(core);
+    sk_mem_dump("ENGINE-INIT-ADMIN-DONE");
 
     // 10. load services
     _sk_setup_services(core);
+    sk_mem_dump("ENGINE-INIT-SERVICES-DONE");
 
     // 11. load workflows and related drivers
     _sk_setup_workflows(core);
+    sk_mem_dump("ENGINE-INIT-WORKFLOWS-DONE");
 
     // 12. fill up static information
     _sk_init_coreinfo(core);
@@ -616,6 +659,8 @@ void sk_core_stop(sk_core_t* core)
 {
     core->status = SK_CORE_STOPPING;
 
+    // Stop tracing if enabled
+    sk_mem_trace(0);
     sk_mem_dump("ENGINE-STOP");
 
     SK_LOG_INFO(core->logger,
@@ -696,10 +741,15 @@ void sk_core_destroy(sk_core_t* core)
              "=================== skull engine stopped ====================");
 
     sk_logger_destroy(core->logger);
+    core->logger = NULL;
 
-    // 12. Destroy mem statistics
+    // 12. Destroy env and mem statistics
     sk_mem_dump("ENGINE-DESTROY-DONE");
-    _sk_mem_destroy(core);
+
+    sk_logger_destroy(core->logger_diag);
+    core->logger_diag = NULL;
+
+    _sk_env_destroy(core);
 }
 
 // Utils APIs

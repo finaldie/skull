@@ -85,11 +85,21 @@ sk_engine_t* sk_engine_create(sk_engine_type_t type, int max_fds, int flags)
     sk_engine_t* engine = calloc(1, sizeof(*engine));
     engine->type       = type;
     engine->evlp       = sk_eventloop_create(max_fds);
-    engine->timer_svc  = sk_timersvc_create(engine->evlp);
-    engine->entity_mgr = sk_entity_mgr_create(0);
+    sk_mem_dump("EVENTLOOP-DONE");
+
+    engine->timer_svc  = sk_timersvc_create(engine->evlp, SK_ENGINE_INIT_TIMER_SIZE);
+    sk_mem_dump("TIMER-SERVICE-DONE");
+
+    engine->entity_mgr = sk_entity_mgr_create(SK_ENGINE_INIT_ENTITY_POOL);
+    sk_mem_dump("ENTITY_MGR-DONE");
+
     engine->sched      = sk_sched_create(engine->evlp, engine->entity_mgr,
                                          engine->timer_svc, flags);
+    sk_mem_dump("SCHED-DONE");
+
     engine->mon        = sk_mon_create();
+    sk_mem_dump("MON-DONE");
+
     engine->ep_pool    = sk_ep_pool_create(engine->evlp, engine->timer_svc, max_fds);
 
     return engine;
@@ -105,7 +115,7 @@ void sk_engine_destroy(sk_engine_t* engine)
     sk_entity_mgr_destroy(engine->entity_mgr);
     sk_eventloop_destroy(engine->evlp);
     sk_mon_destroy(engine->mon);
-    free(engine->env);
+    if (engine->type != SK_ENGINE_MASTER) free(engine->env);
     free(engine);
 }
 

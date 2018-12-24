@@ -22,20 +22,33 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
     SK_ASSERT(SK_ENV_ENGINE == SK_ENV_CORE->master);
     SK_ASSERT(sk_pto_check(SK_PTO_SVC_TIMER_DONE, msg));
 
-    sk_service_t* service = sk_pto_arg(SK_PTO_SVC_TIMER_DONE, msg, 0)->p;
+    uint32_t id = SK_PTO_SVC_TIMER_DONE;
+    sk_service_t* service  = sk_pto_arg(id, msg, 0)->p;
+    int           status   = sk_pto_arg(id, msg, 1)->i;
+    uint32_t      interval = sk_pto_arg(id, msg, 2)->u32;
 
     // 1. mark task complete
-    sk_service_task_setcomplete(service);
+    if (status == SK_SRV_JOB_OK) {
+        sk_service_task_setcomplete(service);
+    }
 
-    // 2. Re-schedule tasks
+    // 2. Destory timer entity if this is not a cron timer entity
+    if (!interval) {
+        sk_entity_safe_destroy(entity);
+    }
+
+    // 3. Update service timer metrics
+    if (status == SK_SRV_JOB_OK) {
+        sk_metrics_global.srv_timer_complete.inc(1);
+        sk_metrics_worker.srv_timer_complete.inc(1);
+    } else { // So far, only one reason is possible here
+        SK_ASSERT_MSG(status == SK_SRV_JOB_ERROR_BUSY, "status=%d\n", status);
+        sk_metrics_worker.srv_timer_busy.inc(1);
+        sk_metrics_global.srv_timer_busy.inc(1);
+    }
+
+    // 4. Re-schedule tasks
     sk_service_schedule_tasks(service);
-
-    // 3. Destory timer entity
-    sk_entity_safe_destroy(entity);
-
-    // 4. Update service timer metrics
-    sk_metrics_global.srv_timer_complete.inc(1);
-    sk_metrics_worker.srv_timer_complete.inc(1);
     return 0;
 }
 

@@ -3,6 +3,9 @@
 
 struct sk_const_t;
 
+// System
+#define SK_DEFAULT_OPEN_FILES                (1024)
+
 // dump core
 #define SK_MAX_BACKTRACE                     (50)
 
@@ -50,6 +53,8 @@ struct sk_const_t;
 #define SK_SCHED_MAX_IO_BRIDGE               (48)
 #define SK_SCHED_MAX_ROUTING_HOP             (255)
 #define SK_SCHED_DEFAULT_WAITMS              (1000)
+#define SK_SCHED_IO_BRIDGE_SZ                (65535)
+#define SK_SCHED_IO_INIT_SZ                  (32)
 
 // eventloop max events
 #define SK_EVENTLOOP_MAX_EVENTS              (65535)
@@ -59,14 +64,15 @@ struct sk_const_t;
 
 // config
 #define SK_CONFIG_LOCATION_LEN               (1024)
-#define SK_CONFIG_LOGNAME_LEN                (128)
+#define SK_CONFIG_LOGNAME_LEN                (64)
 
 #define SK_CONFIG_NO_PORT                    (-1)
 #define SK_CONFIG_DEFAULT_CMD_PORT           (7759)
 #define SK_CONFIG_VALUE_MAXLEN               (256)
 
 // ep pool
-#define SK_EP_POOL_MAX                       (1024)
+#define SK_EP_POOL_MAX                       (8192)
+#define SK_EP_POOL_MIN                       (128)
 #define SK_EP_KEY_MAX                        (64)
 #define SK_EP_DEFAULT_SHUTDOWN_MS            (1000)
 
@@ -88,6 +94,15 @@ struct sk_const_t;
 // sk_engine
 #define SK_ENGINE_SECOND_INTERVAL            (1000)
 #define SK_ENGINE_MINUTE_INTERVAL            (1000 * 60)
+#define SK_ENGINE_INIT_ENTITY_POOL           (1024)
+#define SK_ENGINE_INIT_TIMER_SIZE            (1024)
+
+// sk_timer_service
+#define SK_TIMER_LOOP_DISABLED               (0)
+
+// sk_mon
+#define SK_MON_DEFAULT_SIZE                  (100)
+#define SK_MON_DEFAULT_WINDOW                (2)
 
 #endif
 

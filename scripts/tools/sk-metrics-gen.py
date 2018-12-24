@@ -30,6 +30,7 @@ HEADER_CONTENT_START = "\
 // base metrics type, including inc() and get() methods\n\
 typedef struct sk_metrics_t {\n\
     void   (*inc)(double value);\n\
+    void   (*set)(double value);\n\
     double (*get)();\n\
 } sk_metrics_t;\n\
 \n"
@@ -55,6 +56,13 @@ void _sk_%s_%s_inc(double value)\n\
     sk_mon_inc(mon, \"skull.core.g.%s.%s\", value);\n\
 }\n\n"
 
+FUNC_GLOBAL_SET_CONTENT = "static\n\
+void _sk_%s_%s_set(double value)\n\
+{\n\
+    sk_mon_t* mon = SK_ENV_CORE->mon;\n\
+    sk_mon_set(mon, \"skull.core.g.%s.%s\", value);\n\
+}\n\n"
+
 FUNC_GLOBAL_GET_CONTENT = "static\n\
 double _sk_%s_%s_get()\n\
 {\n\
@@ -72,6 +80,16 @@ void _sk_%s_%s_inc(double value)\n\
     sk_mon_inc(mon, name, value);\n\
 }\n\n"
 
+FUNC_THREAD_SET_CONTENT = "static\n\
+void _sk_%s_%s_set(double value)\n\
+{\n\
+    sk_mon_t* mon = SK_ENV_MON;\n\
+    char name[256] = {0};\n\
+    snprintf(name, 256, \"skull.core.t.%s.%%s.%s\",\n\
+             SK_ENV->name);\n\
+    sk_mon_set(mon, name, value);\n\
+}\n\n"
+
 FUNC_THREAD_GET_CONTENT = "static\n\
 double _sk_%s_%s_get()\n\
 {\n\
@@ -82,7 +100,7 @@ double _sk_%s_%s_get()\n\
     return sk_mon_get(mon, name);\n\
 }\n\n"
 
-METRICS_INIT_CONTENT = "    .%s = { .inc = _sk_%s_%s_inc, .get = _sk_%s_%s_get},\n"
+METRICS_INIT_CONTENT = "    .%s = { .inc = _sk_%s_%s_inc, .get = _sk_%s_%s_get, .set = _sk_%s_%s_set},\n"
 
 ############################## Internal APIs ############################
 def load_yaml_config():
@@ -109,9 +127,13 @@ def gen_c_header_metrics(scope_name, metrics_obj):
 
     for name in metrics_map:
         items = metrics_map[name]
-        desc = items['desc']
 
-        content += "    // " + desc + "\n"
+        if isinstance(items, dict):
+            desc = items['desc']
+            content += "    // " + desc + "\n"
+        elif isinstance(items, str):
+            content += "    // " + items + "\n"
+
         content += "    sk_metrics_t " + name + ";\n"
 
     # assemble tailer
@@ -168,12 +190,18 @@ def gen_c_source_metrics(scope_name, metrics_obj):
 
             # 1.2 assemble get method
             content += FUNC_GLOBAL_GET_CONTENT % (scope_name, metric_name, scope_name, metric_name)
+
+            # 1.3 assemble set method
+            content += FUNC_GLOBAL_SET_CONTENT % (scope_name, metric_name, scope_name, metric_name)
         else:
-            # 1.3 assemble inc method
+            # 1.4 assemble inc method
             content += FUNC_THREAD_INC_CONTENT % (scope_name, metric_name, scope_name, metric_name)
 
-            # 1.4 assemble get method
+            # 1.5 assemble get method
             content += FUNC_THREAD_GET_CONTENT % (scope_name, metric_name, scope_name, metric_name)
+
+            # 1.6 assemble set method
+            content += FUNC_THREAD_SET_CONTENT % (scope_name, metric_name, scope_name, metric_name)
 
     # 2. assemble metrics
     # 2.1 assemble create api header
@@ -181,7 +209,8 @@ def gen_c_source_metrics(scope_name, metrics_obj):
 
     # 2.2 assemble metrics handler
     for name in metrics_map:
-        content += METRICS_INIT_CONTENT % (name, scope_name, name, scope_name, name)
+        content += METRICS_INIT_CONTENT % (name, scope_name, name,
+                scope_name, name, scope_name, name)
 
     # 2.2 assemble api tailer
     content += "};\n\n"
@@ -210,7 +239,7 @@ def process_core():
     generate_c_source()
 
 def usage():
-    print ("usage: skull-metrics-gen.py -c yaml_file")
+    print ("usage: sk-metrics-gen.py -c yaml_file")
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

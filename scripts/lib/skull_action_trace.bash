@@ -6,7 +6,7 @@
 function action_trace()
 {
     # parse the command args
-    local args=`getopt -a -o p:n:fdh -l help \
+    local args=`getopt -a -o p:n:fdDh -l help \
         -n "skull_action_trace.bash" -- "$@"`
     if [ $? != 0 ]; then
         echo "Error: Invalid parameters" >&2
@@ -19,6 +19,7 @@ function action_trace()
     local port=-1
     local count=10 # Default last 10 lines
     local follow=false
+    local extract=false
     local debug=false
 
     while true; do
@@ -38,6 +39,10 @@ function action_trace()
                 follow=true
                 ;;
             -d)
+                shift
+                extract=true
+                ;;
+            -D)
                 shift
                 debug=true
                 ;;
@@ -60,14 +65,16 @@ function action_trace()
         esac
     done
 
-    do_trace $port $count $follow $debug
+    do_trace $port $count $follow $extract $debug
 }
 
 function do_trace() {
     local port=$1
     local count=$2
     local follow=$3
-    local debug=$4
+    local extract=$4
+    local debug=$5
+    local extra=""
 
     if ! $(sk_util_is_number $port); then
         echo "Error: Invalid port $port" >&2
@@ -108,10 +115,18 @@ function do_trace() {
     local skull_bin=$(_get_value_from_info "$infos" "binary")
     echo " - Got skull-engine: $skull_bin"
 
+    if $extract; then
+        extra+="-d "
+    fi
+
+    if $debug; then
+        extra+="-D "
+    fi
+
     if $follow; then
-        tail -F $diag | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid
+        tail -F $diag | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid $extra
     else
-        tail -n $count $diag | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid
+        tail -n $count $diag | grep "[MEM_TRACE]" | skull-addr-remap.py -e $skull_bin -p $pid $extra
     fi
 }
 

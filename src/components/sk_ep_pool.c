@@ -312,8 +312,8 @@ sk_ep_mgr_t* sk_ep_mgr_create(sk_ep_pool_t* owner, int max)
 
     sk_ep_mgr_t* mgr = calloc(1, sizeof(*mgr));
     mgr->owner = owner;
-    mgr->eps   = sk_entity_mgr_create(0);
-    mgr->ee    = fhash_u64_create(0, FHASH_MASK_AUTO_REHASH);
+    mgr->eps   = sk_entity_mgr_create(SK_EP_POOL_MIN);
+    mgr->ee    = fhash_u64_create(SK_EP_POOL_MIN, FHASH_MASK_AUTO_REHASH);
     mgr->tmp   = flist_create();
     mgr->max   = max;
 
@@ -1160,6 +1160,15 @@ void sk_ep_pool_destroy(sk_ep_pool_t* pool)
     sk_ep_mgr_destroy(pool->tcp);
     sk_ep_mgr_destroy(pool->udp);
     free(pool);
+}
+
+const sk_entity_mgr_t*
+sk_ep_pool_emgr(const sk_ep_pool_t* pool, sk_ep_type_t type) {
+    if (type == SK_EP_TCP) {
+        return pool->tcp->eps;
+    } else {
+        return pool->udp->eps;
+    }
 }
 
 sk_ep_status_t _sk_ep_send(sk_ep_pool_t*         pool,

@@ -81,6 +81,7 @@ typedef struct sk_core_t {
 
     // logger
     sk_logger_t*     logger;
+    sk_logger_t*     logger_diag;
 
     flist*           workflows;      // element type: sk_workflow_t*
     flist*           drivers;        // emement type: sk_driver_t*
@@ -100,10 +101,16 @@ typedef struct sk_core_t {
 
     time_t           starttime;
 
-    // main thread env (weak reference)
+    // main thread env
     struct sk_thread_env_t* env;
 
     sk_core_info_t   info;
+
+    // The final log location
+    char log_path[SK_LOG_MAX_PATH_LEN];
+
+    // The final diag log location
+    char diag_path[SK_LOG_MAX_PATH_LEN];
 } sk_core_t;
 
 void sk_core_init(sk_core_t* core);

@@ -49,12 +49,12 @@ struct sk_sched_t {
 };
 
 // INTERNAL APIs
-static
+static inline
 void _event_destroy(sk_event_t* event)
 {
     if (!event) return;
 
-    sk_print("destroy an event: {pto_id: %u, hop: %u}\n",
+    sk_print("Destroy an event: {pto_id: %u, hop: %u}\n",
              event->pto_id, event->hop);
     free(event->data);
 }
@@ -111,8 +111,8 @@ static
 sk_io_bridge_t* sk_io_bridge_create(sk_sched_t* dst, size_t size)
 {
     sk_io_bridge_t* io_bridge = calloc(1, sizeof(*io_bridge));
-    io_bridge->dst = dst;
-    io_bridge->mq = fmbuf_create(SK_EVENT_SZ * size);
+    io_bridge->dst  = dst;
+    io_bridge->mq   = fmbuf_create(SK_EVENT_SZ * size);
     io_bridge->evfd = eventfd(0, EFD_NONBLOCK);
 
     _setup_bridge(dst, io_bridge);
@@ -518,7 +518,7 @@ sk_sched_t* sk_sched_create(void* evlp, sk_entity_mgr_t* entity_mgr,
 
     // create the default io
     for (int i = SK_PTO_PRI_MIN; i <= SK_PTO_PRI_MAX; i++) {
-        sched->io_tbl[i] = sk_io_create(0, 0);
+        sched->io_tbl[i] = sk_io_create(SK_SCHED_IO_INIT_SZ, SK_SCHED_IO_INIT_SZ);
     }
 
     _check_ptos(sk_pto_tbl);
@@ -591,12 +591,12 @@ void sk_sched_stop(sk_sched_t* sched)
 
 int sk_sched_setup_bridge(sk_sched_t* src, sk_sched_t* dst)
 {
-    // register a sk_io which is only used for delivery message in dst side
+    // register a sk_io which is only used for delivery message to dst side
     if (src->bridge_size == SK_SCHED_MAX_IO_BRIDGE) {
         return 1;
     }
 
-    sk_io_bridge_t* io_bridge = sk_io_bridge_create(dst, 65535);
+    sk_io_bridge_t* io_bridge = sk_io_bridge_create(dst, SK_SCHED_IO_BRIDGE_SZ);
     src->bridge_tbl[src->bridge_size++] = io_bridge;
     return 0;
 }

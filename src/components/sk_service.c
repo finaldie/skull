@@ -198,6 +198,7 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
     sk_entity_t*      entity = task->data.timer.entity;
     sk_obj_t*         ud     = task->data.timer.ud;
     int               valid  = task->data.timer.valid;
+    uint32_t          interval  = task->data.timer.interval;
     sk_service_job_ret_t status = task->io_status == SK_SRV_IO_STATUS_OK
         ? SK_SRV_JOB_OK : SK_SRV_JOB_ERROR_BUSY;
 
@@ -211,7 +212,7 @@ void _schedule_timer_task(sk_service_t* service, const sk_srv_task_t* task)
              valid, (void*)(intptr_t)job, sizeof(job));
 
     sk_sched_send(SK_ENV_SCHED, target, entity, NULL, 0,
-                  SK_PTO_SVC_TIMER_RUN, service, job, ud, valid, status);
+        SK_PTO_SVC_TIMER_RUN, service, job, ud, valid, status, interval);
 }
 
 // return 0 on invalid, 1 on valid
@@ -234,6 +235,8 @@ typedef struct srv_jobdata_t {
     const sk_obj_t* ud;
     int             bidx;
     sk_service_job_rw_t type;
+    uint32_t        interval;
+    int             _padding;
 } srv_jobdata_t;
 
 static
@@ -256,13 +259,14 @@ void _job_triggered(sk_entity_t* entity, int valid, sk_obj_t* ud)
     const sk_obj_t*  udata   = jobdata->ud;
     int              bidx    = jobdata->bidx;
     sk_service_job_rw_t type = jobdata->type;
+    uint32_t         interval = jobdata->interval;
 
     // 4. Send event to prepare running a service task
     sk_print("send a timer_emit to timer service, job: %p\n",
              (void*)(uintptr_t)job);
 
     sk_sched_send(SK_ENV_SCHED, SK_ENV_CORE->master->sched, entity, NULL, 0,
-                  SK_PTO_TIMER_EMIT, svc, job, udata, valid, bidx, type);
+        SK_PTO_TIMER_EMIT, svc, job, udata, valid, bidx, type, interval);
 }
 
 //========================= Public APIs of service =============================
@@ -427,6 +431,9 @@ void sk_service_schedule_normaltask(sk_service_t* service,
 void sk_service_schedule_task(sk_service_t* service,
                               const sk_srv_task_t* task)
 {
+    SK_ASSERT(SK_ENV_ENGINE == SK_ENV_CORE->master);
+    sk_print("service schedule one task\n");
+
     if (task->io_status == SK_SRV_IO_STATUS_OK) {
         sk_service_schedule_normaltask(service, task);
     } else {
@@ -692,6 +699,7 @@ sk_service_job_create(sk_service_t*       service,
     jobdata->ud      = ud;
     jobdata->bidx    = bidx;
     jobdata->type    = type;
+    jobdata->interval = interval;
 
     sk_entity_mgr_add(SK_ENV_ENTITY_MGR, jobdata->entity);
     sk_entity_timeradd(jobdata->entity, ud);

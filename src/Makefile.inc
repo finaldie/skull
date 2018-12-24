@@ -9,6 +9,7 @@ EXTRA   += -pedantic -Wpadded -Wextra -Wno-unused-parameter
 EXTRA   += -Wno-unused-function -Wfloat-equal -Winline -Wdisabled-optimization
 EXTRA   += -Wconversion
 FEATURE += -fno-omit-frame-pointer
+#FEATURE += -fno-optimize-sibling-calls
 OTHER   += -pipe -g -ggdb3 -fPIC
 SHARED  += -shared
 
