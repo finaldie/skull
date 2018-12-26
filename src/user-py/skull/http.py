@@ -75,8 +75,8 @@ class Request(simple_server.WSGIRequestHandler):
             # After parsing, we can setup the environ
             self._env = self.getEnv()
             self.request = WebObRequest(self._env)
-        except Exception as e:
-            raise e
+        except Exception as ex:
+            raise ex
 
         # Verify the request body is complete
         content_length = self.request.content_length
@@ -84,8 +84,8 @@ class Request(simple_server.WSGIRequestHandler):
             try:
                 if len(self.request.body) != content_length:
                     raise RequestIncomplete('Request Body Incomplete')
-            except WebObReqModule.DisconnectionError as de:
-                raise RequestIncomplete('Request Body Incomplete: {}'.format(de))
+            except WebObReqModule.DisconnectionError as ex:
+                raise RequestIncomplete('Request Body Incomplete: {}'.format(ex))
 
         return self.request
 

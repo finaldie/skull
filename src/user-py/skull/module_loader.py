@@ -3,7 +3,7 @@ Global module loader
 """
 
 import os
-import sys
+#import sys
 import types
 import importlib
 
@@ -72,9 +72,9 @@ def module_load(module_name):
         #print ("Loading user module: %s" % full_name, file=sys.stderr)
 
         umodule = importlib.import_module(full_name)
-    except Exception as e:
+    except Exception as ex:
         Logger.fatal('module_load', 'Cannot load user module {}: {}'.format( \
-                module_name, str(e)), 'please check the module whether exist')
+                module_name, str(ex)), 'please check the module whether exist')
         raise
 
     user_module['module_obj'] = umodule
@@ -123,10 +123,10 @@ def module_load_config(module_name, config_file_name):
 
     try:
         yaml_file = open(config_file_name, 'r')
-    except Exception as e:
+    except Exception as ex:
         Logger.fatal('load_config', \
             'Cannot load user module {} config {} : {}'.format(module_name, \
-            config_file_name, str(e)), 'please check the config content format')
+            config_file_name, str(ex)), 'please check the config content format')
         raise
 
     conf_yml_obj = yaml.load(yaml_file)

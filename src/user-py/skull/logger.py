@@ -25,8 +25,8 @@ def trace(msg):
     log_msg = "%s:%d TRACE - %s" % (filename, frame.lineno, str(msg))
     try:
         capi.log(log_msg)
-    except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
+    except Exception as ex:
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
 
 def debug(msg):
     """
@@ -47,8 +47,8 @@ def debug(msg):
     log_msg = "%s:%d DEBUG - %s" % (filename, frame.lineno, str(msg))
     try:
         capi.log(log_msg)
-    except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
+    except Exception as ex:
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
 
 def info(code, msg):
     """
@@ -72,8 +72,8 @@ def info(code, msg):
     log_msg = "%s:%d INFO - {%s} %s" % (filename, frame.lineno, str(code), str(msg))
     try:
         capi.log(log_msg)
-    except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
+    except Exception as ex:
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
 
 def warn(code, msg, suggestion):
     """
@@ -101,8 +101,8 @@ def warn(code, msg, suggestion):
             str(code), str(msg), str(suggestion))
     try:
         capi.log(log_msg)
-    except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
+    except Exception as ex:
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
 
 def error(code, msg, solution):
     """
@@ -130,8 +130,8 @@ def error(code, msg, solution):
             str(code), str(msg), str(solution))
     try:
         capi.log(log_msg)
-    except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
+    except Exception as ex:
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
 
 def fatal(code, msg, solution):
     """
@@ -156,8 +156,8 @@ def fatal(code, msg, solution):
             str(code), str(msg), str(solution))
     try:
         capi.log(log_msg)
-    except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
+    except Exception as ex:
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
 
 # Level Checking APIs
 def isTraceEnabled():

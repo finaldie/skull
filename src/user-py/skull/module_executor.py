@@ -14,9 +14,9 @@ def run_module_init(init_func, config):
     """
     try:
         return init_func(config)
-    except Exception as e:
-        Logger.error('module_init', 'module_init failed due to: {}'.format(e), \
-                'StackTrace:\n{}'.format(__dumpStackTrace()))
+    except Exception as ex:
+        Logger.error('module_init', 'module_init failed due to: {}'.format(ex), \
+                'StackTrace:\n{}'.format(__dump_stack_trace()))
         return False
 
 def run_module_release(release_func):
@@ -25,9 +25,9 @@ def run_module_release(release_func):
     """
     try:
         release_func()
-    except Exception as e:
-        Logger.error('module_release', 'module_release failed due to: {}'.format(e), \
-                'StackTrace:\n{}'.format(__dumpStackTrace()))
+    except Exception as ex:
+        Logger.error('module_release', 'module_release failed due to: {}'.format(ex), \
+                'StackTrace:\n{}'.format(__dump_stack_trace()))
 
 def run_module_run(run_func, skull_txn):
     """
@@ -39,9 +39,9 @@ def run_module_run(run_func, skull_txn):
 
         txn.storeMsgData()
         return ret
-    except Exception as e:
-        Logger.error('module_run', 'module_run failed due to: {}'.format(e), \
-                'StackTrace:\n{}'.format(__dumpStackTrace()))
+    except Exception as ex:
+        Logger.error('module_run', 'module_run failed due to: {}'.format(ex), \
+                'StackTrace:\n{}'.format(__dump_stack_trace()))
         return False
 
 def run_module_unpack(unpack_func, skull_txn, data: bytes):
@@ -58,9 +58,9 @@ def run_module_unpack(unpack_func, skull_txn, data: bytes):
             return -1
 
         return int(consumed_length)
-    except Exception as e:
-        Logger.error('module_unpack', 'module_unpack failed due to: {}'.format(e), \
-                'StackTrace:\n{}'.format(__dumpStackTrace()))
+    except Exception as ex:
+        Logger.error('module_unpack', 'module_unpack failed due to: {}'.format(ex), \
+                'StackTrace:\n{}'.format(__dump_stack_trace()))
         return -1 # Error occurred
 
 def run_module_pack(pack_func, skull_txn, skull_txndata):
@@ -72,14 +72,14 @@ def run_module_pack(pack_func, skull_txn, skull_txndata):
 
     try:
         pack_func(txn, txndata)
-    except Exception as e:
-        Logger.error('module_pack', 'module_pack failed due to: {}'.format(e), \
-                'StackTrace:\n{}'.format(__dumpStackTrace()))
+    except Exception as ex:
+        Logger.error('module_pack', 'module_pack failed due to: {}'.format(ex), \
+                'StackTrace:\n{}'.format(__dump_stack_trace()))
         raise
     finally:
         txn.destroyMsgData()
 
-def __dumpStackTrace():
+def __dump_stack_trace():
     """
     Internal stack trace dumper
     """

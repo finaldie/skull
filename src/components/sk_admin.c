@@ -153,8 +153,7 @@ void _mon_cb(const char* name, double value, void* ud)
 
 static
 void _transport_mon_snapshot(sk_mon_snapshot_t* snapshot,
-                             sk_admin_data_t* admin_data)
-{
+                             sk_admin_data_t* admin_data) {
     sk_mon_snapshot_foreach(snapshot, _mon_cb, admin_data);
 }
 
@@ -228,6 +227,7 @@ void _process_metrics(sk_txn_t* txn, int loc)
     _transport_mon_snapshot(user_snapshot, admin_data);
     if (!loc) sk_mon_snapshot_destroy(user_snapshot);
 
+    _append_response(txn, "\n");
     _fill_first_line(txn, global_snapshot);
     if (!loc) sk_mon_snapshot_destroy(global_snapshot);
 }
