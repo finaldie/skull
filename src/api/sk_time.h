@@ -23,7 +23,7 @@ sk_time_info_t* sk_time_info(sk_time_info_t*);
  * @return  0: error.
  *         >0: succeed, return the nanoseconds
  */
-ulong_t sk_time_ns();
+slong_t sk_time_ns();
 
 /**
  * Unit: microseconds. clockid = CLOCK_MONOTONIC by default
@@ -31,7 +31,7 @@ ulong_t sk_time_ns();
  * @return  0: error.
  *         >0: succeed, return the microseconds
  */
-ulong_t sk_time_us();
+slong_t sk_time_us();
 
 /**
  * Unit: milliseconds. clockid = CLOCK_MONOTONIC_COARSE by default
@@ -42,7 +42,9 @@ ulong_t sk_time_us();
  * @return  0: error.
  *         >0: succeed, return the milliseconds
  */
-ulong_t sk_time_ms();
+slong_t sk_time_ms();
+
+slong_t sk_time_threadcpu_ns();
 
 #endif
 

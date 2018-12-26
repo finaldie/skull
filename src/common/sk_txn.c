@@ -18,8 +18,8 @@
 struct sk_txn_task_t {
     uint64_t id;
     // record the time of start and end
-    ulong_t  start;
-    ulong_t  end;   // If end is non-zero, means the task is done
+    slong_t  start;
+    slong_t  end;   // If end is non-zero, means the task is done
 
     sk_txn_taskdata_t task_data;
 
@@ -50,7 +50,7 @@ struct sk_txn_t {
     int             complete_tasks;
 
     // Unit: micro-second
-    ulong_t         start_time;
+    slong_t         start_time;
 
     sk_txn_state_t  state;
 
@@ -257,11 +257,11 @@ int sk_txn_is_last_module(const sk_txn_t* txn)
     return txn->current == sk_workflow_last_module(txn->workflow);
 }
 
-ulong_t sk_txn_starttime(const sk_txn_t* txn) {
+slong_t sk_txn_starttime(const sk_txn_t* txn) {
     return txn->start_time;
 }
 
-ulong_t sk_txn_alivetime(const sk_txn_t* txn)
+slong_t sk_txn_alivetime(const sk_txn_t* txn)
 {
     return sk_time_us() - txn->start_time;
 }
@@ -340,14 +340,14 @@ sk_txn_taskdata_t* sk_txn_taskdata(const sk_txn_t* txn, uint64_t task_id)
     return &task->task_data;
 }
 
-ulong_t sk_txn_task_starttime(const sk_txn_t* txn, uint64_t task_id) {
+slong_t sk_txn_task_starttime(const sk_txn_t* txn, uint64_t task_id) {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
 
     return task->start;
 }
 
-ulong_t sk_txn_task_lifetime(const sk_txn_t* txn, uint64_t task_id)
+slong_t sk_txn_task_lifetime(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -359,7 +359,7 @@ ulong_t sk_txn_task_lifetime(const sk_txn_t* txn, uint64_t task_id)
     return task->end - task->start;
 }
 
-ulong_t sk_txn_task_livetime(const sk_txn_t* txn, uint64_t task_id)
+slong_t sk_txn_task_livetime(const sk_txn_t* txn, uint64_t task_id)
 {
     sk_txn_task_t* task = fhash_u64_get(txn->task_tbl, task_id);
     SK_ASSERT(task);
@@ -440,8 +440,8 @@ int sk_txn_timeout(const sk_txn_t* txn)
         return 0;
     }
 
-    ulong_t alivetime_ms = sk_txn_alivetime(txn) / SK_US_PER_MS;
-    if (alivetime_ms > (ulong_t)timeout) {
+    slong_t alivetime_ms = sk_txn_alivetime(txn) / SK_US_PER_MS;
+    if (alivetime_ms > (slong_t)timeout) {
         return 1;
     }
 

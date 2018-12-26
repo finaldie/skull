@@ -7,14 +7,19 @@
 typedef struct sk_time_t {
     struct timespec res;
     struct timespec res_coarse;
+    struct timespec res_thread_cpu;
 
     clockid_t monotonic_id;
     clockid_t monotonic_coarse_id;
+    clockid_t thread_cpu_id;
+
+    int       _padding;
 } sk_time_t;
 
 static sk_time_t itime = {
     .monotonic_id        = CLOCK_MONOTONIC,
-    .monotonic_coarse_id = CLOCK_MONOTONIC
+    .monotonic_coarse_id = CLOCK_MONOTONIC,
+    .thread_cpu_id       = CLOCK_THREAD_CPUTIME_ID
 };
 
 void sk_time_init() {
@@ -25,6 +30,8 @@ void sk_time_init() {
             itime.monotonic_coarse_id = CLOCK_MONOTONIC_COARSE;
         }
     }
+
+    clock_getres(CLOCK_THREAD_CPUTIME_ID, &itime.res_thread_cpu);
 }
 
 sk_time_info_t* sk_time_info(sk_time_info_t* info) {
@@ -37,26 +44,35 @@ sk_time_info_t* sk_time_info(sk_time_info_t* info) {
     return info;
 }
 
-ulong_t sk_time_ns() {
+slong_t sk_time_ns() {
     struct timespec tp;
     if (unlikely(clock_gettime(itime.monotonic_id, &tp))) {
         return 0;
     }
 
-    return (ulong_t)tp.tv_sec * SK_NS_PER_SEC + (ulong_t)tp.tv_nsec;
+    return (slong_t)tp.tv_sec * SK_NS_PER_SEC + (slong_t)tp.tv_nsec;
 }
 
-ulong_t sk_time_us() {
+slong_t sk_time_us() {
     return sk_time_ns() / SK_NS_PER_US;
 }
 
-ulong_t sk_time_ms() {
+slong_t sk_time_ms() {
     struct timespec tp;
     if (unlikely(clock_gettime(itime.monotonic_coarse_id, &tp))) {
         return 0;
     }
 
-    return ((ulong_t)tp.tv_sec * SK_NS_PER_SEC + (ulong_t)tp.tv_nsec)
+    return ((slong_t)tp.tv_sec * SK_NS_PER_SEC + (slong_t)tp.tv_nsec)
             / SK_NS_PER_MS;
+}
+
+slong_t sk_time_threadcpu_ns() {
+    struct timespec tp;
+    if (unlikely(clock_gettime(itime.thread_cpu_id, &tp))) {
+        return 0;
+    }
+
+    return (slong_t)tp.tv_sec * SK_NS_PER_SEC + (slong_t)tp.tv_nsec;
 }
 
