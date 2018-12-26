@@ -1,11 +1,16 @@
-# Python Logger API
+"""
+Python Logger API
+"""
 
 import os
-import types
 import inspect
 import skull_capi as capi
 
 def trace(msg):
+    """
+    Write trace log
+    """
+
     if msg is None:
         return
 
@@ -14,17 +19,20 @@ def trace(msg):
 
     caller_frame_record = inspect.stack()[1]
     caller_frame = caller_frame_record[0]
-    info = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(info.filename)
+    frame = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(frame.filename)
 
-    log_msg = "%s:%d TRACE - %s" % (filename, info.lineno, str(msg))
+    log_msg = "%s:%d TRACE - %s" % (filename, frame.lineno, str(msg))
     try:
         capi.log(log_msg)
     except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
-        pass
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
 
 def debug(msg):
+    """
+    Write debug log
+    """
+
     if msg is None:
         return
 
@@ -33,17 +41,20 @@ def debug(msg):
 
     caller_frame_record = inspect.stack()[1]
     caller_frame = caller_frame_record[0]
-    info = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(info.filename)
+    frame = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(frame.filename)
 
-    log_msg = "%s:%d DEBUG - %s" % (filename, info.lineno, str(msg))
+    log_msg = "%s:%d DEBUG - %s" % (filename, frame.lineno, str(msg))
     try:
         capi.log(log_msg)
     except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
-        pass
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
 
 def info(code, msg):
+    """
+    Write info log
+    """
+
     if code is None:
         raise Exception('Logging Format Error: Must have a code')
 
@@ -55,17 +66,20 @@ def info(code, msg):
 
     caller_frame_record = inspect.stack()[1]
     caller_frame = caller_frame_record[0]
-    info = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(info.filename)
+    frame = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(frame.filename)
 
-    log_msg = "%s:%d INFO - {%s} %s" % (filename, info.lineno, str(code), str(msg))
+    log_msg = "%s:%d INFO - {%s} %s" % (filename, frame.lineno, str(code), str(msg))
     try:
         capi.log(log_msg)
     except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
-        pass
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
 
 def warn(code, msg, suggestion):
+    """
+    Write warn log
+    """
+
     if code is None:
         raise Exception('Logging Format Error: Must have a code')
 
@@ -80,17 +94,21 @@ def warn(code, msg, suggestion):
 
     caller_frame_record = inspect.stack()[1]
     caller_frame = caller_frame_record[0]
-    info = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(info.filename)
+    frame = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(frame.filename)
 
-    log_msg = "%s:%d WARN - {%s} %s; suggestion: %s" % (filename, info.lineno, str(code), str(msg), str(suggestion))
+    log_msg = "%s:%d WARN - {%s} %s; suggestion: %s" % (filename, frame.lineno, \
+            str(code), str(msg), str(suggestion))
     try:
         capi.log(log_msg)
     except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
-        pass
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
 
 def error(code, msg, solution):
+    """
+    Write error log
+    """
+
     if code is None:
         raise Exception('Logging Format Error: Must have a code')
 
@@ -105,17 +123,21 @@ def error(code, msg, solution):
 
     caller_frame_record = inspect.stack()[1]
     caller_frame = caller_frame_record[0]
-    info = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(info.filename)
+    frame = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(frame.filename)
 
-    log_msg = "%s:%d ERROR - {%s} %s; solution: %s" % (filename, info.lineno, str(code), str(msg), str(solution))
+    log_msg = "%s:%d ERROR - {%s} %s; solution: %s" % (filename, frame.lineno, \
+            str(code), str(msg), str(solution))
     try:
         capi.log(log_msg)
     except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
-        pass
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
 
 def fatal(code, msg, solution):
+    """
+    Write fatal log
+    """
+
     if code is None:
         raise Exception('Logging Format Error: Must have a code')
 
@@ -127,29 +149,34 @@ def fatal(code, msg, solution):
 
     caller_frame_record = inspect.stack()[1]
     caller_frame = caller_frame_record[0]
-    info = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(info.filename)
+    frame = inspect.getframeinfo(caller_frame)
+    filename = os.path.basename(frame.filename)
 
-    log_msg = "%s:%d FATAL - {%s} %s; solution: %s" % (filename, info.lineno, str(code), str(msg), str(solution))
+    log_msg = "%s:%d FATAL - {%s} %s; solution: %s" % (filename, frame.lineno, \
+            str(code), str(msg), str(solution))
     try:
         capi.log(log_msg)
     except Exception as e:
-        print("Failed to log message: {}:{} {}".format(filename, info.lineno, e))
-        pass
+        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, e))
 
 # Level Checking APIs
 def isTraceEnabled():
+    """Return whether trace level enabled"""
     return capi.log_trace_enabled()
 
 def isDebugEnabled():
+    """Return whether debug level enabled"""
     return capi.log_debug_enabled()
 
 def isInfoEnabled():
+    """Return whether info level enabled"""
     return capi.log_info_enabled()
 
 def isWarnEnabled():
+    """Return whether warn level enabled"""
     return capi.log_warn_enabled()
 
 def isErrorEnabled():
+    """Return whether error level enabled"""
     return capi.log_error_enabled()
 

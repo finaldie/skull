@@ -34,11 +34,22 @@ from webob import Response as WebObResponse
 import webob.request as WebObReqModule
 
 class RequestIncomplete(Exception):
+    """
+    RequestIncomplete(Exception) - Customized exception
+    """
     def __init__(self, reason):
+        super(RequestIncomplete, self).__init__(reason)
         self.message = reason
 
 class Request(simple_server.WSGIRequestHandler):
+    """
+    Http Request class
+    """
+
     def __init__(self, data):
+        """
+        __init__ - constructor
+        """
         self._env = None
 
         # Wrap input data into stringio
@@ -54,6 +65,10 @@ class Request(simple_server.WSGIRequestHandler):
         self.raw_requestline = self.rfile.readline()
 
     def parse(self):
+        """
+        parse(self) - parse http request
+        """
+
         try:
             self.parse_request()
 
@@ -75,6 +90,10 @@ class Request(simple_server.WSGIRequestHandler):
         return self.request
 
     def getEnv(self):
+        """
+        getEnv(self) - Return env table
+        """
+
         if self._env is not None:
             return self._env
 
@@ -82,7 +101,9 @@ class Request(simple_server.WSGIRequestHandler):
         env = self._env = self.get_environ()
 
         # Fill WSGI required fields
-        env['wsgi.input']        = self.rfile # point to body (The internal position of this IO is currently point to body)
+        ## 'input' point to body (The internal position of this IO is currently
+        ## point to body)
+        env['wsgi.input']        = self.rfile
         env['wsgi.errors']       = self.wfile
         env['wsgi.version']      = (1, 0)
         env['wsgi.run_once']     = False
@@ -94,16 +115,26 @@ class Request(simple_server.WSGIRequestHandler):
 
     def address_string(self):
         """This is used for override the BaseHTTPRequestHandler.address_string
-         Which will be calling the gethostbyaddr() blocking API (leading
+         Which will call the gethostbyaddr() blocking API (leading
          latency issue)
         """
         return 'unknow'
 
 
-class Response(object):
+class Response():
+    """
+    Http Reponse class
+    """
+
     def __init__(self):
+        """
+        __init__ - constructor
+        """
         self.response = WebObResponse()
 
     def getFullContent(self):
+        """
+        getFullContent - Return the whole http response content
+        """
         return "HTTP/1.1 {}".format(self.response)
 

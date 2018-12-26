@@ -46,6 +46,9 @@ SKULL_OBJS = \
 all: $(SKULL_CXX_LIB)
 	$(python_path) setup.py check
 
+check:
+	pylint --disable=trailing-newlines,bad-whitespace skull/*.py
+
 install: prepare
 	cp -r $(LOCAL_BIN_DIR)/* $(SKULL_BIN_DIR)
 	cp -r $(LOCAL_LIB_DIR)/* $(SKULL_LIB_DIR)
