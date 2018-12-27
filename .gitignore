@@ -28,6 +28,8 @@
 # ctag
 .tags
 tags
+tags.lock
+tags.temp
 
 # cscope
 .cscope.*
