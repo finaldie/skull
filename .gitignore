@@ -50,5 +50,4 @@ src/user-py/build/
 *.egg
 
 # clang
-.clang-format
 compile_commands.json
