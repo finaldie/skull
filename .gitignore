@@ -51,3 +51,7 @@ src/user-py/build/
 
 # clang
 compile_commands.json
+
+# ccls
+.ccls-cache/
+
