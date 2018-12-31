@@ -1,25 +1,25 @@
 # Required Targets
-$(TARGET): prepare $(OBJS)
-	$(SKULL_LD) -o $(TARGET) $(OBJS) $(DEPS_LIBS)
+$(COMMON_TARGET): prepare $(OBJS)
+	$(SKULL_LD) -o $(COMMON_TARGET) $(OBJS) $(DEPS_LIBS)
 
 prepare:
 	test -d lib || mkdir lib
 
-check: $(TEST_TARGET) $(TARGET)
+check: $(TEST_TARGET) $(COMMON_TARGET)
 	./$(TEST_TARGET)
 
-valgrind-check: $(TEST_TARGET) $(TARGET)
+valgrind-check: $(TEST_TARGET) $(COMMON_TARGET)
 	$(VALGRIND) ./$(TEST_TARGET)
 
-$(TEST_TARGET): $(TEST_OBJS) $(TARGET)
-	$(SKULL_BIN_LD) -o $(TEST_TARGET) $(TEST_OBJS) $(TARGET) $(TEST_DEPS_LIBS)
+$(TEST_TARGET): $(TEST_OBJS) $(COMMON_TARGET)
+	$(SKULL_BIN_LD) -o $(TEST_TARGET) $(TEST_OBJS) $(COMMON_TARGET) $(TEST_DEPS_LIBS)
 
 deploy:
 	test -d $(DEPLOY_DIR) || mkdir -p $(DEPLOY_DIR)
 	test -d $(DEPLOY_DIR)/lib || mkdir -p $(DEPLOY_DIR)/lib
-	cp -f $(TARGET) $(DEPLOY_DIR)/lib
+	cp -f $(COMMON_TARGET) $(DEPLOY_DIR)/lib
 
 clean:
-	rm -f $(TARGET) $(OBJS) $(TEST_TARGET) $(TEST_OBJS)
+	rm -f $(COMMON_TARGET) $(OBJS) $(TEST_TARGET) $(TEST_OBJS)
 
 .PHONY: prepare check valgrind-check deploy clean

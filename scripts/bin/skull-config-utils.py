@@ -403,7 +403,7 @@ def _process_gen_workflow_idl():
         content += "//     if we really want to use it, make sure to fill it \n"
         content += "//     before using it\n"
         content += "\n"
-        content += "syntax = \"proto3\";"
+        content += "syntax = \"proto3\";\n"
         content += "package skull.workflow;\n\n"
         content += "message %s {\n" % idl_name
         content += "    bytes data = 1;\n"

@@ -15,7 +15,7 @@ function _skull_create()
     mkdir -p $workspace/idls/
     mkdir -p $workspace/src/modules
     mkdir -p $workspace/src/services
-    mkdir -p $workspace/src/common
+    #mkdir -p $workspace/src/common
     mkdir -p $workspace/scripts
     mkdir -p $workspace/tests/common
     mkdir -p $workspace/tests/cases

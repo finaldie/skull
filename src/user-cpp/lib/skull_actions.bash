@@ -15,7 +15,7 @@
 
 # static global env var
 LANGUAGE_CPP_PATH=$SKULL_ROOT/share/skull/lang/cpp
-COMMON_CPP_LOCATION=$SKULL_PROJ_ROOT/src/common/cpp
+COMMON_CPP_LOCATION=$SKULL_PROJ_ROOT/src/common-cpp
 PROTO_CPP_FOLDER_NAME=protos
 PROTO_CPP_FOLDER=$COMMON_CPP_LOCATION/src/$PROTO_CPP_FOLDER_NAME
 
@@ -75,7 +75,7 @@ function action_cpp_module_add()
 function action_cpp_common_create()
 {
     if [ -d "$COMMON_CPP_LOCATION" ]; then
-        echo "Notice: the common/cpp folder has already exist, ignore it"
+        echo "Notice: the common-cpp folder has already exist, ignore it"
         return 0
     fi
 
@@ -84,7 +84,7 @@ function action_cpp_common_create()
     mkdir -p $COMMON_CPP_LOCATION/tests
     mkdir -p $COMMON_CPP_LOCATION/lib
 
-    # move the Makefile to common/cpp only when there is no Makefile in there
+    # move the Makefile to common-cpp only when there is no Makefile in there
     if [ ! -f $COMMON_CPP_LOCATION/Makefile ]; then
         cp $LANGUAGE_CPP_PATH/share/Makefile.common \
             $COMMON_CPP_LOCATION/Makefile

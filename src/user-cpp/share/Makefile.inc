@@ -47,7 +47,7 @@ DEPS_LDFLAGS += -rdynamic
 # linking flags (for unit test)
 DEPS_LDFLAGS += \
     -Wl,-rpath,./lib \
-    -Wl,-rpath,../../common/cpp/lib \
+    -Wl,-rpath,../../common-cpp/lib \
     -Wl,-rpath,/usr/local/lib
 
 # Skull cxx and ld
@@ -81,6 +81,7 @@ TEST_OBJS = $(patsubst %.cpp, %.o, $(TEST_SRCS))
 DIRNAME        ?= $(shell basename $(shell pwd))
 PARENT_DIRNAME ?= $(shell basename $(shell pwd | xargs dirname))
 TARGET         ?= lib/libskull-$(PARENT_DIRNAME)-$(DIRNAME).so
+COMMON_TARGET  ?= lib/libskull-common-cpp.so
 TEST_TARGET    ?= test.out
 CONF_TARGET    ?= skull-$(PARENT_DIRNAME)-$(DIRNAME).yaml
 
