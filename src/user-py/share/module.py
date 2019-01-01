@@ -1,18 +1,19 @@
 """Skull Module"""
 
 import pprint
-import yaml
 
-from skull     import *
-from skull.txn import *
+from skull import logger
+from skull.txn import Txn
+from skull.txndata import TxnData
 
-from common import *
+from common import metrics
 from common.proto import *
 
 
 def module_init(config):
-    """
-    Module Init Entry, be called when start phase
+    """Module Init Entry.
+
+    It's called once when module be loaded
 
     @param config  A parsed yamlObj
 
@@ -23,20 +24,21 @@ def module_init(config):
     logger.info('ModuleInit', 'config: {}'.format(pprint.pformat(config)))
     return True
 
+
 def module_release():
-    """
-    Module Release Function, be called when shutdown phase
-    """
+    """Module Release Function, it's called once when module be unloaded"""
 
     logger.debug("py module release")
 
-def module_unpack(txn: Txn, data: bytes):
-    """
-    Input data unpack function, be called if this module is the 'first' module in
-     the workflow and there is input data incoming
 
-    @param txn  Transaction context which is used for getting shared transaction
-                 data or invoking service `iocall`
+def module_unpack(txn: Txn, data: bytes):
+    """Input data unpack function.
+
+    It's called if this module is the 'first' module in the workflow and there
+    is input data incoming
+
+    @param txn  Transaction context which is used for getting shared
+                transaction data or invoking `service.call()`
     @param data Input read-only `bytes` data
 
     @return - > 0: Tell engine N bytes be consumed
@@ -51,13 +53,15 @@ def module_unpack(txn: Txn, data: bytes):
     sharedata.data = data
     return len(data)
 
+
 def module_pack(txn: Txn, txndata: TxnData):
-    """
-    Input data unpack function, be called if this module is the 'last' module in
+    """Output data pack function.
+
+    It's called after 'module_run' function.
      the workflow (It would no effect if there is no response needed)
 
-    @param txn  Transaction context which is used for getting shared transaction
-                 data or invoking service `iocall`
+    @param txn  Transaction context which is used for getting shared
+                transaction data or invoking `service.call()`
     @param data Input data
 
     @return How many bytes be consumed
@@ -75,9 +79,11 @@ def module_pack(txn: Txn, txndata: TxnData):
     else:
         sharedData = txn.data()
         logger.debug("pack data: %s" % sharedData.data)
-        logger.info('ModulePack', 'module_pack: data sz: {}'.format(len(sharedData.data)))
+        logger.info('ModulePack', 'module_pack: data sz: {}'.format(
+            len(sharedData.data)))
 
         txndata.append(sharedData.data)
+
 
 def module_run(txn: Txn):
     """
@@ -96,4 +102,3 @@ def module_run(txn: Txn):
     mod_metrics = metrics.module()
     mod_metrics.request.inc(1)
     return True
-
