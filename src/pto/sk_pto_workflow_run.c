@@ -10,6 +10,7 @@
 #include "api/sk_utils.h"
 #include "api/sk_const.h"
 #include "api/sk_event.h"
+#include "api/sk_types.h"
 #include "api/sk_metrics.h"
 #include "api/sk_log_helper.h"
 #include "api/sk_entity_mgr.h"
@@ -24,7 +25,7 @@ static
 int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
                 sk_entity_t* entity, sk_txn_t* txn, sk_pto_hdr_t* msg)
 {
-    unsigned long long start_time = sk_txn_alivetime(txn);
+    slong_t start_time = sk_txn_alivetime(txn);
     int ret = 0;
 
     // 1. Run the next module
@@ -51,8 +52,8 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
     sk_print("module execution return code=%d\n", ret);
     sk_module_stat_inc_run(module);
 
-    unsigned long long alivetime = sk_txn_alivetime(txn);
-    sk_txn_log_add(txn, "-> m:%s:run start: %llu end: %llu ",
+    slong_t alivetime = sk_txn_alivetime(txn);
+    sk_txn_log_add(txn, "-> m:%s:run start: %ld end: %ld ",
                    module_name, start_time, alivetime);
 
     if (ret) {
@@ -103,12 +104,12 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
 
 static
 void _write_txn_log(sk_txn_t* txn) {
-    unsigned long long alivetime = sk_txn_alivetime(txn);
+    slong_t alivetime = sk_txn_alivetime(txn);
     bool slowlog = false;
     bool txnlog  = false;
 
     if (SK_ENV_CONFIG->slowlog_ms > 0) {
-        if (alivetime >= (unsigned long long)SK_ENV_CONFIG->slowlog_ms) {
+        if (alivetime >= (slong_t)SK_ENV_CONFIG->slowlog_ms) {
             slowlog = true;
         }
     }
@@ -173,7 +174,7 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
 {
     sk_workflow_t* workflow = sk_txn_workflow(txn);
     sk_module_t* last_module = sk_workflow_last_module(workflow);
-    unsigned long long start_time = sk_txn_alivetime(txn);
+    slong_t start_time = sk_txn_alivetime(txn);
 
     // 1. No pack function means no need to send response
     if (!last_module->pack) {
@@ -212,12 +213,12 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
     }
 
     // 3. Increase metrics and set state
-    unsigned long long alivetime = sk_txn_alivetime(txn);
-    sk_print("txn time: %llu\n", alivetime);
-    sk_metrics_worker.latency.inc((uint32_t)alivetime);
-    sk_metrics_global.latency.inc((uint32_t)alivetime);
+    slong_t alivetime = sk_txn_alivetime(txn);
+    sk_print("txn time: %ld\n", alivetime);
+    sk_metrics_worker.latency.inc((double)alivetime);
+    sk_metrics_global.latency.inc((double)alivetime);
 
-    sk_txn_log_add(txn, "-> m:%s:pack start: %llu end: %llu",
+    sk_txn_log_add(txn, "-> m:%s:pack start: %ld end: %ld",
                    module_name, start_time, alivetime);
 
     sk_txn_setstate(txn, SK_TXN_PACKED);

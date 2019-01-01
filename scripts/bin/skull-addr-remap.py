@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
+"""
+Address to line converasion tool
+
+Includes:
+ - Memory usage summary
+ - CrossScope allocation/deallocation report
+ - MemLeak report (Experimental)
+"""
 
 import os
 import sys
 import time
 import getopt
-import string
 import pprint
 import subprocess
 
@@ -29,9 +36,9 @@ IDX_FRAME_START = LOG_PREFIX + 12
 
 ADDR2LINE_CMD  = "addr2line -e {} -fpC {}"
 
-MEMLEAK_THRESHOLD = 10 # N times larger than avg latency
+MEMLEAK_THRESHOLD = 10  # N times larger than avg latency
 
-MAX_FRAME         = 9  # Besides first caller, how many additional frames
+MAX_FRAME         = 9   # Besides first caller, how many additional frames
 MAX_REPORT        = 10
 NUM_OF_PROCESSED  = 50
 
@@ -152,12 +159,11 @@ def loadAddrMaps(pid:int):
     }
     """
 
-    global DEBUG
-
     maps = {}
     procMaps = None
     mapFileName = "/proc/{}/maps".format(pid)
-    if DEBUG: print("map file: {}".format(mapFileName))
+    if DEBUG:
+        print("map file: {}".format(mapFileName))
 
     try:
         procMaps = open(mapFileName, 'r')

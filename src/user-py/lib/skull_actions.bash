@@ -15,7 +15,7 @@
 
 # static global env var
 LANGUAGE_PY_PATH=$SKULL_ROOT/share/skull/lang/py
-COMMON_PY_LOCATION=$SKULL_PROJ_ROOT/src/common/py
+COMMON_PY_LOCATION=$SKULL_PROJ_ROOT/src/common-py/common
 PROTO_PY_FOLDER_NAME=proto
 PROTO_PY_FOLDER=$COMMON_PY_LOCATION/$PROTO_PY_FOLDER_NAME
 
@@ -26,7 +26,7 @@ function action_py_module_valid()
 {
     # for now, just check whether there is module.py exist
     local module=$1
-    if [ -f $SKULL_PROJ_ROOT/src/modules/$module/module.py ]; then
+    if [ -f "$SKULL_PROJ_ROOT/src/modules/$module/module.py" ]; then
         return 0
     else
         return 1
@@ -45,21 +45,21 @@ function action_py_module_add()
     fi
 
     # add module folder and files
-    mkdir -p $module_path
+    mkdir -p "$module_path"
 
-    cp $LANGUAGE_PY_PATH/etc/config.yaml         $module_path/config.yaml
-    cp $LANGUAGE_PY_PATH/share/module.py         $module_path/module.py
-    #cp $LANGUAGE_PY_PATH/share/__init__.py       $module_path/__init__.py
-    cp $LANGUAGE_PY_PATH/share/gitignore-module  $module_path/.gitignore
+    cp "$LANGUAGE_PY_PATH/etc/config.yaml"        "$module_path/config.yaml"
+    cp "$LANGUAGE_PY_PATH/share/module.py"        "$module_path/module.py"
+    #cp $LANGUAGE_PY_PATH/share/__init__.py        $module_path/__init__.py
+    cp "$LANGUAGE_PY_PATH/share/gitignore-module" "$module_path/.gitignore"
 
-    sed -i "s/{MODULE_NAME}/$module/g" $module_path/module.py
+    sed -i "s/{MODULE_NAME}/$module/g" "$module_path/module.py"
 
     # copy makefile templates
-    cp $LANGUAGE_PY_PATH/share/Makefile.mod         $module_path/Makefile
+    cp "$LANGUAGE_PY_PATH/share/Makefile.mod"     "$module_path/Makefile"
 
     # generate a static config code for user
     local module_config=$module_path/config.yaml
-    action_py_gen_config $module_config
+    action_py_gen_config "$module_config"
 
     return 0
 }
@@ -72,30 +72,30 @@ function action_py_common_create()
     fi
 
     # create common folders
-    mkdir -p $COMMON_PY_LOCATION
-    if [ ! -f $COMMON_PY_LOCATION/__init__.py ]; then
-        cp $LANGUAGE_PY_PATH/share/init_common.py \
-            $COMMON_PY_LOCATION/__init__.py
+    mkdir -p "$COMMON_PY_LOCATION"
+    if [ ! -f "$COMMON_PY_LOCATION/__init__.py" ]; then
+        cp "$LANGUAGE_PY_PATH/share/init_common.py" \
+            "$COMMON_PY_LOCATION/__init__.py"
     fi
 
     # move the Makefile to common/py only when there is no Makefile in there
-    if [ ! -f $COMMON_PY_LOCATION/Makefile ]; then
-        cp $LANGUAGE_PY_PATH/share/Makefile.common \
-            $COMMON_PY_LOCATION/Makefile
+    if [ ! -f "$COMMON_PY_LOCATION/Makefile" ]; then
+        cp "$LANGUAGE_PY_PATH/share/Makefile.common" \
+            "$COMMON_PY_LOCATION/Makefile"
     fi
 
     # copy gitignore
-    if [ ! -f $COMMON_PY_LOCATION/.gitignore ]; then
-        cp $LANGUAGE_PY_PATH/share/gitignore-common \
-            $COMMON_PY_LOCATION/.gitignore
+    if [ ! -f "$COMMON_PY_LOCATION/.gitignore" ]; then
+        cp "$LANGUAGE_PY_PATH/share/gitignore-common" \
+            "$COMMON_PY_LOCATION/.gitignore"
     fi
 
     # generate the metrics
-    action_py_gen_metrics $SKULL_METRICS_FILE
+    action_py_gen_metrics "$SKULL_METRICS_FILE"
 
     # generate idl source code according to the idls
     local config=$SKULL_PROJ_ROOT/config/skull-config.yaml
-    action_py_gen_idl $config
+    action_py_gen_idl "$config"
 }
 
 function action_py_gen_metrics()
@@ -110,11 +110,11 @@ function action_py_gen_metrics()
     local tmp_source_file=$tmpdir/metrics.py
     local source_file=$COMMON_PY_LOCATION/metrics.py
 
-    $SKULL_PYTHON $LANGUAGE_PY_PATH/bin/skull-metrics-gen.py -c $config \
+    $SKULL_PYTHON "$LANGUAGE_PY_PATH/bin/skull-metrics-gen.py" -c "$config" \
         -o $tmp_source_file
 
-    if ! $(sk_util_compare_file $tmp_source_file $source_file); then
-        cp $tmp_source_file $source_file
+    if ! $(sk_util_compare_file "$tmp_source_file" "$source_file"); then
+        cp "$tmp_source_file" "$source_file"
     fi
 }
 
@@ -125,7 +125,7 @@ function action_py_gen_metrics()
 function action_py_gen_config()
 {
     local config=$1
-    local confdir=`dirname $config`
+    local confdir=$(dirname "$config")
     local targetdir=$confdir
     local tmpdir=/tmp
 
@@ -150,21 +150,21 @@ function action_py_gen_idl()
     # 1. generate protobuf source code for workflows/services
     (
         # 1. prepare building folder
-        mkdir -p $PROTO_PY_FOLDER
-        cd $PROTO_PY_FOLDER
+        mkdir -p "$PROTO_PY_FOLDER"
+        cd "$PROTO_PY_FOLDER"
         #touch __init__.py
 
         # 2. copy workflow/service idls into building folder
         # 2.1 copy workflow idls
         local workflow_idls=($(sk_util_workflow_all_idls))
         for idl in ${workflow_idls[@]}; do
-            cp $idl $PROTO_PY_FOLDER
+            cp "$idl" "$PROTO_PY_FOLDER"
         done
 
         # 2.2 copy service idls
         local service_idls=($(sk_util_service_all_idls))
         for idl in ${service_idls[@]}; do
-            cp $idl $PROTO_PY_FOLDER
+            cp "$idl" "$PROTO_PY_FOLDER"
         done
 
         # 2.3 check at least have one proto to build

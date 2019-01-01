@@ -68,18 +68,18 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
             sk_txn_setstate(txn, SK_TXN_ERROR);
         }
 
-        unsigned long long txn_starttime = sk_txn_starttime(txn);
-        unsigned long long txn_alivetime = sk_txn_alivetime(txn);
-        unsigned long long task_starttime = sk_txn_task_starttime(txn, task_id);
+        slong_t txn_starttime = sk_txn_starttime(txn);
+        slong_t txn_alivetime = sk_txn_alivetime(txn);
+        slong_t task_starttime = sk_txn_task_starttime(txn, task_id);
 
-        sk_txn_log_add(txn, "; t:%s:%s st: %d cb_st: %d start: %llu end: %llu ",
+        sk_txn_log_add(txn, "; t:%s:%s st: %d cb_st: %d start: %ld end: %ld ",
                        service_name, api_name, task_status, ret,
                        task_starttime - txn_starttime, txn_alivetime);
     }
 
     // 5. log the task lifetime for debugging purpose
     SK_LOG_TRACE(SK_ENV_LOGGER, "service: one task id: %d completed, "
-                 "cost %llu usec", (int)task_id,
+                 "cost %ld usec", (int)task_id,
                  sk_txn_task_lifetime(txn, task_id));
 
     // 6. send a complete protocol back to master

@@ -1,9 +1,16 @@
-# Python Client Object
-#  User could use it to get the basic information of client
+"""
+Python Client Object
+
+Below APIs are for getting the basic information of a client
+"""
 
 import skull_capi as capi
 
-class Client(object):
+class Client():
+    """
+    Client class
+    """
+
     # Client Type
     NONE  = 0
     STD   = 1
@@ -12,7 +19,7 @@ class Client(object):
     UDPV4 = 4
     UDPV6 = 5
 
-    # Client Type Name Mapping
+    """ Client Type Name Mapping """
     _TYPE_NAME_MAP = {
         NONE:  "NONE",
         STD:   "STD",
@@ -23,6 +30,10 @@ class Client(object):
     }
 
     def __init__(self, skull_txn):
+        """
+        Constructor
+        """
+
         self._skull_txn = skull_txn
 
         self._name = None
@@ -30,24 +41,45 @@ class Client(object):
         self._type = self.NONE
 
     def name(self):
-        self.__setupPeerInfo()
+        """
+        name(self) - Return client (peer) name. like: 192.168.1.1
+        """
+
+        self.__setup_peer_info()
         return self._name
 
     def port(self):
-        self.__setupPeerInfo()
+        """
+        port(self) - Return client (peer) port. like: 80
+        """
+
+        self.__setup_peer_info()
         return self._port
 
     def type(self):
-        self.__setupPeerInfo()
+        """
+        type(self) - Return client (peer) type. like: TCPV4
+        """
+
+        self.__setup_peer_info()
         return self._type
 
     def typeName(self):
-        self.__setupPeerInfo()
+        """
+        typeName(self) - Return client (peer) type name. like: 'TCPV4'
+        """
+
+        self.__setup_peer_info()
 
         return self._TYPE_NAME_MAP.get(self._type) or "UNKNOWN"
 
-    def __setupPeerInfo(self):
-        if self._name is not None: return
+    def __setup_peer_info(self):
+        """
+        __setup_peer_info(self) - Internal private method
+        """
+
+        if self._name is not None:
+            return
 
         peer = capi.txn_peer(self._skull_txn)
         self._name = peer[0]

@@ -12,6 +12,7 @@ typedef union sk_ud_t {
 } sk_ud_t;
 
 typedef unsigned long int ulong_t;
+typedef signed long int slong_t;
 
 #endif
 

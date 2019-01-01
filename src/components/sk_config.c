@@ -70,8 +70,8 @@ sk_config_t* _create_config()
     config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
     config->langs     = flist_create();
     config->max_fds   = SK_DEFAULT_OPEN_FILES;
-    strncpy(config->log_name, "skull.log", sizeof("skull.log"));
-    strncpy(config->diag_name, "diag.log", sizeof("diag.log"));
+    strncpy(config->log_name,  "skull.log", strlen("skull.log"));
+    strncpy(config->diag_name, "diag.log",  strlen("diag.log"));
     config->txn_logging = false;
 
     return config;
@@ -476,7 +476,10 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
 
 static
 bool _validate_logname(const char* name) {
-    if (!name || name[0] == '\0') return false;
+    if (!name || name[0] == '\0') {
+        return false;
+    }
+
     if (strchr(name, '/')) {
         return name[0] == '/' && strlen(name) > 1;
     }

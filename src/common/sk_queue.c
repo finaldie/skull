@@ -210,7 +210,7 @@ size_t _sk_queue_pull_rw_pw(sk_queue_t* queue,
         // now, let's pull the read elements as much as possible
         SK_ASSERT(elems->type == SK_QUEUE_ELEM_READ);
         pulled_cnt +=
-            _sk_queue_pull(mq, elems->type, queue->elem_sz,
+            _sk_queue_pull(mq, (int)elems->type, queue->elem_sz,
                            elems + pulled_cnt * queue->elem_sz, max_slots - 1);
 
     } else if (queue->state == SK_QUEUE_STATE_READ) {

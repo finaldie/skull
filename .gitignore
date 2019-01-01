@@ -28,6 +28,8 @@
 # ctag
 .tags
 tags
+tags.lock
+tags.temp
 
 # cscope
 .cscope.*
@@ -46,4 +48,10 @@ src/skull-engine
 # python build folder
 src/user-py/build/
 *.egg
+
+# clang
+compile_commands.json
+
+# ccls
+.ccls-cache/
 

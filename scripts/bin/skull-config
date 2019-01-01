@@ -11,8 +11,8 @@ SKULL_LONG_OPS+="py-dir,py-inc,py-common-targets,py-targets,"
 SKULL_LONG_OPS+="valgrind-dir"
 
 function get_root() {
-    SKULL_ROOT=`dirname $0`
-    SKULL_ROOT=`dirname $SKULL_ROOT`
+    SKULL_ROOT=$(dirname "$0")
+    SKULL_ROOT=$(dirname "$SKULL_ROOT")
 }
 
 function process_cmd() {
@@ -149,11 +149,11 @@ function _usage() {
 }
 
 function _echo_prefix() {
-    echo $SKULL_ROOT
+    echo "$SKULL_ROOT"
 }
 
 function _echo_includes() {
-    echo "-Isrc -I../../common/cpp/src"
+    echo "-Isrc -I../../common-cpp/src"
 }
 
 function _echo_common_includes() {
@@ -181,7 +181,7 @@ function _echo_cflags() {
 }
 
 function _echo_ldflags() {
-    echo "-L../../common/cpp/lib"
+    echo "-L../../common-cpp/lib"
 }
 
 function _echo_common_ldflags() {
