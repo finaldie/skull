@@ -1,3 +1,14 @@
+* 2018-12-31 1.4.2
+  * Engine
+     * **Enhancement:** Add more counters for logger
+  * API
+     * **Enhancement:** Refine python APIs according to pylint
+     * **Enhancement:** Re-structure common folder and makes python common
+                        source folder align with lib folder structure
+     * **Enhancement:** Refine python template module.py according to PEG8
+  * CLI
+     * **Enhancement:** Refine mem tracing report format
+     * **Enhancement:** Add whitelist for memleak report
 * 2018-12-21 1.4.1
   * Engine
     * **New:** Introduce tracing level into `sk_malloc`
