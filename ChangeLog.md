@@ -1,6 +1,7 @@
 * 2019-01-01 1.4.3
   * API
      * **Enhancement:** Refine C++ APIs to make service and ep APIs more user friendly
+     * **Enhancement:** Enhance python suppression file on ubuntu 18
 * 2018-12-31 1.4.2
   * Engine
      * **Enhancement:** Add more counters for logger
