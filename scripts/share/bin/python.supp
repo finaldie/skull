@@ -971,7 +971,6 @@
    Memcheck:Addr4
    ...
    fun:PyImport_Cleanup
-   fun:Py_Finalize
 }
 
 {
@@ -979,7 +978,13 @@
    Memcheck:Addr4
    obj:*
    fun:PyGrammar_RemoveAccelerators
-   fun:Py_Finalize
+}
+
+{
+   _PyGC_CollectNoFail Invalid read 4
+   Memcheck:Addr4
+   ...
+   fun:_PyGC_CollectNoFail
 }
 
 {
@@ -1133,6 +1138,13 @@
 }
 
 {
+   _PyState_ClearModules Invalid read 4
+   Memcheck:Addr4
+   ...
+   fun:_PyState_ClearModules
+}
+
+{
    _PyState_ClearModules jump cond
    Memcheck:Cond
    ...
@@ -1144,4 +1156,157 @@
    Memcheck:Value8
    ...
    fun:_PyState_ClearModules
+}
+
+# Below for ubuntu 18, python 3.6
+{
+   Ubuntu 18, python 3.6, _PyCFunction_FastCallDict uninitialised value 8 bytes
+   Memcheck:Value8
+   ...
+   fun:_PyCFunction_FastCallDict
+   fun:_PyObject_FastCallDict
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, _PyCFunction_FastCallDict jump cond
+   Memcheck:Cond
+   ...
+   fun:_PyCFunction_FastCallDict
+   fun:_PyObject_FastCallDict
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, _PyEval_EvalFrameDefault invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:_PyEval_EvalFrameDefault
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, _PyEval_EvalFrameDefault jump cond
+   Memcheck:Cond
+   ...
+   fun:_PyEval_EvalFrameDefault
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, _PyEval_EvalFrameDefault uninitialised value 8 bytes
+   Memcheck:Value8
+   ...
+   fun:_PyEval_EvalFrameDefault
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, PyEval_EvalCodeEx invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:PyEval_EvalCodeEx
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, PyMarshal_ReadObjectFromString invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:PyMarshal_ReadObjectFromString
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, PyList_Append invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:PyList_Append
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, _Py_wfopen jump cond
+   Memcheck:Cond
+   ...
+   fun:_Py_wfopen
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, _Py_wreadlink jump cond
+   Memcheck:Cond
+   ...
+   fun:_Py_wreadlink
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, PyType_Ready invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:PyType_Ready
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, PyDict_SetDefault uninitialised value 8 bytes
+   Memcheck:Value8
+   ...
+   fun:PyDict_SetDefault
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, PyDict_SetDefault jump cond
+   Memcheck:Cond
+   ...
+   fun:PyDict_SetDefault
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, PyDict_SetItemString invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:PyDict_SetItemString
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, _PyModule_ClearDict invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:_PyModule_ClearDict
+   ...
+}
+
+{
+   Ubuntu 18, python 3.6, _PyFaulthandler_Fini invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:_PyFaulthandler_Fini
+   ...
+}
+
+{
+   ubuntu 18, python 3.6, Pyinterpreterstate_clear invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:Pyinterpreterstate_clear
+   ...
+}
+
+{
+   ubuntu 18, python 3.6, Py_FinalizeEx invalid read 4 bytes
+   Memcheck:Addr4
+   ...
+   fun:Py_FinalizeEx
+   ...
+}
+
+{
+   ubuntu 18, python 3.6, Unknown code path invalid read 4 bytes
+   Memcheck:Addr4
+   obj:/usr/lib/x86_64-linux-gnu/libpython3.6m.so.1.0
 }
