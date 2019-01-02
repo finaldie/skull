@@ -129,8 +129,8 @@ private:
     EPClientNPRet& operator=(EPClientNPRet&&) = delete;
 
 public:
-    EPClientNPRet() {}
-    virtual ~EPClientNPRet() {}
+    EPClientNPRet() = default;
+    virtual ~EPClientNPRet() = default;
 
 public:
     virtual EPClient::Type type() const = 0;
@@ -155,8 +155,8 @@ private:
     EPClientRet& operator=(EPClientRet&&) = delete;
 
 public:
-    EPClientRet() {}
-    virtual ~EPClientRet() {}
+    EPClientRet() = default;
+    virtual ~EPClientRet() = default;
 
 public:
     virtual EPClient::Type type() const = 0;
@@ -170,7 +170,10 @@ public:
     virtual int latency() const = 0;
     virtual const void* response() const = 0;
     virtual size_t responseSize() const = 0;
+
+public:
     virtual ServiceApiData& apiData() = 0;
+    virtual const ServiceApiData& apiData() const = 0;
 };
 
 } // End of namespace

@@ -46,8 +46,8 @@ public:
      *
      * @return 0 on success, 1 on failure
      */
-    virtual int createJob(JobR, JobError) const = 0;
-    virtual int createJob(JobW, JobError) const = 0;
+    virtual int createJob(JobR, JobError = nullptr) const = 0;
+    virtual int createJob(JobW, JobError = nullptr) const = 0;
 
     /**
      * Create a pending service job
@@ -57,8 +57,8 @@ public:
      *
      * @return 0 on success, 1 on failure
      */
-    virtual int createJob(uint32_t delayed, JobR, JobError) const = 0;
-    virtual int createJob(uint32_t delayed, JobW, JobError) const = 0;
+    virtual int createJob(uint32_t delayed, JobR, JobError = nullptr) const = 0;
+    virtual int createJob(uint32_t delayed, JobW, JobError = nullptr) const = 0;
 
     /**
      * Create a no pending service job
@@ -73,8 +73,8 @@ public:
      *
      * @return 0 on success, 1 on failure
      */
-    virtual int createJob(uint32_t delayed, uint32_t interval, int bioIdx, JobNPR, JobNPError) const = 0;
-    virtual int createJob(uint32_t delayed, uint32_t interval, int bioIdx, JobNPW, JobNPError) const = 0;
+    virtual int createJob(uint32_t delayed, uint32_t interval, int bioIdx, JobNPR, JobNPError = nullptr) const = 0;
+    virtual int createJob(uint32_t delayed, uint32_t interval, int bioIdx, JobNPW, JobNPError = nullptr) const = 0;
 
     /**
      * Create a no pending service job
@@ -88,8 +88,8 @@ public:
      *
      * @return 0 on success, 1 on failure
      */
-    virtual int createJob(uint32_t delayed, int bioIdx, JobNPR, JobNPError) const = 0;
-    virtual int createJob(uint32_t delayed, int bioIdx, JobNPW, JobNPError) const = 0;
+    virtual int createJob(uint32_t delayed, int bioIdx, JobNPR, JobNPError = nullptr) const = 0;
+    virtual int createJob(uint32_t delayed, int bioIdx, JobNPW, JobNPError = nullptr) const = 0;
 
     /**
      * Create a no pending service job, which will be triggered ASAP
@@ -102,8 +102,8 @@ public:
      *
      * @return 0 on success, 1 on failure
      */
-    virtual int createJob(int bioIdx, JobNPR, JobNPError) const = 0;
-    virtual int createJob(int bioIdx, JobNPW, JobNPError) const = 0;
+    virtual int createJob(int bioIdx, JobNPR, JobNPError = nullptr) const = 0;
+    virtual int createJob(int bioIdx, JobNPW, JobNPError = nullptr) const = 0;
 
     /**
      * Create a no pending service job
@@ -113,8 +113,8 @@ public:
      *
      * @return 0 on success, 1 on failure
      */
-    virtual int createJob(uint32_t delayed, JobNPR, JobNPError) const = 0;
-    virtual int createJob(uint32_t delayed, JobNPW, JobNPError) const = 0;
+    virtual int createJob(uint32_t delayed, JobNPR, JobNPError = nullptr) const = 0;
+    virtual int createJob(uint32_t delayed, JobNPW, JobNPError = nullptr) const = 0;
 
     /**
      * Create a no pending service job, it will be executed ASAP
@@ -123,8 +123,8 @@ public:
      *
      * @return 0 on success, 1 on failure
      */
-    virtual int createJob(JobNPR, JobNPError) const = 0;
-    virtual int createJob(JobNPW, JobNPError) const = 0;
+    virtual int createJob(JobNPR, JobNPError = nullptr) const = 0;
+    virtual int createJob(JobNPW, JobNPError = nullptr) const = 0;
 
 public:
     virtual void set(ServiceData* data) = 0;
@@ -162,8 +162,8 @@ private:
     ServiceData& operator=(ServiceData&&) = delete;
 
 public:
-    ServiceData() {}
-    virtual ~ServiceData() {}
+    ServiceData() = default;
+    virtual ~ServiceData() = default;
 };
 
 // [Deprecated Macros]
