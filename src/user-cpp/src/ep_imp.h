@@ -18,7 +18,7 @@ public:
     uint32_t __padding :16;
 
 public:
-    EPClientImpl() : unpack_(NULL), type_(EPClient::TCP),
+    EPClientImpl() : unpack_(nullptr), type_(EPClient::TCP),
         timeout_(0), flags_(0), port_(0) {
         (void)__padding;
     }
@@ -37,7 +37,7 @@ private:
 public:
     EPClientNPRetImp(const EPClientImpl&, skull_ep_ret_t ret,
                      const void* response, size_t respSize);
-    virtual ~EPClientNPRetImp();
+    virtual ~EPClientNPRetImp() = default;
 
 public:
     EPClient::Type type() const;
@@ -62,7 +62,7 @@ public:
     EPClientRetImp(const EPClientImpl&, skull_ep_ret_t ret,
                    const void* response, size_t responseSize,
                    ServiceApiDataImp& apiData);
-    virtual ~EPClientRetImp();
+    virtual ~EPClientRetImp() = default;
 
 public:
     EPClient::Type type() const;
@@ -76,10 +76,13 @@ public:
     int latency() const;
     const void* response() const;
     size_t responseSize() const;
+
+public:
     ServiceApiData& apiData();
+    const ServiceApiData& apiData() const;
 };
 
-} // End of namespace
+} // End of namespace skullcpp
 
 #endif
 

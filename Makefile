@@ -18,7 +18,6 @@ dep: metrics flibs skull-ft protobuf
 endif
 
 core:
-	echo "CC=$(CC), LD=$(LD)"
 	cd src && $(MAKE)
 
 check:
