@@ -1,3 +1,6 @@
+* 2019-01-01 1.4.3
+  * API
+     * **Enhancement:** Refine C++ APIs to make service and ep APIs more user friendly
 * 2018-12-31 1.4.2
   * Engine
      * **Enhancement:** Add more counters for logger
