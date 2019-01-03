@@ -3,8 +3,10 @@ Python Logger API
 """
 
 import os
-import inspect
+import sys
+
 import skull_capi as capi
+
 
 def trace(msg):
     """
@@ -17,16 +19,13 @@ def trace(msg):
     if isTraceEnabled() is False:
         return
 
-    caller_frame_record = inspect.stack()[1]
-    caller_frame = caller_frame_record[0]
-    frame = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(frame.filename)
-
-    log_msg = "%s:%d TRACE - %s" % (filename, frame.lineno, str(msg))
+    fname, lineno = _caller_info()
+    log_msg = "%s:%d TRACE - %s" % (fname, lineno, str(msg))
     try:
         capi.log(log_msg)
     except Exception as ex:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
+        print("Failed to log message: {}:{} {}".format(fname, lineno, ex))
+
 
 def debug(msg):
     """
@@ -39,16 +38,13 @@ def debug(msg):
     if isDebugEnabled() is False:
         return
 
-    caller_frame_record = inspect.stack()[1]
-    caller_frame = caller_frame_record[0]
-    frame = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(frame.filename)
-
-    log_msg = "%s:%d DEBUG - %s" % (filename, frame.lineno, str(msg))
+    fname, lineno = _caller_info()
+    log_msg = "%s:%d DEBUG - %s" % (fname, lineno, str(msg))
     try:
         capi.log(log_msg)
     except Exception as ex:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
+        print("Failed to log message: {}:{} {}".format(fname, lineno, ex))
+
 
 def info(code, msg):
     """
@@ -64,16 +60,13 @@ def info(code, msg):
     if isInfoEnabled() is False:
         return
 
-    caller_frame_record = inspect.stack()[1]
-    caller_frame = caller_frame_record[0]
-    frame = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(frame.filename)
-
-    log_msg = "%s:%d INFO - {%s} %s" % (filename, frame.lineno, str(code), str(msg))
+    fname, lineno = _caller_info()
+    log_msg = "%s:%d INFO - {%s} %s" % (fname, lineno, str(code), str(msg))
     try:
         capi.log(log_msg)
     except Exception as ex:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
+        print("Failed to log message: {}:{} {}".format(fname, lineno, ex))
+
 
 def warn(code, msg, suggestion):
     """
@@ -92,17 +85,14 @@ def warn(code, msg, suggestion):
     if suggestion is None:
         raise Exception('Logging Format Error: Must have a suggestion message')
 
-    caller_frame_record = inspect.stack()[1]
-    caller_frame = caller_frame_record[0]
-    frame = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(frame.filename)
-
-    log_msg = "%s:%d WARN - {%s} %s; suggestion: %s" % (filename, frame.lineno, \
-            str(code), str(msg), str(suggestion))
+    fname, lineno = _caller_info()
+    log_msg = "%s:%d WARN - {%s} %s; suggestion: %s" % (
+        fname, lineno, str(code), str(msg), str(suggestion))
     try:
         capi.log(log_msg)
     except Exception as ex:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
+        print("Failed to log message: {}:{} {}".format(fname, lineno, ex))
+
 
 def error(code, msg, solution):
     """
@@ -121,17 +111,14 @@ def error(code, msg, solution):
     if solution is None:
         raise Exception('Logging Format Error: Must have a solution message')
 
-    caller_frame_record = inspect.stack()[1]
-    caller_frame = caller_frame_record[0]
-    frame = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(frame.filename)
-
-    log_msg = "%s:%d ERROR - {%s} %s; solution: %s" % (filename, frame.lineno, \
-            str(code), str(msg), str(solution))
+    fname, lineno = _caller_info()
+    log_msg = "%s:%d ERROR - {%s} %s; solution: %s" % (
+        fname, lineno, str(code), str(msg), str(solution))
     try:
         capi.log(log_msg)
     except Exception as ex:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
+        print("Failed to log message: {}:{} {}".format(fname, lineno, ex))
+
 
 def fatal(code, msg, solution):
     """
@@ -147,36 +134,49 @@ def fatal(code, msg, solution):
     if solution is None:
         raise Exception('Logging Format Error: Must have a solution message')
 
-    caller_frame_record = inspect.stack()[1]
-    caller_frame = caller_frame_record[0]
-    frame = inspect.getframeinfo(caller_frame)
-    filename = os.path.basename(frame.filename)
-
-    log_msg = "%s:%d FATAL - {%s} %s; solution: %s" % (filename, frame.lineno, \
-            str(code), str(msg), str(solution))
+    fname, lineno = _caller_info()
+    log_msg = "%s:%d FATAL - {%s} %s; solution: %s" % (
+        fname, lineno, str(code), str(msg), str(solution))
     try:
         capi.log(log_msg)
     except Exception as ex:
-        print("Failed to log message: {}:{} {}".format(filename, frame.lineno, ex))
+        print("Failed to log message: {}:{} {}".format(fname, lineno, ex))
+
 
 # Level Checking APIs
 def isTraceEnabled():
     """Return whether trace level enabled"""
     return capi.log_trace_enabled()
 
+
 def isDebugEnabled():
     """Return whether debug level enabled"""
     return capi.log_debug_enabled()
+
 
 def isInfoEnabled():
     """Return whether info level enabled"""
     return capi.log_info_enabled()
 
+
 def isWarnEnabled():
     """Return whether warn level enabled"""
     return capi.log_warn_enabled()
+
 
 def isErrorEnabled():
     """Return whether error level enabled"""
     return capi.log_error_enabled()
 
+
+def _caller_info():
+    """Return filename and lineno
+
+    This function is trying best to get the frame but not guarantee
+    """
+
+    frame = sys._getframe(2) if hasattr(sys, '_getframe') else None
+    if frame is None:
+        return 'n/a', 0
+
+    return os.path.basename(frame.f_code.co_filename), frame.f_lineno

@@ -44,9 +44,10 @@ SKULL_OBJS = \
     src/txn_idldata.o
 
 all: $(SKULL_CXX_LIB)
-	$(python_path) setup.py check
+	$(python_path) setup.py build
 
 check:
+	$(python_path) setup.py check
 	pylint --disable=trailing-newlines,bad-whitespace skull/*.py
 
 install: prepare
