@@ -14,7 +14,7 @@
 
 void sk_assert_exit(const char* expr, const char* file, int lineno)
 {
-    printf("FATAL: assert [%s] failed - %s:%d\n", expr, file, lineno);
+    fprintf(stderr, "FATAL: assert [%s] failed - %s:%d\n", expr, file, lineno);
 
 #if defined SK_DUMP_CORE && defined __GLIBC__
     sk_backtrace_print(0, SK_MAX_BACKTRACE);
@@ -28,7 +28,7 @@ void sk_assert_exit_with_msg(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    vprintf(format, args);
+    vfprintf(stderr, format, args);
     va_end(args);
 
 #if defined SK_DUMP_CORE && defined __GLIBC__

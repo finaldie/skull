@@ -21,40 +21,44 @@ void sk_assert_exit_with_msg(const char* format, ...);
 #define SK_MIN(x, y) ((x) < (y) ? (x) : (y))
 
 // ASSERTIONS
-#define SK_ASSERT(expr) \
-    if (unlikely(!(expr))) { \
-        sk_assert_exit(#expr, __FILE__, __LINE__); \
-    }
+#define SK_ASSERT(expr)                                \
+    do {                                               \
+        if (unlikely(!(expr))) {                       \
+            sk_assert_exit(#expr, __FILE__, __LINE__); \
+        }                                              \
+    } while (0)
 
-#define SK_ASSERT_MSG(expr, ...) \
-    if (unlikely(!(expr))) { \
-        sk_assert_exit_with_msg("FATAL: assert [" #expr "] failed, " \
-                                __FILE__ ":" SK_EXTRACT_STR(__LINE__) " - " \
-                                __VA_ARGS__); \
-    }
+#define SK_ASSERT_MSG(expr, ...)                                 \
+    do {                                                         \
+        if (unlikely(!(expr))) {                                 \
+            sk_assert_exit_with_msg(                             \
+                "FATAL: assert [" #expr "] failed, " __FILE__    \
+                ":" SK_EXTRACT_STR(__LINE__) " - " __VA_ARGS__); \
+        }                                                        \
+    } while (0)
 
 // debug print
 #ifdef SK_DEBUG
-# define sk_print(...) \
-    do { \
+#define sk_print(...)                                                    \
+    do {                                                                 \
         printf(__FILE__ ":" SK_EXTRACT_STR(__LINE__) " - " __VA_ARGS__); \
     } while (0)
 
-# define sk_print_err(...) \
-    do { \
-        fprintf(stderr, __FILE__ ":" SK_EXTRACT_STR(__LINE__) " - " \
-                __VA_ARGS__); \
+#define sk_print_err(...)                                                 \
+    do {                                                                  \
+        fprintf(stderr,                                                   \
+                __FILE__ ":" SK_EXTRACT_STR(__LINE__) " - " __VA_ARGS__); \
     } while (0)
 
-# define sk_rawprint(...) \
-    do { \
+#define sk_rawprint(...)     \
+    do {                     \
         printf(__VA_ARGS__); \
     } while (0)
 
 #else
-# define sk_print(...)
-# define sk_print_err(...)
-# define sk_rawprint(...)
+#define sk_print(...)
+#define sk_print_err(...)
+#define sk_rawprint(...)
 #endif
 
 /**
