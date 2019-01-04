@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "flibs/compiler.h"
 #include "flibs/fhash.h"
 #include "flibs/flist.h"
 #include "flibs/fdlist.h"
@@ -69,7 +70,7 @@ typedef enum sk_ep_st_t {
 
 typedef enum sk_ep_nst_t {
     SK_EP_NST_INIT    = 0,
-    SK_EP_NST_PENDING = 1, // pending on the connection be ready
+    SK_EP_NST_PENDING = 1, // pending on the state until it's ready
     SK_EP_NST_SENT    = 2,
 } sk_ep_nst_t;
 
@@ -98,7 +99,7 @@ typedef struct sk_ep_data_t {
 
     sk_timer_t*        recv_timer;
 
-    size_t             count;   // size of data (bytes)
+    size_t             count;    // size of data (bytes)
     sk_ep_nst_t        status;
     char               data[EPDATA_INIT_SZ]; // data for sending
 } sk_ep_data_t;
@@ -289,9 +290,12 @@ void _ep_destroy(sk_ep_t* ep)
     }
     fdlist_destroy(ep->txns);
 
-    // if no ep->entity and ep->fd >= 0 and ep->status == SK_EP_ST_CONNECTING, then we need to close this fd
+    // if no ep->entity and ep->fd >= 0 and ep->status == SK_EP_ST_CONNECTING,
+    // then we need to close this fd
     if (!ep->entity && ep->fd >= 0 && ep->status == SK_EP_ST_CONNECTING) {
-        sk_print("close connection which under connecting..., fd: %d, ntxns: %d\n", ep->fd, ep->ntxn);
+        sk_print(
+            "close connection which under connecting, fd: %d, ntxns: %d\n",
+            ep->fd, ep->ntxn);
         fev_del_event(ep->owner->owner->evlp, ep->fd, FEV_READ | FEV_WRITE);
         close(ep->fd);
     }
@@ -761,7 +765,8 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
     ssize_t bytes = sk_entity_read(ep->entity, NULL, read_len);
     sk_print("ep entity read bytes: %ld, fd: %d\n", bytes, epfd);
     if (bytes <= 0) {
-        sk_print("ep entity buffer cannot read, bytes: %d, fd: %d\n", (int)bytes, epfd);
+        sk_print("ep entity buffer cannot read, bytes: %d, fd: %d\n",
+                 (int)bytes, epfd);
         return;
     }
 
@@ -945,7 +950,7 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         SK_ASSERT(sockfd >= 0);
         sk_entity_t* net_entity = ep->entity;
 
-        sk_print("ep connected to target, fd: %d\n", sockfd);
+        sk_print("ep connected to target(TCP), fd: %d\n", sockfd);
         fev_buff* evbuff =
             fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep);
         SK_ASSERT(evbuff);
@@ -983,12 +988,12 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         // Setup connection socket to evlp
         int ret = fev_reg_event(mgr->owner->evlp, sockfd, FEV_WRITE, NULL,
                                 _on_connect, ep);
-        if (!ret) {
+        if (unlikely(ret)) {
             SK_LOG_WARN(SK_ENV_LOGGER,
                         "Register socket into ep pool failed, ret: %d, "
                         "fd: %d, max: %d, used: %d, errno: %d\n",
                         ret, sockfd, mgr->max, mgr->nep, errno);
-            sk_metrics_global.ep_conn_overflow.inc(1);
+            sk_metrics_global.ep_tcp_fd_overflow.inc(1);
             return -1;
         }
 
@@ -1006,8 +1011,10 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 {
     fnet_sockaddr_t addr;
     socklen_t addrlen = 0;
-    int fd = fnet_socket(handler->ip, handler->port, SOCK_DGRAM | SOCK_NONBLOCK, &addr, &addrlen);
+    int fd = fnet_socket(handler->ip, handler->port, SOCK_DGRAM | SOCK_NONBLOCK,
+                         &addr, &addrlen);
     if (fd < 0) {
+        sk_metrics_global.ep_udp_fd_overflow.inc(1);
         return -1;
     }
 
@@ -1020,7 +1027,7 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 
     sk_entity_t* net_entity = ep->entity;
 
-    sk_print("ep connected to target(UDP), fd: %d\n", fd);
+    sk_print("ep entity(UDP) created, fd: %d\n", fd);
     fev_buff* evbuff =
         fevbuff_new(mgr->owner->evlp, fd, _read_cb, _error, ep);
     SK_ASSERT(evbuff);
@@ -1109,7 +1116,7 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
         mgr->nep++;
 
         SK_METRICS_EP_CREATE();
-        SK_LOG_TRACE(SK_ENV_LOGGER, "ep create");
+        SK_LOG_TRACE(SK_ENV_LOGGER, "ep created: %s", ipkey);
     }
 
     size_t extra_data_sz = count > EPDATA_INIT_SZ ? count - EPDATA_INIT_SZ : 0;

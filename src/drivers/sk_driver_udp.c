@@ -56,7 +56,9 @@ void _readcb(fev_state* fev, int fd, int mask, void* ud)
     if (bytes < 0) { // Error occurred
         sk_print("UDP _readcb: recvfrom return value < 0, skip to driver workflow\n");
         return;
-    } else if (bytes == 0) { // Shutdowned
+    }
+
+    if (bytes == 0) { // Shutdowned
         sk_print("UDP _readcb: recvfrom return value = 0, skip to driver workflow\n");
         return;
     }
@@ -123,9 +125,7 @@ void _driver_udp_run(sk_driver_t* driver)
     }
 
     int ret = fev_reg_event(fev, rootfd, FEV_READ, _readcb, NULL, driver);
-    if (ret) {
-        SK_ASSERT_MSG(ret == 0, "Register UDP rootfd failed, ret: %d\n", ret);
-    }
+    SK_ASSERT_MSG(ret == 0, "Register UDP rootfd failed, ret: %d\n", ret);
 }
 
 static
