@@ -1,4 +1,6 @@
 - 2019-01-02 1.5.1
+  - Engine
+    - **Fix:** Prevent crash if ep pool run out of file descriptor resource
   - API
     - **Fix:** Reduce unnecessary syscall during python log
 - 2019-01-01 1.4.3
