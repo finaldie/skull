@@ -498,6 +498,18 @@ void _sk_init_sys(sk_core_t* core)
     SK_LOG_INFO(core->logger, "Open files limitation (soft): %d,"
                 " config max_fds: %d, set max_fds to: %d",
                 soft_limit, core->config->max_fds, core->max_fds);
+
+    struct rlimit new_limit;
+    new_limit.rlim_cur = (rlim_t)core->max_fds;
+    new_limit.rlim_max = (rlim_t)core->max_fds;
+
+    if (setrlimit(RLIMIT_NOFILE, &new_limit)) {
+         SK_LOG_WARN(core->logger,
+            "set max open file limitation failed: %s, fallback to soft-limit value: %d",
+            strerror(errno), soft_limit);
+
+         core->max_fds = soft_limit;
+    }
 }
 
 static

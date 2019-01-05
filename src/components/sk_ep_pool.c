@@ -513,7 +513,9 @@ sk_ep_status_t _ep_send(fdlist_node_t* ep_node, const void* data, size_t len)
         SK_ASSERT(ep->status == SK_EP_ST_CONNECTING);
         SK_ASSERT(ep_data->status == SK_EP_NST_INIT);
 
-        // ep still not ready (under connecting), just return
+        // ep is still not ready (under connecting), just return.
+        // The actual sending will be happened when status == connected
+        SK_ASSERT_MSG(ep->type == SK_EP_TCP, "ep->type: %d\n", ep->type);
         sk_print("ep still not ready (under connecting), fd: %d\n", epfd);
         ep_data->status = SK_EP_NST_PENDING;
         return SK_EP_OK;
@@ -616,7 +618,8 @@ void _handle_error(sk_ep_t* ep)
 
             _ep_node_destroy(ep_node, 1);
         } else {
-            // Otherwise, only release the internal resources, the user resources will be released by user
+            // Otherwise, only release the internal resources, the user
+            // resources will be released by user
             _ep_node_destroy(ep_node, 0);
         }
     }
@@ -989,6 +992,10 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         int ret = fev_reg_event(mgr->owner->evlp, sockfd, FEV_WRITE, NULL,
                                 _on_connect, ep);
         if (unlikely(ret)) {
+            SK_ASSERT_MSG(ret == -4,
+                          "ret: %d, fd: %d, used: %d, max: %d, errno: %d\n",
+                          ret, sockfd, mgr->nep, mgr->max, errno);
+
             SK_LOG_WARN(SK_ENV_LOGGER,
                         "Register socket into ep pool failed, ret: %d, "
                         "fd: %d, max: %d, used: %d, errno: %d\n",
@@ -1030,7 +1037,7 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     sk_print("ep entity(UDP) created, fd: %d\n", fd);
     fev_buff* evbuff =
         fevbuff_new(mgr->owner->evlp, fd, _read_cb, _error, ep);
-    SK_ASSERT(evbuff);
+    SK_ASSERT_MSG(evbuff, "fd: %d, errno: %d\n", fd, errno);
     sk_entity_tcp_create(net_entity, evbuff);
 
     ep->status = SK_EP_ST_CONNECTED;
