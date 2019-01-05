@@ -4,15 +4,9 @@
 #include "api/sk_pto.h"
 #include "api/sk_driver.h"
 
-static
-void _driver_direct_create(sk_driver_t* driver)
-{
-    return;
-}
+static void _driver_app_create(sk_driver_t* driver) {}
 
-static
-void _driver_direct_run(sk_driver_t* driver)
-{
+static void _driver_app_run(sk_driver_t* driver) {
     sk_engine_t* engine = driver->engine;
     sk_sched_t* sched = engine->sched;
     sk_workflow_t* workflow = driver->workflow;
@@ -32,14 +26,10 @@ void _driver_direct_run(sk_driver_t* driver)
     sk_sched_send(sched, NULL, entity, txn, 0, SK_PTO_WORKFLOW_RUN);
 }
 
-static
-void _driver_direct_destroy(sk_driver_t* driver)
-{
-    return;
-}
+static void _driver_app_destroy(sk_driver_t* driver) {}
 
-sk_driver_opt_t sk_driver_direct = {
-    .create  = _driver_direct_create,
-    .run     = _driver_direct_run,
-    .destroy = _driver_direct_destroy
+sk_driver_opt_t sk_driver_app = {
+    .create  = _driver_app_create,
+    .run     = _driver_app_run,
+    .destroy = _driver_app_destroy
 };

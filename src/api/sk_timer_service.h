@@ -27,6 +27,12 @@ long sk_timersvc_timer_interval(const sk_timer_t*);
 
 uint32_t sk_timersvc_timeralive_cnt(const sk_timersvc_t*);
 
+/**
+ * Create a light-weight user space timer
+ *
+ * @note The new created timer object will be destroyed by timer service after
+ *       timer is triggered
+ */
 sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t*,
                                      sk_entity_t*,
                                      uint32_t delay,    // unit: millisecond
@@ -34,7 +40,12 @@ sk_timer_t* sk_timersvc_timer_create(sk_timersvc_t*,
                                      sk_timer_triggered,
                                      sk_obj_t* ud);
 
-// Destroy a timer when a timer has already been cancelled
+/**
+ * Destroy a timer when a timer has already been cancelled
+ *
+ * @note This API is only used by timer service itself, we shouldn't call it
+ *       outside
+ */
 void sk_timersvc_timer_destroy(sk_timersvc_t*, sk_timer_t*);
 
 #endif

@@ -7,26 +7,24 @@
 #include "api/sk_utils.h"
 #include "api/sk_entity.h"
 
-sk_entity_opt_t sk_entity_stdin_opt;
+sk_entity_opt_t sk_entity_std_opt;
 
-typedef struct sk_entity_stdin_data_t {
+typedef struct sk_entity_std_data_t {
     fev_buff* evbuff;
-} sk_entity_stdin_data_t;
+} sk_entity_std_data_t;
 
-void sk_entity_stdin_create(sk_entity_t* entity, void* evbuff)
-{
-    sk_entity_stdin_data_t* data = calloc(1, sizeof(*data));
+void sk_entity_std_create(sk_entity_t* entity, void* evbuff) {
+    sk_entity_std_data_t* data = calloc(1, sizeof(*data));
     data->evbuff = evbuff;
 
-    sk_entity_setopt(entity, sk_entity_stdin_opt, data);
+    sk_entity_setopt(entity, sk_entity_std_opt, data);
 }
 
 static
-ssize_t _stdin_read(sk_entity_t* entity, void* buf, size_t len, void* ud)
-{
+ssize_t _stdin_read(sk_entity_t* entity, void* buf, size_t len, void* ud) {
     if (!ud) return -1;
 
-    sk_entity_stdin_data_t* data = ud;
+    sk_entity_std_data_t* data = ud;
     fev_buff* evbuff = data->evbuff;
 
     return fevbuff_read(evbuff, buf, len);
@@ -34,8 +32,7 @@ ssize_t _stdin_read(sk_entity_t* entity, void* buf, size_t len, void* ud)
 
 static
 ssize_t _stdout_write(sk_entity_t* entity, const void* buf, size_t len,
-                      void* ud)
-{
+                      void* ud) {
     int printed = fprintf(stdout, "%s", (const char*) buf);
     SK_ASSERT_MSG(len == (size_t)printed, "expect print len: %zu, real %d\n",
                   len, printed);
@@ -51,9 +48,9 @@ static
 void _std_destroy(sk_entity_t* entity, void* ud)
 {
     if (!ud) return;
-    sk_print("stdin entity destroy\n");
+    sk_print("std entity destroy\n");
 
-    sk_entity_stdin_data_t* data = ud;
+    sk_entity_std_data_t* data = ud;
     fev_buff* evbuff = data->evbuff;
     fevbuff_destroy(evbuff);
 
@@ -63,7 +60,7 @@ void _std_destroy(sk_entity_t* entity, void* ud)
 static
 void* _std_rbufget(const sk_entity_t* entity, void* ud)
 {
-    sk_entity_stdin_data_t* data = ud;
+    sk_entity_std_data_t* data = ud;
     fev_buff* evbuff = data->evbuff;
 
     return fevbuff_rawget(evbuff);
@@ -72,7 +69,7 @@ void* _std_rbufget(const sk_entity_t* entity, void* ud)
 static
 size_t _std_rbufsz(const sk_entity_t* entity, void* ud)
 {
-    sk_entity_stdin_data_t* data = ud;
+    sk_entity_std_data_t* data = ud;
     fev_buff* evbuff = data->evbuff;
 
     return fevbuff_get_usedlen(evbuff, FEVBUFF_TYPE_READ);
@@ -81,13 +78,13 @@ size_t _std_rbufsz(const sk_entity_t* entity, void* ud)
 static
 size_t _std_rbufpop(sk_entity_t* entity, size_t popsz, void* ud)
 {
-    sk_entity_stdin_data_t* data = ud;
+    sk_entity_std_data_t* data = ud;
     fev_buff* evbuff = data->evbuff;
 
     return fevbuff_pop(evbuff, popsz);
 }
 
-sk_entity_opt_t sk_entity_stdin_opt = {
+sk_entity_opt_t sk_entity_std_opt = {
     .read    = _stdin_read,
     .write   = _stdout_write,
     .destroy = _std_destroy,

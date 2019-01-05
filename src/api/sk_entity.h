@@ -99,12 +99,13 @@ int  sk_entity_taskcnt(const sk_entity_t*);
 void sk_entity_timeradd(sk_entity_t*, const sk_obj_t*);
 void sk_entity_timerdel(sk_entity_t*, const sk_obj_t*);
 
-// create network entity from a base entity
-void sk_entity_stdin_create(sk_entity_t*, void* ud);
-void sk_entity_tcp_create  (sk_entity_t*, void* ud);
-void sk_entity_udp_create  (sk_entity_t*, int rootfd,
-                            const void* buf, uint16_t buf_sz,
-                            struct sockaddr* src_addr, socklen_t src_addr_len);
+// create an entity from a base entity
+void sk_entity_evb_create(sk_entity_t*, void* ud);
+void sk_entity_std_create(sk_entity_t*, void* ud);
+void sk_entity_tcp_create(sk_entity_t*, void* ud);
+void sk_entity_udp_create(sk_entity_t*, int rootfd, const void* buf,
+                          uint16_t buf_sz, struct sockaddr* src_addr,
+                          socklen_t src_addr_len);
 
 // Debugging API
 void sk_entity_dump_txns(const sk_entity_t* entity);

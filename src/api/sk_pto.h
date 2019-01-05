@@ -118,7 +118,7 @@ typedef enum sk_pto_id_t {
     SK_PTO_SVC_TASK_DONE,   // 5
     SK_PTO_TIMER_TRIGGERED, // 6
     SK_PTO_TIMER_EMIT,      // 7
-    SK_PTO_STDIN_START,     // 8
+    SK_PTO_STD_START,       // 8
     SK_PTO_SVC_TIMER_RUN,   // 9
     SK_PTO_SVC_TIMER_DONE,  // 10
     SK_PTO_SVC_TASK_CB,     // 11
@@ -197,7 +197,7 @@ typedef struct sk_pto_service_timer_done_t {
 } sk_pto_service_timer_done_t;
 
 // SK_PTO_STDIN_START
-struct sk_pto_stdin_start_t;
+struct sk_pto_std_start_t;
 
 // SK_PTO_TIMER_EMIT
 typedef struct sk_pto_timer_emit_t {

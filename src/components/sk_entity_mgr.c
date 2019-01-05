@@ -33,7 +33,7 @@ static
 void _update_stat(sk_entity_mgr_t* mgr, const sk_entity_t* entity,
                   bool inactive, int value)
 {
-    if (!value) return;
+    if (!value) { return; }
 
     if (inactive) {
         mgr->stat.inactive += value;
@@ -109,8 +109,8 @@ void _cleanup_dead_entities(sk_entity_mgr_t* mgr, int force)
         sk_metrics_worker.entity_destroy.inc(1);
         sk_entity_type_t etype = sk_entity_type(entity);
 
-        if (SK_ENTITY_SOCK_V4TCP == etype ||
-            SK_ENTITY_SOCK_V6TCP == etype) {
+        if (SK_ENTITY_SOCK_V4TCP == etype || SK_ENTITY_SOCK_V6TCP == etype) {
+            sk_metrics_global.connection_closed.inc(1);
             sk_metrics_worker.connection_closed.inc(1);
         }
 
@@ -162,8 +162,8 @@ void sk_entity_mgr_add(sk_entity_mgr_t* mgr, sk_entity_t* entity)
     // Recored metrics
     sk_metrics_worker.entity_create.inc(1);
     sk_entity_type_t etype = sk_entity_type(entity);
-    if (SK_ENTITY_SOCK_V4TCP == etype ||
-        SK_ENTITY_SOCK_V6TCP == etype) {
+    if (SK_ENTITY_SOCK_V4TCP == etype || SK_ENTITY_SOCK_V6TCP == etype) {
+        sk_metrics_global.connection_opened.inc(1);
         sk_metrics_worker.connection_opened.inc(1);
     }
 

@@ -350,7 +350,7 @@ void sk_ep_mgr_destroy(sk_ep_mgr_t* mgr)
     free(mgr);
 }
 
-// TODO: optimize this part of performance
+// TODO(YH): optimize this part of performance
 static
 void _remove_ep(sk_ep_mgr_t* mgr, flist* ep_list, sk_ep_t* ep)
 {
@@ -386,9 +386,11 @@ sk_ep_t* _find_ep(sk_ep_mgr_t* mgr, flist* ep_list,
     flist_iter iter = flist_new_iter(ep_list);
     while ((t = flist_each(&iter))) {
         if (handler->flags == t->flags) {
-            if (t->flags & SK_EP_F_CONCURRENT) {
+            if (unlikely(t->flags & SK_EP_F_CONCURRENT)) {
                 return t;
-            } else if (t->status == SK_EP_ST_CONNECTED) {
+            }
+
+            if (t->status == SK_EP_ST_CONNECTED) {
                 SK_ASSERT(t->ntxn <= 1);
 
                 if (fdlist_empty(t->txns)) {
@@ -731,7 +733,9 @@ int _try_unpack(fdlist_node_t* ep_node, void* ud)
         // Error occurred
         readarg->consumed = consumed;
         return 1;
-    } else if (consumed == 0) {
+    }
+
+    if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", len);
         return 0;
@@ -1038,7 +1042,7 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     fev_buff* evbuff =
         fevbuff_new(mgr->owner->evlp, fd, _read_cb, _error, ep);
     SK_ASSERT_MSG(evbuff, "fd: %d, errno: %d\n", fd, errno);
-    sk_entity_tcp_create(net_entity, evbuff);
+    sk_entity_evb_create(net_entity, evbuff);
 
     ep->status = SK_EP_ST_CONNECTED;
     return 0;

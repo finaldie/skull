@@ -95,11 +95,11 @@ int _module_run(const sk_sched_t* sched, const sk_sched_t* src,
         sk_print("Doesn't reach the last module, schedule to next module\n");
         sk_sched_send(sched, sched, entity, txn, 0, SK_PTO_WORKFLOW_RUN);
         return 0;
-    } else {
-        // 3.2 Set complete state
-        sk_txn_setstate(txn, SK_TXN_COMPLETED);
-        return _run(sched, src, entity, txn, msg);
     }
+
+    // 3.2 Set complete state
+    sk_txn_setstate(txn, SK_TXN_COMPLETED);
+    return _run(sched, src, entity, txn, msg);
 }
 
 static
@@ -155,7 +155,7 @@ void _txn_log_and_destroy(const sk_sched_t* sched, sk_txn_t* txn) {
     int r = sk_txn_safe_destroy(txn);
 
     // 2. Destroy entity if its flags contain SK_ENTITY_F_DESTROY_NOTXN
-    if (r) return;
+    if (r) { return; }
 
     int txncnt = sk_entity_taskcnt(entity);
     int eflags = sk_entity_flags(entity);
@@ -205,7 +205,13 @@ int _module_pack(const sk_sched_t* sched, const sk_sched_t* src,
         sk_print("module no need to send response\n");
     } else {
         sk_print("write data sz:%zu\n", packed_data_sz);
-        sk_entity_write(entity, packed_data, packed_data_sz);
+        ssize_t nwrites = sk_entity_write(entity, packed_data, packed_data_sz);
+        if (nwrites != (ssize_t)packed_data_sz) {
+            SK_LOG_TRACE(SK_ENV_LOGGER,
+                        "Unfinished sent, bufsz: %zu, sent: %ld, "
+                        "entity type: %d",
+                        packed_data_sz, nwrites, sk_entity_type(entity));
+        }
 
         // Record metrics
         sk_metrics_worker.response.inc(1);

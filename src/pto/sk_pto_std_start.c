@@ -63,10 +63,10 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
     fev_buff* evbuff = fevbuff_new(fev, STDIN_FILENO, _read_cb, _error, entity);
     SK_ASSERT(evbuff);
 
-    sk_entity_stdin_create(entity, evbuff);
+    sk_entity_std_create(entity, evbuff);
     return 0;
 }
 
-sk_proto_ops_t sk_pto_ops_stdin_start = {
+sk_proto_ops_t sk_pto_ops_std_start = {
     .run = _run
 };
