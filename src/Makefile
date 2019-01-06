@@ -49,15 +49,16 @@ COMMON_OBJS = \
 
 ENTITY_OBJS = \
     entities/sk_entity.o \
-    entities/sk_entity_stdin.o \
+    entities/sk_entity_evb.o \
+    entities/sk_entity_std.o \
     entities/sk_entity_tcp.o \
     entities/sk_entity_udp.o \
     entities/sk_entity_util.o
 
 DRIVER_OBJS = \
     drivers/sk_driver.o \
-    drivers/sk_driver_direct.o \
-    drivers/sk_driver_stdin.o \
+    drivers/sk_driver_app.o \
+    drivers/sk_driver_std.o \
     drivers/sk_driver_tcp.o \
     drivers/sk_driver_udp.o \
     drivers/sk_driver_utils.o
@@ -82,7 +83,7 @@ PTO_OBJS = \
     pto/sk_pto_service_task_done.o \
     pto/sk_pto_timer_triggered.o \
     pto/sk_pto_timer_emit.o \
-    pto/sk_pto_stdin_start.o \
+    pto/sk_pto_std_start.o \
     pto/sk_pto_service_timer_run.o \
     pto/sk_pto_service_timer_done.o \
     pto/sk_pto_service_task_cb.o
@@ -135,7 +136,8 @@ UT_OBJS = \
     common/sk_module.o \
     common/sk_time.o \
     entities/sk_entity.o \
-    entities/sk_entity_stdin.o \
+    entities/sk_entity_evb.o \
+    entities/sk_entity_std.o \
     entities/sk_entity_tcp.o \
     entities/sk_entity_udp.o
 

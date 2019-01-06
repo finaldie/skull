@@ -9,7 +9,7 @@
 struct sk_sched_t;
 typedef struct sk_entity_mgr_t sk_entity_mgr_t;
 
-sk_entity_mgr_t* sk_entity_mgr_create(uint32_t size);
+sk_entity_mgr_t* sk_entity_mgr_create(uint32_t idx_sz);
 void sk_entity_mgr_destroy(sk_entity_mgr_t* mgr);
 
 void sk_entity_mgr_add(sk_entity_mgr_t* mgr, sk_entity_t* entity);

@@ -6,8 +6,8 @@
 #include "api/sk_config.h"
 
 typedef enum sk_driver_type_t {
-    SK_DRIVER_IMMEDIATELY = 0,
-    SK_DRIVER_STDIN,
+    SK_DRIVER_APP = 0,
+    SK_DRIVER_STD,
     SK_DRIVER_TCP,
     SK_DRIVER_UDP
 } sk_driver_type_t;

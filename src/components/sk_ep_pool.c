@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "flibs/compiler.h"
 #include "flibs/fhash.h"
 #include "flibs/flist.h"
 #include "flibs/fdlist.h"
@@ -69,7 +70,7 @@ typedef enum sk_ep_st_t {
 
 typedef enum sk_ep_nst_t {
     SK_EP_NST_INIT    = 0,
-    SK_EP_NST_PENDING = 1, // pending on the connection be ready
+    SK_EP_NST_PENDING = 1, // pending on the state until it's ready
     SK_EP_NST_SENT    = 2,
 } sk_ep_nst_t;
 
@@ -98,7 +99,7 @@ typedef struct sk_ep_data_t {
 
     sk_timer_t*        recv_timer;
 
-    size_t             count;   // size of data (bytes)
+    size_t             count;    // size of data (bytes)
     sk_ep_nst_t        status;
     char               data[EPDATA_INIT_SZ]; // data for sending
 } sk_ep_data_t;
@@ -183,11 +184,7 @@ int  sk_ep_timeout(sk_ep_data_t* ep_data)
     sk_print("sk_ep_timeout: consumed: %lu, timeout value: %d\n",
              consumed, ep_data->handler.timeout);
 
-    if (consumed >= ep_data->handler.timeout) {
-        return 1;
-    } else {
-        return 0;
-    }
+    return consumed >= ep_data->handler.timeout;
 }
 
 static
@@ -208,9 +205,8 @@ slong_t sk_ep_txn_time_left(sk_ep_data_t* ep_data)
     slong_t consumed = sk_time_ms() - ep_data->start;
     if (consumed >= ep_data->handler.timeout) {
         return 0;
-    } else {
-        return ep_data->handler.timeout - consumed;
     }
+    return ep_data->handler.timeout - consumed;
 }
 
 static
@@ -259,7 +255,7 @@ void _ep_data_release(sk_ep_data_t* ep_data, int release_userdata)
 static
 void _ep_node_destroy(fdlist_node_t* ep_node, int release_userdata)
 {
-    if (!ep_node) return;
+    if (!ep_node) { return; }
 
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
     sk_ep_t*      ep      = ep_data->owner;
@@ -273,7 +269,7 @@ void _ep_node_destroy(fdlist_node_t* ep_node, int release_userdata)
 static
 void _ep_destroy(sk_ep_t* ep)
 {
-    if (!ep) return;
+    if (!ep) { return; }
 
     // Cancel connection timer
     if (ep->conn_timer) {
@@ -294,9 +290,12 @@ void _ep_destroy(sk_ep_t* ep)
     }
     fdlist_destroy(ep->txns);
 
-    // if no ep->entity and ep->fd >= 0 and ep->status == SK_EP_ST_CONNECTING, then we need to close this fd
+    // if no ep->entity and ep->fd >= 0 and ep->status == SK_EP_ST_CONNECTING,
+    // then we need to close this fd
     if (!ep->entity && ep->fd >= 0 && ep->status == SK_EP_ST_CONNECTING) {
-        sk_print("close connection which under connecting..., fd: %d, ntxns: %d\n", ep->fd, ep->ntxn);
+        sk_print(
+            "close connection which under connecting, fd: %d, ntxns: %d\n",
+            ep->fd, ep->ntxn);
         fev_del_event(ep->owner->owner->evlp, ep->fd, FEV_READ | FEV_WRITE);
         close(ep->fd);
     }
@@ -308,7 +307,7 @@ void _ep_destroy(sk_ep_t* ep)
 static
 sk_ep_mgr_t* sk_ep_mgr_create(sk_ep_pool_t* owner, int max)
 {
-    if (max <= 0) return NULL;
+    if (max <= 0) { return NULL; }
 
     sk_ep_mgr_t* mgr = calloc(1, sizeof(*mgr));
     mgr->owner = owner;
@@ -323,7 +322,7 @@ sk_ep_mgr_t* sk_ep_mgr_create(sk_ep_pool_t* owner, int max)
 static
 void sk_ep_mgr_destroy(sk_ep_mgr_t* mgr)
 {
-    if (!mgr) return;
+    if (!mgr) { return; }
 
     // Destroy mapping
     fhash_u64_iter eiter = fhash_u64_iter_new(mgr->ee);
@@ -351,12 +350,12 @@ void sk_ep_mgr_destroy(sk_ep_mgr_t* mgr)
     free(mgr);
 }
 
-// TODO: optimize this part of performance
+// TODO(YH): optimize this part of performance
 static
 void _remove_ep(sk_ep_mgr_t* mgr, flist* ep_list, sk_ep_t* ep)
 {
-    if (!ep_list) return;
-    if (flist_empty(ep_list)) return;
+    if (!ep_list) { return; }
+    if (flist_empty(ep_list)) { return; }
 
     sk_print("_remove_ep\n");
     sk_ep_t* t = NULL;
@@ -380,16 +379,18 @@ static
 sk_ep_t* _find_ep(sk_ep_mgr_t* mgr, flist* ep_list,
                   const sk_ep_handler_t* handler)
 {
-    if (!ep_list) return NULL;
-    if (flist_empty(ep_list)) return NULL;
+    if (!ep_list) { return NULL; }
+    if (flist_empty(ep_list)) { return NULL; }
 
     sk_ep_t* t = NULL;
     flist_iter iter = flist_new_iter(ep_list);
     while ((t = flist_each(&iter))) {
         if (handler->flags == t->flags) {
-            if (t->flags & SK_EP_F_CONCURRENT) {
+            if (unlikely(t->flags & SK_EP_F_CONCURRENT)) {
                 return t;
-            } else if (t->status == SK_EP_ST_CONNECTED) {
+            }
+
+            if (t->status == SK_EP_ST_CONNECTED) {
                 SK_ASSERT(t->ntxn <= 1);
 
                 if (fdlist_empty(t->txns)) {
@@ -405,7 +406,7 @@ sk_ep_t* _find_ep(sk_ep_mgr_t* mgr, flist* ep_list,
 static
 void _ep_mgr_del(sk_ep_mgr_t* mgr, sk_ep_t* ep)
 {
-    if (!ep) return;
+    if (!ep) { return; }
 
     sk_entity_mgr_t* emgr = sk_entity_owner(ep->entity);
 
@@ -453,7 +454,7 @@ sk_timer_t* _ep_create_timer(sk_ep_t* ep,
                              sk_timer_triggered timer_cb,
                              uint32_t timeout)
 {
-    if (timeout == 0) return NULL;
+    if (timeout == 0) { return NULL; }
 
     sk_ep_mgr_t* mgr = ep->owner;
 
@@ -478,7 +479,7 @@ sk_timer_t* _ep_node_create_timer(fdlist_node_t* ep_node,
                                   sk_timer_triggered timer_cb,
                                   uint32_t timeout)
 {
-    if (timeout == 0) return NULL;
+    if (timeout == 0) { return NULL; }
 
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
     SK_ASSERT(ep_data);
@@ -514,15 +515,18 @@ sk_ep_status_t _ep_send(fdlist_node_t* ep_node, const void* data, size_t len)
         SK_ASSERT(ep->status == SK_EP_ST_CONNECTING);
         SK_ASSERT(ep_data->status == SK_EP_NST_INIT);
 
-        // ep still not ready (under connecting), just return
-        sk_print("ep still not ready (under connecting), just return, fd: %d\n", epfd);
+        // ep is still not ready (under connecting), just return.
+        // The actual sending will be happened when status == connected
+        SK_ASSERT_MSG(ep->type == SK_EP_TCP, "ep->type: %d\n", ep->type);
+        sk_print("ep still not ready (under connecting), fd: %d\n", epfd);
         ep_data->status = SK_EP_NST_PENDING;
         return SK_EP_OK;
     }
 
     sk_print("ep_send: send data to %s, len: %zu\n", ep->ipkey, len);
-    SK_ASSERT_MSG(ep_data->status == SK_EP_NST_INIT || ep_data->status == SK_EP_NST_PENDING,
-        "ep_data->status: %d\n", ep_data->status);
+    SK_ASSERT_MSG(ep_data->status == SK_EP_NST_INIT ||
+                      ep_data->status == SK_EP_NST_PENDING,
+                  "ep_data->status: %d\n", ep_data->status);
 
     ssize_t sent_bytes = sk_entity_write(ep->entity, data, len);
     if (sent_bytes < 0) {
@@ -616,7 +620,8 @@ void _handle_error(sk_ep_t* ep)
 
             _ep_node_destroy(ep_node, 1);
         } else {
-            // Otherwise, only release the internal resources, the user resources will be released by user
+            // Otherwise, only release the internal resources, the user
+            // resources will be released by user
             _ep_node_destroy(ep_node, 0);
         }
     }
@@ -728,7 +733,9 @@ int _try_unpack(fdlist_node_t* ep_node, void* ud)
         // Error occurred
         readarg->consumed = consumed;
         return 1;
-    } else if (consumed == 0) {
+    }
+
+    if (consumed == 0) {
         // means user need more data, re-try in next round
         sk_print("user need more data, current data size=%zu\n", len);
         return 0;
@@ -765,7 +772,8 @@ void _read_cb(fev_state* fev, fev_buff* evbuff, void* arg)
     ssize_t bytes = sk_entity_read(ep->entity, NULL, read_len);
     sk_print("ep entity read bytes: %ld, fd: %d\n", bytes, epfd);
     if (bytes <= 0) {
-        sk_print("ep entity buffer cannot read, bytes: %d, fd: %d\n", (int)bytes, epfd);
+        sk_print("ep entity buffer cannot read, bytes: %d, fd: %d\n",
+                 (int)bytes, epfd);
         return;
     }
 
@@ -813,8 +821,10 @@ int _send_each(fdlist_node_t* ep_node, void* ud)
     sk_print("send_each\n");
     flist* timeout_nodes = ud;
     sk_ep_data_t* ep_data = fdlist_get_nodedata(ep_node);
-    SK_ASSERT_MSG(ep_data->status == SK_EP_NST_PENDING,
-        "ep txn node status is not pending, somewhere wrong!!! status: %d\n", ep_data->status);
+    SK_ASSERT_MSG(
+        ep_data->status == SK_EP_NST_PENDING,
+        "ep txn node status is not pending, somewhere wrong!!! status: %d\n",
+        ep_data->status);
 
     sk_ep_status_t ret = _ep_send(ep_node, ep_data->data, ep_data->count);
     if (ret == SK_EP_TIMEOUT) {
@@ -836,12 +846,15 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
     int sockfd = fd;
 
     if (mask & FEV_ERROR) {
-        sk_print("fd: %d, mask: %d, error ocurred: %s\n", fd, mask, strerror(errno));
+        sk_print("fd: %d, mask: %d, error ocurred: %s\n", fd, mask,
+                 strerror(errno));
         goto CONN_ERROR;
     }
 
-    SK_ASSERT_MSG(ep->status == SK_EP_ST_CONNECTING,
-        "_on_connect status checking failed, ep->status: %d, fd: %d\n", ep->status, fd);
+    SK_ASSERT_MSG(
+        ep->status == SK_EP_ST_CONNECTING,
+        "_on_connect status checking failed, ep->status: %d, fd: %d\n",
+        ep->status, fd);
 
     int err = 0;
     socklen_t len = sizeof(int);
@@ -867,7 +880,8 @@ void _on_connect(fev_state* fev, int fd, int mask, void* arg)
                 ep->conn_timer = NULL;
             }
 
-            sk_print("prepare send data to target, txns size: %zu\n", fdlist_size(ep->txns));
+            sk_print("prepare send data to target, txns size: %zu\n",
+                     fdlist_size(ep->txns));
             flist* timeout_nodes = ep->owner->tmp;
             fdlist_foreach(ep->txns, _send_each, timeout_nodes);
 
@@ -935,14 +949,15 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
     int s = fnet_conn_async(handler->ip, handler->port, &sockfd);
     ep->fd = sockfd;
 
-    sk_print("create connection to %s, ep status: %d, fd: %d, async connection status: %d\n",
-        ep->ipkey, ep->status, ep->fd, s);
+    sk_print(
+        "create connection to %s, ep status: %d, fd: %d, async connection "
+        "status: %d\n", ep->ipkey, ep->status, ep->fd, s);
 
     if (s == 0) {
         SK_ASSERT(sockfd >= 0);
         sk_entity_t* net_entity = ep->entity;
 
-        sk_print("ep connected to target, fd: %d\n", sockfd);
+        sk_print("ep connected to target(TCP), fd: %d\n", sockfd);
         fev_buff* evbuff =
             fevbuff_new(mgr->owner->evlp, sockfd, _read_cb, _error, ep);
         SK_ASSERT(evbuff);
@@ -962,7 +977,9 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         if (ep_data->handler.timeout > 0) {
             slong_t time_left = sk_ep_txn_time_left(ep_data);
             if (time_left == 0) {
-                sk_print("create_entity_tcp: timed out1, set connection timeout to 1ms, fd: %d\n", ep->fd);
+                sk_print(
+                    "create_entity_tcp: timed out1, set connection timeout to "
+                    "1ms, fd: %d\n", ep->fd);
                 time_left = 1;
             }
 
@@ -978,11 +995,23 @@ int _create_entity_tcp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
         // Setup connection socket to evlp
         int ret = fev_reg_event(mgr->owner->evlp, sockfd, FEV_WRITE, NULL,
                                 _on_connect, ep);
-        SK_ASSERT_MSG(!ret, "Register socket into ep pool failed, ret: %d, fd: %d, max: %d\n", ret, sockfd, mgr->max);
+        if (unlikely(ret)) {
+            SK_ASSERT_MSG(ret == -4,
+                          "ret: %d, fd: %d, used: %d, max: %d, errno: %d\n",
+                          ret, sockfd, mgr->nep, mgr->max, errno);
+
+            SK_LOG_WARN(SK_ENV_LOGGER,
+                        "Register socket into ep pool failed, ret: %d, "
+                        "fd: %d, max: %d, used: %d, errno: %d\n",
+                        ret, sockfd, mgr->max, mgr->nep, errno);
+            sk_metrics_global.ep_tcp_fd_overflow.inc(1);
+            return -1;
+        }
 
         return 0;
     } else {
-        sk_print("connect to target %s:%d failed: %s\n", handler->ip, handler->port, strerror(errno));
+        sk_print("connect to target %s:%d failed: %s\n", handler->ip,
+                 handler->port, strerror(errno));
         return -1;
     }
 }
@@ -993,8 +1022,10 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 {
     fnet_sockaddr_t addr;
     socklen_t addrlen = 0;
-    int fd = fnet_socket(handler->ip, handler->port, SOCK_DGRAM | SOCK_NONBLOCK, &addr, &addrlen);
+    int fd = fnet_socket(handler->ip, handler->port, SOCK_DGRAM | SOCK_NONBLOCK,
+                         &addr, &addrlen);
     if (fd < 0) {
+        sk_metrics_global.ep_udp_fd_overflow.inc(1);
         return -1;
     }
 
@@ -1007,11 +1038,11 @@ int _create_entity_udp(sk_ep_mgr_t* mgr, const sk_ep_handler_t* handler,
 
     sk_entity_t* net_entity = ep->entity;
 
-    sk_print("ep connected to target(UDP), fd: %d\n", fd);
+    sk_print("ep entity(UDP) created, fd: %d\n", fd);
     fev_buff* evbuff =
         fevbuff_new(mgr->owner->evlp, fd, _read_cb, _error, ep);
-    SK_ASSERT(evbuff);
-    sk_entity_tcp_create(net_entity, evbuff);
+    SK_ASSERT_MSG(evbuff, "fd: %d, errno: %d\n", fd, errno);
+    sk_entity_evb_create(net_entity, evbuff);
 
     ep->status = SK_EP_ST_CONNECTED;
     return 0;
@@ -1089,14 +1120,14 @@ fdlist_node_t* _ep_mgr_get_or_create(sk_ep_mgr_t*           mgr,
     ep = _find_ep(mgr, ep_list, handler);
     if (!ep) {
         ep = _ep_create(mgr, handler, ekey, ipkey, start);
-        if (!ep) return NULL;
+        SK_ASSERT(ep);
 
         sk_entity_mgr_add(mgr->eps, ep->entity);
         flist_push(ep_list, ep);
         mgr->nep++;
 
         SK_METRICS_EP_CREATE();
-        SK_LOG_TRACE(SK_ENV_LOGGER, "ep create");
+        SK_LOG_TRACE(SK_ENV_LOGGER, "ep created: %s", ipkey);
     }
 
     size_t extra_data_sz = count > EPDATA_INIT_SZ ? count - EPDATA_INIT_SZ : 0;
@@ -1155,7 +1186,7 @@ sk_ep_pool_t* sk_ep_pool_create(void* evlp, sk_timersvc_t* tmsvc, int max_fds)
 
 void sk_ep_pool_destroy(sk_ep_pool_t* pool)
 {
-    if (!pool) return;
+    if (!pool) { return; }
 
     sk_ep_mgr_destroy(pool->tcp);
     sk_ep_mgr_destroy(pool->udp);
@@ -1164,11 +1195,7 @@ void sk_ep_pool_destroy(sk_ep_pool_t* pool)
 
 const sk_entity_mgr_t*
 sk_ep_pool_emgr(const sk_ep_pool_t* pool, sk_ep_type_t type) {
-    if (type == SK_EP_TCP) {
-        return pool->tcp->eps;
-    } else {
-        return pool->udp->eps;
-    }
+    return type == SK_EP_TCP ? pool->tcp->eps : pool->udp->eps;
 }
 
 sk_ep_status_t _sk_ep_send(sk_ep_pool_t*         pool,

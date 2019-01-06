@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='skull',
-    version='1.4.1',
+    version='1.4.2',
     description='Skull Python API',
     author='Yuzhang Hu',
     author_email='hyzwowtools@gmail.com',

@@ -11,7 +11,7 @@ extern sk_proto_ops_t sk_pto_ops_srv_task_run;
 extern sk_proto_ops_t sk_pto_ops_srv_task_done;
 extern sk_proto_ops_t sk_pto_ops_timer_triggered;
 extern sk_proto_ops_t sk_pto_ops_timer_emit;
-extern sk_proto_ops_t sk_pto_ops_stdin_start;
+extern sk_proto_ops_t sk_pto_ops_std_start;
 extern sk_proto_ops_t sk_pto_ops_svc_timer_run;
 extern sk_proto_ops_t sk_pto_ops_svc_timer_done;
 extern sk_proto_ops_t sk_pto_ops_srv_task_cb;
@@ -25,7 +25,7 @@ sk_proto_t sk_pto_tbl[] = {
     {SK_PTO_SVC_TASK_DONE,   SK_PTO_PRI_6, 3, 0, 15, &sk_pto_ops_srv_task_done},
     {SK_PTO_TIMER_TRIGGERED, SK_PTO_PRI_8, 3, 0, 16, &sk_pto_ops_timer_triggered},
     {SK_PTO_TIMER_EMIT,      SK_PTO_PRI_8, 7, 0, 17, &sk_pto_ops_timer_emit},
-    {SK_PTO_STDIN_START,     SK_PTO_PRI_7, 0, 0, 18, &sk_pto_ops_stdin_start},
+    {SK_PTO_STD_START,       SK_PTO_PRI_7, 0, 0, 18, &sk_pto_ops_std_start},
     {SK_PTO_SVC_TIMER_RUN,   SK_PTO_PRI_8, 6, 0, 19, &sk_pto_ops_svc_timer_run},
     {SK_PTO_SVC_TIMER_DONE,  SK_PTO_PRI_8, 3, 0, 20, &sk_pto_ops_svc_timer_done},
     {SK_PTO_SVC_TASK_CB,     SK_PTO_PRI_6, 5, 0, 21, &sk_pto_ops_srv_task_cb},

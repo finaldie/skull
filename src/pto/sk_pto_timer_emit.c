@@ -54,7 +54,8 @@ int _run (const sk_sched_t* sched, const sk_sched_t* src, sk_entity_t* entity,
         SK_ASSERT_MSG(ret == SK_SRV_STATUS_BUSY, "ret: %d\n", ret);
         task.io_status = SK_SRV_IO_STATUS_BUSY;
 
-        SK_LOG_DEBUG(SK_ENV_LOGGER, "ServiceJob Busy, service: %s", sk_service_name(svc));
+        SK_LOG_DEBUG(SK_ENV_LOGGER, "ServiceJob Busy, service: %s",
+                     sk_service_name(svc));
 
         // Schedule it back to original caller
         sk_service_schedule_task(svc, &task);

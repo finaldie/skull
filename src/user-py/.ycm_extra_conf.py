@@ -76,6 +76,8 @@ flags = [
 '-isystem',
 '/usr/include/python2.7/',
 '-isystem',
+'/usr/include/python3.6m/',
+'-isystem',
 '/usr/bin/../lib/gcc/x86_64-linux-gnu/4.8/include',
 '-isystem',
 '/usr/bin/../lib/clang/3.4/include',

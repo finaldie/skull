@@ -16,7 +16,7 @@ sk_entity_opt_t sk_entity_udp_opt;
 static size_t _udp_rbufsz(const sk_entity_t* entity, void* ud);
 
 typedef struct sk_udp_data_t {
-    int       rootfd;
+    int       fd;
     uint16_t  buf_sz;
     uint16_t  _padding;
 
@@ -27,14 +27,14 @@ typedef struct sk_udp_data_t {
     char      readbuf[SK_PADDING_SZ];
 } sk_udp_data_t;
 
-void sk_entity_udp_create(sk_entity_t* entity, int rootfd,
+void sk_entity_udp_create(sk_entity_t* entity, int fd,
                           const void* buf, uint16_t buf_sz,
                           struct sockaddr* src_addr, socklen_t src_addr_len)
 {
     size_t extra_sz = buf_sz > SK_PADDING_SZ ? buf_sz - (size_t)SK_PADDING_SZ : 0;
 
     sk_udp_data_t* udp_data = calloc(1, sizeof(*udp_data) + extra_sz);
-    udp_data->rootfd        = rootfd;
+    udp_data->fd            = fd;
     udp_data->buf_sz        = buf_sz;
     udp_data->src_addr_len  = src_addr_len;
     memcpy(&udp_data->src_addr, src_addr, src_addr_len);
@@ -68,7 +68,7 @@ ssize_t _udp_write(sk_entity_t* entity, const void* buf, size_t len, void* ud)
     if (!ud) return -1;
 
     sk_udp_data_t* udp_data = ud;
-    return sendto(udp_data->rootfd, buf, len, MSG_NOSIGNAL, &udp_data->src_addr.sa,
+    return sendto(udp_data->fd, buf, len, MSG_NOSIGNAL, &udp_data->src_addr.sa,
                   udp_data->src_addr_len);
 }
 
@@ -112,10 +112,12 @@ int _udp_peer(const sk_entity_t* entity, sk_entity_peer_t* peer, void* ud)
 
     peer->family = udp_data->src_addr.sa.sa_family;
     if (sk_entity_type(entity) == SK_ENTITY_SOCK_V4TCP) {
-        inet_ntop(AF_INET, (void*)&udp_data->src_addr.in.sin_addr, peer->name, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET, (void*)&udp_data->src_addr.in.sin_addr, peer->name,
+                  INET6_ADDRSTRLEN);
         peer->port = ntohs(udp_data->src_addr.in.sin_port);
     } else {
-        inet_ntop(AF_INET6, (void*)&udp_data->src_addr.in6.sin6_addr, peer->name, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, (void*)&udp_data->src_addr.in6.sin6_addr,
+                  peer->name, INET6_ADDRSTRLEN);
         peer->port = ntohs(udp_data->src_addr.in6.sin6_port);
     }
 
