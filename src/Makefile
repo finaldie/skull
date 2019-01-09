@@ -2,7 +2,7 @@ include Makefile.inc
 
 # dependency library list
 SKULL_LIBS = \
-    -lyaml \
+    $(LIBYAML_STATIC) \
     -lflibs \
     $(JEMALLOC_STATIC) \
     -pthread \

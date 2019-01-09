@@ -75,4 +75,3 @@ clean:
 
 $(SKULL_CXX_LIB): $(SKULL_OBJS)
 	$(SKULL_CXX_LD) -o $@ $^ $(SKULL_LIBS)
-

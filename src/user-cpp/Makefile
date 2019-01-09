@@ -23,7 +23,7 @@ DEPS_LDFLAGS = -L../../deps/flibs/lib
 
 SKULL_LIBS = \
     -ldl \
-    -lprotobuf
+    ../../deps/protobuf/src/.libs/libprotobuf.a
 
 SKULL_OBJS = \
     src/ep.o \

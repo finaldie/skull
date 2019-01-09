@@ -10,3 +10,6 @@
 [submodule "deps/protobuf"]
 	path = deps/protobuf
 	url = git://github.com/google/protobuf.git
+[submodule "deps/libyaml"]
+	path = deps/libyaml
+	url = git://github.com/yaml/libyaml.git

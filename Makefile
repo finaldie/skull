@@ -3,6 +3,7 @@ prefix ?= /usr/local
 disable_jemalloc ?= false
 disable_fast_proto ?= false
 export python_path ?= /usr/bin/python3
+minimal_deps ?= true
 
 MAKE_FLAGS +=
 
@@ -12,9 +13,13 @@ api-cpp: core
 api-py: core
 
 ifeq ($(disable_jemalloc), false)
-dep: metrics flibs skull-ft protobuf jemalloc
+dep: metrics flibs skull-ft protobuf libyaml jemalloc
 else
-dep: metrics flibs skull-ft protobuf
+dep: metrics flibs skull-ft protobuf libyaml
+endif
+
+ifeq ($(minimal_deps), true)
+    disable_fast_proto := true
 endif
 
 core:
@@ -35,6 +40,7 @@ clean: clean-api-cpp clean-api-py
 	cd src && $(MAKE) $@
 
 clean-dep: clean-flibs clean-skull-ft clean-jemalloc clean-protobuf
+clean-dep: clean-libyaml
 
 .PHONY: all dep core check valgrind-check install clean clean-dep
 
