@@ -1,3 +1,6 @@
+- 2019-01-08 1.5.2
+  - Engine
+    - **New:** Add building option for minize the dependency
 - 2019-01-02 1.5.1
   - Engine
     - **Fix:** Prevent crash if ep pool run out of file descriptor resource

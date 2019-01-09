@@ -30,11 +30,13 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
 
     // 1. unpack the parameters
     uint32_t id = SK_PTO_SVC_TASK_CB;
+
     sk_txn_taskdata_t* taskdata = sk_pto_arg(id, msg, 0)->p;
-    const char* service_name = sk_pto_arg(id, msg, 1)->s;
-    const char* api_name     = sk_pto_arg(id, msg, 2)->s;
-    sk_txn_task_status_t task_status = (sk_txn_task_status_t)sk_pto_arg(id, msg, 3)->i;
-    int svc_task_done        = sk_pto_arg(id, msg, 4)->i;
+    const char* service_name    = sk_pto_arg(id, msg, 1)->s;
+    const char* api_name        = sk_pto_arg(id, msg, 2)->s;
+    sk_txn_task_status_t task_status =
+        (sk_txn_task_status_t)sk_pto_arg(id, msg, 3)->i;
+    int svc_task_done           = sk_pto_arg(id, msg, 4)->i;
 
     sk_module_t* caller_module      = taskdata->caller_module;
     const char*  caller_module_name = caller_module->cfg->name;
@@ -93,5 +95,5 @@ int _run(const sk_sched_t* sched, const sk_sched_t* src,
 }
 
 sk_proto_ops_t sk_pto_ops_srv_task_cb = {
-    .run        = _run
+    .run = _run
 };
