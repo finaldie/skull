@@ -36,15 +36,13 @@ install: true
 before_script: true
 
 script:
-    - make dep -j4 disable_fast_proto=true
-    - sudo env PATH=$PATH make install-dep disable_fast_proto=true
+    - make dep -j4 minimal_deps=true FLIB_CFLAGS=-DFLIB_SKIP_LEGACY
+    - sudo env PATH=$PATH make install-dep minimal_deps=true
     - make -j4
     - make clean
     - make -j4 debug=true
     - make clean
     - make -j4 disable_jemalloc=true
-    - make clean
-    - make -j4 disable_jemalloc=true FLIB_CFLAGS=-DFLIB_SKIP_LEGACY
     - sudo make install
     - make check verbose=true
 
