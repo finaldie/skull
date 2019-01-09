@@ -2,7 +2,9 @@
   - Engine
     - **New:** Add building option for minize the dependency
     - **Enhancement:** Static link libyaml to reduce external dependency
+  - API
     - **Enhancement:** Static link libprotobuf `api-cpp` to reduce dependency
+    - **Enhancement:** Refine python APIs
 - 2019-01-02 1.5.1
   - Engine
     - **Fix:** Prevent crash if ep pool run out of file descriptor resource
