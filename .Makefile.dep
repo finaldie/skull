@@ -1,11 +1,9 @@
-CONF_ARGS ?= CXXFLAGS="-O2 -g -fPIC -std=c++11 -DNDEBUG"
+PB_CONF_ARGS ?= CXXFLAGS="-O2 -g -fPIC -std=c++11 -DNDEBUG"
 
 ifeq ($(disable_fast_proto), false)
-    CONF_ARGS += --disable-dependency-tracking
     CPP_PROTO += --cpp_implementation
     PB_LIB_PATH += export LD_LIBRARY_PATH=../src/.libs
 else
-    CONF_ARGS += --disable-dependency-tracking --enable-shared=no
     CPP_PROTO =
     PB_LIB_PATH = true
 endif
@@ -23,7 +21,7 @@ skull-ft:
 
 deps/libyaml/Makefile:
 	cd deps/libyaml && ./bootstrap && ./configure --enable-shared=no \
-	    --disable-dependency-tracking CFLAGS="-O2 -g -fPIC"
+	    CFLAGS="-O2 -g -fPIC"
 
 libyaml: deps/libyaml/Makefile
 	cd deps/libyaml && $(MAKE) $(MAKE_FLAGS)
@@ -44,7 +42,7 @@ protobuf-py: protobuf-cpp
 protobuf: protobuf-py
 
 deps/protobuf/Makefile:
-	cd deps/protobuf && ./autogen.sh && ./configure $(CONF_ARGS)
+	cd deps/protobuf && ./autogen.sh && ./configure $(PB_CONF_ARGS)
 
 .PHONY: flibs metrics skull-ft jemalloc protobuf protobuf-py protobuf-cpp
 .PHONY: libyaml
