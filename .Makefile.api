@@ -15,10 +15,10 @@ api-py: core
 
 # user api targets
 api-cpp:
-	cd src/user-cpp && $(MAKE) $(MAKE_FLAGS)
+	cd src/user-cpp && $(MAKE) $(SK_MFLAGS)
 
 api-py:
-	cd src/user-py && $(MAKE) $(MAKE_FLAGS)
+	cd src/user-py && $(MAKE) $(SK_MFLAGS)
 
 .PHONY: api api-cpp api-py
 

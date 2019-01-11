@@ -1,5 +1,6 @@
 MAKE ?= make
-MAKE_FLAGS +=
+MAKEFLAGS +=
+SK_MFLAGS +=
 
 prefix ?= /usr/local
 disable_jemalloc ?= false

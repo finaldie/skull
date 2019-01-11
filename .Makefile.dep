@@ -20,7 +20,7 @@ endif
 
 # dependency targets
 flibs:
-	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs || exit "$$?"
+	$(MAKE) $(SK_MFLAGS) -C ./deps/flibs || exit "$$?"
 
 metrics:
 	cd scripts/config && $(python_path) ../tools/sk-metrics-gen.py -c metrics.yaml
@@ -34,16 +34,16 @@ deps/libyaml/Makefile:
 	    CFLAGS="-O2 -g -fPIC"
 
 libyaml: deps/libyaml/Makefile
-	cd deps/libyaml && $(MAKE) $(MAKE_FLAGS)
+	cd deps/libyaml && $(MAKE) $(SK_MFLAGS)
 
 jemalloc: deps/jemalloc/Makefile
-	cd deps/jemalloc && $(MAKE) $(MAKE_FLAGS)
+	cd deps/jemalloc && $(MAKE) $(SK_MFLAGS)
 
 deps/jemalloc/Makefile:
 	cd deps/jemalloc && ./autogen.sh --with-jemalloc-prefix=je_
 
 protobuf-cpp: deps/protobuf/Makefile
-	cd deps/protobuf && $(MAKE) $(MAKE_FLAGS)
+	cd deps/protobuf && $(MAKE) $(SK_MFLAGS)
 
 protobuf-py: protobuf-cpp
 	cd deps/protobuf/python && \
@@ -93,24 +93,24 @@ install-protobuf: install-protobuf-py
 
 # clean targets
 clean-flibs:
-	$(MAKE) $(MAKE_FLAGS) -C ./deps/flibs clean || exit "$$?"
+	$(MAKE) $(SK_MFLAGS) -C ./deps/flibs clean || exit "$$?"
 
 clean-skull-ft:
-	$(MAKE) $(MAKE_FLAGS) -C ./deps/skull-ft clean || exit "$$?"
+	$(MAKE) $(SK_MFLAGS) -C ./deps/skull-ft clean || exit "$$?"
 
 clean-jemalloc:
 	! test -f ./deps/jemalloc/Makefile || \
-	    $(MAKE) $(MAKE_FLAGS) -C ./deps/jemalloc clean || exit "$$?"
+	    $(MAKE) $(SK_MFLAGS) -C ./deps/jemalloc clean || exit "$$?"
 	rm -f ./deps/jemalloc/Makefile
 
 clean-libyaml:
 	! test -f ./deps/libyaml/Makefile || \
-	    $(MAKE) $(MAKE_FLAGS) -C ./deps/libyaml clean || exit "$$?"
+	    $(MAKE) $(SK_MFLAGS) -C ./deps/libyaml clean || exit "$$?"
 	rm -f ./deps/libyaml/Makefile
 
 clean-protobuf:
 	! test -f ./deps/protobuf/Makefile || \
-	    $(MAKE) $(MAKE_FLAGS) -C ./deps/protobuf clean || exit "$$?"
+	    $(MAKE) $(SK_MFLAGS) -C ./deps/protobuf clean || exit "$$?"
 	rm -f ./deps/protobuf/Makefile
 	cd ./deps/protobuf/python && $(python_path) setup.py clean
 
