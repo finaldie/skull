@@ -10,13 +10,9 @@
  * 4. DO NOT Test metrics, since FT may covered it
  */
 
-static
-void test_case1()
-{
-}
+static void test_case1() {}
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     SKULL_CUNIT_RUN(test_case1);
     return 0;
 }
