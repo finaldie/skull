@@ -18,6 +18,7 @@ config_name = ""
 
 # Config headers
 CONFIG_HEADER = """
+---
 ##
 # Skull-Engine Top Config
 ##\n
@@ -28,15 +29,15 @@ CONFIG_WF_HEADER = """
 # Skull Workflows
 # Example:
 #
-#     workflows:
-#      - concurrency: 1
-#        IDL: example
-#        modules: ['test:cpp']
-#        port: 7758
-#        stdin: 0
-#        #bind: 0.0.0.0
-#        #sock_type: tcp
-#        #timeout: 100
+#   workflows:
+#     - concurrency: 1
+#       IDL: example
+#       modules: ['test:cpp']
+#       port: 7758
+#       stdin: 0
+#       # bind: 0.0.0.0
+#       # sock_type: tcp
+#       # timeout: 100
 #
 # The 'bind' item is optional, and by default it will bind to '0.0.0.0', to make
 #  it more secure, it's recommended to bind to '127.0.0.1' when there is no
@@ -158,7 +159,7 @@ def _dump_config_to_file(cfgYamlObj, filename):
     if cfgYamlObj.get('languages'):
         content.write('languages: {}\n\n'.format(cfgYamlObj['languages']))
     else:
-        content.write('languages: [\'cpp\', \'py\']\n\n')
+        content.write('languages: [\"cpp\", \"py\"]\n\n')
 
     # 9. 'Txn Logging'
     content.write('##\n')

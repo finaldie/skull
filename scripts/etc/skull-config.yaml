@@ -1,4 +1,4 @@
-
+---
 ##
 # Skull-Engine Top Config
 ##
@@ -28,7 +28,7 @@ log_level: debug
 diag_name: diag.log
 
 # Supported Languages: cpp, py
-languages: ['cpp', 'py']
+languages: ["cpp", "py"]
 
 ##
 # Transaction Logging\n')
@@ -56,15 +56,15 @@ languages: ['cpp', 'py']
 # Skull Workflows
 # Example:
 #
-#     workflows:
-#      - concurrency: 1
-#        idl: example
-#        modules: ['test:cpp']
-#        port: 7758
-#        stdin: 0
-#        #bind: 0.0.0.0
-#        #sock_type: tcp
-#        #timeout: 100
+#   workflows:
+#     - concurrency: 1
+#       idl: example
+#       modules: ['test:cpp']
+#       port: 7758
+#       stdin: 0
+#       # bind: 0.0.0.0
+#       # sock_type: tcp
+#       # timeout: 100
 #
 # The 'bind' item is optional, and by default it will bind to '0.0.0.0', to make
 #  it more secure, it's recommended to bind to '127.0.0.1' when there is no
@@ -87,7 +87,6 @@ languages: ['cpp', 'py']
 #
 workflows:
 
-
 ##
 # Skull Services
 # Example:
@@ -99,4 +98,3 @@ workflows:
 #   it controls the max service task queue size, by default is 1024
 #
 services:
-
