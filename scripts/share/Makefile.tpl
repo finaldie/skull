@@ -1,5 +1,5 @@
 MAKE ?= make
-MAKEFLAGS += -s
+MAKEFLAGS ?= -s
 
 # global variables
 export SKULL_SRCTOP := $(shell pwd)
