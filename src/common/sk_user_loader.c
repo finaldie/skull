@@ -16,17 +16,17 @@ typedef struct sk_user_api_t {
 
 static fhash* user_libs = NULL;
 
-int sk_userlib_load(const char* filename)
+int sk_userlib_load(const char* libname)
 {
     if (!user_libs) {
         user_libs = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     }
 
     // Check whether lib has already loaded
-    const char* lib = fhash_str_get(user_libs, filename);
+    const char* lib = fhash_str_get(user_libs, libname);
     if (lib) {
-        sk_print("user lib %s has already loaded\n", filename);
-        printf("user lib %s has already loaded\n", filename);
+        sk_print("user lib %s has already loaded\n", libname);
+        printf("user lib %s has already loaded\n", libname);
         return 0;
     }
 
@@ -36,15 +36,16 @@ int sk_userlib_load(const char* filename)
 
     char fullname[SK_USER_LIBNAME_MAX];
     memset(fullname, 0, SK_USER_LIBNAME_MAX);
-    snprintf(fullname, SK_USER_LIBNAME_MAX, "%s/%s", SK_USER_PREFIX1, filename);
+    snprintf(fullname, SK_USER_LIBNAME_MAX, "%s/%s", SK_USER_PREFIX1, libname);
+    int flags = RTLD_NOW | RTLD_GLOBAL;
 
-    void* handler = dlopen(fullname, RTLD_NOW | RTLD_GLOBAL);
+    void* handler = dlopen(fullname, flags);
     if (!handler) {
         fprintf(stdout, "Notice: cannot open %s: %s\n", fullname, dlerror());
 
         memset(fullname, 0, SK_USER_LIBNAME_MAX);
-        snprintf(fullname, SK_USER_LIBNAME_MAX, "%s/%s", SK_USER_PREFIX2, filename);
-        handler = dlopen(fullname, RTLD_NOW);
+        snprintf(fullname, SK_USER_LIBNAME_MAX, "%s/%s", SK_USER_PREFIX2, libname);
+        handler = dlopen(fullname, flags);
         if (!handler) {
             fprintf(stderr, "Error: cannot open %s: %s\n", fullname, dlerror());
             return 1;
@@ -58,7 +59,8 @@ int sk_userlib_load(const char* filename)
     *(void**)(&user_api->load) = dlsym(handler, SK_API_LOAD_FUNCNAME);
     if ((error = dlerror()) != NULL) {
         fprintf(stderr, "Error: cannot setup user 'load' api %s:%s, reason: %s\n",
-                 filename, SK_API_LOAD_FUNCNAME, error);
+                 libname, SK_API_LOAD_FUNCNAME, error);
+        goto error;
         return 1;
     }
 
@@ -66,16 +68,21 @@ int sk_userlib_load(const char* filename)
     *(void**)(&user_api->unload) = dlsym(handler, SK_API_UNLOAD_FUNCNAME);
     if ((error = dlerror()) != NULL) {
         fprintf(stderr, "Error: cannot setup user 'unload' api %s:%s, reason: %s\n",
-                 filename, SK_API_UNLOAD_FUNCNAME, error);
+                 libname, SK_API_UNLOAD_FUNCNAME, error);
+        goto error;
         return 1;
     }
 
     // 4. Add to userlibs table
-    fhash_str_set(user_libs, filename, user_api);
+    fhash_str_set(user_libs, libname, user_api);
 
     // 5. Run api loader
     user_api->load();
     return 0;
+
+error:
+    free(user_api);
+    return 1;
 }
 
 void sk_userlib_unload()

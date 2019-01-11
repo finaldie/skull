@@ -68,7 +68,7 @@ sk_config_t* _create_config()
     config->workflows = flist_create();
     config->services  = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
-    config->langs     = flist_create();
+    config->langs     = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     config->max_fds   = SK_DEFAULT_OPEN_FILES;
     strncpy(config->log_name,  "skull.log", strlen("skull.log"));
     strncpy(config->diag_name, "diag.log",  strlen("diag.log"));
@@ -99,11 +99,7 @@ void _delete_config(sk_config_t* config)
     fhash_str_delete(config->services);
 
     // destroy langs
-    char* lang = NULL;
-    while ((lang = flist_pop(config->langs))) {
-        free(lang);
-    }
-    flist_delete(config->langs);
+    fhash_str_delete(config->langs);
 
     free((void*)config->command_bind);
     free(config);
@@ -410,8 +406,7 @@ void _load_langs(sk_cfg_node_t* node, sk_config_t* config)
     while ((child = flist_each(&iter))) {
         SK_ASSERT(child->type == SK_CFG_NODE_VALUE);
 
-        int ret = flist_push(config->langs, strdup(child->data.value));
-        SK_ASSERT(!ret);
+        fhash_str_set(config->langs, child->data.value, "");
     }
 }
 
@@ -450,7 +445,7 @@ void _load_config(sk_cfg_node_t* root, sk_config_t* config)
             // load bio(s)
             _load_bios(child, config);
         } else if (0 == strcmp(key, "languages")) {
-            // load languages
+            // load API loaders
             _load_langs(child, config);
         } else if (0 == strcmp(key, "command_port")) {
             // load command port

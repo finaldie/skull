@@ -87,6 +87,7 @@ typedef struct sk_core_t {
     flist*           drivers;        // emement type: sk_driver_t*
     fhash*           unique_modules; // key: module name; value: sk_module_t*
     fhash*           services;       // key: service name; value: sk_service_t*
+    fhash*           apis;           // key: api name; value: loaded or not
     const char*      working_dir;
 
     // admin module and config

@@ -80,8 +80,7 @@ typedef struct sk_admin_data_t {
 
 /******************************** Internal APIs *******************************/
 static
-sk_admin_data_t* _sk_admin_data_create()
-{
+sk_admin_data_t* _sk_admin_data_create() {
     sk_admin_data_t* admin_data = calloc(1, sizeof(*admin_data));
     admin_data->response = fmbuf_create(ADMIN_RESP_MAX_LENGTH);
 
@@ -89,17 +88,15 @@ sk_admin_data_t* _sk_admin_data_create()
 }
 
 static
-void _sk_admin_data_destroy(sk_admin_data_t* admin_data)
-{
-    if (!admin_data) return;
+void _sk_admin_data_destroy(sk_admin_data_t* admin_data) {
+    if (!admin_data) { return; }
 
     fmbuf_delete(admin_data->response);
     free(admin_data);
 }
 
 static
-void _append_response(sk_txn_t* txn, const char* fmt, ...)
-{
+void _append_response(sk_txn_t* txn, const char* fmt, ...) {
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
     char line[ADMIN_LINE_MAX_LENGTH];
     memset(line, 0, sizeof(line));
@@ -119,8 +116,7 @@ void _process_help(sk_txn_t* txn) {
 }
 
 static
-void _mon_cb(const char* name, double value, void* ud)
-{
+void _mon_cb(const char* name, double value, void* ud) {
     sk_admin_data_t* admin_data = ud;
     fmbuf* buf = admin_data->response;
 
@@ -138,7 +134,7 @@ void _mon_cb(const char* name, double value, void* ud)
     }
 
     int ret = fmbuf_push(buf, metrics_str, (size_t)printed);
-    if (!ret) return;
+    if (!ret) { return; }
 
     admin_data->response = fmbuf_realloc(buf, fmbuf_size(buf) + 1024);
     buf = admin_data->response;
@@ -182,14 +178,13 @@ void _fill_first_line(sk_txn_t* txn, sk_mon_snapshot_t* snapshot) {
 }
 
 static
-void _process_metrics(sk_txn_t* txn, int loc)
-{
+void _process_metrics(sk_txn_t* txn, int loc) {
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
     sk_core_t* core = SK_ENV_CORE;
 
     // 1. snapshot global metrics
     sk_mon_snapshot_t* global_snapshot = sk_mon_snapshot(core->mon, loc);
-    if (!global_snapshot) return;
+    if (!global_snapshot) { return; }
 
     _fill_first_line(txn, global_snapshot);
     _append_response(txn, "\n");
@@ -200,7 +195,7 @@ void _process_metrics(sk_txn_t* txn, int loc)
     // 2. snapshot master metrics
     sk_mon_snapshot_t* master_snapshot = sk_mon_snapshot(core->master->mon, loc);
     _transport_mon_snapshot(master_snapshot, admin_data);
-    if (!loc) sk_mon_snapshot_destroy(master_snapshot);
+    if (!loc) { sk_mon_snapshot_destroy(master_snapshot); }
     _append_response(txn, "\n");
 
     // 3. snapshot workers metrics
@@ -209,7 +204,7 @@ void _process_metrics(sk_txn_t* txn, int loc)
         sk_engine_t* worker = core->workers[i];
         sk_mon_snapshot_t* worker_snapshot = sk_mon_snapshot(worker->mon, loc);
         _transport_mon_snapshot(worker_snapshot, admin_data);
-        if (!loc) sk_mon_snapshot_destroy(worker_snapshot);
+        if (!loc) { sk_mon_snapshot_destroy(worker_snapshot); }
         _append_response(txn, "\n");
     }
 
@@ -218,23 +213,22 @@ void _process_metrics(sk_txn_t* txn, int loc)
         sk_engine_t* bio = core->bio[i];
         sk_mon_snapshot_t* bio_snapshot = sk_mon_snapshot(bio->mon, loc);
         _transport_mon_snapshot(bio_snapshot, admin_data);
-        if (!loc) sk_mon_snapshot_destroy(bio_snapshot);
+        if (!loc) { sk_mon_snapshot_destroy(bio_snapshot); }
         _append_response(txn, "\n");
     }
 
     // 5. shapshot user metrics
     sk_mon_snapshot_t* user_snapshot = sk_mon_snapshot(core->umon, loc);
     _transport_mon_snapshot(user_snapshot, admin_data);
-    if (!loc) sk_mon_snapshot_destroy(user_snapshot);
+    if (!loc) { sk_mon_snapshot_destroy(user_snapshot); }
 
     _append_response(txn, "\n");
     _fill_first_line(txn, global_snapshot);
-    if (!loc) sk_mon_snapshot_destroy(global_snapshot);
+    if (!loc) { sk_mon_snapshot_destroy(global_snapshot); }
 }
 
 static
-void _status_workflow(sk_txn_t* txn, sk_core_t* core)
-{
+void _status_workflow(sk_txn_t* txn, sk_core_t* core) {
     flist_iter iter = flist_new_iter(core->workflows);
     sk_workflow_t* workflow = NULL;
     int total = 0;
@@ -248,8 +242,7 @@ void _status_workflow(sk_txn_t* txn, sk_core_t* core)
 
 
 static
-void _status_module(sk_txn_t* txn, sk_core_t* core)
-{
+void _status_module(sk_txn_t* txn, sk_core_t* core) {
     {
         fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
         sk_module_t* module = NULL;
@@ -287,8 +280,7 @@ void _status_module(sk_txn_t* txn, sk_core_t* core)
 }
 
 static
-void _status_service(sk_txn_t* txn, sk_core_t* core)
-{
+void _status_service(sk_txn_t* txn, sk_core_t* core) {
     {
         fhash_str_iter iter = fhash_str_iter_new(core->services);
         sk_service_t* service = NULL;
@@ -322,8 +314,7 @@ void _status_service(sk_txn_t* txn, sk_core_t* core)
 
 static
 void _merge_one_stat(sk_entity_mgr_stat_t* target,
-                     const sk_entity_mgr_stat_t* stat)
-{
+                     const sk_entity_mgr_stat_t* stat) {
     target->total               += stat->total;
     target->inactive            += stat->inactive;
     target->entity_none         += stat->entity_none;
@@ -364,8 +355,7 @@ void _merge_stat(sk_entity_mgr_stat_t* target,
 }
 
 static
-void _status_entity(sk_txn_t* txn, sk_core_t* core)
-{
+void _status_entity(sk_txn_t* txn, sk_core_t* core) {
     sk_entity_mgr_stat_t stat;
     memset(&stat, 0, sizeof(stat));
     _merge_stat(&stat, core->master);
@@ -391,8 +381,7 @@ void _status_entity(sk_txn_t* txn, sk_core_t* core)
 }
 
 static
-void _status_resources(sk_txn_t* txn, sk_core_t* core)
-{
+void _status_resources(sk_txn_t* txn, sk_core_t* core) {
     float cpu_sys  = (float)core->info.self_ru.ru_stime.tv_sec +
                      (float)core->info.self_ru.ru_stime.tv_usec / 1000000;
     float cpu_user = (float)core->info.self_ru.ru_utime.tv_sec +
@@ -419,12 +408,17 @@ void _status_resources(sk_txn_t* txn, sk_core_t* core)
     _append_response(txn, IFMT(signals, "%ld\n"), core->info.self_ru.ru_nsignals);
     _append_response(txn, IFMT(voluntary_context_switches, "%ld\n"), core->info.self_ru.ru_nvcsw);
     _append_response(txn, IFMT(involuntary_context_switches, "%ld\n"), core->info.self_ru.ru_nivcsw);
-
 }
 
 static
-void _process_status(sk_txn_t* txn)
-{
+void _status_apis(sk_txn_t* txn) {
+    sk_core_t* core = SK_ENV_CORE;
+    _append_response(txn, IFMT(api-cpp, "%s\n"), fhash_str_get(core->apis, "cpp"));
+    _append_response(txn, IFMT(api-py,  "%s\n"), fhash_str_get(core->apis, "py"));
+}
+
+static
+void _process_status(sk_txn_t* txn) {
     sk_core_t* core = SK_ENV_CORE;
 
     _append_response(txn, IFMT(version, "%s\n"), core->info.version);
@@ -468,6 +462,9 @@ void _process_status(sk_txn_t* txn)
     }
     _append_response(txn, "\n");
 
+    _status_apis(txn);
+    _append_response(txn, "\n");
+
     _status_time(txn, core);
     _append_response(txn, "\n");
 
@@ -486,8 +483,7 @@ void _process_status(sk_txn_t* txn)
 }
 
 static
-void __append_jemalloc_stat(void* txn, const char * content)
-{
+void __append_jemalloc_stat(void* txn, const char * content) {
     _append_response(txn, "%s", content);
 }
 
@@ -496,10 +492,9 @@ void __append_mem_stat(sk_txn_t* txn,
                        const char* t, // tag
                        const char* n, // name
                        const sk_mem_stat_t* st,
-                       bool detail)
-{
+                       bool detail) {
     _append_response(txn, MEM_FMT, t, n, "used", sk_mem_allocated(st));
-    if (!detail) return;
+    if (!detail) { return; }
 
     _append_response(txn, MEM_FMT_ARGS(t, n, nmalloc));
     _append_response(txn, MEM_FMT_ARGS(t, n, nfree));
@@ -588,6 +583,8 @@ static
 int _parse_tracing_level(char* subcmd) {
     // Extract first token 'trace'
     char* token = strsep(&subcmd, "=");
+    (void)token;
+
     // Extract second token 'number of level'
     token = strsep(&subcmd, "=");
 
@@ -635,8 +632,7 @@ void _process_memory(sk_admin_data_t* admin_data, sk_txn_t* txn) {
 }
 
 /********************************* Public APIs ********************************/
-sk_workflow_cfg_t* sk_admin_workflowcfg_create(const char* bind, int port)
-{
+sk_workflow_cfg_t* sk_admin_workflowcfg_create(const char* bind, int port) {
     sk_workflow_cfg_t* cfg = calloc(1, sizeof(*cfg));
     cfg->concurrent   = 0;
     cfg->enable_stdin = 0;
@@ -655,36 +651,31 @@ sk_workflow_cfg_t* sk_admin_workflowcfg_create(const char* bind, int port)
     return cfg;
 }
 
-void sk_admin_workflowcfg_destroy(sk_workflow_cfg_t* cfg)
-{
-    if (!cfg) return;
+void sk_admin_workflowcfg_destroy(sk_workflow_cfg_t* cfg) {
+    if (!cfg) { return; }
 
     flist_delete(cfg->modules);
     free(cfg);
 }
 
-sk_module_t* sk_admin_module()
-{
+sk_module_t* sk_admin_module() {
     return &_sk_admin_module;
 }
 
 /****************************** Admin Module **********************************/
 static
-int  _admin_init(void* md)
-{
+int  _admin_init(void* md) {
     sk_print("admin module: init\n");
     return 0;
 }
 
 static
-void _admin_release(void* md)
-{
+void _admin_release(void* md) {
     sk_print("admin module: release\n");
 }
 
 static
-int _admin_run(void* md, sk_txn_t* txn)
-{
+int _admin_run(void* md, sk_txn_t* txn) {
     sk_print("admin module: run\n");
 
     sk_admin_data_t* admin_data = sk_txn_udata(txn);
@@ -717,8 +708,7 @@ int _admin_run(void* md, sk_txn_t* txn)
 
 static
 ssize_t _admin_unpack(void* md, struct sk_txn_t* txn,
-                      const void* data, size_t data_sz)
-{
+                      const void* data, size_t data_sz) {
     sk_print("admin_unpack, data sz: %zu\n", data_sz);
     SK_LOG_DEBUG(SK_ENV_LOGGER,
                 "admin module_unpack: data sz:%zu", data_sz);
@@ -763,8 +753,7 @@ unpack_done:
 }
 
 static
-int  _admin_pack(void* md, struct sk_txn_t* txn)
-{
+int  _admin_pack(void* md, struct sk_txn_t* txn) {
     sk_print("admin_pack\n");
 
     sk_admin_data_t* admin_data = sk_txn_udata(txn);

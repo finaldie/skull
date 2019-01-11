@@ -94,8 +94,8 @@ typedef struct sk_config_t {
     int    command_port;
     const char* command_bind;
 
-    // Supportted languages, value: char*
-    flist* langs;
+    // Supported languages, value: char*
+    fhash* langs;
 
     // max open fds
     int    max_fds;
