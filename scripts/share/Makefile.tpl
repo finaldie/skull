@@ -1,5 +1,5 @@
 MAKE ?= make
-MAKEFLAGS += -s -j8
+MAKEFLAGS += -s
 
 # global variables
 export SKULL_SRCTOP := $(shell pwd)
@@ -91,7 +91,7 @@ prepare_deploy_dirs:
 	@test -d $(DEPLOY_LOG_ROOT) || mkdir -p $(DEPLOY_LOG_ROOT)
 	@echo "done"
 
-prepare_deploy_files:
+prepare_deploy_files: prepare_deploy_dirs
 	@echo -n "Copying basic files ... "
 	@cp ChangeLog.md README.md $(DEPLOY_DIR_ROOT)
 	@cp $(SKULL_CONFIG_DIR)/skull-config.yaml $(DEPLOY_DIR_ROOT)

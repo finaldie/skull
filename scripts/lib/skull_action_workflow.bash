@@ -123,11 +123,21 @@ function _action_workflow_add()
     $SKULL_PYTHON $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
         -c $skull_conf -a add -C $concurrent -i $idl -p $port -I $enable_stdin
 
+    if [ $? != 0 ]; then
+        echo "Error: Failed to setup workflow" >&2
+        exit 1
+    fi
+
     # 6. generate the workflow txn idl file if it's not exist
     local idl_path=$SKULL_WORKFLOW_IDL_FOLDER
-    if [ ! -f $SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto ]; then
+    if [ ! -f "$SKULL_WORKFLOW_IDL_FOLDER/${idl}.proto" ]; then
         $SKULL_PYTHON $SKULL_ROOT/bin/skull-config-utils.py -m workflow \
-            -c $skull_conf -a gen_idl -n $idl -p $idl_path
+            -c "$skull_conf" -a gen_idl -n "$idl" -p "$idl_path"
+    fi
+
+    if [ $? != 0 ]; then
+        echo "Error: Failed to generate protos" >&2
+        exit 1
     fi
 
     echo "Workflow added successfully"
