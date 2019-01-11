@@ -1,13 +1,4 @@
-APIS := api-cpp
-INSTALL-APIS := api-cpp
-CLEAN-APIS := api-cpp
-
-ifeq ($(api_py), true)
-    APIS += api-py
-    INSTALL-APIS += install-api-py
-    CLEAN-APIS += clean-api-cpp
-endif
-
+# API targets
 api: $(APIS)
 
 api-cpp: core

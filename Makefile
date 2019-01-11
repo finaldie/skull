@@ -9,9 +9,7 @@ minimal_deps ?= true
 api_py ?= true
 
 export python_path ?= /usr/bin/python3
-
-include .Makefile.dep
-include .Makefile.api
+include .Makefile.inc
 
 all: api
 
@@ -38,3 +36,7 @@ clean-dep: clean-flibs clean-skull-ft clean-jemalloc clean-protobuf
 clean-dep: clean-libyaml
 
 .PHONY: all dep core check valgrind-check install clean clean-dep
+
+# Dep and api targets
+include .Makefile.dep
+include .Makefile.api
