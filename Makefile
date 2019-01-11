@@ -5,19 +5,13 @@ prefix ?= /usr/local
 disable_jemalloc ?= false
 disable_fast_proto ?= false
 minimal_deps ?= true
+api_py ?= true
 
 export python_path ?= /usr/bin/python3
 
-all: api-cpp api-py
+all: api
 
-api-cpp: core
-api-py: core
-
-ifeq ($(disable_jemalloc), false)
-dep: metrics flibs skull-ft protobuf libyaml jemalloc
-else
-dep: metrics flibs skull-ft protobuf libyaml
-endif
+dep: $(SK_DEPS)
 
 ifeq ($(minimal_deps), true)
     disable_fast_proto := true
@@ -34,10 +28,10 @@ valgrind-check:
 
 install-dep: install-skull-ft install-protobuf
 
-install: install-core install-scripts install-ft install-others
-install: install-api install-api-cpp install-api-py
+install: install-core install-core-api install-scripts install-ft install-others
+install: install-api
 
-clean: clean-api-cpp clean-api-py
+clean: clean-api
 	cd src && $(MAKE) $@
 
 clean-dep: clean-flibs clean-skull-ft clean-jemalloc clean-protobuf

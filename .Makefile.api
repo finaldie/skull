@@ -1,3 +1,17 @@
+APIS := api-cpp
+INSTALL-APIS := api-cpp
+CLEAN-APIS := api-cpp
+
+ifeq ($(api_py), true)
+    APIS += api-py
+    INSTALL-APIS += install-api-py
+    CLEAN-APIS += clean-api-cpp
+endif
+
+api: $(APIS)
+
+api-cpp: core
+api-py: core
 
 # user api targets
 api-cpp:
@@ -6,22 +20,26 @@ api-cpp:
 api-py:
 	cd src/user-py && $(MAKE) $(MAKE_FLAGS)
 
-.PHONY: api-cpp api-py
+.PHONY: api api-cpp api-py
 
 # user api install targets
+install-api: $(INSTALL-APIS)
+
 install-api-cpp:
 	cd src/user-cpp && $(MAKE) install
 
 install-api-py:
 	cd src/user-py && $(MAKE) install
 
-.PHONY: install-api-cpp install-api-py
+.PHONY: install-api install-api-cpp install-api-py
 
 # clean targets
+clean-api: $(CLEAN-APIS)
+
 clean-api-cpp:
 	cd src/user-cpp && $(MAKE) clean
 
 clean-api-py:
 	cd src/user-py && $(MAKE) clean
 
-.PHONY: clean-api-cpp clean-api-py
+.PHONY: clean-api clean-api-cpp clean-api-py

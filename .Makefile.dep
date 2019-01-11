@@ -1,10 +1,16 @@
+SK_DEPS := metrics flibs skull-ft protobuf libyaml
+
+ifeq ($(disable_jemalloc), false)
+SK_DEPS += jemalloc
+endif
+
 PB_CONF_ARGS ?= CXXFLAGS="-O2 -g -fPIC -std=c++11 -DNDEBUG"
 
 ifeq ($(disable_fast_proto), false)
-    CPP_PROTO += --cpp_implementation
+    PB_CPP_IMPL += --cpp_implementation
     PB_LIB_PATH += export LD_LIBRARY_PATH=../src/.libs
 else
-    CPP_PROTO =
+    PB_CPP_IMPL =
     PB_LIB_PATH = true
 endif
 
@@ -37,7 +43,7 @@ protobuf-cpp: deps/protobuf/Makefile
 
 protobuf-py: protobuf-cpp
 	cd deps/protobuf/python && \
-	    $(PB_LIB_PATH) ; $(python_path) setup.py build $(CPP_PROTO)
+	    $(PB_LIB_PATH) ; $(python_path) setup.py build $(PB_CPP_IMPL)
 
 protobuf: protobuf-py
 
@@ -57,7 +63,7 @@ install-skull-ft:
 install-ft:
 	cd tests && $(MAKE) install
 
-install-api:
+install-core-api:
 	cd src/user-c && $(MAKE) install
 
 install-others:
@@ -73,11 +79,11 @@ install-protobuf-cpp:
 
 install-protobuf-py: install-protobuf-cpp
 	cd deps/protobuf/python && \
-	    $(PB_LIB_PATH) ; $(python_path) setup.py install $(CPP_PROTO)
+	    $(PB_LIB_PATH) ; $(python_path) setup.py install $(PB_CPP_IMPL)
 
 install-protobuf: install-protobuf-py
 
-.PHONY: install-core install-api install-others install-scripts
+.PHONY: install-core install-core-api install-others install-scripts
 .PHONY: install-skull-ft install-ft install-protobuf install-protobuf-py
 .PHONY: install-protobuf-cpp
 

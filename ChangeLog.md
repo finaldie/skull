@@ -7,6 +7,8 @@
   - API
     - **Enhancement:** Static link libprotobuf `api-cpp` to reduce dependency
     - **Enhancement:** Refine python APIs
+  - MISC
+    - **Enhancement:** Add `api-py=false` makefile option
 - 2019-01-02 1.5.1
   - Engine
     - **Fix:** Prevent crash if ep pool run out of file descriptor resource
