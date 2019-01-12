@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 SKULL_PROJ_NAME=project
 
 function usage()
