@@ -27,5 +27,5 @@ CLEAN-APIS := api-cpp
 ifeq ($(api_py), true)
     APIS += api-py
     INSTALL-APIS += install-api-py
-    CLEAN-APIS += clean-api-cpp
+    CLEAN-APIS += clean-api-py
 endif
