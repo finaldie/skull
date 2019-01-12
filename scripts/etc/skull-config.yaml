@@ -1,4 +1,3 @@
----
 ##
 # Skull-Engine Top Config
 ##
@@ -28,7 +27,7 @@ log_level: debug
 diag_name: diag.log
 
 # Supported Languages: cpp, py
-languages: ["cpp", "py"]
+languages: ['cpp', 'py']
 
 ##
 # Transaction Logging\n')
