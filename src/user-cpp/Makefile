@@ -23,7 +23,10 @@ DEPS_LDFLAGS = -L../../deps/flibs/lib
 
 SKULL_LIBS = \
     -ldl \
-    -lprotobuf
+    ../../deps/protobuf/src/.libs/libprotobuf.a
+
+SKULL_UT_LIBS = \
+    -ldl
 
 SKULL_OBJS = \
     src/ep.o \
@@ -93,4 +96,4 @@ $(SKULL_CXX_LIB): $(SKULL_OBJS)
 	$(SKULL_CXX_LD) -o $@ $^ $(SKULL_LIBS)
 
 $(SKULL_UT_LIB): $(SKULL_UT_OBJS)
-	$(SKULL_CXX_UTLD) -o $(SKULL_UT_LIB) $(SKULL_UT_OBJS) $(SKULL_LIBS)
+	$(SKULL_CXX_UTLD) -o $@ $^ $(SKULL_UT_LIBS)

@@ -16,9 +16,8 @@
  *   - 0:     Initialization success
  *   - non-0: Initialization failure
  */
-static
-int  skull_service_init(skullcpp::Service& service, const skull_config_t* config)
-{
+static int skull_service_init(skullcpp::Service& service,
+                              const skull_config_t* config) {
     SKULLCPP_LOG_INFO("svc.{SERVICE_NAME}", "Skull service initializing");
 
     // Load skull_config to skullcpp::Config
@@ -29,9 +28,7 @@ int  skull_service_init(skullcpp::Service& service, const skull_config_t* config
 /**
  * Service Release
  */
-static
-void skull_service_release(skullcpp::Service& service)
-{
+static void skull_service_release(skullcpp::Service& service) {
     SKULLCPP_LOG_INFO("svc.{SERVICE_NAME}", "Skull service releasd");
 }
 
@@ -67,16 +64,14 @@ static skullcpp::ServiceReadApi api_read_tbl[] = {
     /**
      * Format: {API_Name, API_Entry_Function}, e.g. {"get", skull_service_get}
      */
-    {NULL, NULL}
-};
+    {NULL, NULL}};
 
 // Register Write APIs Here
 static skullcpp::ServiceWriteApi api_write_tbl[] = {
     /**
      * Format: {API_Name, API_Entry_Function}, e.g. {"set", skull_service_set}
      */
-    {NULL, NULL}
-};
+    {NULL, NULL}};
 
 // Register Service Entries
 static skullcpp::ServiceEntry service_entry = {

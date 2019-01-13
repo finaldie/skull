@@ -1,6 +1,8 @@
+PB_CONF_ARGS ?= CXXFLAGS="-O2 -g -fPIC -std=c++11 -DNDEBUG"
+
 ifeq ($(disable_fast_proto), false)
-    CPP_PROTO = --cpp_implementation
-    PB_LIB_PATH = export LD_LIBRARY_PATH=../src/.libs
+    CPP_PROTO += --cpp_implementation
+    PB_LIB_PATH += export LD_LIBRARY_PATH=../src/.libs
 else
     CPP_PROTO =
     PB_LIB_PATH = true
@@ -16,6 +18,13 @@ metrics:
 	mv scripts/config/sk_metrics.c src/common
 
 skull-ft:
+
+deps/libyaml/Makefile:
+	cd deps/libyaml && ./bootstrap && ./configure --enable-shared=no \
+	    CFLAGS="-O2 -g -fPIC"
+
+libyaml: deps/libyaml/Makefile
+	cd deps/libyaml && $(MAKE) $(MAKE_FLAGS)
 
 jemalloc: deps/jemalloc/Makefile
 	cd deps/jemalloc && $(MAKE) $(MAKE_FLAGS)
@@ -33,9 +42,10 @@ protobuf-py: protobuf-cpp
 protobuf: protobuf-py
 
 deps/protobuf/Makefile:
-	cd deps/protobuf && ./autogen.sh && ./configure --enable-static=no
+	cd deps/protobuf && ./autogen.sh && ./configure $(PB_CONF_ARGS)
 
 .PHONY: flibs metrics skull-ft jemalloc protobuf protobuf-py protobuf-cpp
+.PHONY: libyaml
 
 # install targets
 install-core:
@@ -83,10 +93,15 @@ clean-jemalloc:
 	    $(MAKE) $(MAKE_FLAGS) -C ./deps/jemalloc clean || exit "$$?"
 	rm -f ./deps/jemalloc/Makefile
 
+clean-libyaml:
+	! test -f ./deps/libyaml/Makefile || \
+	    $(MAKE) $(MAKE_FLAGS) -C ./deps/libyaml clean || exit "$$?"
+	rm -f ./deps/libyaml/Makefile
+
 clean-protobuf:
 	! test -f ./deps/protobuf/Makefile || \
 	    $(MAKE) $(MAKE_FLAGS) -C ./deps/protobuf clean || exit "$$?"
 	rm -f ./deps/protobuf/Makefile
 	cd ./deps/protobuf/python && $(python_path) setup.py clean
 
-.PHONY: clean-flibs clean-skull-ft clean-jemalloc clean-protobuf
+.PHONY: clean-flibs clean-skull-ft clean-jemalloc clean-protobuf clean-libyaml

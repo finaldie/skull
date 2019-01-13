@@ -13,8 +13,7 @@ typedef struct sk_mloader_tbl_t {
 static sk_mloader_tbl_t* mloader_tbl = NULL;
 
 static
-sk_mloader_tbl_t* sk_mloader_tbl_create()
-{
+sk_mloader_tbl_t* sk_mloader_tbl_create() {
     sk_mloader_tbl_t* tbl = calloc(1, sizeof(*tbl));
     tbl->tbl = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
@@ -22,8 +21,7 @@ sk_mloader_tbl_t* sk_mloader_tbl_create()
 }
 
 static
-void sk_mloader_tbl_destroy(sk_mloader_tbl_t* tbl)
-{
+void sk_mloader_tbl_destroy(sk_mloader_tbl_t* tbl) {
     if (!tbl) return;
 
     // Destroy module loader tbl
@@ -38,26 +36,22 @@ void sk_mloader_tbl_destroy(sk_mloader_tbl_t* tbl)
 }
 
 static
-sk_module_loader_t* sk_mloader_tbl_get(const char* type)
-{
+sk_module_loader_t* sk_mloader_tbl_get(const char* type) {
     return fhash_str_get(mloader_tbl->tbl, type);
 }
 
 static
-void sk_mloader_tbl_set(const char* type, sk_module_loader_t* loader)
-{
+void sk_mloader_tbl_set(const char* type, sk_module_loader_t* loader) {
     fhash_str_set(mloader_tbl->tbl, type, loader);
 }
 
 static
-sk_module_loader_t* sk_mloader_tbl_del(const char* type)
-{
+sk_module_loader_t* sk_mloader_tbl_del(const char* type) {
     return fhash_str_del(mloader_tbl->tbl, type);
 }
 
 sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
-                            const char* conf_name)
-{
+                            const char* conf_name) {
     const char* type = cfg->type;
     const char* name = cfg->name;
 
@@ -98,8 +92,7 @@ sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
     return module;
 }
 
-void sk_module_unload(sk_module_t* module)
-{
+void sk_module_unload(sk_module_t* module) {
     const sk_module_cfg_t* cfg = module->cfg;
     const char* type = cfg->type;
     sk_module_loader_t* loader = sk_mloader_tbl_get(type);
@@ -109,8 +102,7 @@ void sk_module_unload(sk_module_t* module)
     SK_ASSERT_MSG(!ret, "module unload failed: ret = %d\n", ret);
 }
 
-void sk_module_loader_register(const char* type, sk_module_loader_t loader)
-{
+void sk_module_loader_register(const char* type, sk_module_loader_t loader) {
     if (!mloader_tbl) {
         mloader_tbl = sk_mloader_tbl_create();
     }
@@ -124,8 +116,7 @@ void sk_module_loader_register(const char* type, sk_module_loader_t loader)
     sk_mloader_tbl_set(type, mloader);
 }
 
-sk_module_loader_t* sk_module_loader_unregister(const char* type)
-{
+sk_module_loader_t* sk_module_loader_unregister(const char* type) {
     if (!type) return NULL;
     return sk_mloader_tbl_del(type);
 }

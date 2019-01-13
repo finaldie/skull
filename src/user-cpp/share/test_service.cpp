@@ -39,13 +39,11 @@
  * }
  */
 
-static
-void test_example() {
+static void test_example() {
     // Write the test case logic here
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     SKULL_CUNIT_RUN(test_example);
     return 0;
 }

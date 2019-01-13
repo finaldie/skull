@@ -14,12 +14,10 @@
  *
  * More information here: https://github.com/finaldie/skull/wiki/How-To-Test
  */
-
-static
-void test_example()
-{
+static void test_example() {
     // 1. Create a ut env
-    skullcpp::UTModule env("{MODULE_NAME}", "{IDL_NAME}", "tests/test_config.yaml");
+    skullcpp::UTModule env("{MODULE_NAME}", "{IDL_NAME}",
+                           "tests/test_config.yaml");
 
     // 2. Set the global txn share data before execution
     skull::workflow::{IDL_NAME} sharedData;
@@ -40,8 +38,7 @@ void test_example()
     SKULL_CUNIT_ASSERT(newSharedData.data() == sharedData.data());
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     SKULL_CUNIT_RUN(test_example);
     return 0;
 }

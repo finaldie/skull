@@ -161,7 +161,7 @@ function _echo_common_includes() {
 }
 
 function _echo_common_libs() {
-    echo "-lskull-api-cpp -Wl,--no-as-needed -lprotobuf"
+    echo "-Wl,--no-as-needed"
 }
 
 function _echo_common_test_libs() {
@@ -169,7 +169,7 @@ function _echo_common_test_libs() {
 }
 
 function _echo_libs() {
-    echo "-lprotobuf -lskull-api-cpp -Wl,--no-as-needed -lskull-common-cpp"
+    echo "-Wl,--no-as-needed -lskull-common-cpp"
 }
 
 function _echo_test_libs() {
@@ -227,5 +227,5 @@ function _echo_valgrind-dir() {
 # main
 get_root
 
-process_cmd $@
+process_cmd "$@"
 

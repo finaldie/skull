@@ -51,7 +51,7 @@ _Skull_ requires:
 ### Install Dependencies
 ```console
 # Install System Dependencies
-sudo apt-get install autoconf libtool valgrind expect libyaml-dev python3-dev python3-pip;
+sudo apt-get install autoconf libtool valgrind expect python3-dev python3-pip;
 sudo pip3 install PyYAML pympler WebOb;
 
 # Clone and Build Dependencies (For example: project folder is 'skull')

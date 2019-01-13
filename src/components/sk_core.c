@@ -1,30 +1,30 @@
+#include <errno.h>
+#include <libgen.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <libgen.h>
-#include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/time.h>
+#include <unistd.h>
 
-#include "api/sk_types.h"
-#include "api/sk_utils.h"
-#include "api/sk_eventloop.h"
-#include "api/sk_time.h"
-#include "api/sk_pto.h"
-#include "api/sk_config.h"
-#include "api/sk_module.h"
 #include "api/sk_admin.h"
-#include "api/sk_service.h"
-#include "api/sk_workflow.h"
-#include "api/sk_driver.h"
-#include "api/sk_loader.h"
+#include "api/sk_config.h"
 #include "api/sk_const.h"
+#include "api/sk_core.h"
+#include "api/sk_driver.h"
 #include "api/sk_env.h"
+#include "api/sk_eventloop.h"
+#include "api/sk_loader.h"
 #include "api/sk_log.h"
 #include "api/sk_log_helper.h"
 #include "api/sk_malloc.h"
-#include "api/sk_core.h"
+#include "api/sk_module.h"
+#include "api/sk_pto.h"
+#include "api/sk_service.h"
+#include "api/sk_time.h"
+#include "api/sk_types.h"
+#include "api/sk_utils.h"
+#include "api/sk_workflow.h"
 
 // INTERNAL APIs
 
@@ -33,22 +33,24 @@ int _sk_snprintf_logpath(char* path, size_t sz, const char* workdir,
                          const char* logname, bool std_fwd) {
     if (std_fwd) {
         return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s", SK_LOG_STDOUT_FILE);
-    } else if (logname[0] == '/') {
-        return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s", logname);
-    } else {
-        size_t workdir_len = strlen(workdir);
-        size_t logname_len = strlen(logname);
-
-        // Notes: we add more 5 bytes space for the string of fullname "/log/"
-        size_t full_name_sz = workdir_len + logname_len + 5 + 1;
-        SK_ASSERT_MSG(full_name_sz < SK_LOG_MAX_PATH_LEN,
-            "Full log path is too long (>= %d), workdir: %s, name: %s\n",
-            SK_LOG_MAX_PATH_LEN, workdir, logname);
-
-        // Construct the full log name and then create async logger
-        // NOTES: the log file will be put at log/xxx
-        return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s/log/%s", workdir, logname);
     }
+
+    if (logname[0] == '/') {
+        return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s", logname);
+    }
+
+    size_t workdir_len = strlen(workdir);
+    size_t logname_len = strlen(logname);
+
+    // Notes: we add more 5 bytes space for the string of fullname "/log/"
+    size_t full_name_sz = workdir_len + logname_len + 5 + 1;
+    SK_ASSERT_MSG(full_name_sz < SK_LOG_MAX_PATH_LEN,
+                  "Full log path is too long (>= %d), workdir: %s, name: %s\n",
+                  SK_LOG_MAX_PATH_LEN, workdir, logname);
+
+    // Construct the full log name and then create async logger
+    // NOTES: the log file will be put at log/xxx
+    return snprintf(path, SK_LOG_MAX_PATH_LEN, "%s/log/%s", workdir, logname);
 }
 
 static
@@ -75,8 +77,7 @@ void _sk_mem_destroy(sk_core_t* core) {
 }
 
 static
-void _sk_init_admin(sk_core_t* core)
-{
+void _sk_init_admin(sk_core_t* core) {
     sk_print("Init admin module\n");
     SK_LOG_INFO(core->logger, "Init admin module");
 
@@ -258,8 +259,7 @@ void _sk_init_config(sk_core_t* core) {
 }
 
 static
-void _sk_chdir(sk_core_t* core)
-{
+void _sk_chdir(sk_core_t* core) {
     char* raw_path = strdup(core->cmd_args.config_location);
     const char* config_dir = dirname(raw_path);
     int ret = chdir(config_dir);
@@ -272,8 +272,7 @@ void _sk_chdir(sk_core_t* core)
 }
 
 static
-void _sk_module_init(sk_core_t* core)
-{
+void _sk_module_init(sk_core_t* core) {
     fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
     sk_module_t* module = NULL;
 
@@ -299,8 +298,7 @@ void _sk_module_init(sk_core_t* core)
 }
 
 static
-void _sk_module_destroy(sk_core_t* core)
-{
+void _sk_module_destroy(sk_core_t* core) {
     fhash_str_iter iter = fhash_str_iter_new(core->unique_modules);
     sk_module_t* module = NULL;
 
@@ -321,8 +319,7 @@ void _sk_module_destroy(sk_core_t* core)
 }
 
 static
-void _sk_setup_services(sk_core_t* core)
-{
+void _sk_setup_services(sk_core_t* core) {
     sk_config_t* config = core->config;
     core->services = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     fhash_str_iter srv_cfg_iter = fhash_str_iter_new(config->services);
@@ -350,8 +347,7 @@ void _sk_setup_services(sk_core_t* core)
 }
 
 static
-void _sk_service_init(sk_core_t* core)
-{
+void _sk_service_init(sk_core_t* core) {
     fhash_str_iter srv_iter = fhash_str_iter_new(core->services);
     sk_service_t* service = NULL;
 
@@ -364,7 +360,8 @@ void _sk_service_init(sk_core_t* core)
 
         SK_LOG_SETCOOKIE("service.%s", service_name);
         if (sk_service_start(service)) {
-            SK_LOG_FATAL(core->logger, "Initialize service %s failed", service_name);
+            SK_LOG_FATAL(core->logger, "Initialize service %s failed",
+                         service_name);
             exit(1);
         }
         SK_LOG_SETCOOKIE(SK_CORE_LOG_COOKIE, NULL);
@@ -375,8 +372,7 @@ void _sk_service_init(sk_core_t* core)
 }
 
 static
-void _sk_service_destroy(sk_core_t* core)
-{
+void _sk_service_destroy(sk_core_t* core) {
     fhash_str_iter srv_iter = fhash_str_iter_new(core->services);
     sk_service_t* service = NULL;
 
@@ -400,8 +396,7 @@ void _sk_service_destroy(sk_core_t* core)
 }
 
 static
-void _sk_init_log(sk_core_t* core)
-{
+void _sk_init_log(sk_core_t* core) {
     const sk_config_t*   config   =  core->config;
     const sk_cmd_args_t* cmd_args = &core->cmd_args;
 
@@ -425,15 +420,13 @@ void _sk_init_log(sk_core_t* core)
 }
 
 static
-void _sk_init_moniter(sk_core_t* core)
-{
+void _sk_init_moniter(sk_core_t* core) {
     core->mon  = sk_mon_create();
     core->umon = sk_mon_create();
 }
 
 static
-void _sk_engines_destroy(sk_core_t* core)
-{
+void _sk_engines_destroy(sk_core_t* core) {
     // 1. destroy workers
     for (int i = 0; i < core->config->threads; i++) {
         SK_LOG_INFO(core->logger, "Engine worker-%d is destroying", i);
@@ -453,14 +446,17 @@ void _sk_engines_destroy(sk_core_t* core)
 }
 
 static
-void _sk_init_user_loaders(sk_core_t* core)
-{
+void _sk_init_user_loaders(sk_core_t* core) {
+    core->apis = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
+
     sk_config_t* cfg = core->config;
-    flist* user_langs = cfg->langs;
+    fhash* user_langs = cfg->langs;
     const char* lang = NULL;
 
-    flist_iter iter = flist_new_iter(user_langs);
-    while ((lang = flist_each(&iter))) {
+    fhash_str_iter iter = fhash_str_iter_new(user_langs);
+    while ((fhash_str_next(&iter))) {
+        lang = iter.key;
+
         // 1. generate user library name
         char mlibname[SK_MODULE_NAME_MAX_LEN];
         memset(mlibname, 0, SK_MODULE_NAME_MAX_LEN);
@@ -471,15 +467,23 @@ void _sk_init_user_loaders(sk_core_t* core)
         // 2. load module and service loader
         int ret = sk_userlib_load(mlibname);
         if (ret) {
-            SK_LOG_FATAL(core->logger, "Load user lib %s failed", mlibname);
-            exit(1);
+            SK_LOG_WARN(core->logger, "Load user lib %s failed", mlibname);
+            fhash_str_set(core->apis, lang, "Not loaded");
+        } else {
+            fhash_str_set(core->apis, lang, "Loaded");
         }
     }
+    fhash_str_iter_release(&iter);
 }
 
 static
-void _sk_init_sys(sk_core_t* core)
-{
+void _sk_destroy_user_loaders(sk_core_t* core) {
+    sk_userlib_unload();
+    fhash_str_delete(core->apis);
+}
+
+static
+void _sk_init_sys(sk_core_t* core) {
     // 1. Set the max open file if needed
     // 1.1 get the current open file limitation (soft)
     struct rlimit limit;
@@ -504,17 +508,17 @@ void _sk_init_sys(sk_core_t* core)
     new_limit.rlim_max = (rlim_t)core->max_fds;
 
     if (setrlimit(RLIMIT_NOFILE, &new_limit)) {
-         SK_LOG_WARN(core->logger,
-            "set max open file limitation failed: %s, fallback to soft-limit value: %d",
-            strerror(errno), soft_limit);
+        SK_LOG_WARN(core->logger,
+                    "set max open file limitation failed: %s, fallback to "
+                    "soft-limit value: %d",
+                    strerror(errno), soft_limit);
 
-         core->max_fds = soft_limit;
+        core->max_fds = soft_limit;
     }
 }
 
 static
-void _sk_init_coreinfo(sk_core_t* core)
-{
+void _sk_init_coreinfo(sk_core_t* core) {
     sk_util_setup_coreinfo(core);
 }
 
@@ -522,8 +526,7 @@ void _sk_init_coreinfo(sk_core_t* core)
 
 // The skull core context initialization function, please *BE CAREFUL* for the
 // execution orders, DO NOT modify the order before fully understand it.
-void sk_core_init(sk_core_t* core)
-{
+void sk_core_init(sk_core_t* core) {
     core->status = SK_CORE_INIT;
 
     // 1. prepare the thread env
@@ -578,8 +581,7 @@ void sk_core_init(sk_core_t* core)
     sk_mem_dump("ENGINE-INIT-DONE");
 }
 
-void sk_core_start(sk_core_t* core)
-{
+void sk_core_start(sk_core_t* core) {
     core->status = SK_CORE_STARTING;
 
     sk_mem_dump("ENGINE-START");
@@ -667,8 +669,7 @@ void sk_core_start(sk_core_t* core)
     }
 }
 
-void sk_core_stop(sk_core_t* core)
-{
+void sk_core_stop(sk_core_t* core) {
     core->status = SK_CORE_STOPPING;
 
     // Stop tracing if enabled
@@ -698,8 +699,7 @@ void sk_core_stop(sk_core_t* core)
     sk_mem_dump("ENGINE-STOP-DONE");
 }
 
-void sk_core_destroy(sk_core_t* core)
-{
+void sk_core_destroy(sk_core_t* core) {
     core->status = SK_CORE_DESTROYING;
 
     sk_mem_dump("ENGINE-DESTROY");
@@ -708,46 +708,38 @@ void sk_core_destroy(sk_core_t* core)
              "================== skull engine destroying ==================");
     sk_print("================== skull engine destroying ==================\n");
 
-    // 1. destroy drivers
+    // destroy drivers
     sk_driver_t* driver = NULL;
     while ((driver = flist_pop(core->drivers))) {
         sk_driver_destroy(driver);
     }
     flist_delete(core->drivers);
 
-    // 2. destroy engines
     _sk_engines_destroy(core);
 
-    // 3. destroy modules
     _sk_module_destroy(core);
 
-    // 4. destroy services
     _sk_service_destroy(core);
 
-    // 5. destroy moniters
     sk_mon_destroy(core->mon);
     sk_mon_destroy(core->umon);
 
-    // 6. destroy config
     sk_config_destroy(core->config);
 
-    // 7. destroy workflows
+    // destroy workflows
     sk_workflow_t* workflow = NULL;
     while ((workflow = flist_pop(core->workflows))) {
         sk_workflow_destroy(workflow);
     }
     flist_delete(core->workflows);
 
-    // 8. destroy admin
     _sk_admin_destroy(core);
 
-    // 9. destroy working dir string
     free((void*)core->working_dir);
 
-    // 10. destroy user lib loaders
-    sk_userlib_unload();
+    _sk_destroy_user_loaders(core);
 
-    // 11. destroy loggers
+    // destroy loggers
     sk_print("=================== skull engine stopped ====================\n");
     SK_LOG_INFO(core->logger,
              "=================== skull engine stopped ====================");
@@ -755,7 +747,7 @@ void sk_core_destroy(sk_core_t* core)
     sk_logger_destroy(core->logger);
     core->logger = NULL;
 
-    // 12. Destroy env and mem statistics
+    // Destroy env and mem statistics
     sk_mem_dump("ENGINE-DESTROY-DONE");
 
     sk_logger_destroy(core->logger_diag);
@@ -765,21 +757,16 @@ void sk_core_destroy(sk_core_t* core)
 }
 
 // Utils APIs
-sk_service_t* sk_core_service(sk_core_t* core, const char* service_name)
-{
+sk_service_t* sk_core_service(sk_core_t* core, const char* service_name) {
     SK_ASSERT(core);
     SK_ASSERT(service_name);
 
     return fhash_str_get(core->services, service_name);
 }
 
-sk_core_status_t sk_core_status(sk_core_t* core)
-{
-    return core->status;
-}
+sk_core_status_t sk_core_status(sk_core_t* core) { return core->status; }
 
-sk_engine_t*     sk_core_bio(sk_core_t* core, int idx)
-{
+sk_engine_t* sk_core_bio(sk_core_t* core, int idx) {
     int bidx = idx - 1;
 
     if (bidx < 0 || bidx >= core->config->bio_cnt) {
@@ -789,7 +776,6 @@ sk_engine_t*     sk_core_bio(sk_core_t* core, int idx)
     return core->bio[bidx];
 }
 
-const char* sk_core_binpath(sk_core_t* core)
-{
+const char* sk_core_binpath(sk_core_t* core) {
     return core->cmd_args.binary_path;
 }

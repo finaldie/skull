@@ -73,6 +73,8 @@ SKULL_TP_CXX   = $(CXX) $(SKULL_TP_CXXFLAGS)
 SKULL_CXX_LD   = $(CXX) $(SKULL_LDFLAGS)
 SKULL_CXX_UTLD = $(CXX) $(SKULL_UTLDFLAGS)
 
+SKULL_AR = ar -rcu
+
 # jemalloc
 disable_jemalloc ?= false
 
@@ -82,3 +84,5 @@ ifeq ($(disable_jemalloc), false)
 else
     JEMALLOC_STATIC :=
 endif
+
+LIBYAML_STATIC := ../deps/libyaml/src/.libs/libyaml.a
