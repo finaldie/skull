@@ -155,10 +155,9 @@ void _sk_setup_engines(sk_core_t* core)
 }
 
 static
-void _sk_setup_workflows(sk_core_t* core)
-{
+void _sk_setup_workflows(sk_core_t* core) {
     sk_config_t* config = core->config;
-    core->workflows      = flist_create();
+    core->workflows     = flist_create();
     core->drivers       = core->drivers ? core->drivers : flist_create();
     core->unique_modules = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
 
