@@ -97,7 +97,7 @@ const google::protobuf::Message& ServiceApiReqData::get() const {
 }
 
 void* ServiceApiReqData::serialize(size_t& sz) {
-    size_t msg_sz = (size_t)this->msg_->ByteSize();
+    size_t msg_sz = this->msg_->ByteSizeLong();
 
     void* data = NULL;
     if (msg_sz) {
@@ -165,7 +165,7 @@ ServiceApiRespData::~ServiceApiRespData() {
             free(data);
         }
 
-        int newSz = this->msg_->ByteSize();
+        int newSz = (int)this->msg_->ByteSizeLong();
         if (newSz) {
             void* newData = calloc(1, (size_t)newSz);
             bool r = this->msg_->SerializeToArray(newData, newSz);

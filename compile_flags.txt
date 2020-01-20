@@ -1,4 +1,0 @@
--I ./src/
--I ./src/user-c/include/
--I ./deps/flibs/include/
--I ./deps/jemalloc/include/

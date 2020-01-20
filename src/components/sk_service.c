@@ -333,7 +333,7 @@ void sk_service_api_register(sk_service_t* service, const char* api_name,
 
     sk_service_api_t* api = calloc(1, sizeof(*api) + extra_len);
     api->type = type;
-    strncpy(api->name, api_name, api_name_len);
+    memcpy(api->name, api_name, api_name_len);
 
     fhash_str_set(service->apis, api_name, api);
 }

@@ -48,7 +48,7 @@ TxnImp::~TxnImp() {
         // Fill back the data when msg_ has be used before
         if (this->msg_) {
             void* idlData = NULL;
-            int sz = this->msg_->ByteSize();
+            int sz = (int)this->msg_->ByteSizeLong();
             if (sz) {
                 idlData = calloc(1, (size_t)sz);
                 bool r = this->msg_->SerializeToArray(idlData, sz);

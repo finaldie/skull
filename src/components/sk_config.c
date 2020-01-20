@@ -60,8 +60,7 @@ void _service_cfg_item_destroy(sk_service_cfg_t* cfg)
 }
 
 static
-sk_config_t* _create_config()
-{
+sk_config_t* _create_config() {
     sk_config_t* config = calloc(1, sizeof(*config));
     config->threads   = 1;
     config->log_level = FLOG_LEVEL_INFO;
@@ -70,8 +69,8 @@ sk_config_t* _create_config()
     config->command_port = SK_CONFIG_DEFAULT_CMD_PORT;
     config->langs     = fhash_str_create(0, FHASH_MASK_AUTO_REHASH);
     config->max_fds   = SK_DEFAULT_OPEN_FILES;
-    strncpy(config->log_name,  "skull.log", strlen("skull.log"));
-    strncpy(config->diag_name, "diag.log",  strlen("diag.log"));
+    memcpy(config->log_name,  "skull.log", strlen("skull.log"));
+    memcpy(config->diag_name, "diag.log",  strlen("diag.log"));
     config->txn_logging = false;
 
     return config;
@@ -122,7 +121,7 @@ void _load_modules(sk_cfg_node_t* node, sk_workflow_cfg_t* workflow)
         const char* raw = child->data.value;
 
         char tmp[SK_CONFIG_VALUE_MAXLEN];
-        strncpy(tmp, raw, SK_CONFIG_VALUE_MAXLEN);
+        memcpy(tmp, raw, SK_CONFIG_VALUE_MAXLEN);
         char* tmp1 = tmp;
 
         // Format: 'name:type'
@@ -237,7 +236,7 @@ void _load_log_name(sk_cfg_node_t* child, sk_config_t* config)
     const char* log_name = child->data.value;
 
     if (log_name && strlen(log_name)) {
-        strncpy(config->log_name, log_name, SK_CONFIG_LOGNAME_LEN);
+        memcpy(config->log_name, log_name, SK_CONFIG_LOGNAME_LEN);
     } else {
         sk_print_err("Fatal: empty log name, please configure a non-empty "
                      "log name\n");
@@ -252,7 +251,7 @@ void _load_diaglog_name(sk_cfg_node_t* child, sk_config_t* config)
     const char* log_name = child->data.value;
 
     if (log_name && strlen(log_name)) {
-        strncpy(config->diag_name, log_name, SK_CONFIG_LOGNAME_LEN);
+        memcpy(config->diag_name, log_name, SK_CONFIG_LOGNAME_LEN);
     } else {
         sk_print_err("Fatal: empty diag log name, please configure a non-empty "
                      "diag log name\n");
@@ -495,7 +494,7 @@ sk_config_t* sk_config_create(const char* filename)
 {
     // create sk_config
     sk_config_t* config = _create_config();
-    strncpy(config->location, filename, SK_CONFIG_LOCATION_LEN);
+    memcpy(config->location, filename, SK_CONFIG_LOCATION_LEN);
     const char* location = config->location;
 
     sk_cfg_node_t* root = sk_config_load(location);

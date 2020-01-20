@@ -1,12 +1,7 @@
 PB_CONF_ARGS ?= CXXFLAGS="-O2 -g -fPIC -std=c++11 -DNDEBUG"
 
-ifeq ($(disable_fast_proto), false)
-    CPP_PROTO += --cpp_implementation
-    PB_LIB_PATH += export LD_LIBRARY_PATH=../src/.libs
-else
-    CPP_PROTO =
-    PB_LIB_PATH = true
-endif
+CPP_PROTO += --cpp_implementation
+PB_LIB_PATH += export LD_LIBRARY_PATH=../src/.libs
 
 # dependency targets
 flibs:

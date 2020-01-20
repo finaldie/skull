@@ -76,9 +76,9 @@ SKULL_CXX_UTLD = $(CXX) $(SKULL_UTLDFLAGS)
 SKULL_AR = ar -rcu
 
 # jemalloc
-disable_jemalloc ?= false
+link_jemalloc ?= true
 
-ifeq ($(disable_jemalloc), false)
+ifeq ($(link_jemalloc), true)
     JEMALLOC_STATIC := ../deps/jemalloc/lib/libjemalloc_pic.a
     MACRO += -DSKULL_JEMALLOC_LINKED
 else

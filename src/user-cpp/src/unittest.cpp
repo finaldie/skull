@@ -80,7 +80,7 @@ void _iocall(const char* apiName, skullmock_task_t* task, void* ud) {
         return;
     }
 
-    task->response_sz = (size_t)respMsg->ByteSize();
+    task->response_sz = (size_t)respMsg->ByteSizeLong();
     task->response = calloc(1, task->response_sz);
     respMsg->SerializeToArray(task->response, (int)task->response_sz);
 }
@@ -170,7 +170,7 @@ void UTModule::setTxnSharedData(const google::protobuf::Message& data) {
 
     // 2. serialize msg to rawData
     void* idlData = NULL;
-    int sz = data.ByteSize();
+    int sz = (int)data.ByteSizeLong();
     if (sz) {
         idlData = calloc(1, (size_t)sz);
         bool r = data.SerializeToArray(idlData, sz);

@@ -2,9 +2,6 @@ MAKE ?= make
 MAKE_FLAGS +=
 
 prefix ?= /usr/local
-disable_jemalloc ?= false
-disable_fast_proto ?= false
-minimal_deps ?= true
 
 export python_path ?= /usr/bin/python3
 
@@ -13,15 +10,16 @@ all: api-cpp api-py
 api-cpp: core
 api-py: core
 
-ifeq ($(disable_jemalloc), false)
-dep: metrics flibs skull-ft protobuf libyaml jemalloc
-else
-dep: metrics flibs skull-ft protobuf libyaml
+DEPS = metrics flibs skull-ft libyaml
+ifdef with_jemalloc
+  DEPS += jemalloc
 endif
 
-ifeq ($(minimal_deps), true)
-    disable_fast_proto := true
+ifdef with_protobuf
+  DEPS += protobuf
 endif
+
+dep: $(DEPS)
 
 core:
 	cd src && $(MAKE)

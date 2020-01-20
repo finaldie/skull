@@ -49,7 +49,8 @@ src/skull-engine
 src/user-py/build/
 *.egg
 
-# clang
+# clangd/lsp
+.clangd/
 compile_commands.json
 
 # ccls
