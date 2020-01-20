@@ -41,9 +41,9 @@ int _srv_open (const char* filename, skull_service_opt_t* opt/*out*/)
     dlerror();
 
     char* error = NULL;
-    void* handler = dlopen(filename, RTLD_NOW);
+    void* handler = dlopen(filename, RTLD_LAZY);
     if (!handler) {
-        fprintf(stderr, "error: cannot open %s: %s\n", filename, dlerror());
+        fprintf(stderr, "Error: Cannot open user service %s: %s\n", filename, dlerror());
         return 1;
     }
 
@@ -54,7 +54,7 @@ int _srv_open (const char* filename, skull_service_opt_t* opt/*out*/)
     // 3. load service register func
     *(void**)(&md->reg) = dlsym(handler, SKULL_SRV_REG_NAME);
     if ((error = dlerror()) != NULL) {
-        fprintf(stderr, "error: load %s failed: %s\n", SKULL_SRV_REG_NAME, error);
+        fprintf(stderr, "Error: Load %s failed: %s\n", SKULL_SRV_REG_NAME, error);
         return 1;
     }
 
@@ -85,7 +85,7 @@ static
 int _srv_load_config (skull_service_opt_t* opt, const char* filename)
 {
     if (!filename) {
-        fprintf(stderr, "error: service config name is NULL\n");
+        fprintf(stderr, "Error: Service config name is NULL\n");
         return 1;
     }
 

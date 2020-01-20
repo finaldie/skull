@@ -25,8 +25,8 @@ int sk_userlib_load(const char* libname)
     // Check whether lib has already loaded
     const char* lib = fhash_str_get(user_libs, libname);
     if (lib) {
-        sk_print("user lib %s has already loaded\n", libname);
-        printf("user lib %s has already loaded\n", libname);
+        sk_print("User lib %s has already loaded\n", libname);
+        fprintf(stdout, "INFO: User lib %s has already loaded\n", libname);
         return 0;
     }
 
@@ -41,13 +41,13 @@ int sk_userlib_load(const char* libname)
 
     void* handler = dlopen(fullname, flags);
     if (!handler) {
-        fprintf(stdout, "Notice: cannot open %s: %s\n", fullname, dlerror());
+        fprintf(stdout, "WARN: Cannot open API %s: %s\n", fullname, dlerror());
 
         memset(fullname, 0, SK_USER_LIBNAME_MAX);
         snprintf(fullname, SK_USER_LIBNAME_MAX, "%s/%s", SK_USER_PREFIX2, libname);
         handler = dlopen(fullname, flags);
         if (!handler) {
-            fprintf(stderr, "Error: cannot open %s: %s\n", fullname, dlerror());
+            fprintf(stderr, "Error: Cannot open API %s: %s\n", fullname, dlerror());
             return 1;
         }
     }
@@ -58,7 +58,7 @@ int sk_userlib_load(const char* libname)
     // 2. Find api loader
     *(void**)(&user_api->load) = dlsym(handler, SK_API_LOAD_FUNCNAME);
     if ((error = dlerror()) != NULL) {
-        fprintf(stderr, "Error: cannot setup user 'load' api %s:%s, reason: %s\n",
+        fprintf(stderr, "Error: Cannot setup user 'load' api %s:%s, reason: %s\n",
                  libname, SK_API_LOAD_FUNCNAME, error);
         goto error;
         return 1;
@@ -67,7 +67,7 @@ int sk_userlib_load(const char* libname)
     // 3. Find api unloader
     *(void**)(&user_api->unload) = dlsym(handler, SK_API_UNLOAD_FUNCNAME);
     if ((error = dlerror()) != NULL) {
-        fprintf(stderr, "Error: cannot setup user 'unload' api %s:%s, reason: %s\n",
+        fprintf(stderr, "Error: Cannot setup user 'unload' api %s:%s, reason: %s\n",
                  libname, SK_API_UNLOAD_FUNCNAME, error);
         goto error;
         return 1;

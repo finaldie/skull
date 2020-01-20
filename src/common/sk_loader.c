@@ -62,7 +62,7 @@ sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
 
     char fullname[SK_MODULE_NAME_MAX_LEN] = {0};
     loader->name(name, fullname, SK_MODULE_NAME_MAX_LEN, loader->ud);
-    sk_print("try to load module: %s, type: %s - %s\n",
+    sk_print("Try to load module: %s, type: %s - %s\n",
              name, type, fullname);
 
     sk_module_t* module = loader->open(fullname, loader->ud);
@@ -80,15 +80,15 @@ sk_module_t* sk_module_load(const sk_module_cfg_t* cfg,
         conf_name = loader->conf_name(name, real_confname,
                                       SK_MODULE_NAME_MAX_LEN, loader->ud);
     }
-    sk_print("module config name: %s\n", conf_name);
+    sk_print("Module config name: %s\n", conf_name);
 
     int ret = loader->load_config(module, conf_name, loader->ud);
     if (ret) {
-        fprintf(stderr, "module config %s load failed\n", conf_name);
+        fprintf(stderr, "Module config %s load failed\n", conf_name);
         return NULL;
     }
 
-    sk_print("load module{%s:%s} successfully\n", name, type);
+    sk_print("Load module{%s:%s} successfully\n", name, type);
     return module;
 }
 
@@ -96,10 +96,10 @@ void sk_module_unload(sk_module_t* module) {
     const sk_module_cfg_t* cfg = module->cfg;
     const char* type = cfg->type;
     sk_module_loader_t* loader = sk_mloader_tbl_get(type);
-    SK_ASSERT_MSG(loader, "cannot find loader. type: %s\n", type);
+    SK_ASSERT_MSG(loader, "Cannot find loader. type: %s\n", type);
 
     int ret = loader->close(module, loader->ud);
-    SK_ASSERT_MSG(!ret, "module unload failed: ret = %d\n", ret);
+    SK_ASSERT_MSG(!ret, "Module unload failed: ret = %d\n", ret);
 }
 
 void sk_module_loader_register(const char* type, sk_module_loader_t loader) {

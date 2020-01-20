@@ -60,20 +60,20 @@ int sk_service_load(sk_service_t* service, const char* conf_name)
     const char* type = sk_service_type(service);
     sk_service_loader_t* loader = sk_sloader_tbl_get(type);
     if (!loader) {
-        fprintf(stderr, "cannot find service loader, type: %s\n", type);
+        fprintf(stderr, "Cannot find service loader, type: %s\n", type);
         return 1;
     }
 
     const char* service_name = sk_service_name(service);
     char fullname[SK_SERVICE_NAME_MAX_LEN] = {0};
     loader->name(service_name, fullname, SK_SERVICE_NAME_MAX_LEN, loader->ud);
-    sk_print("try to load service: %s, type: %s - %s\n",
+    sk_print("Try to load service: %s, type: %s - %s\n",
              service_name, type, fullname);
 
     sk_service_opt_t service_opt = {NULL, NULL, NULL, NULL, NULL};
     int ret = loader->open(fullname, &service_opt, loader->ud);
     if (ret) {
-        fprintf(stderr, "load service: %s failed by loader [%s]\n",
+        fprintf(stderr, "Load service: %s failed by loader [%s]\n",
                  service_name, type);
         return 1;
     }
@@ -87,15 +87,15 @@ int sk_service_load(sk_service_t* service, const char* conf_name)
         conf_name = loader->conf_name(service_name, real_confname,
                                       SK_SERVICE_NAME_MAX_LEN, loader->ud);
     }
-    sk_print("service config name: %s\n", conf_name);
+    sk_print("Service config name: %s\n", conf_name);
 
     ret = loader->load_config(service, conf_name, loader->ud);
     if (ret) {
-        fprintf(stderr, "service config %s load failed\n", conf_name);
+        fprintf(stderr, "Service config %s load failed\n", conf_name);
         return 1;
     }
 
-    sk_print("load service{%s:%s} successfully\n", service_name,
+    sk_print("Load service{%s:%s} successfully\n", service_name,
              sk_service_type(service));
     return 0;
 }
@@ -104,10 +104,10 @@ void sk_service_unload(sk_service_t* service)
 {
     const char* type = sk_service_type(service);
     sk_service_loader_t* loader = sk_sloader_tbl_get(type);
-    SK_ASSERT_MSG(loader, "cannot find service loader. type: %s\n", type);
+    SK_ASSERT_MSG(loader, "Cannot find service loader. type: %s\n", type);
 
     int ret = loader->close(service, loader->ud);
-    SK_ASSERT_MSG(!ret, "service unload failed: ret = %d\n", ret);
+    SK_ASSERT_MSG(!ret, "Service unload failed: ret = %d\n", ret);
 }
 
 void sk_service_loader_register(const char* type, sk_service_loader_t loader)

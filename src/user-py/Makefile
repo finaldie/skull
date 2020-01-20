@@ -18,7 +18,7 @@ SKULLPY_BUILD_DIR := build
 PYTHON_INC := $(shell $(python_path)-config --includes)
 PYTHON_LDFLAGS := $(shell $(python_path)-config --ldflags)
 PYTHON_CFLAGS := $(shell $(python_path)-config --cflags)
-PYTHON_LIBS := $(shell $(python_path)-config --libs)
+PYTHON_LIBS := $(shell $(python_path)-config --libs --embed)
 
 # Reset macro
 MACRO =

@@ -42,7 +42,7 @@ skull_module_t* _module_open(const char* filename)
     char* error = NULL;
     void* handler = dlopen(filename, RTLD_NOW);
     if (!handler) {
-        fprintf(stderr, "error: cannot open %s: %s\n", filename, dlerror());
+        fprintf(stderr, "Error: Cannot open user module %s: %s\n", filename, dlerror());
         return NULL;
     }
 
@@ -56,7 +56,7 @@ skull_module_t* _module_open(const char* filename)
     // 3. load module entry
     *(void**)(&md->reg) = dlsym(handler, SKULL_MODULE_REG_NAME);
     if ((error = dlerror()) != NULL) {
-        fprintf(stderr, "error: load %s failed: %s\n",
+        fprintf(stderr, "Error: Load %s failed: %s\n",
                 SKULL_MODULE_REG_NAME, error);
         return NULL;
     }
@@ -89,7 +89,7 @@ static
 int _module_load_config(skull_module_t* module, const char* filename)
 {
     if (!filename) {
-        fprintf(stderr, "error: module config name is NULL\n");
+        fprintf(stderr, "Error: Module config name is NULL\n");
         return 1;
     }
 
