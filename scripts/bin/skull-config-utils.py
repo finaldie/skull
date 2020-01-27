@@ -75,7 +75,7 @@ CONFIG_SVC_HEADER = """
 
 def _load_yaml_config(config_name):
     yaml_file = open(config_name, 'r')
-    yml_obj = yaml.load(yaml_file, Loader=yaml.FullLoader)
+    yml_obj = yaml.load(yaml_file)
 
     yaml_file.close()
     return yml_obj

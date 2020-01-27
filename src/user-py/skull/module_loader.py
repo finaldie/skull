@@ -129,7 +129,7 @@ def module_load_config(module_name, config_file_name):
             config_file_name, str(ex)), 'please check the config content format')
         raise
 
-    conf_yml_obj = yaml.load(yaml_file, Loader=yaml.FullLoader)
+    conf_yml_obj = yaml.load(yaml_file)
     user_module['config']      = conf_yml_obj
     user_module['config_name'] = config_file_name
     yaml_file.close()

@@ -77,7 +77,7 @@ def load_yaml_config():
     global config_name
 
     yaml_file = open(config_name, 'r')
-    yaml_obj = yaml.load(yaml_file, Loader=yaml.FullLoader)
+    yaml_obj = yaml.load(yaml_file)
 
 def gen_py_header_metrics(scope_name, metrics_obj):
     global METRICS_TYPE
