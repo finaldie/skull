@@ -15,10 +15,14 @@ SKULL_ETC_DIR := $(SKULL_LANG_PATH)/etc
 SKULL_SHARE_DIR := $(SKULL_LANG_PATH)/share
 SKULLPY_BUILD_DIR := build
 
+ifdef with_python_embed
+  PYTHON_EMBED := --embed
+endif
+
 PYTHON_INC := $(shell $(python_path)-config --includes)
 PYTHON_LDFLAGS := $(shell $(python_path)-config --ldflags)
 PYTHON_CFLAGS := $(shell $(python_path)-config --cflags)
-PYTHON_LIBS := $(shell $(python_path)-config --libs)
+PYTHON_LIBS := $(shell $(python_path)-config --libs $(PYTHON_EMBED))
 
 # Reset macro
 MACRO =
